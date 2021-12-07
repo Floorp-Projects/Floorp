@@ -21,7 +21,7 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Your private tabs will be shown here.</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
-    <string name="open_tab_tray_single">1 open tab. Tap to switch tabs.</string>
+    <string name="open_tab_tray_single" moz:removedIn="96" tools:ignore="UnusedResources">1 open tab. Tap to switch tabs.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
     <string name="open_tab_tray_plural" moz:removedIn="95" tools:ignore="UnusedResources">%1$s open tabs. Tap to switch tabs.</string>
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
@@ -37,13 +37,13 @@
     <!-- Content description for save to collection button while in multiselect mode in tab tray -->
     <string name="tab_tray_collection_button_multiselect_content_description">Save selected tabs to collection</string>
     <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
-    <string name="tab_tray_item_selected_multiselect_content_description">Selected %1$s</string>
+    <string name="tab_tray_item_selected_multiselect_content_description" moz:removedIn="96" tools:ignore="UnusedResources">Selected %1$s</string>
     <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
-    <string name="tab_tray_item_unselected_multiselect_content_description">Unselected %1$s</string>
+    <string name="tab_tray_item_unselected_multiselect_content_description" moz:removedIn="96" tools:ignore="UnusedResources">Unselected %1$s</string>
     <!-- Content description announcement when exiting multiselect mode in tab tray -->
-    <string name="tab_tray_exit_multiselect_content_description">Exited multiselect mode</string>
+    <string name="tab_tray_exit_multiselect_content_description" moz:removedIn="96" tools:ignore="UnusedResources">Exited multiselect mode</string>
     <!-- Content description announcement when entering multiselect mode in tab tray -->
-    <string name="tab_tray_enter_multiselect_content_description">Entered multiselect mode, select tabs to save to a collection</string>
+    <string name="tab_tray_enter_multiselect_content_description" moz:removedIn="96" tools:ignore="UnusedResources">Entered multiselect mode, select tabs to save to a collection</string>
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">Selected</string>
 
@@ -66,7 +66,7 @@
 
     <!-- Private Browsing -->
     <!-- Title for private session option -->
-    <string name="private_browsing_title">You’re in a private session</string>
+    <string name="private_browsing_title" moz:removedIn="96" tools:ignore="UnusedResources">You’re in a private session</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="private_browsing_placeholder_description_2">
@@ -75,7 +75,7 @@
        Common myths about private browsing
     </string>
     <!-- Delete session button to erase your history in a private session -->
-    <string name="private_browsing_delete_session">Delete session</string>
+    <string name="private_browsing_delete_session" moz:removedIn="96" tools:ignore="UnusedResources">Delete session</string>
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
     <!-- Text for the main message -->
@@ -166,7 +166,7 @@
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
-    <string name="browser_tabs_button">Open Tabs</string>
+    <string name="browser_tabs_button" moz:removedIn="96" tools:ignore="UnusedResources">Open Tabs</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
     <string name="browser_menu_back">Back</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
@@ -178,11 +178,11 @@
     <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
     <string name="browser_menu_bookmark" moz:removedIn="95" tools:ignore="UnusedResources">Bookmark</string>
     <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
-    <string name="browser_menu_edit_bookmark">Edit bookmark</string>
+    <string name="browser_menu_edit_bookmark" moz:removedIn="96" tools:ignore="UnusedResources">Edit bookmark</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Add-ons</string>
     <!-- Browser menu button that opens the addon extensions manager -->
-    <string name="browser_menu_extensions">Extensions</string>
+    <string name="browser_menu_extensions" moz:removedIn="96" tools:ignore="UnusedResources">Extensions</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">No add-ons here</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -206,13 +206,13 @@
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Find in page</string>
     <!-- Browser menu button that creates a private tab -->
-    <string name="browser_menu_private_tab">Private tab</string>
+    <string name="browser_menu_private_tab" moz:removedIn="96" tools:ignore="UnusedResources">Private tab</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Save to collection</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Share</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
-    <string name="menu_share_with">Share with…</string>
+    <string name="menu_share_with" moz:removedIn="96" tools:ignore="UnusedResources">Share with…</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_open_in_fenix">Open in %1$s</string>
@@ -229,7 +229,7 @@
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">Open in app</string>
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
-    <string name="browser_menu_read_appearance">Appearance</string>
+    <string name="browser_menu_read_appearance" moz:removedIn="96" tools:ignore="UnusedResources">Appearance</string>
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">Customize reader view</string>
     <!-- Browser menu label for adding a bookmark -->
@@ -246,13 +246,13 @@
 
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
-    <string name="unknown_scheme_error_message">Unable to connect. Unrecognizable URL scheme.</string>
+    <string name="unknown_scheme_error_message" moz:removedIn="96" tools:ignore="UnusedResources">Unable to connect. Unrecognizable URL scheme.</string>
 
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Selected language</string>
     <!-- Content description for search icon -->
-    <string name="a11y_search_icon_content_description">Search</string>
+    <string name="a11y_search_icon_content_description" moz:removedIn="96" tools:ignore="UnusedResources">Search</string>
     <!-- Text for default locale item -->
     <string name="default_locale_text">Follow device language</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
@@ -266,7 +266,7 @@
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Search engine settings</string>
     <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_engines_search_with">This time, search with:</string>
+    <string name="search_engines_search_with" moz:removedIn="96" tools:ignore="UnusedResources">This time, search with:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Fill link from clipboard</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
@@ -319,7 +319,7 @@
     <!-- Title for the settings page-->
     <string name="settings">Settings</string>
     <!-- Preference category for basic settings -->
-    <string name="preferences_category_basics">Basics</string>
+    <string name="preferences_category_basics" moz:removedIn="96" tools:ignore="UnusedResources">Basics</string>
     <!-- Preference category for general settings -->
     <string name="preferences_category_general">General</string>
     <!-- Preference category for all links about Fenix -->
@@ -331,26 +331,26 @@
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar">Address bar</string>
     <!-- Preference linking to help about Fenix -->
-    <string name="preferences_help">Help</string>
+    <string name="preferences_help" moz:removedIn="96" tools:ignore="UnusedResources">Help</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">Rate on Google Play</string>
     <!-- Preference for giving feedback about Fenix -->
-    <string name="preferences_feedback">Give feedback</string>
+    <string name="preferences_feedback" moz:removedIn="96" tools:ignore="UnusedResources">Give feedback</string>
     <!-- Preference linking to about page for Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="preferences_about">About %1$s</string>
     <!-- Preference linking to the your rights SUMO page -->
-    <string name="preferences_your_rights">Your Rights</string>
+    <string name="preferences_your_rights" moz:removedIn="96" tools:ignore="UnusedResources">Your Rights</string>
     <!-- Preference for settings related to saved passwords -->
-    <string name="preferences_passwords">Passwords</string>
+    <string name="preferences_passwords" moz:removedIn="96" tools:ignore="UnusedResources">Passwords</string>
     <!-- Preference for settings related to saved credit cards and addresses -->
-    <string name="preferences_credit_cards_addresses">Credit cards and addresses</string>
+    <string name="preferences_credit_cards_addresses" moz:removedIn="96" tools:ignore="UnusedResources">Credit cards and addresses</string>
     <!-- Preference for settings related to changing the default browser -->
     <string name="preferences_set_as_default_browser">Set as default browser</string>
     <!-- Preference category for advanced settings -->
     <string name="preferences_category_advanced">Advanced</string>
     <!-- Preference category for privacy settings -->
-    <string name="preferences_category_privacy">Privacy</string>
+    <string name="preferences_category_privacy" moz:removedIn="96" tools:ignore="UnusedResources">Privacy</string>
     <!-- Preference category for privacy and security settings -->
     <string name="preferences_category_privacy_security">Privacy and security</string>
     <!-- Preference for advanced site permissions -->
@@ -376,7 +376,7 @@
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Account</string>
     <!-- Preference shown on banner to sign into account -->
-    <string name="preferences_sign_in">Sign in</string>
+    <string name="preferences_sign_in" moz:removedIn="96" tools:ignore="UnusedResources">Sign in</string>
     <!-- Preference for changing where the toolbar is positioned -->
     <string name="preferences_toolbar">Toolbar</string>
     <!-- Preference for changing default theme to dark or light mode -->
@@ -402,9 +402,9 @@
     <!-- Preference for data collection -->
     <string name="preferences_data_collection">Data collection</string>
     <!-- Preference linking to the privacy notice -->
-    <string name="preferences_privacy_link">Privacy notice</string>
+    <string name="preferences_privacy_link" moz:removedIn="96" tools:ignore="UnusedResources">Privacy notice</string>
     <!-- Preference category for developer tools -->
-    <string name="developer_tools_category">Developer tools</string>
+    <string name="developer_tools_category" moz:removedIn="96" tools:ignore="UnusedResources">Developer tools</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Remote debugging via USB</string>
     <!-- Preference title for switch preference to show search engines -->
@@ -520,21 +520,21 @@
     <!--  The body for these is the URL of the tab received  -->
     <string name="fxa_tab_received_notification_name">Tab Received</string>
     <!-- When multiple tabs have been received -->
-    <string name="fxa_tabs_received_notification_name">Tabs Received</string>
+    <string name="fxa_tabs_received_notification_name" moz:removedIn="96" tools:ignore="UnusedResources">Tabs Received</string>
     <!-- %s is the device name -->
     <string name="fxa_tab_received_from_notification_name">Tab from %s</string>
 
     <!-- Advanced Preferences -->
     <!-- Preference for tracking protection settings -->
-    <string name="preferences_tracking_protection_settings">Tracking Protection</string>
+    <string name="preferences_tracking_protection_settings" moz:removedIn="96" tools:ignore="UnusedResources">Tracking Protection</string>
     <!-- Preference switch for tracking protection -->
-    <string name="preferences_tracking_protection">Tracking Protection</string>
+    <string name="preferences_tracking_protection" moz:removedIn="96" tools:ignore="UnusedResources">Tracking Protection</string>
     <!-- Preference switch description for tracking protection -->
-    <string name="preferences_tracking_protection_description">Block content and scripts that track you online</string>
+    <string name="preferences_tracking_protection_description" moz:removedIn="96" tools:ignore="UnusedResources">Block content and scripts that track you online</string>
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">Exceptions</string>
     <!-- Preference description for tracking protection exceptions -->
-    <string name="preferences_tracking_protection_exceptions_description">Tracking Protection is off for these websites</string>
+    <string name="preferences_tracking_protection_exceptions_description" moz:removedIn="96" tools:ignore="UnusedResources">Tracking Protection is off for these websites</string>
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Turn on for all sites</string>
     <!-- Text displayed when there are no exceptions -->
@@ -543,7 +543,7 @@
     <string name="exceptions_empty_message_learn_more_link">Learn more</string>
 
     <!-- Preference switch for Telemetry -->
-    <string name="preferences_telemetry">Telemetry</string>
+    <string name="preferences_telemetry" moz:removedIn="96" tools:ignore="UnusedResources">Telemetry</string>
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">Usage and technical data</string>
     <!-- Preference description for usage and technical data collection -->
@@ -551,7 +551,7 @@
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Marketing data</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
-    <string name="preferences_marketing_data_description">Shares data about what features you use in %1$s with Leanplum, our mobile marketing vendor.</string>
+    <string name="preferences_marketing_data_description" moz:removedIn="96" tools:ignore="UnusedResources">Shares data about what features you use in %1$s with Leanplum, our mobile marketing vendor.</string>
     <!-- Preference description for marketing data collection -->
     <string name="preferences_marketing_data_description2">Shares basic usage data with Adjust, our mobile marketing vendor</string>
     <!-- Title for studies preferences -->
@@ -559,15 +559,15 @@
     <!-- Summary for studies preferences -->
     <string name="preference_experiments_summary_2">Allows Mozilla to install and run studies</string>
     <!-- Title for experiments preferences -->
-    <string name="preference_experiments">Experiments</string>
+    <string name="preference_experiments" moz:removedIn="96" tools:ignore="UnusedResources">Experiments</string>
     <!-- Summary for experiments preferences -->
-    <string name="preference_experiments_summary">Allows Mozilla to install and collect data for experimental features</string>
+    <string name="preference_experiments_summary" moz:removedIn="96" tools:ignore="UnusedResources">Allows Mozilla to install and collect data for experimental features</string>
     <!-- Preference switch for crash reporter -->
-    <string name="preferences_crash_reporter">Crash reporter</string>
+    <string name="preferences_crash_reporter" moz:removedIn="96" tools:ignore="UnusedResources">Crash reporter</string>
     <!-- Preference switch for Mozilla location service -->
-    <string name="preferences_mozilla_location_service">Mozilla location service</string>
+    <string name="preferences_mozilla_location_service" moz:removedIn="96" tools:ignore="UnusedResources">Mozilla location service</string>
     <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preferences_fenix_health_report">%s health report</string>
+    <string name="preferences_fenix_health_report" moz:removedIn="96" tools:ignore="UnusedResources">%s health report</string>
 
     <!-- Turn On Sync Preferences -->
     <!-- Header of the Turn on Sync preference view -->
@@ -575,7 +575,7 @@
     <!-- Preference for pairing -->
     <string name="preferences_sync_pair" moz:removedIn="95" tools:ignore="UnusedResources">Scan pairing code in desktop Firefox</string>
     <!-- Preference for account login -->
-    <string name="preferences_sync_sign_in">Sign in</string>
+    <string name="preferences_sync_sign_in" moz:removedIn="96" tools:ignore="UnusedResources">Sign in</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Sign in to reconnect</string>
     <!-- Preference for removing FxA account -->
@@ -585,9 +585,9 @@
     <!-- Instructions on how to access pairing -->
     <string name="pair_instructions_2"><![CDATA[Scan the QR code shown at <b>firefox.com/pair</b>]]></string>
     <!-- Button to open camera for pairing -->
-    <string name="pair_open_camera">Open Camera</string>
+    <string name="pair_open_camera" moz:removedIn="96" tools:ignore="UnusedResources">Open Camera</string>
     <!-- Button to cancel pairing -->
-    <string name="pair_cancel">Cancel</string>
+    <string name="pair_cancel" moz:removedIn="96" tools:ignore="UnusedResources">Cancel</string>
 
     <!-- Toolbar Preferences -->
     <!-- Preference for using top toolbar -->
@@ -617,9 +617,9 @@
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
-    <string name="library_sessions">Sessions</string>
+    <string name="library_sessions" moz:removedIn="96" tools:ignore="UnusedResources">Sessions</string>
     <!-- Option in Library to open Screenshots page -->
-    <string name="library_screenshots">Screenshots</string>
+    <string name="library_screenshots" moz:removedIn="96" tools:ignore="UnusedResources">Screenshots</string>
     <!-- Option in Library to open Downloads page -->
     <string name="library_downloads">Downloads</string>
     <!-- Option in library to open Bookmarks page -->
@@ -637,15 +637,15 @@
     <!-- Option in Library to open a new tab -->
     <string name="library_new_tab">New tab</string>
     <!-- Option in Library to find text in page -->
-    <string name="library_find_in_page">Find in page</string>
+    <string name="library_find_in_page" moz:removedIn="96" tools:ignore="UnusedResources">Find in page</string>
     <!-- Option in Library to open Reading List -->
-    <string name="library_reading_list">Reading List</string>
+    <string name="library_reading_list" moz:removedIn="96" tools:ignore="UnusedResources">Reading List</string>
     <!-- Menu Item Label for Search in Library -->
-    <string name="library_search">Search</string>
+    <string name="library_search" moz:removedIn="96" tools:ignore="UnusedResources">Search</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Settings</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
-    <string name="content_description_history_menu">History item menu</string>
+    <string name="content_description_history_menu" moz:removedIn="96" tools:ignore="UnusedResources">History item menu</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Close</string>
 
@@ -749,7 +749,7 @@
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Open tabs</string>
     <!-- Title for the list of tabs in the current private session -->
-    <string name="tabs_header_private_title">Private session</string>
+    <string name="tabs_header_private_title" moz:removedIn="96" tools:ignore="UnusedResources">Private session</string>
     <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">Private tabs</string>
     <!-- Title for the list of tabs in the synced tabs -->
@@ -763,9 +763,9 @@
     <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
     <string name="tab_drawer_fab_sync">Sync</string>
     <!-- Text shown as the title of the open tab tray -->
-    <string name="tab_tray_title">Open Tabs</string>
+    <string name="tab_tray_title" moz:removedIn="96" tools:ignore="UnusedResources">Open Tabs</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
-    <string name="tab_tray_menu_item_save">Save to collection</string>
+    <string name="tab_tray_menu_item_save" moz:removedIn="96" tools:ignore="UnusedResources">Save to collection</string>
     <!-- Text shown in the menu for the collection selector -->
     <string name="tab_tray_menu_select" moz:removedIn="95" tools:ignore="UnusedResources">Select</string>
     <!-- Text shown in the menu for sharing all tabs -->
@@ -781,11 +781,11 @@
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Close all tabs</string>
     <!-- Shortcut action to open new tab -->
-    <string name="tab_tray_menu_open_new_tab">New tab</string>
+    <string name="tab_tray_menu_open_new_tab" moz:removedIn="96" tools:ignore="UnusedResources">New tab</string>
     <!-- Shortcut action to open the home screen -->
-    <string name="tab_tray_menu_home">Go home</string>
+    <string name="tab_tray_menu_home" moz:removedIn="96" tools:ignore="UnusedResources">Go home</string>
     <!-- Shortcut action to toggle private mode -->
-    <string name="tab_tray_menu_toggle">Toggle tab mode</string>
+    <string name="tab_tray_menu_toggle" moz:removedIn="96" tools:ignore="UnusedResources">Toggle tab mode</string>
     <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
     <string name="tab_tray_multiselect_menu_item_bookmark">Bookmark</string>
     <!-- Text shown in the multiselect menu for closing selected tabs. -->
@@ -813,17 +813,17 @@
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
     <string name="tab_menu">Tab menu</string>
     <!-- Tab menu item to share the tab -->
-    <string name="tab_share">Share tab</string>
+    <string name="tab_share" moz:removedIn="96" tools:ignore="UnusedResources">Share tab</string>
     <!-- Button in the current session menu. Deletes the session when pressed -->
-    <string name="current_session_delete">Delete</string>
+    <string name="current_session_delete" moz:removedIn="96" tools:ignore="UnusedResources">Delete</string>
     <!-- Button in the current session menu. Saves the session when pressed -->
-    <string name="current_session_save">Save</string>
+    <string name="current_session_save" moz:removedIn="96" tools:ignore="UnusedResources">Save</string>
     <!-- Button in the current session menu. Opens the share menu when pressed -->
-    <string name="current_session_share">Share</string>
+    <string name="current_session_share" moz:removedIn="96" tools:ignore="UnusedResources">Share</string>
     <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
-    <string name="current_session_image">Current session image</string>
+    <string name="current_session_image" moz:removedIn="96" tools:ignore="UnusedResources">Current session image</string>
     <!-- Button to save the current set of tabs into a collection -->
-    <string name="save_to_collection">Save to collection</string>
+    <string name="save_to_collection" moz:removedIn="96" tools:ignore="UnusedResources">Save to collection</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Delete collection</string>
     <!-- Text for the menu button to rename a collection -->
@@ -841,7 +841,7 @@
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (Private Mode)</string>
     <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
-    <string name="tab_tray_save_to_collection">Save</string>
+    <string name="tab_tray_save_to_collection" moz:removedIn="96" tools:ignore="UnusedResources">Save</string>
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
     <string name="tab_tray_header_title" moz:removedIn="94" tools:ignore="UnusedResources">Other</string>
     <!-- Title text for the normal tabs header in the tabs tray which are not part of any tab grouping. -->
@@ -851,13 +851,13 @@
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Delete history</string>
     <!-- Text for the dialog to confirm clearing all history -->
-    <string name="history_delete_all_dialog">Are you sure you want to clear your history?</string>
+    <string name="history_delete_all_dialog" moz:removedIn="96" tools:ignore="UnusedResources">Are you sure you want to clear your history?</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
     <string name="history_delete_multiple_items_snackbar">History Deleted</string>
     <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
     <string name="history_delete_single_item_snackbar">Deleted %1$s</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
-    <string name="history_clear_dialog">Clear</string>
+    <string name="history_clear_dialog" moz:removedIn="96" tools:ignore="UnusedResources">Clear</string>
     <!-- History overflow menu copy button -->
     <string name="history_menu_copy_button" moz:removedIn="94" tools:ignore="UnusedResources">Copy</string>
     <!-- History overflow menu share button -->
@@ -873,13 +873,13 @@
     <string name="history_multi_select_title">%1$d selected</string>
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
-    <string name="history_delete_some">Delete %1$d items</string>
+    <string name="history_delete_some" moz:removedIn="96" tools:ignore="UnusedResources">Delete %1$d items</string>
     <!-- Text for the header that groups the history for today -->
     <string name="history_today">Today</string>
     <!-- Text for the header that groups the history for yesterday -->
     <string name="history_yesterday">Yesterday</string>
     <!-- Text for the header that groups the history for last 24 hours -->
-    <string name="history_24_hours">Last 24 hours</string>
+    <string name="history_24_hours" moz:removedIn="96" tools:ignore="UnusedResources">Last 24 hours</string>
     <!-- Text for the header that groups the history the past 7 days -->
     <string name="history_7_days">Last 7 days</string>
     <!-- Text for the header that groups the history the past 30 days -->
@@ -900,7 +900,7 @@
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d selected</string>
     <!-- History overflow menu open in new tab button -->
-    <string name="download_menu_open">Open</string>
+    <string name="download_menu_open" moz:removedIn="96" tools:ignore="UnusedResources">Open</string>
     <!-- Text for the button to remove a single download item -->
     <string name="download_delete_item_1">Remove</string>
 
@@ -909,7 +909,7 @@
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
     <string name="tab_crash_title_2">Sorry. %1$s can’t load that page.</string>
     <!-- Description text displayed on the tab crash page -->
-    <string name="tab_crash_description">You can attempt to restore or close this tab below.</string>
+    <string name="tab_crash_description" moz:removedIn="96" tools:ignore="UnusedResources">You can attempt to restore or close this tab below.</string>
     <!-- Send crash report checkbox text on the tab crash page -->
     <string name="tab_crash_send_report">Send crash report to Mozilla</string>
     <!-- Close tab button text on the tab crash page -->
@@ -918,24 +918,24 @@
     <string name="tab_crash_restore">Restore tab</string>
 
     <!-- Content Description for session item menu button -->
-    <string name="content_description_session_menu">Session options</string>
+    <string name="content_description_session_menu" moz:removedIn="96" tools:ignore="UnusedResources">Session options</string>
 
     <!-- Content Description for session item share button -->
-    <string name="content_description_session_share">Share session</string>
+    <string name="content_description_session_share" moz:removedIn="96" tools:ignore="UnusedResources">Share session</string>
 
     <!-- Bookmarks -->
     <!-- Content description for bookmarks library menu -->
-    <string name="bookmark_menu_content_description">Bookmark menu</string>
+    <string name="bookmark_menu_content_description" moz:removedIn="96" tools:ignore="UnusedResources">Bookmark menu</string>
     <!-- Screen title for editing bookmarks -->
     <string name="bookmark_edit" moz:removedIn="95" tools:ignore="UnusedResources">Edit bookmark</string>
     <!-- Screen title for selecting a bookmarks folder -->
-    <string name="bookmark_select_folder">Select folder</string>
+    <string name="bookmark_select_folder" moz:removedIn="96" tools:ignore="UnusedResources">Select folder</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">Are you sure you want to delete this folder?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
     <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s will delete the selected items.</string>
     <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
-    <string name="bookmark_delete_folder_snackbar">Deleted %1$s</string>
+    <string name="bookmark_delete_folder_snackbar" moz:removedIn="96" tools:ignore="UnusedResources">Deleted %1$s</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Add folder</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
@@ -945,7 +945,7 @@
     <!-- Bookmark overflow menu edit button -->
     <string name="bookmark_menu_edit_button">Edit</string>
     <!-- Bookmark overflow menu select button -->
-    <string name="bookmark_menu_select_button">Select</string>
+    <string name="bookmark_menu_select_button" moz:removedIn="96" tools:ignore="UnusedResources">Select</string>
     <!-- Bookmark overflow menu copy button -->
     <string name="bookmark_menu_copy_button">Copy</string>
     <!-- Bookmark overflow menu share button -->
@@ -995,7 +995,7 @@
 
     <!-- Site Permissions -->
     <!-- Site permissions preferences header -->
-    <string name="permissions_header">Permissions</string>
+    <string name="permissions_header" moz:removedIn="96" tools:ignore="UnusedResources">Permissions</string>
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">Go to Settings</string>
     <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
@@ -1005,7 +1005,7 @@
     <!-- Label that indicates that this option it the recommended one -->
     <string name="phone_feature_recommended">Recommended</string>
     <!-- button that allows editing site permissions settings -->
-    <string name="quick_settings_sheet_manage_site_permissions">Manage site permissions</string>
+    <string name="quick_settings_sheet_manage_site_permissions" moz:removedIn="96" tools:ignore="UnusedResources">Manage site permissions</string>
     <!-- Button label for clearing all the information of site permissions-->
     <string name="clear_permissions">Clear permissions</string>
     <!-- Button label for clearing a site permission-->
@@ -1110,14 +1110,14 @@
 
     <!-- Share -->
     <!-- Share screen header -->
-    <string name="share_header">Send and Share</string>
+    <string name="share_header" moz:removedIn="96" tools:ignore="UnusedResources">Send and Share</string>
     <!-- Share screen header -->
     <string name="share_header_2">Share</string>
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">Share</string>
     <!-- Sub-header in the dialog to share a link to another app -->
-    <string name="share_link_subheader">Share a link</string>
+    <string name="share_link_subheader" moz:removedIn="96" tools:ignore="UnusedResources">Share a link</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Send to device</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -1153,17 +1153,17 @@
 
     <!-- Notifications -->
     <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
-    <string name="notification_pbm_channel_name">Private browsing session</string>
+    <string name="notification_pbm_channel_name" moz:removedIn="96" tools:ignore="UnusedResources">Private browsing session</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
-    <string name="notification_pbm_delete_text">Delete private tabs</string>
+    <string name="notification_pbm_delete_text" moz:removedIn="96" tools:ignore="UnusedResources">Delete private tabs</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">Close private tabs</string>
     <!-- Notification action to open Fenix and resume the current browsing session. -->
-    <string name="notification_pbm_action_open">Open</string>
+    <string name="notification_pbm_action_open" moz:removedIn="96" tools:ignore="UnusedResources">Open</string>
     <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
-    <string name="notification_pbm_action_delete_and_open">Delete and Open</string>
+    <string name="notification_pbm_action_delete_and_open" moz:removedIn="96" tools:ignore="UnusedResources">Delete and Open</string>
     <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
-    <string name="notification_powered_by_channel_name">Powered By</string>
+    <string name="notification_powered_by_channel_name" moz:removedIn="96" tools:ignore="UnusedResources">Powered By</string>
     <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
     <string name="notification_marketing_channel_name">Marketing</string>
     <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
@@ -1179,19 +1179,19 @@
     <!-- Text shown in snackbar when user renames a collection -->
     <string name="snackbar_collection_renamed">Collection renamed</string>
     <!-- Text shown in snackbar when user deletes a tab -->
-    <string name="snackbar_tab_deleted">Tab deleted</string>
+    <string name="snackbar_tab_deleted" moz:removedIn="96" tools:ignore="UnusedResources">Tab deleted</string>
     <!-- Text shown in snackbar when user deletes all tabs -->
-    <string name="snackbar_tabs_deleted">Tabs deleted</string>
+    <string name="snackbar_tabs_deleted" moz:removedIn="96" tools:ignore="UnusedResources">Tabs deleted</string>
     <!-- Text shown in snackbar when user closes a tab -->
     <string name="snackbar_tab_closed">Tab closed</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Tabs closed</string>
     <!-- Text shown in snackbar when user closes tabs -->
-    <string name="snackbar_message_tabs_closed">Tabs closed!</string>
+    <string name="snackbar_message_tabs_closed" moz:removedIn="96" tools:ignore="UnusedResources">Tabs closed!</string>
     <!-- Text shown in snackbar when user bookmarks a list of tabs -->
     <string name="snackbar_message_bookmarks_saved">Bookmarks saved!</string>
     <!-- Text shown in snackbar action for viewing bookmarks -->
-    <string name="snackbar_message_bookmarks_view">View</string>
+    <string name="snackbar_message_bookmarks_view" moz:removedIn="96" tools:ignore="UnusedResources">View</string>
     <!-- Text shown in snackbar when user adds a site to top sites -->
     <string name="snackbar_added_to_top_sites">Added to top sites!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
@@ -1199,15 +1199,15 @@
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">Private tabs closed</string>
     <!-- Text shown in snackbar when user deletes all private tabs -->
-    <string name="snackbar_private_tabs_deleted">Private tabs deleted</string>
+    <string name="snackbar_private_tabs_deleted" moz:removedIn="96" tools:ignore="UnusedResources">Private tabs deleted</string>
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">UNDO</string>
     <!-- Text shown in snackbar when user removes a top site -->
-    <string name="snackbar_top_site_removed">Site removed</string>
+    <string name="snackbar_top_site_removed" moz:removedIn="96" tools:ignore="UnusedResources">Site removed</string>
     <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
-    <string name="a11y_dialog_deleted_undo">Undo</string>
+    <string name="a11y_dialog_deleted_undo" moz:removedIn="96" tools:ignore="UnusedResources">Undo</string>
     <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
-    <string name="a11y_dialog_deleted_confirm">Confirm</string>
+    <string name="a11y_dialog_deleted_confirm" moz:removedIn="96" tools:ignore="UnusedResources">Confirm</string>
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
         First parameter is the name of the app, second parameter is the URL or text scanned-->
     <string name="qr_scanner_confirmation_dialog_message">Allow %1$s to open %2$s</string>
@@ -1257,10 +1257,10 @@
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d addresses</string>
     <!-- Title for history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_history_title">History</string>
+    <string name="preferences_delete_browsing_data_browsing_history_title" moz:removedIn="96" tools:ignore="UnusedResources">History</string>
     <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
         number of history pages the user has -->
-    <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d pages</string>
+    <string name="preferences_delete_browsing_data_browsing_history_subtitle" moz:removedIn="96" tools:ignore="UnusedResources">%d pages</string>
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">Cookies</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
@@ -1278,7 +1278,7 @@
     <!-- Title for the Delete browsing data on quit preference -->
     <string name="preferences_delete_browsing_data_on_quit">Delete browsing data on quit</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
-    <string name="preference_summary_delete_browsing_data_on_quit">Automatically deletes browsing data when you select "Quit" from the main menu</string>
+    <string name="preference_summary_delete_browsing_data_on_quit" moz:removedIn="96" tools:ignore="UnusedResources">Automatically deletes browsing data when you select "Quit" from the main menu</string>
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">Automatically deletes browsing data when you select \"Quit\" from the main menu</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
@@ -1330,7 +1330,7 @@
     The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="onboarding_header">Welcome to %s!</string>
     <!-- text for the Firefox Accounts section header -->
-    <string name="onboarding_fxa_section_header">Already have an account?</string>
+    <string name="onboarding_fxa_section_header" moz:removedIn="96" tools:ignore="UnusedResources">Already have an account?</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1" moz:removedIn="94" tools:ignore="UnusedResources">See what’s new</string>
     <!-- text for the "what's new" onboarding card description
@@ -1353,7 +1353,7 @@
     <!-- text for the button to manually sign into Firefox account. -->
     <string name="onboarding_firefox_account_sign_in_1">Sign up</string>
     <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
-    <string name="onboarding_firefox_account_stay_signed_out">Stay signed out</string>
+    <string name="onboarding_firefox_account_stay_signed_out" moz:removedIn="96" tools:ignore="UnusedResources">Stay signed out</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sync is on</string>
     <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
@@ -1367,7 +1367,7 @@
     <!-- text for standard blocking option button description -->
     <string name="onboarding_tracking_protection_standard_button_description_3">Balanced for privacy and performance. Pages load normally.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_button">Strict (recommended)</string>
+    <string name="onboarding_tracking_protection_strict_button" moz:removedIn="96" tools:ignore="UnusedResources">Strict (recommended)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_option">Strict</string>
     <!-- text for strict blocking option button description -->
@@ -1433,7 +1433,7 @@
     <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
     <string name="sign_in_create_account_text"><![CDATA[No account? <u>Create one</u> to sync Firefox between devices.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account -->
-    <string name="sign_out_confirmation_message">Firefox will stop syncing with your account, but won’t delete any of your browsing data on this device.</string>
+    <string name="sign_out_confirmation_message" moz:removedIn="96" tools:ignore="UnusedResources">Firefox will stop syncing with your account, but won’t delete any of your browsing data on this device.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="sign_out_confirmation_message_2">%s will stop syncing with your account, but won’t delete any of your browsing data on this device.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
@@ -1490,7 +1490,7 @@
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Only in Private tabs</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
-    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">Only in Custom tabs</string>
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3" moz:removedIn="96" tools:ignore="UnusedResources">Only in Custom tabs</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Cryptominers</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1533,9 +1533,9 @@
     back from ETP details (Ex: Tracking content) -->
     <string name="etp_back_button_content_description">Navigate back</string>
     <!-- About page Your rights link text -->
-    <string name="about_your_rights">Your rights</string>
+    <string name="about_your_rights" moz:removedIn="96" tools:ignore="UnusedResources">Your rights</string>
     <!-- About page link text to open open source licenses screen -->
-    <string name="about_open_source_licenses">Open source libraries we use</string>
+    <string name="about_open_source_licenses" moz:removedIn="96" tools:ignore="UnusedResources">Open source libraries we use</string>
     <!-- About page link text to open what's new link -->
     <string name="about_whats_new">What’s new in %s</string>
     <!-- Open source licenses page title
@@ -1569,9 +1569,9 @@
     <string name="about_debug_menu_toast_done">Debug menu enabled</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
-    <string name="tab_counter_content_description_one_tab">1 tab</string>
+    <string name="tab_counter_content_description_one_tab" moz:removedIn="96" tools:ignore="UnusedResources">1 tab</string>
     <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
-    <string name="tab_counter_content_description_multi_tab">%d tabs</string>
+    <string name="tab_counter_content_description_multi_tab" moz:removedIn="96" tools:ignore="UnusedResources">%d tabs</string>
 
     <!-- Browser long press popup menu -->
     <!-- Copy the current url -->
@@ -1622,9 +1622,9 @@
     <!-- Preference for syncing saved logins in Fenix, when not signed in-->
     <string name="preferences_passwords_sync_logins_across_devices">Sync logins across devices</string>
     <!-- Syncing saved logins in Fenix needs reconnect to sync -->
-    <string name="preferences_passwords_sync_logins_reconnect">Reconnect</string>
+    <string name="preferences_passwords_sync_logins_reconnect" moz:removedIn="96" tools:ignore="UnusedResources">Reconnect</string>
     <!-- Syncing saved logins in Fenix needs login -->
-    <string name="preferences_passwords_sync_logins_sign_in">Sign in to Sync</string>
+    <string name="preferences_passwords_sync_logins_sign_in" moz:removedIn="96" tools:ignore="UnusedResources">Sign in to Sync</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Saved logins</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
@@ -1642,9 +1642,9 @@
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Search logins</string>
     <!-- Option to sort logins list A-Z, alphabetically -->
-    <string name="preferences_passwords_saved_logins_alphabetically">Alphabetically</string>
+    <string name="preferences_passwords_saved_logins_alphabetically" moz:removedIn="96" tools:ignore="UnusedResources">Alphabetically</string>
     <!-- Option to sort logins list by most recently used -->
-    <string name="preferences_passwords_saved_logins_recently_used">Recently used</string>
+    <string name="preferences_passwords_saved_logins_recently_used" moz:removedIn="96" tools:ignore="UnusedResources">Recently used</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Site</string>
     <!-- The header for the username for a login -->
@@ -1652,25 +1652,25 @@
     <!-- The header for the password for a login -->
     <string name="preferences_passwords_saved_logins_password">Password</string>
     <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
-    <string name="preferences_passwords_saved_logins_enter_pin">Re-enter your PIN</string>
+    <string name="preferences_passwords_saved_logins_enter_pin" moz:removedIn="96" tools:ignore="UnusedResources">Re-enter your PIN</string>
     <!-- Message displayed in security prompt to access saved logins -->
-    <string name="preferences_passwords_saved_logins_enter_pin_description">Unlock to view your saved logins</string>
+    <string name="preferences_passwords_saved_logins_enter_pin_description" moz:removedIn="96" tools:ignore="UnusedResources">Unlock to view your saved logins</string>
     <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
-    <string name="logins_insecure_connection_warning">This connection is not secure. Logins entered here could be compromised.</string>
+    <string name="logins_insecure_connection_warning" moz:removedIn="96" tools:ignore="UnusedResources">This connection is not secure. Logins entered here could be compromised.</string>
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
-    <string name="logins_insecure_connection_warning_learn_more">Learn more</string>
+    <string name="logins_insecure_connection_warning_learn_more" moz:removedIn="96" tools:ignore="UnusedResources">Learn more</string>
     <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
-    <string name="logins_doorhanger_save">Do you want %s to save this login?</string>
+    <string name="logins_doorhanger_save" moz:removedIn="96" tools:ignore="UnusedResources">Do you want %s to save this login?</string>
     <!-- Positive confirmation that Fenix should save the new or updated login -->
-    <string name="logins_doorhanger_save_confirmation">Save</string>
+    <string name="logins_doorhanger_save_confirmation" moz:removedIn="96" tools:ignore="UnusedResources">Save</string>
     <!-- Negative confirmation that Fenix should not save the new or updated login -->
-    <string name="logins_doorhanger_save_dont_save">Don’t save</string>
+    <string name="logins_doorhanger_save_dont_save" moz:removedIn="96" tools:ignore="UnusedResources">Don’t save</string>
     <!-- Shown in snackbar to tell user that the password has been copied -->
     <string name="logins_password_copied">Password copied to clipboard</string>
     <!-- Shown in snackbar to tell user that the username has been copied -->
     <string name="logins_username_copied">Username copied to clipboard</string>
     <!-- Shown in snackbar to tell user that the site has been copied -->
-    <string name="logins_site_copied">Site copied to clipboard</string>
+    <string name="logins_site_copied" moz:removedIn="96" tools:ignore="UnusedResources">Site copied to clipboard</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Copy password</string>
     <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
@@ -1682,7 +1682,7 @@
     <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
     <string name="saved_login_clear_hostname">Clear hostname</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
-    <string name="saved_login_copy_site">Copy site</string>
+    <string name="saved_login_copy_site" moz:removedIn="96" tools:ignore="UnusedResources">Copy site</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
     <string name="saved_login_open_site">Open site in browser</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
@@ -1742,7 +1742,7 @@
     <!-- The header for the name on the credit card -->
     <string name="credit_cards_name_on_card">Name on Card</string>
     <!-- The header for the nickname for a credit card -->
-    <string name="credit_cards_card_nickname">Card Nickname</string>
+    <string name="credit_cards_card_nickname" moz:removedIn="96" tools:ignore="UnusedResources">Card Nickname</string>
     <!-- The text for the "Delete card" menu item for deleting a credit card -->
     <string name="credit_cards_menu_delete_card">Delete card</string>
     <!-- The text for the "Delete card" button for deleting a credit card -->
@@ -1796,16 +1796,16 @@
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">Replace query with “%s”. Example:\nhttps://www.google.com/search?q=%s</string>
     <!-- Text for the button to learn more about adding a custom search engine -->
-    <string name="search_add_custom_engine_learn_more_label">Learn More</string>
+    <string name="search_add_custom_engine_learn_more_label" moz:removedIn="96" tools:ignore="UnusedResources">Learn More</string>
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Custom search engine details</string>
     <!-- Accessibility description for the 'Learn more' link -->
-    <string name="search_add_custom_engine_learn_more_description">Learn more link</string>
+    <string name="search_add_custom_engine_learn_more_description" moz:removedIn="96" tools:ignore="UnusedResources">Learn more link</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Enter search engine name</string>
     <!-- Text shown when a user tries to add a search engine that already exists -->
-    <string name="search_add_custom_engine_error_existing_name">Search engine with name “%s” already exists.</string>
+    <string name="search_add_custom_engine_error_existing_name" moz:removedIn="96" tools:ignore="UnusedResources">Search engine with name “%s” already exists.</string>
     <!-- Text shown when a user leaves the search string field empty -->
     <string name="search_add_custom_engine_error_empty_search_string">Enter a search string</string>
     <!-- Text shown when a user leaves out the required template string -->
@@ -1858,7 +1858,7 @@
     <!-- label shown when there are not site exceptions to show in the site exception settings -->
     <string name="no_site_exceptions">No site exceptions</string>
     <!-- Label for the Pocket default top site -->
-    <string name="pocket_top_articles">Top Articles</string>
+    <string name="pocket_top_articles" moz:removedIn="96" tools:ignore="UnusedResources">Top Articles</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Are you sure you want to delete this bookmark?</string>
     <!-- Browser menu button that adds a top site to the home fragment -->
@@ -1885,7 +1885,7 @@
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Save changes to login.</string>
     <!--  The button description to discard changes to an edited login. -->
-    <string name="discard_changes">Discard changes</string>
+    <string name="discard_changes" moz:removedIn="96" tools:ignore="UnusedResources">Discard changes</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Edit</string>
     <!--  The page title for adding new login. -->
