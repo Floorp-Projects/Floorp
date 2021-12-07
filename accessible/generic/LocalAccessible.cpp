@@ -3256,6 +3256,14 @@ already_AddRefed<AccAttributes> LocalAccessible::BundleFieldsForCache(
     fields->SetAttribute(nsGkAtoms::state, state);
   }
 
+  if (aUpdateType == CacheUpdateType::Initial) {
+    // Add fields which never change and thus only need to be included in the
+    // initial cache push.
+    if (mContent->IsElement()) {
+      fields->SetAttribute(nsGkAtoms::tag, mContent->NodeInfo()->NameAtom());
+    }
+  }
+
   return fields.forget();
 }
 
