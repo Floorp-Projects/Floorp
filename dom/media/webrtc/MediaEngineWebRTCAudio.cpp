@@ -250,7 +250,7 @@ void MediaEngineWebRTCMicrophoneSource::ApplySettings(
                   bool aPassThrough, uint32_t aRequestedInputChannelCount)
               : ControlMessage(aTrack),
                 mInputProcessing(aInputProcessing),
-                mAudioProcessingConfig(std::move(aAudioProcessingConfig)),
+                mAudioProcessingConfig(aAudioProcessingConfig),
                 mPassThrough(aPassThrough),
                 mRequestedInputChannelCount(aRequestedInputChannelCount) {}
 
