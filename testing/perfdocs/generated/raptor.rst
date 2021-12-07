@@ -1881,7 +1881,7 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
-   * **playback pageset manifest**: mitm5-linux-firefox-amazon.manifest
+   * **playback pageset manifest**: mitm7-linux-firefox-amazon.manifest
    * **playback version**: 7.0.4
    * **test url**: `<https://www.amazon.com/s?k=laptop&ref=nb_sb_noss_1>`__
    * **type**: pageload
