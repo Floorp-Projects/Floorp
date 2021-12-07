@@ -15,8 +15,6 @@ const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
   Downloads: "resource://gre/modules/Downloads.jsm",
@@ -248,9 +246,6 @@ var DownloadsViewUI = {
     // "always open similar files" item instead so that users can add a new
     // mimetype to about:preferences table and set to open with system default.
     // Only appear if browser.download.improvements_to_download_panel is enabled.
-    let improvementsOn = Services.prefs.getBoolPref(
-      "browser.download.improvements_to_download_panel"
-    );
     let alwaysOpenSimilarFilesItem = contextMenu.querySelector(
       ".downloadAlwaysOpenSimilarFilesMenuItem"
     );
@@ -276,7 +271,7 @@ var DownloadsViewUI = {
       (mimeInfo.type === "text/plain" &&
         gReputationService.isBinary(download.target.path));
 
-    if (improvementsOn && !canViewInternally) {
+    if (DownloadsViewUI.improvementsIsOn && !canViewInternally) {
       alwaysOpenSimilarFilesItem.hidden =
         state !== DOWNLOAD_FINISHED || shouldNotRememberChoice;
     } else {
@@ -293,6 +288,13 @@ var DownloadsViewUI = {
     }
   },
 };
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  DownloadsViewUI,
+  "improvementsIsOn",
+  "browser.download.improvements_to_download_panel",
+  false
+);
 
 DownloadsViewUI.BaseView = class {
   canClearDownloads(nodeContainer) {
@@ -632,13 +634,9 @@ DownloadsViewUI.DownloadElementShell.prototype = {
   _updateStateInner() {
     let progressPaused = false;
 
-    let improvementsOn = Services.prefs.getBoolPref(
-      "browser.download.improvements_to_download_panel"
-    );
-
     this.element.classList.toggle(
       "openWhenFinished",
-      improvementsOn && !this.download.stopped
+      DownloadsViewUI.improvementsIsOn && !this.download.stopped
     );
 
     if (!this.download.stopped) {
@@ -656,11 +654,18 @@ DownloadsViewUI.DownloadElementShell.prototype = {
       );
       this.lastEstimatedSecondsLeft = newEstimatedSecondsLeft;
 
-      if (improvementsOn && this.download.launchWhenSucceeded) {
+      if (
+        DownloadsViewUI.improvementsIsOn &&
+        this.download.launchWhenSucceeded
+      ) {
         status = DownloadUtils.getFormattedTimeStatus(newEstimatedSecondsLeft);
       }
-
-      this.showStatus(status);
+      let hoverStatus = DownloadsViewUI.improvementsIsOn
+        ? {
+            l10n: "downloading-file-click-to-open",
+          }
+        : undefined;
+      this.showStatus(status, hoverStatus);
     } else {
       let verdict = "";
 
