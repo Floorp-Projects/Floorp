@@ -325,8 +325,9 @@ function Toolbox(
   this._onResourceUpdated = this._onResourceUpdated.bind(this);
   this._onToolSelectedStopPicker = this._onToolSelectedStopPicker.bind(this);
 
+  // `component` might be null if the toolbox was destroying during the throttling
   this._throttledSetToolboxButtons = throttle(
-    () => this.component.setToolboxButtons(this.toolbarButtons),
+    () => this.component?.setToolboxButtons(this.toolbarButtons),
     500,
     this
   );
