@@ -41,7 +41,6 @@ data class WebsiteInfoState(
     val websiteSecurityUiValues: WebsiteSecurityUiValues,
     val certificateName: String
 ) : State {
-
     companion object {
         /**
          * Construct an initial [WebsiteInfoState]

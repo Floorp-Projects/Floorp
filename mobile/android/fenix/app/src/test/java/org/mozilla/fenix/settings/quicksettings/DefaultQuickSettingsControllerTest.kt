@@ -21,6 +21,7 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.permission.SitePermissions
 import mozilla.components.concept.engine.permission.SitePermissions.Status.NO_DECISION
 import mozilla.components.feature.session.SessionUseCases
@@ -72,6 +73,9 @@ class DefaultQuickSettingsControllerTest {
     private lateinit var permissionStorage: PermissionStorage
 
     @MockK(relaxed = true)
+    private lateinit var engine: Engine
+
+    @MockK(relaxed = true)
     private lateinit var reload: SessionUseCases.ReloadUrlUseCase
 
     @MockK(relaxed = true)
@@ -104,6 +108,7 @@ class DefaultQuickSettingsControllerTest {
                 reload = reload,
                 addNewTab = addNewTab,
                 requestRuntimePermissions = requestPermissions,
+                engine = engine,
                 displayPermissions = {},
                 dismiss = {}
             )
@@ -381,6 +386,21 @@ class DefaultQuickSettingsControllerTest {
             navController.popBackStack()
 
             navController.navigate(any<NavDirections>())
+        }
+    }
+
+    @Test
+    fun `WHEN handleClearSiteData THEN call clearSite`() {
+        controller.handleClearSiteDataClicked("mozilla.org")
+
+        verify {
+            engine.clearData(
+                host = "mozilla.org",
+                data = Engine.BrowsingData.select(
+                    Engine.BrowsingData.AUTH_SESSIONS,
+                    Engine.BrowsingData.ALL_SITE_DATA,
+                )
+            )
         }
     }
 

@@ -41,7 +41,7 @@
             android:id="@+id/trackingProtectionLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:layout_constraintBottom_toBottomOf="parent" />
+            app:layout_constraintBottom_toTopOf="@+id/clearSiteDataLayout" />
 
         <View
             android:id="@+id/trackingProtectionDivider"
@@ -52,6 +52,21 @@
             android:background="?neutralFaded"
             app:layout_constraintBottom_toTopOf="@id/trackingProtectionLayout" />
 
+        <FrameLayout
+            android:id="@+id/clearSiteDataLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <View
+            android:id="@+id/clearSiteDataDivider"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:background="?neutralFaded"
+            app:layout_constraintBottom_toTopOf="@id/clearSiteDataLayout" />
+
         <androidx.constraintlayout.widget.Group
             android:id="@+id/websitePermissionsGroup"
             android:layout_width="wrap_content"
@@ -59,5 +74,6 @@
             android:visibility="gone"
             app:constraint_referenced_ids="websitePermissionsLayout,webSitePermissionsDivider"
             tools:visibility="visible" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.core.widget.NestedScrollView>

@@ -82,4 +82,13 @@ class QuickSettingsInteractorTest {
             controller.handleConnectionDetailsClicked()
         }
     }
+
+    @Test
+    fun `WHEN calling onClearSiteDataClicked THEN delegate to the controller`() {
+        interactor.onClearSiteDataClicked("baseDomain")
+
+        verify {
+            controller.handleClearSiteDataClicked("baseDomain")
+        }
+    }
 }

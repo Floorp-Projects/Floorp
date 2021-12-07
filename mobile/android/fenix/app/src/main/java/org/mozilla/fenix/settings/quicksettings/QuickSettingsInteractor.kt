@@ -15,7 +15,7 @@ package org.mozilla.fenix.settings.quicksettings
  */
 class QuickSettingsInteractor(
     private val controller: QuickSettingsController
-) : WebsitePermissionInteractor, TrackingProtectionInteractor, WebSiteInfoInteractor {
+) : WebsitePermissionInteractor, TrackingProtectionInteractor, WebSiteInfoInteractor, ClearSiteDataViewInteractor {
     override fun onPermissionsShown() {
         controller.handlePermissionsShown()
     }
@@ -38,5 +38,9 @@ class QuickSettingsInteractor(
 
     override fun onConnectionDetailsClicked() {
         controller.handleConnectionDetailsClicked()
+    }
+
+    override fun onClearSiteDataClicked(baseDomain: String) {
+        controller.handleClearSiteDataClicked(baseDomain)
     }
 }
