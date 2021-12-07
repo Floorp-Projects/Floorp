@@ -1107,7 +1107,7 @@ nsString MediaEngineWebRTCAudioCaptureSource::GetName() const {
 }
 
 nsCString MediaEngineWebRTCAudioCaptureSource::GetUUID() const {
-  nsID uuid;
+  nsID uuid{};
   char uuidBuffer[NSID_LENGTH];
   nsCString asciiString;
   ErrorResult rv;
