@@ -62,13 +62,8 @@ void RemoteAccessible::Description(nsString& aDesc) const {
   Unused << mDoc->SendDescription(mID, &aDesc);
 }
 
-already_AddRefed<AccAttributes> RemoteAccessible::Attributes() {
-  if (StaticPrefs::accessibility_cache_enabled_AtStartup()) {
-    return RemoteAccessibleBase<RemoteAccessible>::Attributes();
-  }
-  RefPtr<AccAttributes> attrs;
-  Unused << mDoc->SendAttributes(mID, &attrs);
-  return attrs.forget();
+void RemoteAccessible::Attributes(RefPtr<AccAttributes>* aAttributes) const {
+  Unused << mDoc->SendAttributes(mID, aAttributes);
 }
 
 nsTArray<RemoteAccessible*> RemoteAccessible::RelationByType(
