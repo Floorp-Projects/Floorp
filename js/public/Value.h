@@ -1080,9 +1080,10 @@ JS_PUBLIC_API void HeapValueWriteBarriers(Value* valuep, const Value& prev,
 template <>
 struct GCPolicy<JS::Value> {
   static void trace(JSTracer* trc, Value* v, const char* name) {
-    // It's not safe to trace unbarriered pointers except as part of root
-    // marking.
-    UnsafeTraceRoot(trc, v, name);
+    // This should only be called as part of root marking since that's the only
+    // time we should trace unbarriered GC thing pointers. This will assert if
+    // called at other times.
+    TraceRoot(trc, v, name);
   }
   static bool isTenured(const Value& thing) {
     return !thing.isGCThing() || !IsInsideNursery(thing.toGCThing());
