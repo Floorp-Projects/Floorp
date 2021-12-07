@@ -3,17 +3,16 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g., crates.io) dependencies
+# to registry (e.g., crates.io) dependencies.
 #
-# If you believe there's an error in this file please file an
-# issue against the rust-lang/cargo repository. If you're
-# editing this file be aware that the upstream Cargo.toml
-# will likely look very different (and much more reasonable)
+# If you are reading this file be aware that the original Cargo.toml
+# will likely look very different (and much more reasonable).
+# See Cargo.toml.orig for the original contents.
 
 [package]
 edition = "2018"
 name = "xmldecl"
-version = "0.1.1"
+version = "0.2.0"
 authors = ["Henri Sivonen <hsivonen@hsivonen.fi>"]
 description = "Extracts an encoding from an ASCII-based bogo-XML declaration in text/html in a Web-compatible way"
 homepage = "https://docs.rs/xmldecl/"

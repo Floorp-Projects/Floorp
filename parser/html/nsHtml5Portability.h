@@ -49,7 +49,6 @@ class nsHtml5AttributeName;
 class nsHtml5ElementName;
 class nsHtml5Tokenizer;
 class nsHtml5TreeBuilder;
-class nsHtml5MetaScanner;
 class nsHtml5UTF16Buffer;
 class nsHtml5StateSnapshot;
 
