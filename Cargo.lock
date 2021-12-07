@@ -125,6 +125,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "async-task"
+version = "4.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e91831deabf0d6d7ec49552e489aed63b7456a7a3c46cff62adad428110b0af0"
+
+[[package]]
 name = "async-trait"
 version = "0.1.42"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3074,9 +3080,11 @@ checksum = "2133b12230591b7e727c8977b96b791bba421cd80ce8eb08b782dcb4a43fa1e9"
 name = "moz_task"
 version = "0.1.0"
 dependencies = [
+ "async-task",
  "cstr",
  "futures-task",
  "libc",
+ "log",
  "nserror",
  "nsstring",
  "thiserror",
