@@ -62,8 +62,13 @@ NSString* LocalizedString(const nsString& aString) {
 
 NSString* GetAccAttr(mozAccessible* aNativeAccessible, nsAtom* aAttrName) {
   nsAutoString result;
-  Accessible* acc = [aNativeAccessible geckoAccessible];
-  RefPtr<AccAttributes> attributes = acc->Attributes();
+  RefPtr<AccAttributes> attributes;
+  if (LocalAccessible* acc = [aNativeAccessible geckoAccessible]->AsLocal()) {
+    attributes = acc->Attributes();
+  } else if (RemoteAccessible* proxy =
+                 [aNativeAccessible geckoAccessible]->AsRemote()) {
+    proxy->Attributes(&attributes);
+  }
 
   attributes->GetAttribute(aAttrName, result);
 
