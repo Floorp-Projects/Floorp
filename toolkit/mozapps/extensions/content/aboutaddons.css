@@ -207,17 +207,11 @@ message-bar-stack > * {
 
 .addon.card {
   margin-bottom: 16px;
-}
-
-addon-card:not([expanded]) > .addon.card[active="false"] {
-  opacity: 0.6;
   transition: opacity 150ms, box-shadow 150ms;
 }
 
-addon-card:not([expanded])[panelopen] > .addon.card[active="false"],
-addon-card:not([expanded]) > .addon.card[active="false"]:focus-within,
-addon-card:not([expanded]) > .addon.card[active="false"]:hover {
-  opacity: 1;
+addon-list:not([type="theme"]) addon-card:not([expanded]):not([panelopen]) > .addon.card[active="false"]:not(:focus-within):not(:hover) {
+  opacity: 0.6;
 }
 
 .addon.card:hover {
