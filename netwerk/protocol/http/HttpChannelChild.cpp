@@ -141,6 +141,8 @@ HttpChannelChild::~HttpChannelChild() {
   }
 #endif
 
+  mEventQ->NotifyReleasingOwner();
+
   ReleaseMainThreadOnlyReferences();
 }
 

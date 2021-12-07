@@ -107,6 +107,7 @@ HttpChannelParent::~HttpChannelParent() {
     mRedirectCallback->OnRedirectVerifyCallback(NS_ERROR_UNEXPECTED);
     mRedirectCallback = nullptr;
   }
+  mEventQ->NotifyReleasingOwner();
 }
 
 void HttpChannelParent::ActorDestroy(ActorDestroyReason why) {
