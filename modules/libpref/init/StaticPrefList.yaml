@@ -9321,6 +9321,12 @@
   value: true
   mirror: always
 
+# Whether to use challenges in the most secure order. See bug 650091.
+- name: network.auth.choose_most_secure_challenge
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # See the full list of values in nsICookieService.idl.
 - name: network.cookie.cookieBehavior
   type: RelaxedAtomicInt32
@@ -10137,11 +10143,7 @@
 # If 0 that means no limit.
 - name: network.url.max-length
   type: RelaxedAtomicUint32
-#if defined(EARLY_BETA_OR_EARLIER)
   value: 32 * 1024 * 1024
-#else
-  value: 0
-#endif
   mirror: always
 
 # Force remapping of remote port numbers to allow reaching local testing
@@ -12365,7 +12367,7 @@
 
 - name: widget.windows.window_occlusion_tracking.enabled
   type: bool
-  value: @EARLY_BETA_OR_EARLIER@
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 - name: widget.windows.window_occlusion_tracking_display_state.enabled
