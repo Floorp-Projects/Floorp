@@ -66,6 +66,7 @@ WebSocketChannelChild::WebSocketChannelChild(bool aEncrypted)
 
 WebSocketChannelChild::~WebSocketChannelChild() {
   LOG(("WebSocketChannelChild::~WebSocketChannelChild() %p\n", this));
+  mEventQ->NotifyReleasingOwner();
 }
 
 void WebSocketChannelChild::AddIPDLReference() {
