@@ -4,10 +4,12 @@
 
 package mozilla.components.service.glean.private
 
+typealias CommonMetricData = mozilla.telemetry.glean.private.CommonMetricData
+typealias EventExtraKey = mozilla.telemetry.glean.private.EventExtraKey
+typealias EventExtras = mozilla.telemetry.glean.private.EventExtras
 typealias Lifetime = mozilla.telemetry.glean.private.Lifetime
 typealias NoExtraKeys = mozilla.telemetry.glean.private.NoExtraKeys
 typealias NoExtras = mozilla.telemetry.glean.private.NoExtras
-typealias EventExtras = mozilla.telemetry.glean.private.EventExtras
 typealias NoReasonCodes = mozilla.telemetry.glean.private.NoReasonCodes
 
 typealias BooleanMetricType = mozilla.telemetry.glean.private.BooleanMetricType
@@ -22,11 +24,11 @@ typealias MemoryDistributionMetricType = mozilla.telemetry.glean.private.MemoryD
 typealias MemoryUnit = mozilla.telemetry.glean.private.MemoryUnit
 typealias PingType<T> = mozilla.telemetry.glean.private.PingType<T>
 typealias QuantityMetricType = mozilla.telemetry.glean.private.QuantityMetricType
-typealias RecordedExperimentData = mozilla.telemetry.glean.private.RecordedExperimentData
+typealias RecordedExperiment = mozilla.telemetry.glean.private.RecordedExperiment
 typealias StringListMetricType = mozilla.telemetry.glean.private.StringListMetricType
 typealias StringMetricType = mozilla.telemetry.glean.private.StringMetricType
-typealias TimespanMetricType = mozilla.telemetry.glean.private.TimespanMetricType
 typealias TimeUnit = mozilla.telemetry.glean.private.TimeUnit
+typealias TimespanMetricType = mozilla.telemetry.glean.private.TimespanMetricType
 typealias TimingDistributionMetricType = mozilla.telemetry.glean.private.TimingDistributionMetricType
 typealias UrlMetricType = mozilla.telemetry.glean.private.UrlMetricType
 typealias UuidMetricType = mozilla.telemetry.glean.private.UuidMetricType

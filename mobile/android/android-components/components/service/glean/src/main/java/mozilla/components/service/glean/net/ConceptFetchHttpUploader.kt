@@ -12,7 +12,7 @@ import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.toMutableHeaders
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.telemetry.glean.net.HeadersList
-import mozilla.telemetry.glean.net.HttpResponse
+import mozilla.telemetry.glean.net.HttpStatus
 import mozilla.telemetry.glean.net.RecoverableFailure
 import mozilla.telemetry.glean.net.UploadResult
 import java.io.IOException
@@ -70,7 +70,7 @@ class ConceptFetchHttpUploader(
             performUpload(client.value, request)
         } catch (e: IOException) {
             logger.warn("IOException while uploading ping", e)
-            RecoverableFailure
+            RecoverableFailure(0)
         }
     }
 
@@ -101,7 +101,7 @@ class ConceptFetchHttpUploader(
     internal fun performUpload(client: Client, request: Request): UploadResult {
         logger.debug("Submitting ping to: ${request.url}")
         client.fetch(request).use { response ->
-            return HttpResponse(response.status)
+            return HttpStatus(response.status)
         }
     }
 }

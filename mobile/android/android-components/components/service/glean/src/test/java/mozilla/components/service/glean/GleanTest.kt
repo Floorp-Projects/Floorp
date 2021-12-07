@@ -7,6 +7,7 @@ package mozilla.components.service.glean
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import mozilla.components.service.glean.private.BooleanMetricType
+import mozilla.components.service.glean.private.CommonMetricData
 import mozilla.components.service.glean.private.Lifetime
 import mozilla.components.service.glean.testing.GleanTestRule
 import org.junit.Assert.assertTrue
@@ -27,15 +28,17 @@ class GleanTest {
     fun `Glean correctly initializes and records a metric`() {
         // Define a 'booleanMetric' boolean metric, which will be stored in "store1"
         val booleanMetric = BooleanMetricType(
-            disabled = false,
-            category = "telemetry",
-            lifetime = Lifetime.Application,
-            name = "boolean_metric",
-            sendInPings = listOf("store1")
+            CommonMetricData(
+                disabled = false,
+                category = "telemetry",
+                lifetime = Lifetime.APPLICATION,
+                name = "boolean_metric",
+                sendInPings = listOf("store1")
+            )
         )
 
         booleanMetric.set(true)
 
-        assertTrue(booleanMetric.testGetValue())
+        assertTrue(booleanMetric.testGetValue()!!)
     }
 }

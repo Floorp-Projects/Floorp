@@ -8,7 +8,7 @@ import android.content.Context
 import androidx.annotation.MainThread
 import androidx.annotation.VisibleForTesting
 import mozilla.components.service.glean.config.Configuration
-import mozilla.components.service.glean.private.RecordedExperimentData
+import mozilla.components.service.glean.private.RecordedExperiment
 import mozilla.telemetry.glean.Glean as GleanCore
 
 typealias BuildInfo = mozilla.telemetry.glean.BuildInfo
@@ -78,14 +78,6 @@ object Glean {
     }
 
     /**
-     * Get whether or not Glean is allowed to record and upload data.
-     */
-    @Suppress("DEPRECATION")
-    fun getUploadEnabled(): Boolean {
-        return GleanCore.getUploadEnabled()
-    }
-
-    /**
      * Indicate that an experiment is running. Glean will then add an
      * experiment annotation to the environment which is sent with pings. This
      * information is not persisted between runs.
@@ -132,11 +124,11 @@ object Glean {
      * Returns the stored data for the requested active experiment, for testing purposes only.
      *
      * @param experimentId the id of the experiment to look for.
-     * @return the [RecordedExperimentData] for the experiment
+     * @return the [RecordedExperiment] for the experiment
      * @throws [NullPointerException] if the requested experiment is not active or data is corrupt.
      */
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
-    fun testGetExperimentData(experimentId: String): RecordedExperimentData {
+    fun testGetExperimentData(experimentId: String): RecordedExperiment {
         return GleanCore.testGetExperimentData(experimentId)
     }
 }

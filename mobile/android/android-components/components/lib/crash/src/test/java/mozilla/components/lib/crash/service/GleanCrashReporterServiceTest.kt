@@ -35,7 +35,7 @@ class GleanCrashReporterServiceTest {
         // tests or even between test classes, so we compensate by capturing the initial value
         // to compare to.
         val initialValue = try {
-            CrashMetrics.crashCount[GleanCrashReporterService.MAIN_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()
+            CrashMetrics.crashCount[GleanCrashReporterService.MAIN_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()!!
         } catch (e: NullPointerException) {
             0
         }
@@ -62,14 +62,10 @@ class GleanCrashReporterServiceTest {
         run {
             GleanCrashReporterService(context)
 
-            assertTrue(
-                "Glean must record a value",
-                CrashMetrics.crashCount[GleanCrashReporterService.MAIN_PROCESS_NATIVE_CODE_CRASH_KEY].testHasValue()
-            )
             assertEquals(
                 "Glean must record correct value",
                 1,
-                CrashMetrics.crashCount[GleanCrashReporterService.MAIN_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue() - initialValue
+                CrashMetrics.crashCount[GleanCrashReporterService.MAIN_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()!! - initialValue
             )
         }
     }
@@ -80,7 +76,7 @@ class GleanCrashReporterServiceTest {
         // tests or even between test classes, so we compensate by capturing the initial value
         // to compare to.
         val initialValue = try {
-            CrashMetrics.crashCount[GleanCrashReporterService.FOREGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()
+            CrashMetrics.crashCount[GleanCrashReporterService.FOREGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()!!
         } catch (e: NullPointerException) {
             0
         }
@@ -105,14 +101,10 @@ class GleanCrashReporterServiceTest {
         run {
             GleanCrashReporterService(context)
 
-            assertTrue(
-                "Glean must record a value",
-                CrashMetrics.crashCount[GleanCrashReporterService.FOREGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY].testHasValue()
-            )
             assertEquals(
                 "Glean must record correct value",
                 1,
-                CrashMetrics.crashCount[GleanCrashReporterService.FOREGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue() - initialValue
+                CrashMetrics.crashCount[GleanCrashReporterService.FOREGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()!! - initialValue
             )
         }
     }
@@ -123,7 +115,7 @@ class GleanCrashReporterServiceTest {
         // tests or even between test classes, so we compensate by capturing the initial value
         // to compare to.
         val initialValue = try {
-            CrashMetrics.crashCount[GleanCrashReporterService.BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()
+            CrashMetrics.crashCount[GleanCrashReporterService.BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()!!
         } catch (e: NullPointerException) {
             0
         }
@@ -148,14 +140,10 @@ class GleanCrashReporterServiceTest {
         run {
             GleanCrashReporterService(context)
 
-            assertTrue(
-                "Glean must record a value",
-                CrashMetrics.crashCount[GleanCrashReporterService.BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY].testHasValue()
-            )
             assertEquals(
                 "Glean must record correct value",
                 1,
-                CrashMetrics.crashCount[GleanCrashReporterService.BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue() - initialValue
+                CrashMetrics.crashCount[GleanCrashReporterService.BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()!! - initialValue
             )
         }
     }
@@ -166,7 +154,7 @@ class GleanCrashReporterServiceTest {
         // tests or even between test classes, so we compensate by capturing the initial value
         // to compare to.
         val initialValue = try {
-            CrashMetrics.crashCount[GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY].testGetValue()
+            CrashMetrics.crashCount[GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY].testGetValue()!!
         } catch (e: NullPointerException) {
             0
         }
@@ -191,14 +179,10 @@ class GleanCrashReporterServiceTest {
         run {
             GleanCrashReporterService(context)
 
-            assertTrue(
-                "Glean must record a value",
-                CrashMetrics.crashCount[GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY].testHasValue()
-            )
             assertEquals(
                 "Glean must record correct value",
                 1,
-                CrashMetrics.crashCount[GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY].testGetValue() - initialValue
+                CrashMetrics.crashCount[GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY].testGetValue()!! - initialValue
             )
         }
     }
@@ -209,7 +193,7 @@ class GleanCrashReporterServiceTest {
         // tests or even between test classes, so we compensate by capturing the initial value
         // to compare to.
         val initialValue = try {
-            CrashMetrics.crashCount[GleanCrashReporterService.CAUGHT_EXCEPTION_KEY].testGetValue()
+            CrashMetrics.crashCount[GleanCrashReporterService.CAUGHT_EXCEPTION_KEY].testGetValue()!!
         } catch (e: NullPointerException) {
             0
         }
@@ -234,14 +218,10 @@ class GleanCrashReporterServiceTest {
         run {
             GleanCrashReporterService(context)
 
-            assertTrue(
-                "Glean must record a value",
-                CrashMetrics.crashCount[GleanCrashReporterService.CAUGHT_EXCEPTION_KEY].testHasValue()
-            )
             assertEquals(
                 "Glean must record correct value",
                 1,
-                CrashMetrics.crashCount[GleanCrashReporterService.CAUGHT_EXCEPTION_KEY].testGetValue() - initialValue
+                CrashMetrics.crashCount[GleanCrashReporterService.CAUGHT_EXCEPTION_KEY].testGetValue()!! - initialValue
             )
         }
     }
@@ -249,24 +229,24 @@ class GleanCrashReporterServiceTest {
     @Test
     fun `GleanCrashReporterService correctly handles multiple crashes in a single file`() {
         val initialExceptionValue = try {
-            CrashMetrics.crashCount[GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY].testGetValue()
+            CrashMetrics.crashCount[GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY].testGetValue()!!
         } catch (e: NullPointerException) {
             0
         }
         val initialMainProcessNativeCrashValue = try {
-            CrashMetrics.crashCount[GleanCrashReporterService.MAIN_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()
+            CrashMetrics.crashCount[GleanCrashReporterService.MAIN_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()!!
         } catch (e: NullPointerException) {
             0
         }
 
         val initialForegroundChildProcessNativeCrashValue = try {
-            CrashMetrics.crashCount[GleanCrashReporterService.FOREGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()
+            CrashMetrics.crashCount[GleanCrashReporterService.FOREGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()!!
         } catch (e: NullPointerException) {
             0
         }
 
         val initialBackgroundChildProcessNativeCrashValue = try {
-            CrashMetrics.crashCount[GleanCrashReporterService.BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()
+            CrashMetrics.crashCount[GleanCrashReporterService.BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()!!
         } catch (e: NullPointerException) {
             0
         }
@@ -320,29 +300,25 @@ class GleanCrashReporterServiceTest {
         run {
             GleanCrashReporterService(context)
 
-            assertTrue(
-                "Glean must record a value",
-                CrashMetrics.crashCount[GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY].testHasValue()
-            )
             assertEquals(
                 "Glean must record correct value",
                 2,
-                CrashMetrics.crashCount[GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY].testGetValue() - initialExceptionValue
+                CrashMetrics.crashCount[GleanCrashReporterService.UNCAUGHT_EXCEPTION_KEY].testGetValue()!! - initialExceptionValue
             )
             assertEquals(
                 "Glean must record correct value",
                 1,
-                CrashMetrics.crashCount[GleanCrashReporterService.MAIN_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue() - initialMainProcessNativeCrashValue
+                CrashMetrics.crashCount[GleanCrashReporterService.MAIN_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()!! - initialMainProcessNativeCrashValue
             )
             assertEquals(
                 "Glean must record correct value",
                 1,
-                CrashMetrics.crashCount[GleanCrashReporterService.FOREGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue() - initialForegroundChildProcessNativeCrashValue
+                CrashMetrics.crashCount[GleanCrashReporterService.FOREGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()!! - initialForegroundChildProcessNativeCrashValue
             )
             assertEquals(
                 "Glean must record correct value",
                 1,
-                CrashMetrics.crashCount[GleanCrashReporterService.BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue() - initialBackgroundChildProcessNativeCrashValue
+                CrashMetrics.crashCount[GleanCrashReporterService.BACKGROUND_CHILD_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()!! - initialBackgroundChildProcessNativeCrashValue
             )
         }
     }
@@ -369,7 +345,7 @@ class GleanCrashReporterServiceTest {
         // tests or even between test classes, so we compensate by capturing the initial value
         // to compare to.
         val initialValue = try {
-            CrashMetrics.crashCount[GleanCrashReporterService.MAIN_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()
+            CrashMetrics.crashCount[GleanCrashReporterService.MAIN_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()!!
         } catch (e: NullPointerException) {
             0
         }
@@ -398,14 +374,10 @@ class GleanCrashReporterServiceTest {
         run {
             GleanCrashReporterService(context)
 
-            assertTrue(
-                "Glean must record a value",
-                CrashMetrics.crashCount[GleanCrashReporterService.MAIN_PROCESS_NATIVE_CODE_CRASH_KEY].testHasValue()
-            )
             assertEquals(
                 "Glean must record correct value",
                 1,
-                CrashMetrics.crashCount[GleanCrashReporterService.MAIN_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue() - initialValue
+                CrashMetrics.crashCount[GleanCrashReporterService.MAIN_PROCESS_NATIVE_CODE_CRASH_KEY].testGetValue()!! - initialValue
             )
         }
     }

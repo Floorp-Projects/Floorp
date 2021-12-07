@@ -23,6 +23,17 @@ permalink: /changelog/
 * **feature-prompts**:
   * Added optional `addressPickerView` and `onManageAddresses` parameters through `AddressDelegate` to `PromptFeature` for a new `AddressPicker` to display a view for selecting addresses to autofill into a site. [#12061](https://github.com/mozilla-mobile/android-components/issues/12061)
 
+* **service-glean**
+  * 🆙 Updated Glean to version 50.0.1 ([changelog](https://github.com/mozilla/glean/releases/tag/v50.0.1))
+    * **This is a breaking change**. See <https://github.com/mozilla/glean/releases/tag/v50.0.0>) for full details.
+      Notable breakage:
+      * `testGetValue` on all metric types now returns `null` when no data is recorded instead of throwing an exception.
+      * `testGetValue` on metrics with more complex data now return new objects for inspection.
+      * `testHasValue` on all metric types is deprecated.
+      * On `TimingDistributionMetric`, `CustomDistributionMetric`, `MemoryDistributionMetric` the `accumulateSamples` method now takes a `List<Long>` instead of `LongArray`.
+        Use `listOf` instead of `longArrayOf` or call `.toList`
+      * `TimingDistributionMetricType.start` now always returns a valid `TimerId`, `TimingDistributionMetricType.stopAndAccumulate` always requires a `TimerId`.
+
 # 102.0.0
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v101.0.0...v102.0.1)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/149?closed=1)

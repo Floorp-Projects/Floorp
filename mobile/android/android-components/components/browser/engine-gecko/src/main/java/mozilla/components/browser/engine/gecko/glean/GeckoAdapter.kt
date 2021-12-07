@@ -32,7 +32,7 @@ class GeckoAdapter : RuntimeTelemetry.Delegate {
                 metric.value.forEach { labelIndex -> categorical[labelIndex.toInt()].add(1) }
             }
         } else {
-            GleanGeckoMetricsMapping.getHistogram(metric.name)?.accumulateSamples(metric.value)
+            GleanGeckoMetricsMapping.getHistogram(metric.name)?.accumulateSamples(metric.value.toList())
         }
     }
 

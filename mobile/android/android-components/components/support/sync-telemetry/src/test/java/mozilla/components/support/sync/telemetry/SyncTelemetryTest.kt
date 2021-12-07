@@ -28,6 +28,7 @@ import mozilla.components.support.test.robolectric.testContext
 import org.json.JSONException
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
@@ -126,22 +127,22 @@ class SyncTelemetryTest {
                 0 -> {
                     HistorySync.apply {
                         assertEquals("abc123", uid.testGetValue())
-                        assertEquals(now, startedAt.testGetValue().asSeconds())
-                        assertEquals(now + 5, finishedAt.testGetValue().asSeconds())
+                        assertEquals(now, startedAt.testGetValue()!!.asSeconds())
+                        assertEquals(now + 5, finishedAt.testGetValue()!!.asSeconds())
                         assertEquals(5, incoming["applied"].testGetValue())
                         assertEquals(7, incoming["failed_to_apply"].testGetValue())
                         assertEquals(2, incoming["reconciled"].testGetValue())
                         assertEquals(14, outgoing["uploaded"].testGetValue())
                         assertEquals(7, outgoing["failed_to_upload"].testGetValue())
                         assertEquals(2, outgoingBatches.testGetValue())
-                        assertFalse(Sync.syncUuid.testHasValue("history-sync"))
+                        assertNull(Sync.syncUuid.testGetValue("history-sync"))
                     }
                 }
                 1 -> {
                     HistorySync.apply {
                         assertEquals("abc123", uid.testGetValue())
-                        assertEquals(now + 10, startedAt.testGetValue().asSeconds())
-                        assertEquals(now + 15, finishedAt.testGetValue().asSeconds())
+                        assertEquals(now + 10, startedAt.testGetValue()!!.asSeconds())
+                        assertEquals(now + 15, finishedAt.testGetValue()!!.asSeconds())
                         assertTrue(
                             listOf(
                                 incoming["applied"],
@@ -150,9 +151,9 @@ class SyncTelemetryTest {
                                 outgoing["uploaded"],
                                 outgoing["failed_to_upload"],
                                 outgoingBatches
-                            ).none { it.testHasValue() }
+                            ).none { it.testGetValue() != null }
                         )
-                        assertFalse(Sync.syncUuid.testHasValue("history-sync"))
+                        assertNull(Sync.syncUuid.testGetValue("history-sync"))
                     }
                 }
                 else -> fail()
@@ -272,38 +273,38 @@ class SyncTelemetryTest {
                             "other",
                             "unexpected",
                             "auth"
-                        ).none { HistorySync.failureReason[it].testHasValue() }
+                        ).none { HistorySync.failureReason[it].testGetValue() != null }
                     )
                 }
                 1 -> HistorySync.apply {
                     assertEquals("Synergies not aligned", failureReason["other"].testGetValue())
-                    assertFalse(failureReason["unexpected"].testHasValue())
-                    assertFalse(failureReason["auth"].testHasValue())
-                    assertFalse(Sync.syncUuid.testHasValue("history-sync"))
+                    assertNull(failureReason["unexpected"].testGetValue())
+                    assertNull(failureReason["auth"].testGetValue())
+                    assertNull(Sync.syncUuid.testGetValue("history-sync"))
                 }
                 2 -> HistorySync.apply {
                     assertEquals("Unexpected error: 418", failureReason["unexpected"].testGetValue())
-                    assertFalse(failureReason["other"].testHasValue())
-                    assertFalse(failureReason["auth"].testHasValue())
-                    assertFalse(Sync.syncUuid.testHasValue("history-sync"))
+                    assertNull(failureReason["other"].testGetValue())
+                    assertNull(failureReason["auth"].testGetValue())
+                    assertNull(Sync.syncUuid.testGetValue("history-sync"))
                 }
                 3 -> HistorySync.apply {
                     assertEquals("Splines not reticulated", failureReason["auth"].testGetValue())
-                    assertFalse(failureReason["other"].testHasValue())
-                    assertFalse(failureReason["unexpected"].testHasValue())
-                    assertFalse(Sync.syncUuid.testHasValue("history-sync"))
+                    assertNull(failureReason["other"].testGetValue())
+                    assertNull(failureReason["unexpected"].testGetValue())
+                    assertNull(Sync.syncUuid.testGetValue("history-sync"))
                 }
                 4 -> HistorySync.apply {
                     assertEquals("Kaboom!", failureReason["unexpected"].testGetValue())
-                    assertFalse(failureReason["other"].testHasValue())
-                    assertFalse(failureReason["auth"].testHasValue())
-                    assertFalse(Sync.syncUuid.testHasValue("history-sync"))
+                    assertNull(failureReason["other"].testGetValue())
+                    assertNull(failureReason["auth"].testGetValue())
+                    assertNull(Sync.syncUuid.testGetValue("history-sync"))
                 }
                 5 -> HistorySync.apply {
                     assertEquals("Qualia unsynchronized", failureReason["other"].testGetValue())
-                    assertFalse(failureReason["unexpected"].testHasValue())
-                    assertFalse(failureReason["auth"].testHasValue())
-                    assertFalse(Sync.syncUuid.testHasValue("history-sync"))
+                    assertNull(failureReason["unexpected"].testGetValue())
+                    assertNull(failureReason["auth"].testGetValue())
+                    assertNull(Sync.syncUuid.testGetValue("history-sync"))
                 }
                 else -> fail()
             }
@@ -337,9 +338,9 @@ class SyncTelemetryTest {
             when (pingCount) {
                 0 -> HistorySync.apply {
                     assertEquals("Synergies not aligned", failureReason["other"].testGetValue())
-                    assertFalse(failureReason["unexpected"].testHasValue())
-                    assertFalse(failureReason["auth"].testHasValue())
-                    assertFalse(Sync.syncUuid.testHasValue("history-sync"))
+                    assertNull(failureReason["unexpected"].testGetValue())
+                    assertNull(failureReason["auth"].testGetValue())
+                    assertNull(Sync.syncUuid.testGetValue("history-sync"))
                 }
                 else -> fail()
             }
@@ -428,22 +429,22 @@ class SyncTelemetryTest {
                 0 -> {
                     LoginsSync.apply {
                         assertEquals("abc123", uid.testGetValue())
-                        assertEquals(now, startedAt.testGetValue().asSeconds())
-                        assertEquals(now + 5, finishedAt.testGetValue().asSeconds())
+                        assertEquals(now, startedAt.testGetValue()!!.asSeconds())
+                        assertEquals(now + 5, finishedAt.testGetValue()!!.asSeconds())
                         assertEquals(5, incoming["applied"].testGetValue())
                         assertEquals(7, incoming["failed_to_apply"].testGetValue())
                         assertEquals(2, incoming["reconciled"].testGetValue())
                         assertEquals(14, outgoing["uploaded"].testGetValue())
                         assertEquals(7, outgoing["failed_to_upload"].testGetValue())
                         assertEquals(2, outgoingBatches.testGetValue())
-                        assertFalse(Sync.syncUuid.testHasValue("logins-sync"))
+                        assertNull(Sync.syncUuid.testGetValue("logins-sync"))
                     }
                 }
                 1 -> {
                     LoginsSync.apply {
                         assertEquals("abc123", uid.testGetValue())
-                        assertEquals(now + 10, startedAt.testGetValue().asSeconds())
-                        assertEquals(now + 15, finishedAt.testGetValue().asSeconds())
+                        assertEquals(now + 10, startedAt.testGetValue()!!.asSeconds())
+                        assertEquals(now + 15, finishedAt.testGetValue()!!.asSeconds())
                         assertTrue(
                             listOf(
                                 incoming["applied"],
@@ -452,9 +453,9 @@ class SyncTelemetryTest {
                                 outgoing["uploaded"],
                                 outgoing["failed_to_upload"],
                                 outgoingBatches
-                            ).none { it.testHasValue() }
+                            ).none { it.testGetValue() != null }
                         )
-                        assertFalse(Sync.syncUuid.testHasValue("logins-sync"))
+                        assertNull(Sync.syncUuid.testGetValue("logins-sync"))
                     }
                 }
                 else -> fail()
@@ -574,38 +575,38 @@ class SyncTelemetryTest {
                             "other",
                             "unexpected",
                             "auth"
-                        ).none { LoginsSync.failureReason[it].testHasValue() }
+                        ).none { LoginsSync.failureReason[it].testGetValue() != null }
                     )
                 }
                 1 -> LoginsSync.apply {
                     assertEquals("Synergies not aligned", failureReason["other"].testGetValue())
-                    assertFalse(failureReason["unexpected"].testHasValue())
-                    assertFalse(failureReason["auth"].testHasValue())
-                    assertFalse(Sync.syncUuid.testHasValue("logins-sync"))
+                    assertNull(failureReason["unexpected"].testGetValue())
+                    assertNull(failureReason["auth"].testGetValue())
+                    assertNull(Sync.syncUuid.testGetValue("logins-sync"))
                 }
                 2 -> LoginsSync.apply {
                     assertEquals("Unexpected error: 418", failureReason["unexpected"].testGetValue())
-                    assertFalse(failureReason["other"].testHasValue())
-                    assertFalse(failureReason["auth"].testHasValue())
-                    assertFalse(Sync.syncUuid.testHasValue("logins-sync"))
+                    assertNull(failureReason["other"].testGetValue())
+                    assertNull(failureReason["auth"].testGetValue())
+                    assertNull(Sync.syncUuid.testGetValue("logins-sync"))
                 }
                 3 -> LoginsSync.apply {
                     assertEquals("Splines not reticulated", failureReason["auth"].testGetValue())
-                    assertFalse(failureReason["other"].testHasValue())
-                    assertFalse(failureReason["unexpected"].testHasValue())
-                    assertFalse(Sync.syncUuid.testHasValue("logins-sync"))
+                    assertNull(failureReason["other"].testGetValue())
+                    assertNull(failureReason["unexpected"].testGetValue())
+                    assertNull(Sync.syncUuid.testGetValue("logins-sync"))
                 }
                 4 -> LoginsSync.apply {
                     assertEquals("Kaboom!", failureReason["unexpected"].testGetValue())
-                    assertFalse(failureReason["other"].testHasValue())
-                    assertFalse(failureReason["auth"].testHasValue())
-                    assertFalse(Sync.syncUuid.testHasValue("logins-sync"))
+                    assertNull(failureReason["other"].testGetValue())
+                    assertNull(failureReason["auth"].testGetValue())
+                    assertNull(Sync.syncUuid.testGetValue("logins-sync"))
                 }
                 5 -> LoginsSync.apply {
                     assertEquals("Qualia unsynchronized", failureReason["other"].testGetValue())
-                    assertFalse(failureReason["unexpected"].testHasValue())
-                    assertFalse(failureReason["auth"].testHasValue())
-                    assertFalse(Sync.syncUuid.testHasValue("logins-sync"))
+                    assertNull(failureReason["unexpected"].testGetValue())
+                    assertNull(failureReason["auth"].testGetValue())
+                    assertNull(Sync.syncUuid.testGetValue("logins-sync"))
                 }
                 else -> fail()
             }
@@ -639,9 +640,9 @@ class SyncTelemetryTest {
             when (pingCount) {
                 0 -> LoginsSync.apply {
                     assertEquals("Synergies not aligned", failureReason["other"].testGetValue())
-                    assertFalse(failureReason["unexpected"].testHasValue())
-                    assertFalse(failureReason["auth"].testHasValue())
-                    assertFalse(Sync.syncUuid.testHasValue("logins-sync"))
+                    assertNull(failureReason["unexpected"].testGetValue())
+                    assertNull(failureReason["auth"].testGetValue())
+                    assertNull(Sync.syncUuid.testGetValue("logins-sync"))
                 }
                 else -> fail()
             }
@@ -704,15 +705,15 @@ class SyncTelemetryTest {
                 0 -> {
                     BookmarksSync.apply {
                         assertEquals("xyz789", uid.testGetValue())
-                        assertEquals(now + 25, startedAt.testGetValue().asSeconds())
-                        assertEquals(now + 31, finishedAt.testGetValue().asSeconds())
-                        assertFalse(incoming["applied"].testHasValue())
-                        assertFalse(incoming["failed_to_apply"].testHasValue())
-                        assertFalse(incoming["reconciled"].testHasValue())
+                        assertEquals(now + 25, startedAt.testGetValue()!!.asSeconds())
+                        assertEquals(now + 31, finishedAt.testGetValue()!!.asSeconds())
+                        assertNull(incoming["applied"].testGetValue())
+                        assertNull(incoming["failed_to_apply"].testGetValue())
+                        assertNull(incoming["reconciled"].testGetValue())
                         assertEquals(10, outgoing["uploaded"].testGetValue())
                         assertEquals(5, outgoing["failed_to_upload"].testGetValue())
                         assertEquals(1, outgoingBatches.testGetValue())
-                        assertFalse(Sync.syncUuid.testHasValue("bookmarks-sync"))
+                        assertNull(Sync.syncUuid.testGetValue("bookmarks-sync"))
                     }
                 }
                 else -> fail()
@@ -821,38 +822,38 @@ class SyncTelemetryTest {
                             "other",
                             "unexpected",
                             "auth"
-                        ).none { BookmarksSync.failureReason[it].testHasValue() }
+                        ).none { BookmarksSync.failureReason[it].testGetValue() != null }
                     )
                 }
                 1 -> BookmarksSync.apply {
                     assertEquals("Synergies not aligned", failureReason["other"].testGetValue())
-                    assertFalse(failureReason["unexpected"].testHasValue())
-                    assertFalse(failureReason["auth"].testHasValue())
-                    assertFalse(Sync.syncUuid.testHasValue("bookmarks-sync"))
+                    assertNull(failureReason["unexpected"].testGetValue())
+                    assertNull(failureReason["auth"].testGetValue())
+                    assertNull(Sync.syncUuid.testGetValue("bookmarks-sync"))
                 }
                 2 -> BookmarksSync.apply {
                     assertEquals("Unexpected error: 418", failureReason["unexpected"].testGetValue())
-                    assertFalse(failureReason["other"].testHasValue())
-                    assertFalse(failureReason["auth"].testHasValue())
-                    assertFalse(Sync.syncUuid.testHasValue("bookmarks-sync"))
+                    assertNull(failureReason["other"].testGetValue())
+                    assertNull(failureReason["auth"].testGetValue())
+                    assertNull(Sync.syncUuid.testGetValue("bookmarks-sync"))
                 }
                 3 -> BookmarksSync.apply {
                     assertEquals("Splines not reticulated", failureReason["auth"].testGetValue())
-                    assertFalse(failureReason["other"].testHasValue())
-                    assertFalse(failureReason["unexpected"].testHasValue())
-                    assertFalse(Sync.syncUuid.testHasValue("bookmarks-sync"))
+                    assertNull(failureReason["other"].testGetValue())
+                    assertNull(failureReason["unexpected"].testGetValue())
+                    assertNull(Sync.syncUuid.testGetValue("bookmarks-sync"))
                 }
                 4 -> BookmarksSync.apply {
                     assertEquals("Kaboom!", failureReason["unexpected"].testGetValue())
-                    assertFalse(failureReason["other"].testHasValue())
-                    assertFalse(failureReason["auth"].testHasValue())
-                    assertFalse(Sync.syncUuid.testHasValue("bookmarks-sync"))
+                    assertNull(failureReason["other"].testGetValue())
+                    assertNull(failureReason["auth"].testGetValue())
+                    assertNull(Sync.syncUuid.testGetValue("bookmarks-sync"))
                 }
                 5 -> BookmarksSync.apply {
                     assertEquals("Qualia unsynchronized", failureReason["other"].testGetValue())
-                    assertFalse(failureReason["unexpected"].testHasValue())
-                    assertFalse(failureReason["auth"].testHasValue())
-                    assertFalse(Sync.syncUuid.testHasValue("bookmarks-sync"))
+                    assertNull(failureReason["unexpected"].testGetValue())
+                    assertNull(failureReason["auth"].testGetValue())
+                    assertNull(Sync.syncUuid.testGetValue("bookmarks-sync"))
                 }
                 else -> fail()
             }
@@ -886,9 +887,9 @@ class SyncTelemetryTest {
             when (pingCount) {
                 0 -> BookmarksSync.apply {
                     assertEquals("Synergies not aligned", failureReason["other"].testGetValue())
-                    assertFalse(failureReason["unexpected"].testHasValue())
-                    assertFalse(failureReason["auth"].testHasValue())
-                    assertFalse(Sync.syncUuid.testHasValue("bookmarks-sync"))
+                    assertNull(failureReason["unexpected"].testGetValue())
+                    assertNull(failureReason["auth"].testGetValue())
+                    assertNull(Sync.syncUuid.testGetValue("bookmarks-sync"))
                 }
                 else -> fail()
             }
@@ -1021,7 +1022,7 @@ class SyncTelemetryTest {
 
         fun setOrAssertGlobalSyncUuid(currentPingIndex: Int, pingName: String) {
             if (globalSyncUuids.elementAtOrNull(currentPingIndex) == null) {
-                globalSyncUuids.add(Sync.syncUuid.testGetValue(pingName))
+                globalSyncUuids.add(Sync.syncUuid.testGetValue(pingName)!!)
             } else {
                 assertEquals(globalSyncUuids[currentPingIndex], Sync.syncUuid.testGetValue(pingName))
             }
@@ -1039,7 +1040,6 @@ class SyncTelemetryTest {
             syncTelemetry,
             submitGlobalPing = {
                 assertNotNull(globalSyncUuids.elementAtOrNull(globalPingCount))
-                assertTrue(Sync.syncUuid.testHasValue("sync"))
                 assertEquals(globalSyncUuids[globalPingCount], Sync.syncUuid.testGetValue("sync"))
 
                 // Assertions above already assert syncUuid; below, let's make sure that 'failureReason' is processed.
@@ -1048,10 +1048,10 @@ class SyncTelemetryTest {
                         assertEquals("Synergies not aligned", Sync.failureReason["other"].testGetValue())
                     }
                     1 -> {
-                        assertFalse(Sync.failureReason["other"].testHasValue())
+                        assertNull(Sync.failureReason["other"].testGetValue())
                     }
                     2 -> {
-                        assertFalse(Sync.failureReason["other"].testHasValue())
+                        assertNull(Sync.failureReason["other"].testGetValue())
                     }
                     else -> fail()
                 }
@@ -1066,8 +1066,8 @@ class SyncTelemetryTest {
                         setOrIncrementPingCount(currentPingIndex, "history")
                         HistorySync.apply {
                             assertEquals("abc123", uid.testGetValue())
-                            assertEquals(now, startedAt.testGetValue().asSeconds())
-                            assertEquals(now + 5, finishedAt.testGetValue().asSeconds())
+                            assertEquals(now, startedAt.testGetValue()!!.asSeconds())
+                            assertEquals(now + 5, finishedAt.testGetValue()!!.asSeconds())
                             assertEquals(5, incoming["applied"].testGetValue())
                             assertEquals(7, incoming["failed_to_apply"].testGetValue())
                             assertEquals(2, incoming["reconciled"].testGetValue())
@@ -1082,8 +1082,8 @@ class SyncTelemetryTest {
                         setOrIncrementPingCount(currentPingIndex, "history")
                         HistorySync.apply {
                             assertEquals("abc123", uid.testGetValue())
-                            assertEquals(now + 10, startedAt.testGetValue().asSeconds())
-                            assertEquals(now + 15, finishedAt.testGetValue().asSeconds())
+                            assertEquals(now + 10, startedAt.testGetValue()!!.asSeconds())
+                            assertEquals(now + 15, finishedAt.testGetValue()!!.asSeconds())
                             assertTrue(
                                 listOf(
                                     incoming["applied"],
@@ -1092,7 +1092,7 @@ class SyncTelemetryTest {
                                     outgoing["uploaded"],
                                     outgoing["failed_to_upload"],
                                     outgoingBatches
-                                ).none { it.testHasValue() }
+                                ).none { it.testGetValue() != null }
                             )
                         }
                         Pings.historySync.submit()
@@ -1107,8 +1107,8 @@ class SyncTelemetryTest {
                         setOrIncrementPingCount(currentPingIndex, "passwords")
                         LoginsSync.apply {
                             assertEquals("abc123", uid.testGetValue())
-                            assertEquals(now, startedAt.testGetValue().asSeconds())
-                            assertEquals(now + 5, finishedAt.testGetValue().asSeconds())
+                            assertEquals(now, startedAt.testGetValue()!!.asSeconds())
+                            assertEquals(now + 5, finishedAt.testGetValue()!!.asSeconds())
                             assertEquals(5, incoming["applied"].testGetValue())
                             assertEquals(7, incoming["failed_to_apply"].testGetValue())
                             assertEquals(2, incoming["reconciled"].testGetValue())
@@ -1128,11 +1128,11 @@ class SyncTelemetryTest {
                         setOrIncrementPingCount(currentPingIndex, "bookmarks")
                         BookmarksSync.apply {
                             assertEquals("abc123", uid.testGetValue())
-                            assertEquals(now + 25, startedAt.testGetValue().asSeconds())
-                            assertEquals(now + 31, finishedAt.testGetValue().asSeconds())
-                            assertFalse(incoming["applied"].testHasValue())
-                            assertFalse(incoming["failed_to_apply"].testHasValue())
-                            assertFalse(incoming["reconciled"].testHasValue())
+                            assertEquals(now + 25, startedAt.testGetValue()!!.asSeconds())
+                            assertEquals(now + 31, finishedAt.testGetValue()!!.asSeconds())
+                            assertNull(incoming["applied"].testGetValue())
+                            assertNull(incoming["failed_to_apply"].testGetValue())
+                            assertNull(incoming["reconciled"].testGetValue())
                             assertEquals(10, outgoing["uploaded"].testGetValue())
                             assertEquals(5, outgoing["failed_to_upload"].testGetValue())
                             assertEquals(1, outgoingBatches.testGetValue())
@@ -1165,13 +1165,12 @@ class SyncTelemetryTest {
             }
         """
         SyncTelemetry.processFxaTelemetry(json)
-        assertTrue(FxaTab.sent.testHasValue())
-        val events = FxaTab.sent.testGetValue()
+        val events = FxaTab.sent.testGetValue()!!
         assertEquals(1, events.size)
         assertEquals("test-flow-id", events.elementAt(0).extra!!["flow_id"])
         assertEquals("test-stream-id", events.elementAt(0).extra!!["stream_id"])
 
-        assertFalse(FxaTab.received.testHasValue())
+        assertNull(FxaTab.received.testGetValue())
     }
 
     @Test
@@ -1186,14 +1185,13 @@ class SyncTelemetryTest {
             }
         """
         SyncTelemetry.processFxaTelemetry(json)
-        assertTrue(FxaTab.received.testHasValue())
-        val events = FxaTab.received.testGetValue()
+        val events = FxaTab.received.testGetValue()!!
         assertEquals(1, events.size)
         assertEquals("test-flow-id", events.elementAt(0).extra!!["flow_id"])
         assertEquals("test-stream-id", events.elementAt(0).extra!!["stream_id"])
         assertEquals("test-reason", events.elementAt(0).extra!!["reason"])
 
-        assertFalse(FxaTab.sent.testHasValue())
+        assertNull(FxaTab.sent.testGetValue())
     }
 
     @Test
@@ -1216,8 +1214,8 @@ class SyncTelemetryTest {
         verify(crashReporter, times(2)).submitCaughtException(any<JSONException>())
         // completely invalid json
         SyncTelemetry.processFxaTelemetry(""" foo bar """, crashReporter)
-        assertFalse(FxaTab.sent.testHasValue())
-        assertFalse(FxaTab.received.testHasValue())
+        assertNull(FxaTab.sent.testGetValue())
+        assertNull(FxaTab.received.testGetValue())
         // One more exception, making it the 3rd time
         verify(crashReporter, times(3)).submitCaughtException(any<JSONException>())
     }
