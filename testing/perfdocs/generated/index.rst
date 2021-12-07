@@ -2,6 +2,18 @@
 Performance Testing
 ###################
 
+.. toctree::
+  :maxdepth: 2
+  :hidden:
+  :glob:
+
+  DAMP
+  awsy
+  fxrecord
+  mozperftest
+  raptor
+  talos
+
 Performance tests are designed to catch performance regressions before they reach our
 end users. At this time, there is no unified approach for these types of tests,
 but `mozperftest </testing/perfdocs/mozperftest.html>`_ aims to provide this in the future.
