@@ -1002,7 +1002,7 @@ void AudioInputTrack::SetInputProcessing(
           mProcessing(std::move(aProcessing)) {}
     void Run() override {
       TRACE("AudioInputTrack::SetInputProcessingImpl");
-      mTrack->SetInputProcessingImpl(std::move(mProcessing));
+      mTrack->SetInputProcessingImpl(mProcessing);
     }
   };
 
