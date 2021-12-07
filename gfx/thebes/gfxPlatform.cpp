@@ -2486,7 +2486,8 @@ void gfxPlatform::InitCompositorAccelerationPrefs() {
                          "Acceleration blocked by platform")) {
     if (StaticPrefs::
             layers_acceleration_disabled_AtStartup_DoNotUseDirectly()) {
-      feature.UserDisable("Disabled by pref", "FEATURE_FAILURE_COMP_PREF"_ns);
+      feature.UserDisable("Disabled by layers.acceleration.disabled=true",
+                          "FEATURE_FAILURE_COMP_PREF"_ns);
     } else if (acceleratedEnv && *acceleratedEnv == '0') {
       feature.UserDisable("Disabled by envvar", "FEATURE_FAILURE_COMP_ENV"_ns);
     }
