@@ -8,6 +8,7 @@
 #define mozilla_dom_workers_WorkerDebugger_h
 
 #include "mozilla/PerformanceTypes.h"
+#include "mozilla/dom/WorkerScope.h"
 #include "nsCOMPtr.h"
 #include "nsIWorkerDebugger.h"
 
@@ -24,7 +25,7 @@ class WorkerDebugger : public nsIWorkerDebugger {
   class ReportDebuggerErrorRunnable;
   class PostDebuggerMessageRunnable;
 
-  WorkerPrivate* mWorkerPrivate;
+  CheckedUnsafePtr<WorkerPrivate> mWorkerPrivate;
   bool mIsInitialized;
   nsTArray<nsCOMPtr<nsIWorkerDebuggerListener>> mListeners;
 
