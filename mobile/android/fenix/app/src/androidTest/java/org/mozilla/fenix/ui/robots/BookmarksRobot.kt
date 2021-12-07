@@ -369,6 +369,7 @@ private fun assertBookmarkIsDeleted(expectedTitle: String) {
     assertFalse(
         mDevice.findObject(
             UiSelector()
+                .resourceId("$packageName:id/title")
                 .textContains(expectedTitle)
         ).waitForExists(waitingTime)
     )

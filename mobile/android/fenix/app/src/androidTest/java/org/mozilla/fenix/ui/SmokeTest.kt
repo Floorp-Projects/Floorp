@@ -950,6 +950,18 @@ class SmokeTest {
             selectFolder("My Folder")
             navigateUp()
             saveEditBookmark()
+            createFolder("My Folder 2")
+            bookmarksListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list), 1)
+            IdlingRegistry.getInstance().register(bookmarksListIdlingResource!!)
+            verifyFolderTitle("My Folder 2")
+            IdlingRegistry.getInstance().unregister(bookmarksListIdlingResource!!)
+        }.openThreeDotMenu("My Folder 2") {
+        }.clickEdit {
+            clickParentFolderSelector()
+            selectFolder("My Folder")
+            navigateUp()
+            saveEditBookmark()
         }.openThreeDotMenu("My Folder") {
         }.clickDelete {
             cancelFolderDeletion()
@@ -958,12 +970,15 @@ class SmokeTest {
         }.clickDelete {
             confirmDeletion()
             verifyDeleteSnackBarText()
+            verifyBookmarkIsDeleted("My Folder")
+            verifyBookmarkIsDeleted("My Folder 2")
+            verifyBookmarkIsDeleted("Test_Page_1")
             navigateUp()
         }
 
         browserScreen {
         }.openThreeDotMenu {
-            verifyBookmarksButton()
+            verifyAddBookmarkButton()
         }
     }
 

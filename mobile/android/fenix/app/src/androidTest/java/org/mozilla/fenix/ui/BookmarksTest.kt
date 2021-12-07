@@ -627,4 +627,30 @@ class BookmarksTest {
             verifyBookmarkIsDeleted("Test_Page_1")
         }
     }
+
+    @SmokeTest
+    @Test
+    fun undoDeleteBookmarkFolderTest() {
+
+        browserScreen {
+        }.openThreeDotMenu {
+        }.openBookmarks {
+            bookmarksListIdlingResource =
+                RecyclerViewIdlingResource(activityTestRule.activity.findViewById(R.id.bookmark_list), 1)
+            IdlingRegistry.getInstance().register(bookmarksListIdlingResource!!)
+            createFolder("My Folder")
+            verifyFolderTitle("My Folder")
+            IdlingRegistry.getInstance().unregister(bookmarksListIdlingResource!!)
+        }.openThreeDotMenu("My Folder") {
+        }.clickDelete {
+            cancelFolderDeletion()
+            verifyFolderTitle("My Folder")
+        }.openThreeDotMenu("My Folder") {
+        }.clickDelete {
+            confirmDeletion()
+            verifyDeleteSnackBarText()
+            clickUndoDeleteButton()
+            verifyFolderTitle("My Folder")
+        }
+    }
 }
