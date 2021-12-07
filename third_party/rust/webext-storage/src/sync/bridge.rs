@@ -52,7 +52,7 @@ impl<'a> sync15_traits::BridgedEngine for BridgedEngine<'a> {
     }
 
     fn sync_id(&self) -> Result<Option<String>> {
-        Ok(get_meta(self.db, SYNC_ID_META_KEY)?)
+        get_meta(self.db, SYNC_ID_META_KEY)
     }
 
     fn reset_sync_id(&self) -> Result<String> {
@@ -80,7 +80,7 @@ impl<'a> sync15_traits::BridgedEngine for BridgedEngine<'a> {
     }
 
     fn sync_started(&self) -> Result<()> {
-        schema::create_empty_sync_temp_tables(&self.db)?;
+        schema::create_empty_sync_temp_tables(self.db)?;
         Ok(())
     }
 
@@ -112,7 +112,7 @@ impl<'a> sync15_traits::BridgedEngine for BridgedEngine<'a> {
         stage_outgoing(&tx)?;
         tx.commit()?;
 
-        let outgoing = get_outgoing(&self.db, &signal)?
+        let outgoing = get_outgoing(self.db, &signal)?
             .into_iter()
             .map(OutgoingEnvelope::from)
             .collect::<Vec<_>>();
@@ -129,7 +129,7 @@ impl<'a> sync15_traits::BridgedEngine for BridgedEngine<'a> {
     }
 
     fn sync_finished(&self) -> Result<()> {
-        schema::create_empty_sync_temp_tables(&self.db)?;
+        schema::create_empty_sync_temp_tables(self.db)?;
         Ok(())
     }
 

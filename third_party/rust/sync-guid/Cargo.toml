@@ -6,7 +6,7 @@ license = "MPL-2.0"
 edition = "2018"
 
 [dependencies]
-rusqlite = { version = "0.24.1", optional = true }
+rusqlite = { version = "0.24.2", optional = true, features = ["bundled"] }
 serde = { version = "1", optional = true }
 rand = { version = "0.7", optional = true }
 base64 = { version = "0.12", optional = true }
