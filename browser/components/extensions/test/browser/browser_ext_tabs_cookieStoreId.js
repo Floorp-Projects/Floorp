@@ -273,3 +273,56 @@ add_task(async function tabs_query_cookiestoreid_nocookiepermission() {
   await extension.awaitMessage("done");
   await extension.unload();
 });
+
+add_task(async function tabs_query_multiple_cookiestoreId() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["cookies"],
+    },
+
+    async background() {
+      let tab1 = await browser.tabs.create({
+        cookieStoreId: "firefox-container-1",
+      });
+      browser.test.log(`Tab created for cookieStoreId:${tab1.cookieStoreId}`);
+
+      let tab2 = await browser.tabs.create({
+        cookieStoreId: "firefox-container-2",
+      });
+      browser.test.log(`Tab created for cookieStoreId:${tab2.cookieStoreId}`);
+
+      let tab3 = await browser.tabs.create({
+        cookieStoreId: "firefox-container-3",
+      });
+      browser.test.log(`Tab created for cookieStoreId:${tab3.cookieStoreId}`);
+
+      let tabs = await browser.tabs.query({
+        cookieStoreId: ["firefox-container-1", "firefox-container-2"],
+      });
+
+      browser.test.assertEq(
+        2,
+        tabs.length,
+        "Expecting tabs for firefox-container-1 and firefox-container-2"
+      );
+
+      browser.test.assertEq(
+        "firefox-container-1",
+        tabs[0].cookieStoreId,
+        "Expecting tab for firefox-container-1 cookieStoreId"
+      );
+
+      browser.test.assertEq(
+        "firefox-container-2",
+        tabs[1].cookieStoreId,
+        "Expecting tab forfirefox-container-2 cookieStoreId"
+      );
+
+      await browser.tabs.remove([tab1.id, tab2.id, tab3.id]);
+      browser.test.sendMessage("test-done");
+    },
+  });
+  await extension.startup();
+  await extension.awaitMessage("test-done");
+  await extension.unload();
+});
