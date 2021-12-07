@@ -15,8 +15,6 @@ import mozilla.components.concept.storage.Address
 import mozilla.components.concept.storage.CreditCard
 import mozilla.components.concept.storage.CreditCardNumber
 import mozilla.components.concept.storage.CreditCardsAddressesStorage
-import mozilla.components.concept.storage.KeyGenerationReason
-import mozilla.components.concept.storage.KeyRecoveryHandler
 import mozilla.components.concept.storage.NewCreditCardFields
 import mozilla.components.concept.storage.UpdatableAddressFields
 import mozilla.components.concept.storage.UpdatableCreditCardFields
@@ -40,7 +38,7 @@ const val AUTOFILL_DB_NAME = "autofill.sqlite"
 class AutofillCreditCardsAddressesStorage(
     context: Context,
     securePrefs: Lazy<SecureAbove22Preferences>
-) : CreditCardsAddressesStorage, KeyRecoveryHandler, SyncableStore, AutoCloseable {
+) : CreditCardsAddressesStorage, SyncableStore, AutoCloseable {
     private val logger = Logger("AutofillCCAddressesStorage")
 
     private val coroutineContext by lazy { Dispatchers.IO }
@@ -61,21 +59,10 @@ class AutofillCreditCardsAddressesStorage(
         Unit
     }
 
-    override fun recoverFromBadKey(reason: KeyGenerationReason.RecoveryNeeded) {
-        when (reason) {
-            // At this point, we need A-S API to recover: https://github.com/mozilla/application-services/issues/4015
-            is KeyGenerationReason.RecoveryNeeded.Lost -> logger.warn("CC key lost, new one generated")
-            is KeyGenerationReason.RecoveryNeeded.Corrupt -> logger.warn("CC key was corrupted, new one generated")
-            is KeyGenerationReason.RecoveryNeeded.AbnormalState -> logger.warn(
-                "CC key lost due to storage malfunction, new one generated"
-            )
-        }
-    }
-
     override suspend fun addCreditCard(
         creditCardFields: NewCreditCardFields
     ): CreditCard = withContext(coroutineContext) {
-        val key = crypto.key()
+        val key = crypto.getOrGenerateKey()
 
         // Assume our key is good, and that this operation shouldn't fail.
         val encryptedCardNumber = crypto.encrypt(key, creditCardFields.plaintextCardNumber)!!
@@ -98,7 +85,7 @@ class AutofillCreditCardsAddressesStorage(
         val updatableCreditCardFields = when (creditCardFields.cardNumber) {
             // If credit card number changed, we need to encrypt it.
             is CreditCardNumber.Plaintext -> {
-                val key = crypto.key()
+                val key = crypto.getOrGenerateKey()
                 // Assume our key is good, and that this operation shouldn't fail.
                 val encryptedCardNumber = crypto.encrypt(
                     key, creditCardFields.cardNumber as CreditCardNumber.Plaintext

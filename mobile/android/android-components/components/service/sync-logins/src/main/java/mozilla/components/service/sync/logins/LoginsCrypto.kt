@@ -15,7 +15,6 @@ import mozilla.appservices.logins.recordKeyRegenerationEvent
 import mozilla.components.concept.storage.EncryptedLogin
 import mozilla.components.concept.storage.KeyGenerationReason
 import mozilla.components.concept.storage.KeyProvider
-import mozilla.components.concept.storage.KeyRecoveryHandler
 import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.ManagedKey
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
@@ -30,12 +29,11 @@ import mozilla.components.support.base.log.logger.Logger
  *
  * @param context [Context] used for obtaining [SharedPreferences] for managing internal prefs.
  * @param securePrefs A [SecureAbove22Preferences] instance used for storing the managed key.
- * @param keyRecoveryHandler A [KeyRecoveryHandler] instance that knows how to recover from key failures.
  */
 class LoginsCrypto(
     private val context: Context,
     private val securePrefs: SecureAbove22Preferences,
-    private val keyRecoveryHandler: KeyRecoveryHandler
+    private val storage: SyncableLoginsStorage
 ) : KeyProvider {
     private val logger = Logger("LoginsCrypto")
     private val plaintextPrefs by lazy { context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) }
@@ -43,8 +41,8 @@ class LoginsCrypto(
     /**
      * Decrypts ciphertext fields within [login], producing a plaintext [Login].
      */
-    fun decryptLogin(login: EncryptedLogin): Login {
-        return decryptLogin(login, key())
+    suspend fun decryptLogin(login: EncryptedLogin): Login {
+        return decryptLogin(login, getOrGenerateKey())
     }
 
     /**
@@ -77,7 +75,7 @@ class LoginsCrypto(
         )
     }
 
-    override fun key(): ManagedKey = synchronized(this) {
+    override suspend fun getOrGenerateKey(): ManagedKey = synchronized(this) {
         val managedKey = getManagedKey()
 
         // Record abnormal events if any were detected.
@@ -101,7 +99,11 @@ class LoginsCrypto(
             }
         }
         (managedKey.wasGenerated as? KeyGenerationReason.RecoveryNeeded)?.let {
-            keyRecoveryHandler.recoverFromBadKey(it)
+            // If the key needed to be regenerated, then we lose all
+            // usernames/passwords which were encrypted with the old key.  This
+            // means we can't really use the logins anymore and wipeLocal() is the
+            // best we can do.
+            storage.conn.getStorage().wipeLocal()
         }
         return managedKey
     }

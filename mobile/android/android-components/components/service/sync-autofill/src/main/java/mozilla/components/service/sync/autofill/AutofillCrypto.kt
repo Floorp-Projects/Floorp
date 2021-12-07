@@ -13,7 +13,6 @@ import mozilla.appservices.autofill.encryptString
 import mozilla.components.concept.storage.CreditCardCrypto
 import mozilla.components.concept.storage.CreditCardNumber
 import mozilla.components.concept.storage.KeyGenerationReason
-import mozilla.components.concept.storage.KeyRecoveryHandler
 import mozilla.components.concept.storage.ManagedKey
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.support.base.log.logger.Logger
@@ -27,12 +26,11 @@ import mozilla.components.support.base.log.logger.Logger
  *
  * @param context [Context] used for obtaining [SharedPreferences] for managing internal prefs.
  * @param securePrefs A [SecureAbove22Preferences] instance used for storing the managed key.
- * @param keyRecoveryHandler A [KeyRecoveryHandler] instance that knows how to recover from key failures.
  */
 class AutofillCrypto(
     private val context: Context,
     private val securePrefs: SecureAbove22Preferences,
-    private val keyRecoveryHandler: KeyRecoveryHandler
+    private val storage: AutofillCreditCardsAddressesStorage
 ) : CreditCardCrypto {
     private val logger = Logger("AutofillCrypto")
     private val plaintextPrefs by lazy { context.getSharedPreferences(AUTOFILL_PREFS, Context.MODE_PRIVATE) }
@@ -67,7 +65,7 @@ class AutofillCrypto(
         }
     }
 
-    override fun key(): ManagedKey = synchronized(this) {
+    override suspend fun getOrGenerateKey(): ManagedKey = synchronized(this) {
         val managedKey = getManagedKey()
 
         // Record abnormal events if any were detected.
@@ -75,10 +73,10 @@ class AutofillCrypto(
         // See https://github.com/mozilla-mobile/android-components/issues/10122
         when (managedKey.wasGenerated) {
             is KeyGenerationReason.RecoveryNeeded.Lost -> {
-                logger.warn("Key lost")
+                logger.warn("Key was lost")
             }
             is KeyGenerationReason.RecoveryNeeded.Corrupt -> {
-                logger.warn("Key corrupted")
+                logger.warn("Key was corrupted")
             }
             is KeyGenerationReason.RecoveryNeeded.AbnormalState -> {
                 logger.warn("Abnormal state while reading the key")
@@ -88,7 +86,7 @@ class AutofillCrypto(
             }
         }
         (managedKey.wasGenerated as? KeyGenerationReason.RecoveryNeeded)?.let {
-            keyRecoveryHandler.recoverFromBadKey(it)
+            storage.conn.getStorage().scrubEncryptedData()
         }
         return managedKey
     }

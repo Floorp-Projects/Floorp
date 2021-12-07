@@ -57,7 +57,7 @@ class AutofillCreditCardsAddressesStorageTest {
         assertNotNull(creditCard)
 
         assertEquals(creditCardFields.billingName, creditCard.billingName)
-        assertEquals(plaintextNumber, storage.crypto.decrypt(storage.crypto.key(), creditCard.encryptedCardNumber))
+        assertEquals(plaintextNumber, storage.crypto.decrypt(storage.crypto.getOrGenerateKey(), creditCard.encryptedCardNumber))
         assertEquals(creditCardFields.cardNumberLast4, creditCard.cardNumberLast4)
         assertEquals(creditCardFields.expiryMonth, creditCard.expiryMonth)
         assertEquals(creditCardFields.expiryYear, creditCard.expiryYear)
@@ -126,7 +126,7 @@ class AutofillCreditCardsAddressesStorageTest {
         val creditCard3 = storage.addCreditCard(creditCardFields3)
 
         val creditCards = storage.getAllCreditCards()
-        val key = storage.crypto.key()
+        val key = storage.crypto.getOrGenerateKey()
 
         val savedCreditCard1 = creditCards.find { it == creditCard1 }
         assertNotNull(savedCreditCard1)
@@ -167,7 +167,7 @@ class AutofillCreditCardsAddressesStorageTest {
 
         creditCard = storage.getCreditCard(creditCard.guid)!!
 
-        val key = storage.crypto.key()
+        val key = storage.crypto.getOrGenerateKey()
 
         assertEquals(newCreditCardFields.billingName, creditCard.billingName)
         assertEquals(newCreditCardFields.cardNumber, storage.crypto.decrypt(key, creditCard.encryptedCardNumber))

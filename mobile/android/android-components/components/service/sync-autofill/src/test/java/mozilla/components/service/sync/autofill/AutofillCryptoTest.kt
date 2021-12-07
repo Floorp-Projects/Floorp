@@ -7,7 +7,6 @@ package mozilla.components.service.sync.autofill
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.storage.CreditCardNumber
 import mozilla.components.concept.storage.KeyGenerationReason
-import mozilla.components.concept.storage.KeyRecoveryHandler
 import mozilla.components.concept.storage.ManagedKey
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
 import mozilla.components.support.test.mock
@@ -35,11 +34,11 @@ class AutofillCryptoTest {
     fun `get key - new`() {
         val handler = mock<KeyRecoveryHandler>()
         val crypto = AutofillCrypto(testContext, securePrefs, handler)
-        val key = crypto.key()
+        val key = crypto.getOrGenerateKey()
         assertEquals(KeyGenerationReason.New, key.wasGenerated)
 
         // key was persisted, subsequent fetches return it.
-        val key2 = crypto.key()
+        val key2 = crypto.getOrGenerateKey()
         assertNull(key2.wasGenerated)
 
         assertEquals(key.key, key2.key)
@@ -50,12 +49,12 @@ class AutofillCryptoTest {
     fun `get key - lost`() {
         val handler = mock<KeyRecoveryHandler>()
         val crypto = AutofillCrypto(testContext, securePrefs, handler)
-        val key = crypto.key()
+        val key = crypto.getOrGenerateKey()
         assertEquals(KeyGenerationReason.New, key.wasGenerated)
 
         // now, let's loose the key. It'll be regenerated
         securePrefs.clear()
-        val key2 = crypto.key()
+        val key2 = crypto.getOrGenerateKey()
         assertEquals(KeyGenerationReason.RecoveryNeeded.Lost, key2.wasGenerated)
 
         assertNotEquals(key.key, key2.key)
@@ -66,13 +65,13 @@ class AutofillCryptoTest {
     fun `get key - corrupted`() {
         val handler = mock<KeyRecoveryHandler>()
         val crypto = AutofillCrypto(testContext, securePrefs, handler)
-        val key = crypto.key()
+        val key = crypto.getOrGenerateKey()
         assertEquals(KeyGenerationReason.New, key.wasGenerated)
 
         // now, let's corrupt the key. It'll be regenerated
         securePrefs.putString(AutofillCrypto.AUTOFILL_KEY, "garbage")
 
-        val key2 = crypto.key()
+        val key2 = crypto.getOrGenerateKey()
         assertEquals(KeyGenerationReason.RecoveryNeeded.Corrupt, key2.wasGenerated)
 
         assertNotEquals(key.key, key2.key)
@@ -83,14 +82,14 @@ class AutofillCryptoTest {
     fun `get key - corrupted subtly`() {
         val handler = mock<KeyRecoveryHandler>()
         val crypto = AutofillCrypto(testContext, securePrefs, handler)
-        val key = crypto.key()
+        val key = crypto.getOrGenerateKey()
         assertEquals(KeyGenerationReason.New, key.wasGenerated)
 
         // now, let's corrupt the key. It'll be regenerated
         // this key is shaped correctly, but of course it won't be the same as what we got back in the first call to key()
         securePrefs.putString(AutofillCrypto.AUTOFILL_KEY, "{\"kty\":\"oct\",\"k\":\"GhsmEtujZN_qMEgw1ZHhcJhdAFR9EkUgb94qANel-P4\"}")
 
-        val key2 = crypto.key()
+        val key2 = crypto.getOrGenerateKey()
         assertEquals(KeyGenerationReason.RecoveryNeeded.Corrupt, key2.wasGenerated)
 
         assertNotEquals(key.key, key2.key)
@@ -100,7 +99,7 @@ class AutofillCryptoTest {
     @Test
     fun `encrypt and decrypt card - normal`() {
         val crypto = AutofillCrypto(testContext, securePrefs, mock())
-        val key = crypto.key()
+        val key = crypto.getOrGenerateKey()
         val plaintext1 = CreditCardNumber.Plaintext("4111111111111111")
         val plaintext2 = CreditCardNumber.Plaintext("4111111111111111")
 
@@ -126,7 +125,7 @@ class AutofillCryptoTest {
         val corruptKey = ManagedKey(key = "{\"kty\":\"oct\",\"k\":\"GhsmEtujZN_qMEgw1ZHhcJhdAFR9EkU\"}", wasGenerated = null)
         assertNull(crypto.encrypt(corruptKey, plaintext))
 
-        val goodKey = crypto.key()
+        val goodKey = crypto.getOrGenerateKey()
         val encrypted = crypto.encrypt(goodKey, plaintext)!!
 
         assertNull(crypto.decrypt(badKey, encrypted))

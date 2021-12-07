@@ -237,7 +237,7 @@ interface LoginsStorage : AutoCloseable {
      * @param login [EncryptedLogin] to decrypt
      * @return [Login] with decrypted data
      */
-    fun decryptLogin(login: EncryptedLogin): Login
+    suspend fun decryptLogin(login: EncryptedLogin): Login
 }
 
 /**

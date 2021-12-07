@@ -13,19 +13,7 @@ interface KeyProvider {
      *
      * @return [ManagedKey] that wraps the encryption key.
      */
-    fun key(): ManagedKey
-}
-
-/**
- * Knows how to recover from bad/missing encryption keys, e.g. instances of [KeyGenerationReason.RecoveryNeeded].
- */
-interface KeyRecoveryHandler {
-    /**
-     * Performs storage-specific recovery.
-     *
-     * @param reason Describes what happened to the previous key and why a recovery is needed.
-     */
-    fun recoverFromBadKey(reason: KeyGenerationReason.RecoveryNeeded)
+    suspend fun getOrGenerateKey(): ManagedKey
 }
 
 /**

@@ -28,9 +28,9 @@ class GeckoCreditCardsAddressesStorageDelegate(
     private val isCreditCardAutofillEnabled: () -> Boolean = { false }
 ) : CreditCardsAddressesStorageDelegate {
 
-    override fun decrypt(encryptedCardNumber: CreditCardNumber.Encrypted): CreditCardNumber.Plaintext? {
+    override suspend fun decrypt(encryptedCardNumber: CreditCardNumber.Encrypted): CreditCardNumber.Plaintext? {
         val crypto = storage.value.getCreditCardCrypto()
-        val key = crypto.key()
+        val key = crypto.getOrGenerateKey()
         return crypto.decrypt(key, encryptedCardNumber)
     }
 

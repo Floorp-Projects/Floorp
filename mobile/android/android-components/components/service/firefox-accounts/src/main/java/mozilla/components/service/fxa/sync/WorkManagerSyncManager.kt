@@ -413,7 +413,7 @@ internal class WorkManagerSyncWorker(
         val localEncryptionKeys = engineKeyProviders.mapKeys {
             it.key.nativeName
         }.mapValues {
-            it.value.key().key
+            it.value.getOrGenerateKey().key
         }
 
         // We're now ready to sync.
