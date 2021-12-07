@@ -1320,7 +1320,9 @@ bool NativeLayerCA::Representation::ApplyChanges(
     mWrappingCALayer = nil;
   }
 
+  bool layerNeedsInitialization = false;
   if (!mWrappingCALayer) {
+    layerNeedsInitialization = true;
     mWrappingCALayer = [[CALayer layer] retain];
     mWrappingCALayer.position = NSZeroPoint;
     mWrappingCALayer.bounds = NSZeroRect;
@@ -1378,7 +1380,7 @@ bool NativeLayerCA::Representation::ApplyChanges(
   //  Important: Always use integral numbers for the width and height of your layer.
   // We hope that this refers to integral physical pixels, and not to integral logical coordinates.
 
-  if (mMutatedBackingScale || mMutatedSize) {
+  if (mMutatedBackingScale || mMutatedSize || layerNeedsInitialization) {
     mContentCALayer.bounds =
         CGRectMake(0, 0, aSize.width / aBackingScale, aSize.height / aBackingScale);
     if (mOpaquenessTintLayer) {
@@ -1388,7 +1390,7 @@ bool NativeLayerCA::Representation::ApplyChanges(
   }
 
   if (mMutatedBackingScale || mMutatedPosition || mMutatedDisplayRect || mMutatedClipRect ||
-      mMutatedTransform || mMutatedSurfaceIsFlipped || mMutatedSize) {
+      mMutatedTransform || mMutatedSurfaceIsFlipped || mMutatedSize || layerNeedsInitialization) {
     Maybe<IntRect> clipFromDisplayRect;
     if (!aDisplayRect.IsEqualInterior(IntRect({}, aSize))) {
       // When the display rect is a subset of the layer, then we want to guarantee that no
@@ -1458,7 +1460,7 @@ bool NativeLayerCA::Representation::ApplyChanges(
     }
   }
 
-  if (mMutatedSamplingFilter) {
+  if (mMutatedSamplingFilter || layerNeedsInitialization) {
     if (aSamplingFilter == gfx::SamplingFilter::POINT) {
       mContentCALayer.minificationFilter = kCAFilterNearest;
       mContentCALayer.magnificationFilter = kCAFilterNearest;
