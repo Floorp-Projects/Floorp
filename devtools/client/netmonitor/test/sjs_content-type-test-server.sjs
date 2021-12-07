@@ -355,8 +355,8 @@ function handleRequest(request, response) {
           break;
         }
         case "br": {
-          response.setStatusLine(request.httpVersion, status, "Connected");
-          response.setHeader("Content-Type", "text/plain", false);
+          response.setStatusLine(request.httpVersion, status, "OK");
+          response.setHeader("Content-Type", "text/json", false);
           response.setHeader("Content-Encoding", "br", false);
           setCacheHeaders();
           response.setHeader("Content-Length", "10", false);
