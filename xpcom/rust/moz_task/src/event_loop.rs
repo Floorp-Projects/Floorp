@@ -5,28 +5,27 @@
 extern crate nsstring;
 
 use cstr::cstr;
-use nserror::{nsresult, NS_ERROR_SERVICE_NOT_AVAILABLE, NS_OK};
+use nserror::{nsresult, NS_ERROR_SERVICE_NOT_AVAILABLE, NS_ERROR_UNEXPECTED, NS_OK};
 use nsstring::*;
-use std::cell::UnsafeCell;
+use std::cell::RefCell;
+use std::future::Future;
 use xpcom::{interfaces::nsIThreadManager, xpcom, xpcom_method};
-
-type IsDoneClosure = dyn FnMut() -> bool + 'static;
 
 #[derive(xpcom)]
 #[xpimplements(nsINestedEventLoopCondition)]
-#[refcnt = "atomic"]
-struct InitEventLoopCondition {
-    closure: UnsafeCell<Box<IsDoneClosure>>,
+#[refcnt = "nonatomic"]
+struct InitFutureCompleteCondition<T: 'static> {
+    value: RefCell<Option<T>>,
 }
 
-impl EventLoopCondition {
+impl<T: 'static> FutureCompleteCondition<T> {
     xpcom_method!(is_done => IsDone() -> bool);
     fn is_done(&self) -> Result<bool, nsresult> {
-        unsafe { Ok((&mut *self.closure.get())()) }
+        Ok(self.value.borrow().is_some())
     }
 }
 
-/// Spin the event loop on the current thread until `pred` returns true.
+/// Spin the event loop on the current thread until `future` is resolved.
 ///
 /// # Safety
 ///
@@ -36,23 +35,34 @@ impl EventLoopCondition {
 /// codebase this method would only be ill-advised and not technically "unsafe",
 /// it is marked as unsafe due to the potential for triggering unsafety in
 /// unrelated C++ code.
-pub unsafe fn spin_event_loop_until<P>(pred: P) -> Result<(), nsresult>
+pub unsafe fn spin_event_loop_until<F>(
+    reason: &'static str,
+    future: F,
+) -> Result<F::Output, nsresult>
 where
-    P: FnMut() -> bool + 'static,
+    F: Future + 'static,
+    F::Output: 'static,
 {
-    let closure = Box::new(pred) as Box<IsDoneClosure>;
-    let cond = EventLoopCondition::allocate(InitEventLoopCondition {
-        closure: UnsafeCell::new(closure),
-    });
     let thread_manager =
         xpcom::get_service::<nsIThreadManager>(cstr!("@mozilla.org/thread-manager;1"))
             .ok_or(NS_ERROR_SERVICE_NOT_AVAILABLE)?;
 
-    // XXX: Pass in aVeryGoodReason from caller
+    let cond = FutureCompleteCondition::<F::Output>::allocate(InitFutureCompleteCondition {
+        value: RefCell::new(None),
+    });
+
+    // Spawn our future onto the current thread event loop, and record the
+    // completed value as it completes.
+    let cond2 = cond.clone();
+    crate::spawn_local(reason, async move {
+        let rv = future.await;
+        *cond2.value.borrow_mut() = Some(rv);
+    })
+    .detach();
+
     thread_manager
-        .SpinEventLoopUntil(
-            &*nsCStr::from("event_loop.rs: Rust is spinning the event loop."),
-            cond.coerce(),
-        )
-        .to_result()
+        .SpinEventLoopUntil(&*nsCStr::from(reason), cond.coerce())
+        .to_result()?;
+    let rv = cond.value.borrow_mut().take();
+    rv.ok_or(NS_ERROR_UNEXPECTED)
 }
