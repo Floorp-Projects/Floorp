@@ -19,21 +19,6 @@
 
 #define NANOPERSEC 1000000000.
 
-#ifndef CPUCLOCK_SCHED
-#  define CPUCLOCK_SCHED 2
-#endif
-#ifndef CPUCLOCK_PERTHREAD_MASK
-#  define CPUCLOCK_PERTHREAD_MASK 4
-#endif
-#ifndef MAKE_PROCESS_CPUCLOCK
-#  define MAKE_PROCESS_CPUCLOCK(pid, clock) \
-    ((int)(~(unsigned)(pid) << 3) | (int)(clock))
-#endif
-#ifndef MAKE_THREAD_CPUCLOCK
-#  define MAKE_THREAD_CPUCLOCK(tid, clock) \
-    MAKE_PROCESS_CPUCLOCK(tid, (clock) | CPUCLOCK_PERTHREAD_MASK)
-#endif
-
 namespace mozilla {
 
 int GetCycleTimeFrequencyMHz() { return 0; }
@@ -145,7 +130,7 @@ class StatReader {
       if (mPid == 0) {
         mFilepath.AssignLiteral("/proc/self/stat");
       } else {
-        mFilepath.AppendPrintf("/proc/%u/stat", unsigned(mPid));
+        mFilepath.AppendPrintf("/proc/%u/stat", mPid);
       }
     }
     FILE* fstat = fopen(mFilepath.get(), "r");
@@ -180,9 +165,8 @@ class StatReader {
 class ThreadInfoReader final : public StatReader {
  public:
   ThreadInfoReader(const base::ProcessId aPid, const base::ProcessId aTid)
-      : StatReader(aPid) {
-    mFilepath.AppendPrintf("/proc/%u/task/%u/stat", unsigned(aPid),
-                           unsigned(aTid));
+      : StatReader(aPid), mTid(aTid) {
+    mFilepath.AppendPrintf("/proc/%u/task/%u/stat", aPid, mTid);
   }
 
   nsresult ParseThread(ThreadInfo& aInfo) {
@@ -190,22 +174,18 @@ class ThreadInfoReader final : public StatReader {
     nsresult rv = StatReader::ParseProc(info);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    aInfo.tid = mTid;
     // Copying over the data we got from StatReader::ParseProc()
     aInfo.cpuTime = info.cpuTime;
     aInfo.name.Assign(mName);
     return NS_OK;
   }
+
+ private:
+  base::ProcessId mTid;
 };
 
 nsresult GetCpuTimeSinceProcessStartInMs(uint64_t* aResult) {
-  timespec t;
-  if (clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &t) == 0) {
-    uint64_t cpuTime =
-        uint64_t(t.tv_sec) * 1'000'000'000u + uint64_t(t.tv_nsec);
-    *aResult = cpuTime / PR_NSEC_PER_MSEC;
-    return NS_OK;
-  }
-
   StatReader reader(0);
   ProcInfo info;
   nsresult rv = reader.ParseProc(info);
@@ -231,22 +211,15 @@ ProcInfoPromise::ResolveOrRejectValue GetProcInfoSync(
     return result;
   }
   for (const auto& request : aRequests) {
+    // opening the stat file and reading its content
+    StatReader reader(request.pid);
     ProcInfo info;
-
-    timespec t;
-    clockid_t clockid = MAKE_PROCESS_CPUCLOCK(request.pid, CPUCLOCK_SCHED);
-    if (clock_gettime(clockid, &t) == 0) {
-      info.cpuTime = uint64_t(t.tv_sec) * 1'000'000'000u + uint64_t(t.tv_nsec);
-    } else {
-      // Fallback to parsing /proc/<pid>/stat
-      StatReader reader(request.pid);
-      nsresult rv = reader.ParseProc(info);
-      if (NS_FAILED(rv)) {
-        // Can't read data for this proc.
-        // Probably either a sandboxing issue or a race condition, e.g.
-        // the process has been just been killed. Regardless, skip process.
-        continue;
-      }
+    nsresult rv = reader.ParseProc(info);
+    if (NS_FAILED(rv)) {
+      // Can't read data for this proc.
+      // Probably either a sandboxing issue or a race condition, e.g.
+      // the process has been just been killed. Regardless, skip process.
+      continue;
     }
 
     // The 'Memory' value displayed in the system monitor is resident -
@@ -273,7 +246,7 @@ ProcInfoPromise::ResolveOrRejectValue GetProcInfoSync(
 
     // Let's look at the threads
     nsCString taskPath;
-    taskPath.AppendPrintf("/proc/%u/task", unsigned(request.pid));
+    taskPath.AppendPrintf("/proc/%u/task", request.pid);
     DIR* dirHandle = opendir(taskPath.get());
     if (!dirHandle) {
       // For some reason, we have no data on the threads for this process.
@@ -290,56 +263,14 @@ ProcInfoPromise::ResolveOrRejectValue GetProcInfoSync(
       if (entry->d_name[0] == '.') {
         continue;
       }
+      // Threads have a stat file, like processes.
       nsAutoCString entryName(entry->d_name);
-      nsresult rv;
       int32_t tid = entryName.ToInteger(&rv);
       if (NS_FAILED(rv)) {
         continue;
       }
-
-      ThreadInfo threadInfo;
-      threadInfo.tid = tid;
-
-      timespec ts;
-      if (clock_gettime(MAKE_THREAD_CPUCLOCK(tid, CPUCLOCK_SCHED), &ts) == 0) {
-        threadInfo.cpuTime =
-            uint64_t(ts.tv_sec) * 1'000'000'000u + uint64_t(ts.tv_nsec);
-
-        nsCString path;
-        path.AppendPrintf("/proc/%u/task/%u/comm", unsigned(request.pid),
-                          unsigned(tid));
-        FILE* fstat = fopen(path.get(), "r");
-        if (fstat) {
-          // /proc is a virtual file system and all files are
-          // of size 0, so GetFileSize() and related functions will
-          // return 0 - so the way to read the file is to fill a buffer
-          // of an arbitrary big size and look for the end of line char.
-          // The size of the buffer to use for thread names is TASK_COMM_LEN,
-          // which is part of the kernel, but not available in any system
-          // header.
-          constexpr int TASK_COMM_LEN = 16;
-          char buffer[TASK_COMM_LEN];
-          char* start = fgets(buffer, TASK_COMM_LEN, fstat);
-          fclose(fstat);
-          if (start) {
-            // If the thread name uses the entire buffer, we will have
-            // 15 characters followed by the null terminator.
-            // If the thread name is shorter, we will have a newline
-            // character after the thread name, that we don't want to
-            // copy. strchrnul will return a pointer to the null byte
-            // at the end if the newline character is not found.
-            char* end = strchrnul(buffer, '\n');
-            threadInfo.name.AssignASCII(buffer, size_t(end - start));
-            info.threads.AppendElement(threadInfo);
-            continue;
-          }
-        }
-      }
-
-      // Fallback to parsing /proc/<pid>/task/<tid>/stat
-      // This is needed for child processes, as access to the per-thread
-      // CPU clock is restricted to the process owning the thread.
       ThreadInfoReader reader(request.pid, tid);
+      ThreadInfo threadInfo;
       rv = reader.ParseThread(threadInfo);
       if (NS_FAILED(rv)) {
         continue;
