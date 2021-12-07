@@ -9,6 +9,7 @@
 
 #include "nsNetUtil.h"
 
+#include "mozilla/AppShutdown.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Components.h"
@@ -2706,6 +2707,11 @@ nsresult NS_GetFilenameFromDisposition(nsAString& aFilename,
 void net_EnsurePSMInit() {
   if (XRE_IsSocketProcess()) {
     EnsureNSSInitializedChromeOrContent();
+    return;
+  }
+
+  // Avoid a late initialization
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownNetTeardown)) {
     return;
   }
 
