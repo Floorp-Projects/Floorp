@@ -1231,7 +1231,7 @@ const windowGlobalTargetPrototype = {
   /**
    * Ensure that CSS error reporting is enabled.
    */
-  async ensureCSSErrorReportingEnabled(request) {
+  async ensureCSSErrorReportingEnabled() {
     const promises = [];
     for (const docShell of this.docShells) {
       if (docShell.cssErrorReportingEnabled) {
@@ -1726,6 +1726,14 @@ DebuggerProgressListener.prototype = {
     // This should be removed as part of Bug 1709529.
     if (this._targetActor.typeName === "parentProcessTarget") {
       docShell.browsingContext.watchedByDevTools = true;
+    }
+    // Immediately enable CSS error reports on new top level docshells, if this was already enabled.
+    // This is specific to MBT and WebExtension targets (so the isRootActor check).
+    if (
+      this._targetActor.isRootActor &&
+      this._targetActor.docShell.cssErrorReportingEnabled
+    ) {
+      docShell.cssErrorReportingEnabled = true;
     }
   },
 
