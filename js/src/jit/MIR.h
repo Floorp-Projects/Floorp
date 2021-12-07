@@ -1201,6 +1201,9 @@ class MVariadicT : public T {
   }
 };
 
+// An instruction with a variable number of operands. Note that the
+// MFoo::New constructor for variadic instructions fallibly
+// initializes the operands_ array and must be checked for OOM.
 using MVariadicInstruction = MVariadicT<MInstruction>;
 
 MIR_OPCODE_CLASS_GENERATED
