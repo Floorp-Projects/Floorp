@@ -571,6 +571,20 @@ const AVAILABLE_SHIMS = [
     ],
     onlyIfDFPIActive: true,
   },
+  {
+    id: "History",
+    platform: "all",
+    name: "History.com",
+    bug: "1624853",
+    contentScripts: [
+      {
+        js: "history.js",
+        matches: ["*://play.history.com/*"],
+        runAt: "document_start",
+      },
+    ],
+    onlyIfDFPIActive: true,
+  },
 ];
 
 module.exports = AVAILABLE_SHIMS;
