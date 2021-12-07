@@ -9321,6 +9321,12 @@
   value: true
   mirror: always
 
+# Whether to use challenges in the most secure order. See bug 650091.
+- name: network.auth.choose_most_secure_challenge
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # See the full list of values in nsICookieService.idl.
 - name: network.cookie.cookieBehavior
   type: RelaxedAtomicInt32
