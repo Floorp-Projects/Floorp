@@ -2246,6 +2246,11 @@ nsresult nsNSSComponent::Init() {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  // Avoid a late initialization
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownNetTeardown)) {
+    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
+  }
+
   Telemetry::AutoScalarTimer<Telemetry::ScalarID::NETWORKING_NSS_INITIALIZATION>
       timer;
 
