@@ -13,10 +13,11 @@
     <!-- This array contains the actual value stored in preferences. Not translatable. -->
     <string-array name="cookies_options_entry_values">
         <item>@string/yes</item>
-        <item>third_party_only</item>
-        <item>third_party_tracker</item>
-        <item>cross_site</item>
-        <item>no</item>
+        <item>@string/third_party_only</item>
+        <item>@string/third_party_tracker</item>
+        <!-- Block cross site is the default value. -->
+        <item>@string/cross_site</item>
+        <item>@string/no</item>
     </string-array>
 
     <!-- This array contains the cookie value for display purposes. -->
