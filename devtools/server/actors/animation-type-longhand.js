@@ -129,6 +129,7 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
       "break-after",
       "break-before",
       "break-inside",
+      "page",
       "paint-order",
       "pointer-events",
       "position",
