@@ -421,6 +421,7 @@ void WebRenderBridgeParent::Destroy() {
     mWebRenderBridgeRef->Clear();
     mWebRenderBridgeRef = nullptr;
   }
+  mCompositables.clear();
   ClearResources();
 }
 
