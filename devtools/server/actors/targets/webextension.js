@@ -81,6 +81,7 @@ const webExtensionTargetPrototype = extend({}, parentProcessTargetPrototype);
  *        frame-connector.js connectToFrame method.
  * @param {Object} options
  *        - addonId: {String} the addonId of the target WebExtension.
+ *        - addonBrowsingContextGroupId: {String} the BrowsingContextGroupId used by this addon.
  *        - chromeGlobal: {nsIMessageSender} The chromeGlobal where this actor
  *          has been injected by the frame-connector.js connectToFrame method.
  *        - isTopLevelTarget: {Boolean} flag to indicate if this is the top
@@ -89,9 +90,16 @@ const webExtensionTargetPrototype = extend({}, parentProcessTargetPrototype);
  */
 webExtensionTargetPrototype.initialize = function(
   conn,
-  { addonId, chromeGlobal, isTopLevelTarget, prefix }
+  {
+    addonId,
+    addonBrowsingContextGroupId,
+    chromeGlobal,
+    isTopLevelTarget,
+    prefix,
+  }
 ) {
   this.addonId = addonId;
+  this.addonBrowsingContextGroupId = addonBrowsingContextGroupId;
   this.chromeGlobal = chromeGlobal;
 
   // Expose the BrowsingContext of the fallback document,
