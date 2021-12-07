@@ -4,17 +4,10 @@
 
 use l10nregistry_ffi::load::{load_async, load_sync};
 use moz_task;
-use std::{
-    sync::atomic::{AtomicBool, Ordering::Relaxed},
-    sync::Arc,
-};
 
 #[no_mangle]
 pub extern "C" fn Rust_L10NLoadAsync(it_worked: *mut bool) {
-    let done = Arc::new(AtomicBool::new(false));
-    let done2 = done.clone();
-
-    moz_task::spawn_current_thread(async move {
+    let future = async move {
         match load_async("resource://gre/localization/en-US/toolkit/about/aboutAbout.ftl").await {
             Ok(res) => {
                 assert_eq!(res.len(), 460);
@@ -25,16 +18,12 @@ pub extern "C" fn Rust_L10NLoadAsync(it_worked: *mut bool) {
                     *it_worked = true;
                 }
             }
-            Err(err) => println!("{:?}", err),
+            Err(err) => panic!("{:?}", err),
         }
-
-        done.store(true, Relaxed);
-    })
-    .unwrap();
+    };
 
     unsafe {
-        moz_task::gtest_only::spin_event_loop_until(move || done2.load(Relaxed)).unwrap();
-        *it_worked = true;
+        moz_task::gtest_only::spin_event_loop_until("Rust_L10NLoadAsync", future).unwrap();
     }
 }
 
@@ -50,6 +39,6 @@ pub extern "C" fn Rust_L10NLoadSync(it_worked: *mut bool) {
                 *it_worked = true;
             }
         }
-        Err(err) => println!("{:?}", err),
+        Err(err) => panic!("{:?}", err),
     }
 }

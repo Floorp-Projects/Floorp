@@ -344,10 +344,10 @@ pub unsafe extern "C" fn l10nfilesource_fetch_file(
         ResourceStatus::Loaded(res) => callback(promise, Some(&res)),
         res @ ResourceStatus::Loading(_) => {
             let strong_promise = RefPtr::new(promise);
-            moz_task::spawn_current_thread(async move {
+            moz_task::spawn_local("l10nfilesource_fetch_file", async move {
                 callback(&strong_promise, res.await.as_ref().map(|r| &**r));
             })
-            .expect("Failed to spawn future");
+            .detach();
         }
     }
 }
