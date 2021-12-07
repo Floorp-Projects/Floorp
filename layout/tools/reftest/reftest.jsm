@@ -70,13 +70,12 @@ function TestBuffer(str)
   g.testLog.push(str);
 }
 
-function isWebRenderOnAndroidDevice() {
+function isAndroidDevice() {
   var xr = Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime);
   // This is the best we can do for now; maybe in the future we'll have
   // more correct detection of this case.
   return xr.OS == "Android" &&
-      g.browserIsRemote &&
-      g.windowUtils.layerManagerType.startsWith("WebRender");
+      g.browserIsRemote;
 }
 
 function FlushTestBuffer()
@@ -1214,7 +1213,7 @@ function RecordResult(testRunTime, errorMsg, typeSpecificResults)
 
             if (g.urls[0].noAutoFuzz) {
                 // Autofuzzing is disabled
-            } else if (isWebRenderOnAndroidDevice() && maxDifference.value <= 2 && differences > 0) {
+            } else if (isAndroidDevice() && maxDifference.value <= 2 && differences > 0) {
                 // Autofuzz for WR on Android physical devices: Reduce any
                 // maxDifference of 2 to 0, because we get a lot of off-by-ones
                 // and off-by-twos that are very random and hard to annotate.
