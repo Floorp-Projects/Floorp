@@ -219,6 +219,14 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
                 },
             ],
             [
+                ["--threads"],
+                {
+                    "action": "store",
+                    "dest": "threads",
+                    "help": "Number of total chunks",
+                },
+            ],
+            [
                 ["--gpu-required"],
                 {
                     "action": "store_true",
@@ -610,6 +618,9 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin, CodeCoverageM
 
             if c["enable_webrender"]:
                 base_cmd.append("--enable-webrender")
+
+            if c.get("threads"):
+                base_cmd.extend(["--threads", c["threads"]])
 
             if c["enable_xorigin_tests"]:
                 base_cmd.append("--enable-xorigin-tests")
