@@ -102,7 +102,9 @@ class BrowserRobot {
                 matches(
                     hasDescendant(
                         allOf(
-                            withText(tabTitle[tab]),
+                            hasDescendant(
+                                withText(tabTitle[tab])
+                            ),
                             withParentIndex(tab)
                         )
                     )
