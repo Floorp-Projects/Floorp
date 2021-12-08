@@ -713,11 +713,15 @@ var SelectParentHelper = {
 };
 
 class SelectParent extends JSWindowActorParent {
+  get relevantBrowser() {
+    let bc = this.manager.browsingContext;
+    return bc.isContent ? bc.topFrameElement : bc.embedderElement;
+  }
+
   receiveMessage(message) {
     switch (message.name) {
       case "Forms:ShowDropDown": {
-        let topBrowsingContext = this.manager.browsingContext.top;
-        let browser = topBrowsingContext.embedderElement;
+        let browser = this.relevantBrowser;
 
         if (!browser.hasAttribute("selectmenulist")) {
           return;
@@ -737,7 +741,7 @@ class SelectParent extends JSWindowActorParent {
         let data = message.data;
         menulist.menupopup.style.direction = data.style.direction;
 
-        let { ZoomManager } = topBrowsingContext.topChromeWindow;
+        let { ZoomManager } = browser.browsingContext.topChromeWindow;
         SelectParentHelper.populate(
           menulist,
           data.options.options,
@@ -760,9 +764,7 @@ class SelectParent extends JSWindowActorParent {
       }
 
       case "Forms:HideDropDown": {
-        let topBrowsingContext = this.manager.browsingContext.top;
-        let browser = topBrowsingContext.embedderElement;
-
+        let browser = this.relevantBrowser;
         SelectParentHelper.hide(this._menulist, browser);
         break;
       }
