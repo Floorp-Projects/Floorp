@@ -330,7 +330,7 @@ static void FreeChunkPool(ChunkPool& pool) {
     TenuredChunk* chunk = iter.get();
     iter.next();
     pool.remove(chunk);
-    MOZ_ASSERT(!chunk->info.numArenasFreeCommitted);
+    MOZ_ASSERT(chunk->unused());
     UnmapPages(static_cast<void*>(chunk), ChunkSize);
   }
   MOZ_ASSERT(pool.count() == 0);
@@ -1631,6 +1631,18 @@ bool GCRuntime::checkEagerAllocTrigger(const HeapSize& size,
   return true;
 }
 
+bool GCRuntime::shouldDecommit() const {
+  // If we're doing a shrinking GC we always decommit to release as much memory
+  // as possible.
+  if (cleanUpEverything) {
+    return true;
+  }
+
+  // If we are allocating heavily enough to trigger "high frequency" GC then
+  // skip decommit so that we do not compete with the mutator.
+  return !schedulingState.inHighFrequencyGCMode();
+}
+
 void GCRuntime::startDecommit() {
   gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::DECOMMIT);
 
@@ -1644,25 +1656,22 @@ void GCRuntime::startDecommit() {
     MOZ_ASSERT(availableChunks(lock).verify());
     MOZ_ASSERT(emptyChunks(lock).verify());
 
-    // Verify that all entries in the empty chunks pool are already decommitted.
+    // Verify that all entries in the empty chunks pool are unused.
     for (ChunkPool::Iter chunk(emptyChunks(lock)); !chunk.done();
          chunk.next()) {
-      MOZ_ASSERT(chunk->info.numArenasFreeCommitted == 0);
+      MOZ_ASSERT(chunk->unused());
     }
   }
 #endif
 
-  // If we are allocating heavily enough to trigger "high frequency" GC, then
-  // skip decommit so that we do not compete with the mutator. However if we're
-  // doing a shrinking GC we always decommit to release as much memory as
-  // possible.
-  if (schedulingState.inHighFrequencyGCMode() && !cleanUpEverything) {
+  if (!shouldDecommit()) {
     return;
   }
 
   {
     AutoLockGC lock(this);
-    if (availableChunks(lock).empty() && !tooManyEmptyChunks(lock)) {
+    if (availableChunks(lock).empty() && !tooManyEmptyChunks(lock) &&
+        emptyChunks(lock).empty()) {
       return;  // Nothing to do.
     }
   }
@@ -1708,6 +1717,45 @@ void js::gc::BackgroundDecommitTask::run(AutoLockHelperThreadState& lock) {
   }
 
   gc->maybeRequestGCAfterBackgroundTask(lock);
+}
+
+static inline bool CanDecommitWholeChunk(TenuredChunk* chunk) {
+  return chunk->unused() && chunk->info.numArenasFreeCommitted != 0;
+}
+
+// Called from a background thread to decommit free arenas. Releases the GC
+// lock.
+void GCRuntime::decommitEmptyChunks(const bool& cancel, AutoLockGC& lock) {
+  Vector<TenuredChunk*, 0, SystemAllocPolicy> chunksToDecommit;
+  for (ChunkPool::Iter chunk(emptyChunks(lock)); !chunk.done(); chunk.next()) {
+    if (CanDecommitWholeChunk(chunk) && !chunksToDecommit.append(chunk)) {
+      onOutOfMallocMemory(lock);
+      return;
+    }
+  }
+
+  for (TenuredChunk* chunk : chunksToDecommit) {
+    if (cancel) {
+      break;
+    }
+
+    // Check whether something used the chunk while lock was released.
+    if (!CanDecommitWholeChunk(chunk)) {
+      continue;
+    }
+
+    // Temporarily remove the chunk while decommitting its memory so that the
+    // mutator doesn't start allocating from it when we drop the lock.
+    emptyChunks(lock).remove(chunk);
+
+    {
+      AutoUnlockGC unlock(lock);
+      chunk->decommitAllArenas();
+      MOZ_ASSERT(chunk->info.numArenasFreeCommitted == 0);
+    }
+
+    emptyChunks(lock).push(chunk);
+  }
 }
 
 // Called from a background thread to decommit free arenas. Releases the GC
@@ -3781,6 +3829,8 @@ void GCRuntime::collect(bool nonincrementalByAPI, const SliceBudget& budget,
   AutoStopVerifyingBarriers av(rt, IsShutdownReason(reason));
   AutoMaybeLeaveAtomsZone leaveAtomsZone(rt->mainContextFromOwnThread());
   AutoSetZoneSliceThresholds sliceThresholds(this);
+
+  schedulingState.updateHighFrequencyModeForReason(reason);
 
 #ifdef DEBUG
   if (IsShutdownReason(reason)) {

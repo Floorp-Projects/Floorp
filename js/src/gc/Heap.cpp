@@ -447,8 +447,6 @@ void TenuredChunk::updateChunkListAfterFree(GCRuntime* gc, size_t numArenasFree,
   } else {
     MOZ_ASSERT(unused());
     gc->availableChunks(lock).remove(this);
-    decommitAllArenas();
-    MOZ_ASSERT(info.numArenasFreeCommitted == 0);
     gc->recycleChunk(this, lock);
   }
 }

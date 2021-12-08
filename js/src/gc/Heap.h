@@ -659,6 +659,8 @@ class TenuredChunk : public TenuredChunkBase {
 #ifdef DEBUG
   void verify() const;
 #else
+  void initAsDecommitted();
+
   void verify() const {}
 #endif
 

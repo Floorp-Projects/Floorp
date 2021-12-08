@@ -714,11 +714,19 @@ Arena* TenuredChunk::fetchNextFreeArena(GCRuntime* gc) {
 
 TenuredChunk* GCRuntime::getOrAllocChunk(AutoLockGCBgAlloc& lock) {
   TenuredChunk* chunk = emptyChunks(lock).pop();
-  if (!chunk) {
+  if (chunk) {
+    // Reinitialize ChunkBase; arenas are all free and may or may not be
+    // committed.
+    SetMemCheckKind(chunk, sizeof(ChunkBase), MemCheckKind::MakeUndefined);
+    chunk->initBase(rt, nullptr);
+    MOZ_ASSERT(chunk->unused());
+  } else {
     chunk = TenuredChunk::allocate(this);
     if (!chunk) {
       return nullptr;
     }
+
+    chunk->init(this);
     MOZ_ASSERT(chunk->info.numArenasFreeCommitted == 0);
   }
 
@@ -730,8 +738,15 @@ TenuredChunk* GCRuntime::getOrAllocChunk(AutoLockGCBgAlloc& lock) {
 }
 
 void GCRuntime::recycleChunk(TenuredChunk* chunk, const AutoLockGC& lock) {
+#ifdef DEBUG
+  MOZ_ASSERT(chunk->unused());
+  chunk->verify();
+#endif
+
+  // Poison ChunkBase to catch use after free.
   AlwaysPoison(chunk, JS_FREED_CHUNK_PATTERN, sizeof(ChunkBase),
                MemCheckKind::MakeNoAccess);
+
   emptyChunks(lock).push(chunk);
 }
 
@@ -745,11 +760,12 @@ TenuredChunk* GCRuntime::pickChunk(AutoLockGCBgAlloc& lock) {
     return nullptr;
   }
 
-  chunk->init(this);
-  MOZ_ASSERT(chunk->info.numArenasFreeCommitted == 0);
+#ifdef DEBUG
+  chunk->verify();
   MOZ_ASSERT(chunk->unused());
   MOZ_ASSERT(!fullChunks(lock).contains(chunk));
   MOZ_ASSERT(!availableChunks(lock).contains(chunk));
+#endif
 
   availableChunks(lock).push(chunk);
 
@@ -817,11 +833,11 @@ void TenuredChunk::init(GCRuntime* gc) {
 #ifdef DEBUG
   verify();
 #endif
-
-  /* The rest of info fields are initialized in pickChunk. */
 }
 
 void TenuredChunk::decommitAllArenas() {
+  MOZ_ASSERT(unused());
+
   if (DecommitEnabled()) {
     MarkPagesUnusedSoft(&arenas[0], ArenasPerChunk * ArenaSize);
   }
@@ -830,4 +846,6 @@ void TenuredChunk::decommitAllArenas() {
   freeCommittedArenas.ResetAll();
   info.numArenasFree = ArenasPerChunk;
   info.numArenasFreeCommitted = 0;
+
+  verify();
 }
