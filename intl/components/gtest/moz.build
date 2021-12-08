@@ -11,6 +11,7 @@ UNIFIED_SOURCES += [
     "TestCurrency.cpp",
     "TestDateIntervalFormat.cpp",
     "TestDateTimeFormat.cpp",
+    "TestIDNA.cpp",
     "TestListFormat.cpp",
     "TestLocale.cpp",
     "TestLocaleCanonicalizer.cpp",
