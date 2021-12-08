@@ -4620,25 +4620,6 @@ browser.timings:
 
 # The following section contains the service worker scalars.
 sw:
-  synthesized_res_count:
-    bug_numbers:
-      - 1416629
-      - 1433916
-    description: >
-      The count of number of synthesize response made by service workers.
-    expires: "68"
-    kind: uint
-    notification_emails:
-      - sw-telemetry@mozilla.com
-      - ttung@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-      - 'fennec'
-    record_in_processes:
-      - 'main'
-      - 'content'
-
   cors_res_for_so_req_count:
     bug_numbers:
       - 1416629
