@@ -217,19 +217,19 @@
     --in-content-link-color-active: -moz-nativehyperlinktext;
     --in-content-link-color-visited: -moz-nativehyperlinktext;
 
-    --in-content-button-text-color-hover: SelectedItemText;
+    --in-content-button-text-color-hover: ButtonFace;
     --in-content-button-background: ButtonFace;
     --in-content-button-text-color: ButtonText;
-    --in-content-button-background-hover: SelectedItem;
-    --in-content-button-background-active: SelectedItem;
-    --in-content-button-border-color: var(--in-content-button-text-color);
+    --in-content-button-background-hover: ButtonText;
+    --in-content-button-background-active: ButtonText;
+    --in-content-button-border-color: ButtonText;
 
-    --in-content-primary-button-text-color: SelectedItemText;
-    --in-content-primary-button-text-color-hover: SelectedItem;
-    --in-content-primary-button-background: SelectedItem;
+    --in-content-primary-button-text-color: ButtonFace;
+    --in-content-primary-button-text-color-hover: ButtonText;
+    --in-content-primary-button-background: ButtonText;
     --in-content-primary-button-background-hover: ButtonFace;
     --in-content-primary-button-background-active: ButtonFace;
-    --in-content-primary-button-border-hover: SelectedItem;
+    --in-content-primary-button-border-hover: ButtonText;
 
     --in-content-danger-button-background: var(--in-content-primary-button-background);
     --in-content-danger-button-background-hover: var(--in-content-primary-button-background-hover);
