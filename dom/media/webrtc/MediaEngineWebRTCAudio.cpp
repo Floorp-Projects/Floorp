@@ -14,7 +14,6 @@
 #include "MediaTrackConstraints.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ErrorNames.h"
-#include "nsContentUtils.h"
 #include "nsIDUtils.h"
 #include "transport/runnable_utils.h"
 #include "Tracing.h"
@@ -1113,7 +1112,7 @@ nsCString MediaEngineWebRTCAudioCaptureSource::GetUUID() const {
   nsCString asciiString;
   ErrorResult rv;
 
-  rv = nsContentUtils::GenerateUUIDInPlace(uuid);
+  rv = nsID::GenerateUUIDInPlace(uuid);
   if (rv.Failed()) {
     return ""_ns;
   }
