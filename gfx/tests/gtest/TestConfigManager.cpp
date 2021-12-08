@@ -240,6 +240,10 @@ class MockGfxInfo final : public nsIGfxInfo {
                                           bool* _retval) override {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
+  NS_IMETHOD CrashGPUProcessForTests() override {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
   NS_IMETHOD_(void) GetData() override {}
 
  private:

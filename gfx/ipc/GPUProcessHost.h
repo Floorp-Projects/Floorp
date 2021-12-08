@@ -105,8 +105,11 @@ class GPUProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
 
   void SetListener(Listener* aListener);
 
-  // Used for tests and diagnostics
+  // Kills the GPU process. Used for tests and diagnostics
   void KillProcess();
+
+  // Causes the GPU process to crash. Used for tests and diagnostics
+  void CrashProcess();
 
 #ifdef MOZ_WIDGET_ANDROID
   java::CompositorSurfaceManager::Param GetCompositorSurfaceManager();

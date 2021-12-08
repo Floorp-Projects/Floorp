@@ -314,6 +314,9 @@ interface nsIGfxInfo : nsISupports
   // Forces the GPU process to start or shutdown. This is intended only for
   // xpcshell-tests.
   boolean controlGPUProcessForXPCShell(in boolean aEnable);
+
+  // Causes the GPU process to crash. This is intended only for use by tests.
+  void crashGPUProcessForTests();
 };
 
 
