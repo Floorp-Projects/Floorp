@@ -1441,6 +1441,7 @@ GeckoFontMetrics Gecko_GetFontMetrics(const nsPresContext* aPresContext,
   return {ToLength(NS_round(metrics.xHeight * d2a)),
           ToLength(NS_round(metrics.zeroWidth * d2a)),
           ToLength(NS_round(metrics.capHeight * d2a)),
+          ToLength(NS_round(metrics.ideographicWidth * d2a)),
           ToLength(NS_round(metrics.maxAscent * d2a))};
 }
 

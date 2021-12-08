@@ -62,6 +62,9 @@ pub enum FontRelativeLength {
     /// A "cap" value: https://drafts.csswg.org/css-values/#cap
     #[css(dimension)]
     Cap(CSSFloat),
+    /// An "ic" value: https://drafts.csswg.org/css-values/#ic
+    #[css(dimension)]
+    Ic(CSSFloat),
     /// A "rem" value: https://drafts.csswg.org/css-values/#rem
     #[css(dimension)]
     Rem(CSSFloat),
@@ -96,6 +99,7 @@ impl FontRelativeLength {
             FontRelativeLength::Ex(v) |
             FontRelativeLength::Ch(v) |
             FontRelativeLength::Cap(v) |
+            FontRelativeLength::Ic(v) |
             FontRelativeLength::Rem(v) => v == 0.,
         }
     }
@@ -106,6 +110,7 @@ impl FontRelativeLength {
             FontRelativeLength::Ex(v) |
             FontRelativeLength::Ch(v) |
             FontRelativeLength::Cap(v) |
+            FontRelativeLength::Ic(v) |
             FontRelativeLength::Rem(v) => v < 0.,
         }
     }
@@ -122,12 +127,13 @@ impl FontRelativeLength {
             (&Ex(one), &Ex(other)) => Ex(one + other),
             (&Ch(one), &Ch(other)) => Ch(one + other),
             (&Cap(one), &Cap(other)) => Cap(one + other),
+            (&Ic(one), &Ic(other)) => Ic(one + other),
             (&Rem(one), &Rem(other)) => Rem(one + other),
             // See https://github.com/rust-lang/rust/issues/68867. rustc isn't
             // able to figure it own on its own so we help.
             _ => unsafe {
                 match *self {
-                    Em(..) | Ex(..) | Ch(..) | Cap(..) | Rem(..) => {},
+                    Em(..) | Ex(..) | Ch(..) | Cap(..) | Ic(..) | Rem(..) => {},
                 }
                 debug_unreachable!("Forgot to handle unit in try_sum()")
             },
@@ -251,6 +257,24 @@ impl FontRelativeLength {
                     //     determine the cap-height, the font’s ascent must be used.
                     //
                     metrics.ascent
+                });
+                (reference_size, length)
+            },
+            FontRelativeLength::Ic(length) => {
+                if context.for_non_inherited_property.is_some() {
+                    context.rule_cache_conditions.borrow_mut().set_uncacheable();
+                }
+                context.builder.add_flags(font_metrics_flag);
+                let metrics =
+                    query_font_metrics(context, base_size, FontMetricsOrientation::MatchContextPreferVertical);
+                let reference_size = metrics.ic_width.unwrap_or_else(|| {
+                    // https://drafts.csswg.org/css-values/#ic
+                    //
+                    //     In the cases where it is impossible or impractical to
+                    //     determine the ideographic advance measure, it must be
+                    //     assumed to be 1em.
+                    //
+                    reference_font_size
                 });
                 (reference_size, length)
             },
@@ -566,6 +590,7 @@ impl NoCalcLength {
             "ex" => NoCalcLength::FontRelative(FontRelativeLength::Ex(value)),
             "ch" => NoCalcLength::FontRelative(FontRelativeLength::Ch(value)),
             "cap" => NoCalcLength::FontRelative(FontRelativeLength::Cap(value)),
+            "ic" => NoCalcLength::FontRelative(FontRelativeLength::Ic(value)),
             "rem" => NoCalcLength::FontRelative(FontRelativeLength::Rem(value)),
             // viewport percentages
             "vw" if !context.in_page_rule() => {
@@ -726,12 +751,13 @@ impl PartialOrd for FontRelativeLength {
             (&Ex(ref one), &Ex(ref other)) => one.partial_cmp(other),
             (&Ch(ref one), &Ch(ref other)) => one.partial_cmp(other),
             (&Cap(ref one), &Cap(ref other)) => one.partial_cmp(other),
+            (&Ic(ref one), &Ic(ref other)) => one.partial_cmp(other),
             (&Rem(ref one), &Rem(ref other)) => one.partial_cmp(other),
             // See https://github.com/rust-lang/rust/issues/68867. rustc isn't
             // able to figure it own on its own so we help.
             _ => unsafe {
                 match *self {
-                    Em(..) | Ex(..) | Ch(..) | Cap(..) | Rem(..) => {},
+                    Em(..) | Ex(..) | Ch(..) | Cap(..) | Ic(..) | Rem(..) => {},
                 }
                 debug_unreachable!("Forgot an arm in partial_cmp?")
             },
@@ -749,6 +775,7 @@ impl Mul<CSSFloat> for FontRelativeLength {
             FontRelativeLength::Ex(v) => FontRelativeLength::Ex(v * scalar),
             FontRelativeLength::Ch(v) => FontRelativeLength::Ch(v * scalar),
             FontRelativeLength::Cap(v) => FontRelativeLength::Cap(v * scalar),
+            FontRelativeLength::Ic(v) => FontRelativeLength::Ic(v * scalar),
             FontRelativeLength::Rem(v) => FontRelativeLength::Rem(v * scalar),
         }
     }
