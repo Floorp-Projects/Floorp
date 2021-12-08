@@ -27,6 +27,7 @@ import android.util.Log;
 import androidx.annotation.AnyThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.StringDef;
 import androidx.annotation.UiThread;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleObserver;
@@ -34,6 +35,8 @@ import androidx.lifecycle.OnLifecycleEvent;
 import androidx.lifecycle.ProcessLifecycleOwner;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.List;
 import java.util.Map;
 import org.mozilla.gecko.EventDispatcher;
@@ -97,8 +100,49 @@ public final class GeckoRuntime implements Parcelable {
    * application may be able to recover.
    *
    * @see GeckoSession.ContentDelegate#onCrash(GeckoSession)
+   * @deprecated use {@link #EXTRA_CRASH_PROCESS_TYPE} instead.
    */
+  @Deprecated
+  @DeprecationSchedule(id = "crashreporter-fatal", version = 100)
   public static final String EXTRA_CRASH_FATAL = "fatal";
+
+  /**
+   * This is a key for extra data sent with {@link #ACTION_CRASHED}. The value is a String matching
+   * one of the `CRASHED_PROCESS_TYPE_*` constants, describing what type of process the crash
+   * occurred in.
+   *
+   * @see GeckoSession.ContentDelegate#onCrash(GeckoSession)
+   */
+  public static final String EXTRA_CRASH_PROCESS_TYPE = "processType";
+
+  /**
+   * Value for {@link #EXTRA_CRASH_PROCESS_TYPE} indicating the main application process was
+   * affected by the crash, which is therefore fatal.
+   */
+  public static final String CRASHED_PROCESS_TYPE_MAIN = "MAIN";
+
+  /**
+   * Value for {@link #EXTRA_CRASH_PROCESS_TYPE} indicating a foreground child process, such as a
+   * content process, crashed. The application may be able to recover from this crash, but it was
+   * likely noticable to the user.
+   */
+  public static final String CRASHED_PROCESS_TYPE_FOREGROUND_CHILD = "FOREGROUND_CHILD";
+
+  /**
+   * Value for {@link #EXTRA_CRASH_PROCESS_TYPE} indicating a background child process crashed. This
+   * should have been recovered from automatically, and will have had minimal impact to the user, if
+   * any.
+   */
+  public static final String CRASHED_PROCESS_TYPE_BACKGROUND_CHILD = "BACKGROUND_CHILD";
+
+  @Retention(RetentionPolicy.SOURCE)
+  @StringDef(
+      value = {
+        CRASHED_PROCESS_TYPE_MAIN,
+        CRASHED_PROCESS_TYPE_FOREGROUND_CHILD,
+        CRASHED_PROCESS_TYPE_BACKGROUND_CHILD
+      })
+  /* package */ @interface CrashedProcessType {}
 
   private final class LifecycleListener implements LifecycleObserver {
     private boolean mPaused = false;
@@ -271,6 +315,7 @@ public final class GeckoRuntime implements Parcelable {
             i.putExtra(EXTRA_MINIDUMP_PATH, message.getString(EXTRA_MINIDUMP_PATH));
             i.putExtra(EXTRA_EXTRAS_PATH, message.getString(EXTRA_EXTRAS_PATH));
             i.putExtra(EXTRA_CRASH_FATAL, message.getBoolean(EXTRA_CRASH_FATAL, true));
+            i.putExtra(EXTRA_CRASH_PROCESS_TYPE, message.getString(EXTRA_CRASH_PROCESS_TYPE));
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
               context.startForegroundService(i);
