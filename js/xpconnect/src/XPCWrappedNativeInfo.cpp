@@ -237,21 +237,14 @@ already_AddRefed<XPCNativeInterface> XPCNativeInterface::NewInstance(
   const uint16_t constCount = aInfo->ConstantCount();
   const uint16_t totalCount = methodCount + constCount;
 
-  static const uint16_t MAX_LOCAL_MEMBER_COUNT = 16;
-  XPCNativeMember local_members[MAX_LOCAL_MEMBER_COUNT];
-  UniquePtr<XPCNativeMember[]> array;
-  XPCNativeMember* members;
-  if (totalCount > MAX_LOCAL_MEMBER_COUNT) {
-    array = MakeUnique<XPCNativeMember[]>(totalCount);
-    members = array.get();
-  } else {
-    members = local_members;
-  }
+  using MemberVector =
+      mozilla::Vector<XPCNativeMember, 16, InfallibleAllocPolicy>;
+  MemberVector members;
+  MOZ_ALWAYS_TRUE(members.reserve(totalCount));
 
   // NOTE: since getters and setters share a member, we might not use all
   // of the member objects.
 
-  uint16_t realTotalCount = 0;
   for (unsigned int i = 0; i < methodCount; i++) {
     const nsXPTMethodInfo& info = aInfo->Method(i);
 
@@ -271,10 +264,10 @@ already_AddRefed<XPCNativeInterface> XPCNativeInterface::NewInstance(
     }
 
     if (info.IsSetter()) {
-      MOZ_ASSERT(realTotalCount, "bad setter");
+      MOZ_ASSERT(!members.empty(), "bad setter");
       // Note: ASSUMES Getter/Setter pairs are next to each other
       // This is a rule of the typelib spec.
-      XPCNativeMember* cur = &members[realTotalCount - 1];
+      XPCNativeMember* cur = &members.back();
       MOZ_ASSERT(cur->GetName() == name, "bad setter");
       MOZ_ASSERT(cur->IsReadOnlyAttribute(), "bad setter");
       MOZ_ASSERT(cur->GetIndex() == i - 1, "bad setter");
@@ -282,19 +275,20 @@ already_AddRefed<XPCNativeInterface> XPCNativeInterface::NewInstance(
     } else {
       // XXX need better way to find dups
       // MOZ_ASSERT(!LookupMemberByID(name),"duplicate method name");
-      if (realTotalCount == XPCNativeMember::GetMaxIndexInInterface()) {
+      size_t indexInInterface = members.length();
+      if (indexInInterface == XPCNativeMember::GetMaxIndexInInterface()) {
         NS_WARNING("Too many members in interface");
         return nullptr;
       }
-      XPCNativeMember* cur = &members[realTotalCount];
-      cur->SetName(name);
+      XPCNativeMember cur;
+      cur.SetName(name);
       if (info.IsGetter()) {
-        cur->SetReadOnlyAttribute(i);
+        cur.SetReadOnlyAttribute(i);
       } else {
-        cur->SetMethod(i);
+        cur.SetMethod(i);
       }
-      cur->SetIndexInInterface(realTotalCount);
-      ++realTotalCount;
+      cur.SetIndexInInterface(indexInInterface);
+      members.infallibleAppend(cur);
     }
   }
 
@@ -314,15 +308,16 @@ already_AddRefed<XPCNativeInterface> XPCNativeInterface::NewInstance(
 
     // XXX need better way to find dups
     // MOZ_ASSERT(!LookupMemberByID(name),"duplicate method/constant name");
-    if (realTotalCount == XPCNativeMember::GetMaxIndexInInterface()) {
+    size_t indexInInterface = members.length();
+    if (indexInInterface == XPCNativeMember::GetMaxIndexInInterface()) {
       NS_WARNING("Too many members in interface");
       return nullptr;
     }
-    XPCNativeMember* cur = &members[realTotalCount];
-    cur->SetName(name);
-    cur->SetConstant(i);
-    cur->SetIndexInInterface(realTotalCount);
-    ++realTotalCount;
+    XPCNativeMember cur;
+    cur.SetName(name);
+    cur.SetConstant(i);
+    cur.SetIndexInInterface(indexInInterface);
+    members.infallibleAppend(cur);
   }
 
   const char* bytes = aInfo->Name();
@@ -339,8 +334,8 @@ already_AddRefed<XPCNativeInterface> XPCNativeInterface::NewInstance(
   // Use placement new to create an object with the right amount of space
   // to hold the members array
   size_t size = sizeof(XPCNativeInterface);
-  if (realTotalCount > 1) {
-    size += (realTotalCount - 1) * sizeof(XPCNativeMember);
+  if (members.length() > 1) {
+    size += (members.length() - 1) * sizeof(XPCNativeMember);
   }
   void* place = new char[size];
   if (!place) {
@@ -349,12 +344,12 @@ already_AddRefed<XPCNativeInterface> XPCNativeInterface::NewInstance(
 
   RefPtr<XPCNativeInterface> obj =
       new (place) XPCNativeInterface(aInfo, interfaceName);
-  MOZ_ASSERT(obj);
 
-  obj->mMemberCount = realTotalCount;
+  obj->mMemberCount = members.length();
   // copy valid members
-  if (realTotalCount) {
-    memcpy(obj->mMembers, members, realTotalCount * sizeof(XPCNativeMember));
+  if (!members.empty()) {
+    memcpy(obj->mMembers, members.begin(),
+           members.length() * sizeof(XPCNativeMember));
   }
 
   return obj.forget();

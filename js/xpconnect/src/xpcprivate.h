@@ -992,6 +992,14 @@ class XPCNativeMember final {
   MOZ_COUNTED_DEFAULT_CTOR(XPCNativeMember)
   MOZ_COUNTED_DTOR(XPCNativeMember)
 
+  XPCNativeMember(const XPCNativeMember& other)
+      : mName(other.mName),
+        mIndex(other.mIndex),
+        mFlags(other.mFlags),
+        mIndexInInterface(other.mIndexInInterface) {
+    MOZ_COUNT_CTOR(XPCNativeMember);
+  }
+
  private:
   bool Resolve(XPCCallContext& ccx, XPCNativeInterface* iface,
                JS::HandleObject parent, JS::Value* vp);
