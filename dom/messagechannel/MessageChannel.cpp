@@ -10,7 +10,6 @@
 #include "mozilla/dom/MessagePort.h"
 #include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/WorkerRunnable.h"
-#include "nsContentUtils.h"
 #include "mozilla/dom/Document.h"
 #include "nsIGlobalObject.h"
 #include "nsServiceManagerUtils.h"
@@ -50,13 +49,13 @@ already_AddRefed<MessageChannel> MessageChannel::Constructor(
   MOZ_ASSERT(aGlobal);
 
   nsID portUUID1;
-  aRv = nsContentUtils::GenerateUUIDInPlace(portUUID1);
+  aRv = nsID::GenerateUUIDInPlace(portUUID1);
   if (aRv.Failed()) {
     return nullptr;
   }
 
   nsID portUUID2;
-  aRv = nsContentUtils::GenerateUUIDInPlace(portUUID2);
+  aRv = nsID::GenerateUUIDInPlace(portUUID2);
   if (aRv.Failed()) {
     return nullptr;
   }

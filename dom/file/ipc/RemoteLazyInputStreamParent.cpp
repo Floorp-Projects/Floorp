@@ -7,7 +7,6 @@
 #include "RemoteLazyInputStreamParent.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/InputStreamLengthHelper.h"
-#include "nsContentUtils.h"
 #include "RemoteLazyInputStreamStorage.h"
 
 namespace mozilla {
@@ -22,7 +21,7 @@ RemoteLazyInputStreamParent::CreateCommon(nsIInputStream* aInputStream,
   MOZ_ASSERT(aRv);
 
   nsID id;
-  *aRv = nsContentUtils::GenerateUUIDInPlace(id);
+  *aRv = nsID::GenerateUUIDInPlace(id);
   if (NS_WARN_IF(NS_FAILED(*aRv))) {
     return nullptr;
   }
