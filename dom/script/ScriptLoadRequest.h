@@ -257,6 +257,9 @@ class ScriptLoadRequest
   // UTF-16 source; on failure it will remain in its initial state.
   nsresult GetScriptSource(JSContext* aCx, MaybeSourceText* aMaybeSource);
 
+  // Used to output a string for the Gecko Profiler.
+  void GetProfilerLabel(nsACString& aOutString);
+
   // Make this request a preload (speculative) request.
   void SetIsPreloadRequest() {
     MOZ_ASSERT(!GetScriptElement());
