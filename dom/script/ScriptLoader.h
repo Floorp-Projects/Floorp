@@ -401,23 +401,6 @@ class ScriptLoader final : public nsISupports {
    */
   void Destroy();
 
-  /**
-   * Implement the HostResolveImportedModule abstract operation.
-   *
-   * Resolve a module specifier string and look this up in the module
-   * map, returning the result. This is only called for previously
-   * loaded modules and always succeeds.
-   *
-   * @param aReferencingPrivate A JS::Value which is either undefined
-   *                            or contains a LoadedScript private pointer.
-   * @param aModuleRequest A module request object.
-   * @param aModuleOut This is set to the module found.
-   */
-  static void ResolveImportedModule(JSContext* aCx,
-                                    JS::Handle<JS::Value> aReferencingPrivate,
-                                    JS::Handle<JSObject*> aModuleRequest,
-                                    JS::MutableHandle<JSObject*> aModuleOut);
-
   void StartDynamicImport(ModuleLoadRequest* aRequest);
 
   /**
@@ -697,10 +680,6 @@ class ScriptLoader final : public nsISupports {
                                          ScriptLoadRequest* aRequest,
                                          MaybeSourceText* aMaybeSource);
 
-  friend JSObject* HostResolveImportedModule(
-      JSContext* aCx, JS::Handle<JS::Value> aReferencingPrivate,
-      JS::Handle<JSString*> aSpecifier);
-
   // Returns wether we should save the bytecode of this script after the
   // execution of the script.
   static bool ShouldCacheBytecode(ScriptLoadRequest* aRequest);
@@ -820,6 +799,16 @@ class ModuleLoader : public nsISupports {
   bool InstantiateModuleTree(ModuleLoadRequest* aRequest);
   nsresult InitDebuggerDataForModuleTree(JSContext* aCx,
                                          ModuleLoadRequest* aRequest);
+  static nsresult ResolveRequestedModules(ModuleLoadRequest* aRequest,
+                                          nsCOMArray<nsIURI>* aUrlsOut);
+  static nsresult HandleResolveFailure(JSContext* aCx, LoadedScript* aScript,
+                                       const nsAString& aSpecifier,
+                                       uint32_t aLineNumber,
+                                       uint32_t aColumnNumber,
+                                       JS::MutableHandle<JS::Value> errorOut);
+
+  static already_AddRefed<nsIURI> ResolveModuleSpecifier(
+      ScriptLoader* loader, LoadedScript* aScript, const nsAString& aSpecifier);
 };
 
 class nsAutoScriptLoaderDisabler {
