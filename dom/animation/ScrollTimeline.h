@@ -8,10 +8,13 @@
 #define mozilla_dom_ScrollTimeline_h
 
 #include "mozilla/dom/AnimationTimeline.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/HashTable.h"
 #include "mozilla/ServoStyleConsts.h"
 #include "mozilla/TimingParams.h"
 #include "mozilla/WritingModes.h"
+
+class nsIScrollableFrame;
 
 namespace mozilla {
 
@@ -19,7 +22,6 @@ struct NonOwningAnimationTarget;
 
 namespace dom {
 
-class Document;
 class Element;
 
 /**
@@ -62,8 +64,36 @@ class Element;
  */
 class ScrollTimeline final : public AnimationTimeline {
  public:
+  struct Scroller {
+    // FIXME: Support nearest and replace auto with root in Bug 1737918.
+    enum class Type : uint8_t {
+      // For auto. Should be scrolling element of the owner doc.
+      Auto,
+      // For any other specific elements.
+      Other,
+    };
+    Type mType = Type::Auto;
+    RefPtr<Element> mElement;
+
+    // We use the owner doc of the animation target. This may be different from
+    // |mDocument| after we implement ScrollTimeline interface for script.
+    static Scroller Auto(const Document* aOwnerDoc) {
+      // For auto, we use scrolling element as the default scroller.
+      // However, it's mutable, and we would like to keep things simple, so
+      // we always register the ScrollTimeline to the document element (i.e.
+      // root element) because the content of the root scroll frame is the root
+      // element.
+      return {Type::Auto, aOwnerDoc->GetDocumentElement()};
+    }
+
+    explicit operator bool() const { return mElement; }
+    bool operator==(const Scroller& aOther) const {
+      return mType == aOther.mType && mElement == aOther.mElement;
+    }
+  };
+
   ScrollTimeline() = delete;
-  ScrollTimeline(Document* aDocument, Element* aScroller);
+  ScrollTimeline(Document* aDocument, const Scroller& aScroller);
 
   // FIXME: Bug 1737918: Rewrite this because @scroll-timeline will be obsolete.
   static already_AddRefed<ScrollTimeline> FromRule(
@@ -127,6 +157,8 @@ class ScrollTimeline final : public AnimationTimeline {
   void RegisterWithScrollSource();
   void UnregisterFromScrollSource();
 
+  const nsIScrollableFrame* GetScrollFrame() const;
+
   // A helper to get the physical orientation of this scroll-timeline.
   //
   // The spec defines auto, but there is a spec issue:
@@ -149,10 +181,10 @@ class ScrollTimeline final : public AnimationTimeline {
   // FIXME: Bug 1733260: new spec proposal uses a new way to define scroller,
   // and move the element-based offset into view-timeline, so here we only
   // implement the default behavior of scroll timeline:
-  // 1. "source" is auto (use main viewport scroller), and
+  // 1. "source" is auto (use scrolling element), and
   // 2. "scroll-offsets" is none (i.e. always 0% ~ 100%).
   // So now we will only use the scroll direction from @scroll-timeline rule.
-  RefPtr<Element> mSource;
+  Scroller mSource;
   StyleScrollDirection mDirection;
 
   // Note: it's unfortunate TimingParams cannot be a const variable because
