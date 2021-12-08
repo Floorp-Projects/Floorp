@@ -252,7 +252,11 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
 
   // Shutdown the GPU process.
   void CleanShutdown();
-  void DestroyProcess();
+  // Destroy the process and clean up resources.
+  // Setting aUnexpectedShutdown = true indicates that this is being called to
+  // clean up resources in response to an unexpected shutdown having been
+  // detected.
+  void DestroyProcess(bool aUnexpectedShutdown = false);
 
   void HandleProcessLost();
 

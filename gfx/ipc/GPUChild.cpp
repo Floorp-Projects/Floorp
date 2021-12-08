@@ -103,6 +103,8 @@ base::ProcessHandle GPUChild::GetChildProcessHandle() {
   return mHost->GetChildProcessHandle();
 }
 
+void GPUChild::OnUnexpectedShutdown() { mUnexpectedShutdown = true; }
+
 mozilla::ipc::IPCResult GPUChild::RecvInitComplete(const GPUDeviceData& aData) {
   // We synchronously requested GPU parameters before this arrived.
   if (mGPUReady) {
@@ -265,7 +267,7 @@ mozilla::ipc::IPCResult GPUChild::RecvAddMemoryReport(
 }
 
 void GPUChild::ActorDestroy(ActorDestroyReason aWhy) {
-  if (aWhy == AbnormalShutdown) {
+  if (aWhy == AbnormalShutdown || mUnexpectedShutdown) {
     nsAutoString dumpId;
     GenerateCrashReport(OtherPid(), &dumpId);
 
