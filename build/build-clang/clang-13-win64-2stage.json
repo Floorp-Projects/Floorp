@@ -1,7 +1,6 @@
 {
     "stages": "2",
     "build_type": "Release",
-    "assertions": false,
     "cc": "cl.exe",
     "cxx": "cl.exe",
     "ml": "ml64.exe",
