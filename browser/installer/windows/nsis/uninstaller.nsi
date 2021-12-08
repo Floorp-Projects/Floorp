@@ -327,8 +327,7 @@ Function un.OpenRefreshHelpURL
   ExecShell "open" "${URLProfileRefreshHelp}"
 FunctionEnd
 
-; Returns the common directory (typically
-; "C:\ProgramData\Mozilla-1de4eec8-1241-4177-a864-e594e8d1fb38") on the stack.
+; Returns the common directory (typically "C:\ProgramData\Mozilla") on the stack.
 Function un.GetCommonDirectory
   Push $0   ; Save $0
 
@@ -337,7 +336,7 @@ Function un.GetCommonDirectory
 
   ; Add our subdirectory, this is hardcoded as grandparent of the update directory in
   ; several other places.
-  StrCpy $0 "$0\Mozilla-1de4eec8-1241-4177-a864-e594e8d1fb38"
+  StrCpy $0 "$0\Mozilla"
 
   Exch $0   ; Restore original $0 and put our $0 on the stack.
 FunctionEnd
