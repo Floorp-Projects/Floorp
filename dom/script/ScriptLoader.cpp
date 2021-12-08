@@ -2866,7 +2866,7 @@ void ModuleLoader::ProcessDynamicImport(ModuleLoadRequest* aRequest) {
 
   nsresult rv = NS_ERROR_FAILURE;
   if (aRequest->mModuleScript) {
-    rv = mLoader->EvaluateModule(aRequest);
+    rv = EvaluateModule(aRequest);
   }
 
   if (NS_FAILED(rv)) {
@@ -3155,12 +3155,12 @@ nsresult ScriptLoader::EvaluateScriptElement(ScriptLoadRequest* aRequest) {
   }
 
   if (aRequest->IsModuleRequest()) {
-    return EvaluateModule(globalObject, aRequest);
+    return mModuleLoader->EvaluateModule(globalObject, aRequest);
   }
   return EvaluateScript(globalObject, aRequest);
 }
 
-nsresult ScriptLoader::EvaluateModule(nsIGlobalObject* aGlobalObject,
+nsresult ModuleLoader::EvaluateModule(nsIGlobalObject* aGlobalObject,
                                       ScriptLoadRequest* aRequest) {
   nsAutoMicroTask mt;
   AutoEntryScript aes(aGlobalObject, "EvaluateModule", true);
@@ -3190,7 +3190,7 @@ nsresult ScriptLoader::EvaluateModule(nsIGlobalObject* aGlobalObject,
     // For a dynamic import, the promise is rejected.  Otherwise an error
     // is either reported by AutoEntryScript.
     if (request->IsDynamicImport()) {
-      mModuleLoader->FinishDynamicImport(cx, request, NS_OK, nullptr);
+      FinishDynamicImport(cx, request, NS_OK, nullptr);
     }
     return NS_OK;
   }
@@ -3198,7 +3198,7 @@ nsresult ScriptLoader::EvaluateModule(nsIGlobalObject* aGlobalObject,
   JS::Rooted<JSObject*> module(cx, moduleScript->ModuleRecord());
   MOZ_ASSERT(module);
 
-  nsresult rv = mModuleLoader->InitDebuggerDataForModuleTree(cx, request);
+  nsresult rv = InitDebuggerDataForModuleTree(cx, request);
   NS_ENSURE_SUCCESS(rv, rv);
 
   TRACE_FOR_TEST(aRequest->GetScriptElement(), "scriptloader_evaluate_module");
@@ -3230,7 +3230,7 @@ nsresult ScriptLoader::EvaluateModule(nsIGlobalObject* aGlobalObject,
     aEvaluationPromise.set(&rval.toObject());
   }
   if (request->IsDynamicImport()) {
-    mModuleLoader->FinishDynamicImport(cx, request, rv, aEvaluationPromise);
+    FinishDynamicImport(cx, request, rv, aEvaluationPromise);
   } else {
     // If this is not a dynamic import, and if the promise is rejected,
     // the value is unwrapped from the promise value.
@@ -3385,8 +3385,9 @@ nsresult ScriptLoader::EvaluateScript(nsIGlobalObject* aGlobalObject,
   return rv;
 }
 
-nsresult ScriptLoader::EvaluateModule(ScriptLoadRequest* aRequest) {
-  nsCOMPtr<nsIGlobalObject> globalObject = GetGlobalForRequest(aRequest);
+nsresult ModuleLoader::EvaluateModule(ScriptLoadRequest* aRequest) {
+  nsCOMPtr<nsIGlobalObject> globalObject =
+      mLoader->GetGlobalForRequest(aRequest);
   if (!globalObject) {
     return NS_ERROR_FAILURE;
   }
