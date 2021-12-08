@@ -64,12 +64,15 @@ var ContentCrashHandler = {
     debug`Notifying content process crash, dump ID ${dumpID}`;
     const [minidumpPath, extrasPath] = getPendingMinidump(dumpID);
 
+    const processType = "FOREGROUND_CHILD";
+
     EventDispatcher.instance.sendRequest({
       type: "GeckoView:ContentCrashReport",
       minidumpPath,
       extrasPath,
       success: true,
       fatal: false,
+      processType,
     });
   },
 };
