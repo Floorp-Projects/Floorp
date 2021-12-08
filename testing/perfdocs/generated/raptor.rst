@@ -1976,8 +1976,9 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **page cycles**: 25
    * **page timeout**: 60000
    * **playback**: mitmproxy
-   * **playback pageset manifest**: mitm5-linux-firefox-bing-search.manifest
-   * **playback version**: 5.1.1
+   * **playback pageset manifest**: mitm7-linux-firefox-bing-search.manifest
+   * **playback version**: 7.0.4
+   * **secondary url**: `<https://www.bing.com/search?q=barack+obama+quotes>`__
    * **test url**: `<https://www.bing.com/search?q=barack+obama>`__
    * **type**: pageload
    * **unit**: ms
