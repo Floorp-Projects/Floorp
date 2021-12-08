@@ -11399,6 +11399,16 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
     }
   }
 
+  if (const char* str = op.getStringOption("ion-optimize-shapeguards")) {
+    if (strcmp(str, "on") == 0) {
+      jit::JitOptions.disableRedundantShapeGuards = false;
+    } else if (strcmp(str, "off") == 0) {
+      jit::JitOptions.disableRedundantShapeGuards = true;
+    } else {
+      return OptionFailure("ion-optimize-shapeguards", str);
+    }
+  }
+
   if (const char* str = op.getStringOption("ion-instruction-reordering")) {
     if (strcmp(str, "on") == 0) {
       jit::JitOptions.disableInstructionReordering = false;
@@ -12316,6 +12326,9 @@ int main(int argc, char** argv) {
       !op.addStringOption(
           '\0', "ion-instruction-reordering", "on/off",
           "Instruction reordering (default: off, on to enable)") ||
+      !op.addStringOption(
+          '\0', "ion-optimize-shapeguards", "on/off",
+          "Eliminate redundant shape guards (default: on, off to disable)") ||
       !op.addBoolOption('\0', "ion-check-range-analysis",
                         "Range analysis checking") ||
       !op.addBoolOption('\0', "ion-extra-checks",

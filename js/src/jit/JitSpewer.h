@@ -61,6 +61,8 @@ namespace jit {
   _(Profiling)                             \
   /* Debug info about the I$ */            \
   _(CacheFlush)                            \
+  /* Info about redundant shape guards */  \
+  _(RedundantShapeGuards)                  \
   /* Output a list of MIR expressions */   \
   _(MIRExpressions)                        \
   /* Spew Tracelogger summary stats */     \
