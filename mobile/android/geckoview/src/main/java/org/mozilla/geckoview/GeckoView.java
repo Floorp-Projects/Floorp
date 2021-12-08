@@ -711,7 +711,7 @@ public class GeckoView extends FrameLayout {
   }
 
   @Override
-  public void dispatchDraw(final Canvas canvas) {
+  public void dispatchDraw(final @Nullable Canvas canvas) {
     super.dispatchDraw(canvas);
 
     if (mSession != null) {
