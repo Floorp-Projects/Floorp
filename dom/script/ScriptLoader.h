@@ -629,12 +629,6 @@ class ScriptLoader final : public nsISupports {
   using MaybeSourceText =
       mozilla::MaybeOneOf<JS::SourceText<char16_t>, JS::SourceText<Utf8Unit>>;
 
-  // Get source text.  On success |aMaybeSource| will contain either UTF-8 or
-  // UTF-16 source; on failure it will remain in its initial state.
-  [[nodiscard]] nsresult GetScriptSource(JSContext* aCx,
-                                         ScriptLoadRequest* aRequest,
-                                         MaybeSourceText* aMaybeSource);
-
   // Returns wether we should save the bytecode of this script after the
   // execution of the script.
   static bool ShouldCacheBytecode(ScriptLoadRequest* aRequest);
