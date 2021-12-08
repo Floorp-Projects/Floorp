@@ -36,6 +36,15 @@ interface TabsTrayInteractor {
     fun onInactiveDebugClicked(tabs: Collection<TabSessionState>)
 
     /**
+     * Invoked when [tabId] should be moved to before/after [targetId] from a drag-drop operation
+     */
+    fun onTabsMove(
+        tabId: String,
+        targetId: String?,
+        placeAfter: Boolean
+    )
+
+    /**
      * Deletes all inactive tabs.
      */
     fun onDeleteInactiveTabs()
@@ -63,6 +72,14 @@ class DefaultTabsTrayInteractor(
 
     override fun onDeleteTabs(tabs: Collection<TabSessionState>) {
         controller.handleMultipleTabsDeletion(tabs)
+    }
+
+    override fun onTabsMove(
+        tabId: String,
+        targetId: String?,
+        placeAfter: Boolean
+    ) {
+        controller.handleTabsMove(tabId, targetId, placeAfter)
     }
 
     override fun onInactiveDebugClicked(tabs: Collection<TabSessionState>) {

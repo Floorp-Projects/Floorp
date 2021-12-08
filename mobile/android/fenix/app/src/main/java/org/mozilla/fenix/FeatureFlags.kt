@@ -74,6 +74,11 @@ object FeatureFlags {
     val tabGroupFeature = Config.channel.isNightlyOrDebug
 
     /**
+     * Allows tabs to be dragged around as long as tab groups are disabled
+     */
+    val tabReorderingFeature = Config.channel.isNightlyOrDebug
+
+    /**
      * Enables showing search groupings in the History.
      */
     const val showHistorySearchGroups = true

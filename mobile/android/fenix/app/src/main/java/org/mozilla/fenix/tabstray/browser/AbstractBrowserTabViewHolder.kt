@@ -4,13 +4,18 @@
 
 package org.mozilla.fenix.tabstray.browser
 
+import android.annotation.SuppressLint
+import android.graphics.PointF
+import android.view.MotionEvent
 import android.view.View
+import android.view.ViewConfiguration
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.widget.AppCompatImageButton
+import androidx.core.view.ViewCompat
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import mozilla.components.browser.state.selector.findTabOrCustomTab
@@ -24,6 +29,7 @@ import mozilla.components.browser.toolbar.MAX_URI_LENGTH
 import mozilla.components.concept.base.images.ImageLoadRequest
 import mozilla.components.concept.base.images.ImageLoader
 import mozilla.components.concept.engine.mediasession.MediaSession
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.MetricController
@@ -31,6 +37,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.removeAndDisable
 import org.mozilla.fenix.ext.removeTouchDelegate
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showAndEnable
 import org.mozilla.fenix.ext.toShortUrl
 import org.mozilla.fenix.selection.SelectionHolder
@@ -77,6 +84,9 @@ abstract class AbstractBrowserTabViewHolder(
 
     override var tab: TabSessionState? = null
 
+    internal var beingDragged: Boolean = false
+    private var touchStartPoint: PointF? = null
+
     /**
      * Displays the data of the given session and notifies the given observable about events.
      */
@@ -88,6 +98,7 @@ abstract class AbstractBrowserTabViewHolder(
         delegate: TabsTray.Delegate
     ) {
         this.tab = tab
+        beingDragged = false
 
         updateTitle(tab)
         updateUrl(tab)
@@ -225,6 +236,50 @@ abstract class AbstractBrowserTabViewHolder(
             } else {
                 false
             }
+        }
+        setDragInteractor(item, holder, interactor)
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    private fun setDragInteractor(
+        item: TabSessionState,
+        holder: SelectionHolder<TabSessionState>,
+        interactor: BrowserTrayInteractor
+    ) {
+        // Since I immediately pass the event to onTouchEvent if it's not a move
+        // The ClickableViewAccessibility warning isn't useful
+        itemView.setOnTouchListener { view, motionEvent ->
+            when (motionEvent.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    touchStartPoint = PointF(motionEvent.x, motionEvent.y)
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    touchStartPoint = null
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    val parent = itemView.parent as AbstractBrowserTrayList
+                    val touchStart = touchStartPoint
+                    val selected = holder.selectedItems
+                    val selectsOnlyThis = (selected.size == 1 && selected.contains(item))
+                    val featureEnabled = FeatureFlags.tabReorderingFeature &&
+                        !parent.context.settings().searchTermTabGroupsAreEnabled
+                    if (featureEnabled && selectsOnlyThis && touchStart != null) {
+                        // Prevent scrolling if the user tries to start drag vertically
+                        parent.requestDisallowInterceptTouchEvent(true)
+                        // Only start deselect+drag if the user drags far enough
+                        val dist = PointF.length(touchStart.x - motionEvent.x, touchStart.y - motionEvent.y)
+                        if (dist > ViewConfiguration.get(parent.context).scaledTouchSlop) {
+                            interactor.deselect(item) // Exit selection mode
+                            touchStartPoint = null
+                            val dragOffset = PointF(motionEvent.x, motionEvent.y)
+                            val shadow = BlankDragShadowBuilder()
+                            ViewCompat.startDragAndDrop(itemView, null, shadow, TabDragData(item, dragOffset), 0)
+                        }
+                        return@setOnTouchListener true
+                    }
+                }
+            }
+            view.onTouchEvent(motionEvent)
         }
     }
 
