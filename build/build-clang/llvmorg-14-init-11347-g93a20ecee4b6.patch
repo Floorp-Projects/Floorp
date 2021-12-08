@@ -1,0 +1,76 @@
+From 93a20ecee4b6c6618e0a8e1112f4f929d55ffcbb Mon Sep 17 00:00:00 2001
+From: Arthur Eubanks <aeubanks@google.com>
+Date: Fri, 3 Dec 2021 11:01:25 -0800
+Subject: [PATCH] [DebugInfo] Check DIEnumerator bit width when comparing for
+ equality
+
+As mentioned in D106585, this causes non-determinism, which can also be
+shown by this test case being flaky without this patch.
+
+We were using the APSInt's bit width for hashing, but not for checking
+for equality. APInt::isSameValue() does not check bit width.
+
+Reviewed By: rnk
+
+Differential Revision: https://reviews.llvm.org/D115054
+---
+ llvm/lib/IR/LLVMContextImpl.h       |  5 +++--
+ llvm/unittests/IR/DebugInfoTest.cpp | 20 +++++++++++++++++++-
+ 2 files changed, 22 insertions(+), 3 deletions(-)
+
+diff --git a/llvm/lib/IR/LLVMContextImpl.h b/llvm/lib/IR/LLVMContextImpl.h
+index b2909c425846..8db1b74259a1 100644
+--- a/llvm/lib/IR/LLVMContextImpl.h
++++ b/llvm/lib/IR/LLVMContextImpl.h
+@@ -386,8 +386,9 @@ template <> struct MDNodeKeyImpl<DIEnumerator> {
+         IsUnsigned(N->isUnsigned()) {}
+ 
+   bool isKeyOf(const DIEnumerator *RHS) const {
+-    return APInt::isSameValue(Value, RHS->getValue()) &&
+-           IsUnsigned == RHS->isUnsigned() && Name == RHS->getRawName();
++    return Value.getBitWidth() == RHS->getValue().getBitWidth() &&
++           Value == RHS->getValue() && IsUnsigned == RHS->isUnsigned() &&
++           Name == RHS->getRawName();
+   }
+ 
+   unsigned getHashValue() const { return hash_combine(Value, Name); }
+diff --git a/llvm/unittests/IR/DebugInfoTest.cpp b/llvm/unittests/IR/DebugInfoTest.cpp
+index 060a5c2b08bc..17b6e54644b2 100644
+--- a/llvm/unittests/IR/DebugInfoTest.cpp
++++ b/llvm/unittests/IR/DebugInfoTest.cpp
+@@ -7,8 +7,9 @@
+ //===----------------------------------------------------------------------===//
+ 
+ #include "llvm/IR/DebugInfo.h"
+-#include "llvm/IR/DIBuilder.h"
++#include "llvm/ADT/APSInt.h"
+ #include "llvm/AsmParser/Parser.h"
++#include "llvm/IR/DIBuilder.h"
+ #include "llvm/IR/DebugInfoMetadata.h"
+ #include "llvm/IR/IntrinsicInst.h"
+ #include "llvm/IR/LLVMContext.h"
+@@ -244,4 +245,21 @@ TEST(DIBuilder, CreateSetType) {
+   EXPECT_TRUE(isa_and_nonnull<DIDerivedType>(SetType));
+ }
+ 
++TEST(DIBuilder, DIEnumerator) {
++  LLVMContext Ctx;
++  std::unique_ptr<Module> M(new Module("MyModule", Ctx));
++  DIBuilder DIB(*M);
++  APSInt I1(APInt(32, 1));
++  APSInt I2(APInt(33, 1));
++
++  auto *E = DIEnumerator::get(Ctx, I1, I1.isSigned(), "name");
++  EXPECT_TRUE(E);
++
++  auto *E1 = DIEnumerator::getIfExists(Ctx, I1, I1.isSigned(), "name");
++  EXPECT_TRUE(E1);
++
++  auto *E2 = DIEnumerator::getIfExists(Ctx, I2, I1.isSigned(), "name");
++  EXPECT_FALSE(E2);
++}
++
+ } // end namespace
+-- 
+2.34.0.1.g4c8d2d0e3e
+
