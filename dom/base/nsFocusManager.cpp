@@ -70,9 +70,7 @@
 #include "mozilla/StaticPrefs_full_screen_api.h"
 #include <algorithm>
 
-#ifdef MOZ_XUL
-#  include "nsIDOMXULMenuListElement.h"
-#endif
+#include "nsIDOMXULMenuListElement.h"
 
 #ifdef ACCESSIBILITY
 #  include "nsAccessibilityService.h"
@@ -348,7 +346,6 @@ Element* nsFocusManager::GetFocusedDescendant(
 
 // static
 Element* nsFocusManager::GetRedirectedFocus(nsIContent* aContent) {
-#ifdef MOZ_XUL
   if (aContent->IsXULElement()) {
     nsCOMPtr<nsIDOMXULMenuListElement> menulist =
         aContent->AsElement()->AsXULMenuList();
@@ -358,7 +355,6 @@ Element* nsFocusManager::GetRedirectedFocus(nsIContent* aContent) {
       return inputField;
     }
   }
-#endif
 
   return nullptr;
 }
@@ -3431,7 +3427,6 @@ nsresult nsFocusManager::DetermineElementToMoveFocus(
       }
     }
   } else {
-#ifdef MOZ_XUL
     if (aType != MOVEFOCUS_CARET) {
       // if there is no focus, yet a panel is open, focus the first item in
       // the panel
@@ -3440,7 +3435,6 @@ nsresult nsFocusManager::DetermineElementToMoveFocus(
         popupFrame = pm->GetTopPopup(ePopupTypePanel);
       }
     }
-#endif
     if (popupFrame) {
       // When there is a popup open, and no starting content, start the search
       // at the topmost popup.

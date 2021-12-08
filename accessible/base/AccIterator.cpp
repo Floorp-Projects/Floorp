@@ -6,9 +6,7 @@
 
 #include "AccGroupInfo.h"
 #include "DocAccessible-inl.h"
-#ifdef MOZ_XUL
-#  include "XULTreeAccessible.h"
-#endif
+#include "XULTreeAccessible.h"
 
 #include "mozilla/dom/DocumentOrShadowRoot.h"
 #include "mozilla/dom/HTMLLabelElement.h"

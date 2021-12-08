@@ -18,6 +18,7 @@ XPIDL_SOURCES += [
     "nsICertificateDialogs.idl",
     "nsICertOverrideService.idl",
     "nsICertStorage.idl",
+    "nsICertTree.idl",
     "nsIClientAuthDialogs.idl",
     "nsIClientAuthRememberService.idl",
     "nsIContentSignatureVerifier.idl",
@@ -46,11 +47,6 @@ XPIDL_SOURCES += [
     "nsIX509CertDB.idl",
     "nsIX509CertValidity.idl",
 ]
-
-if CONFIG["MOZ_XUL"]:
-    XPIDL_SOURCES += [
-        "nsICertTree.idl",
-    ]
 
 XPIDL_MODULE = "pipnss"
 
@@ -193,13 +189,9 @@ IPDL_SOURCES += [
     "PVerifySSLServerCert.ipdl",
 ]
 
-if CONFIG["MOZ_XUL"]:
-    UNIFIED_SOURCES += [
-        "nsCertTree.cpp",
-    ]
-
 UNIFIED_SOURCES += [
     "md4.c",
+    "nsCertTree.cpp",
 ]
 
 FINAL_LIBRARY = "xul"

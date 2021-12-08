@@ -5,7 +5,7 @@
 
 #include "mozilla/ModuleUtils.h"
 
-#if defined(MOZ_XUL) && defined(NS_PRINTING)
+#if defined(NS_PRINTING)
 #  include "nsPrintingPromptService.h"
 #  include "nsPrintingProxy.h"
 
@@ -20,7 +20,7 @@ NS_DEFINE_NAMED_CID(NS_PRINTINGPROMPTSERVICE_CID);
 #endif
 
 static const mozilla::Module::CIDEntry kEmbeddingCIDs[] = {
-#if defined(MOZ_XUL) && defined(NS_PRINTING)
+#if defined(NS_PRINTING)
 #  ifdef PROXY_PRINTING
     {&kNS_PRINTINGPROMPTSERVICE_CID, false, nullptr,
      nsPrintingPromptServiceConstructor, mozilla::Module::MAIN_PROCESS_ONLY},
@@ -34,7 +34,7 @@ static const mozilla::Module::CIDEntry kEmbeddingCIDs[] = {
     {nullptr}};
 
 static const mozilla::Module::ContractIDEntry kEmbeddingContracts[] = {
-#if defined(MOZ_XUL) && defined(NS_PRINTING)
+#if defined(NS_PRINTING)
     {NS_PRINTINGPROMPTSERVICE_CONTRACTID, &kNS_PRINTINGPROMPTSERVICE_CID},
 #endif
     {nullptr}};

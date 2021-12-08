@@ -73,9 +73,7 @@
 #include "mozilla/ReflowInput.h"
 #include "nsIImageLoadingContent.h"
 #include "nsCopySupport.h"
-#ifdef MOZ_XUL
-#  include "nsXULPopupManager.h"
-#endif
+#include "nsXULPopupManager.h"
 
 #include "nsIClipboardHelper.h"
 
@@ -1428,11 +1426,9 @@ nsDocumentViewer::PageHide(bool aIsUnload) {
     EventDispatcher::Dispatch(window, mPresContext, &event, nullptr, &status);
   }
 
-#ifdef MOZ_XUL
   // look for open menupopups and close them after the unload event, in case
   // the unload event listeners open any new popups
   nsContentUtils::HidePopupsInDocument(mDocument);
-#endif
 
   return NS_OK;
 }
@@ -2714,7 +2710,6 @@ already_AddRefed<nsINode> nsDocumentViewer::GetPopupNode() {
 
     // get the popup node
     nsCOMPtr<nsINode> node = root->GetPopupNode();
-#ifdef MOZ_XUL
     if (!node) {
       nsPIDOMWindowOuter* rootWindow = root->GetWindow();
       if (rootWindow) {
@@ -2727,7 +2722,6 @@ already_AddRefed<nsINode> nsDocumentViewer::GetPopupNode() {
         }
       }
     }
-#endif
     return node.forget();
   }
 

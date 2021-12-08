@@ -27,36 +27,31 @@ UNIFIED_SOURCES += [
     "nsBoxLayout.cpp",
     "nsBoxLayoutState.cpp",
     "nsButtonBoxFrame.cpp",
+    "nsDeckFrame.cpp",
+    "nsDocElementBoxFrame.cpp",
+    "nsImageBoxFrame.cpp",
+    "nsLeafBoxFrame.cpp",
+    "nsMenuBarFrame.cpp",
+    "nsMenuBarListener.cpp",
+    "nsMenuFrame.cpp",
+    "nsMenuPopupFrame.cpp",
+    "nsPopupSetFrame.cpp",
     "nsRepeatService.cpp",
+    "nsResizerFrame.cpp",
     "nsRootBoxFrame.cpp",
     "nsScrollbarButtonFrame.cpp",
     "nsScrollbarFrame.cpp",
     "nsSliderFrame.cpp",
+    "nsSplitterFrame.cpp",
     "nsSprocketLayout.cpp",
     "nsStackLayout.cpp",
+    "nsTextBoxFrame.cpp",
+    "nsTitleBarFrame.cpp",
+    "nsXULPopupManager.cpp",
     "nsXULTooltipListener.cpp",
 ]
 
-if CONFIG["MOZ_XUL"]:
-    UNIFIED_SOURCES += [
-        "nsDeckFrame.cpp",
-        "nsDocElementBoxFrame.cpp",
-        "nsImageBoxFrame.cpp",
-        "nsLeafBoxFrame.cpp",
-        "nsMenuBarFrame.cpp",
-        "nsMenuBarListener.cpp",
-        "nsMenuFrame.cpp",
-        "nsMenuPopupFrame.cpp",
-        "nsPopupSetFrame.cpp",
-        "nsResizerFrame.cpp",
-        "nsSplitterFrame.cpp",
-        "nsTextBoxFrame.cpp",
-        "nsTitleBarFrame.cpp",
-        "nsXULPopupManager.cpp",
-    ]
-
-if CONFIG["MOZ_XUL"]:
-    DIRS += ["tree"]
+DIRS += ["tree"]
 
 CFLAGS += CONFIG["TK_CFLAGS"]
 CXXFLAGS += CONFIG["TK_CFLAGS"]

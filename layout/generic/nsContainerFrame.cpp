@@ -733,7 +733,6 @@ static bool IsTopLevelWidget(nsIWidget* aWidget) {
 void nsContainerFrame::SyncWindowProperties(nsPresContext* aPresContext,
                                             nsIFrame* aFrame, nsView* aView,
                                             gfxContext* aRC, uint32_t aFlags) {
-#ifdef MOZ_XUL
   if (!aView || !nsCSSRendering::IsCanvasFrame(aFrame) || !aView->HasWidget())
     return;
 
@@ -810,7 +809,6 @@ void nsContainerFrame::SyncWindowProperties(nsPresContext* aPresContext,
     }
   }
   SetSizeConstraints(aPresContext, windowWidget, minSize, maxSize);
-#endif
 }
 
 void nsContainerFrame::SetSizeConstraints(nsPresContext* aPresContext,

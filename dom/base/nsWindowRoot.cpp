@@ -34,9 +34,7 @@
 #include "mozilla/dom/JSActorService.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 
-#ifdef MOZ_XUL
-#  include "nsXULElement.h"
-#endif
+#include "nsXULElement.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -156,7 +154,6 @@ nsresult nsWindowRoot::GetControllers(bool aForVisibleWindow,
   nsIContent* focusedContent = nsFocusManager::GetFocusedDescendant(
       mWindow, searchRange, getter_AddRefs(focusedWindow));
   if (focusedContent) {
-#ifdef MOZ_XUL
     RefPtr<nsXULElement> xulElement = nsXULElement::FromNode(focusedContent);
     if (xulElement) {
       ErrorResult rv;
@@ -164,7 +161,6 @@ nsresult nsWindowRoot::GetControllers(bool aForVisibleWindow,
       NS_IF_ADDREF(*aResult);
       return rv.StealNSResult();
     }
-#endif
 
     HTMLTextAreaElement* htmlTextArea =
         HTMLTextAreaElement::FromNode(focusedContent);

@@ -414,15 +414,13 @@
 // XXX Must be included after mozilla/Encoding.h
 #include "encoding_rs.h"
 
-#ifdef MOZ_XUL
-#  include "mozilla/dom/XULBroadcastManager.h"
-#  include "mozilla/dom/XULPersist.h"
-#  include "nsIAppWindow.h"
-#  include "nsXULPrototypeDocument.h"
-#  include "nsXULCommandDispatcher.h"
-#  include "nsXULPopupManager.h"
-#  include "nsIDocShellTreeOwner.h"
-#endif
+#include "mozilla/dom/XULBroadcastManager.h"
+#include "mozilla/dom/XULPersist.h"
+#include "nsIAppWindow.h"
+#include "nsXULPrototypeDocument.h"
+#include "nsXULCommandDispatcher.h"
+#include "nsXULPopupManager.h"
+#include "nsIDocShellTreeOwner.h"
 
 #define XML_DECLARATION_BITS_DECLARATION_EXISTS (1 << 0)
 #define XML_DECLARATION_BITS_ENCODING_EXISTS (1 << 1)
@@ -9020,12 +9018,9 @@ void Document::GetTitle(nsAString& aTitle) {
 
   nsAutoString tmp;
 
-#ifdef MOZ_XUL
   if (rootElement->IsXULElement()) {
     rootElement->GetAttr(kNameSpaceID_None, nsGkAtoms::title, tmp);
-  } else
-#endif
-  {
+  } else {
     Element* title = GetTitleElement();
     if (!title) {
       return;
@@ -9043,13 +9038,11 @@ void Document::SetTitle(const nsAString& aTitle, ErrorResult& aRv) {
     return;
   }
 
-#ifdef MOZ_XUL
   if (rootElement->IsXULElement()) {
     aRv =
         rootElement->SetAttr(kNameSpaceID_None, nsGkAtoms::title, aTitle, true);
     return;
   }
-#endif
 
   Maybe<mozAutoDocUpdate> updateBatch;
   nsCOMPtr<Element> title = GetTitleElement();

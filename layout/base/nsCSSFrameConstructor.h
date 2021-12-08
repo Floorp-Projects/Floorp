@@ -664,11 +664,9 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   /* If FCDATA_MAY_NEED_SCROLLFRAME is set, the new frame should be wrapped in
      a scrollframe if its overflow type so requires. */
 #define FCDATA_MAY_NEED_SCROLLFRAME 0x80
-#ifdef MOZ_XUL
   /* If FCDATA_IS_POPUP is set, the new frame is a XUL popup frame.  These need
      some really weird special handling.  */
-#  define FCDATA_IS_POPUP 0x100
-#endif /* MOZ_XUL */
+#define FCDATA_IS_POPUP 0x100
   /* If FCDATA_SKIP_ABSPOS_PUSH is set, don't push this frame as an
      absolute containing block, no matter what its style says. */
 #define FCDATA_SKIP_ABSPOS_PUSH 0x200
@@ -1462,18 +1460,16 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   static const FrameConstructionData* FindXULTagData(const Element&,
                                                      ComputedStyle&);
   // XUL data-finding helper functions and structures
-#ifdef MOZ_XUL
   static const FrameConstructionData* FindPopupGroupData(const Element&,
                                                          ComputedStyle&);
   static const FrameConstructionData* FindXULButtonData(const Element&,
                                                         ComputedStyle&);
   static const FrameConstructionData* FindXULLabelOrDescriptionData(
       const Element&, ComputedStyle&);
-#  ifdef XP_MACOSX
+#ifdef XP_MACOSX
   static const FrameConstructionData* FindXULMenubarData(const Element&,
                                                          ComputedStyle&);
-#  endif /* XP_MACOSX */
-#endif   /* MOZ_XUL */
+#endif /* XP_MACOSX */
 
   /**
    * Constructs an outer frame, an anonymous child that wraps its real

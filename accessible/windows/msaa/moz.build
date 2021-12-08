@@ -36,6 +36,7 @@ UNIFIED_SOURCES += [
     "nsWinUtils.cpp",
     "Platform.cpp",
     "RootAccessibleWrap.cpp",
+    "XULMenuAccessibleWrap.cpp",
 ]
 
 SOURCES += [
@@ -48,11 +49,6 @@ SOURCES += [
 OS_LIBS += [
     "ntdll",
 ]
-
-if CONFIG["MOZ_XUL"]:
-    UNIFIED_SOURCES += [
-        "XULMenuAccessibleWrap.cpp",
-    ]
 
 LOCAL_INCLUDES += [
     "/accessible/base",

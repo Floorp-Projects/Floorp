@@ -74,12 +74,10 @@ struct MarkupMapInfo {
   MarkupAttrInfo attrs[4];
 };
 
-#ifdef MOZ_XUL
 struct XULMarkupMapInfo {
   const nsStaticAtom* const tag;
   New_Accessible* new_func;
 };
-#endif
 
 /**
  * PREF_ACCESSIBILITY_FORCE_DISABLED preference change callback.
@@ -373,10 +371,8 @@ class nsAccessibilityService final : public mozilla::a11y::DocManager,
     return nullptr;
   }
 
-#ifdef MOZ_XUL
   nsTHashMap<nsPtrHashKey<const nsAtom>, const mozilla::a11y::XULMarkupMapInfo*>
       mXULMarkupMap;
-#endif
 
   friend nsAccessibilityService* GetAccService();
   friend nsAccessibilityService* GetOrCreateAccService(uint32_t);
