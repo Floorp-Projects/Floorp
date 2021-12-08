@@ -264,6 +264,7 @@ def build_one_stage(
             "-DLLVM_ENABLE_ASSERTIONS=%s" % ("ON" if assertions else "OFF"),
             "-DLLVM_TOOL_LIBCXX_BUILD=%s" % ("ON" if build_libcxx else "OFF"),
             "-DLLVM_ENABLE_BINDINGS=OFF",
+            "-DLLVM_ENABLE_CURL=OFF",
         ]
         if "TASK_ID" in os.environ:
             cmake_args += [
