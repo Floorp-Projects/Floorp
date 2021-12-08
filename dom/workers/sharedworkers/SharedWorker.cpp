@@ -28,6 +28,7 @@
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/StorageAccess.h"
+#include "nsContentUtils.h"
 #include "nsGlobalWindowInner.h"
 #include "nsPIDOMWindow.h"
 
@@ -194,7 +195,7 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
     ipcClientInfo.emplace(clientInfo.value().ToIPC());
   }
 
-  nsID agentClusterId = nsID::GenerateUUID();
+  nsID agentClusterId = nsContentUtils::GenerateUUID();
 
   net::CookieJarSettingsArgs cjsData;
   MOZ_ASSERT(loadInfo.mCookieJarSettings);

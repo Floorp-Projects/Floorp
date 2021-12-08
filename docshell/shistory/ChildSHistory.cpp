@@ -89,7 +89,8 @@ nsID ChildSHistory::AddPendingHistoryChange() {
 
 nsID ChildSHistory::AddPendingHistoryChange(int32_t aIndexDelta,
                                             int32_t aLengthDelta) {
-  nsID changeID = nsID::GenerateUUID();
+  nsID changeID = {};
+  nsContentUtils::GenerateUUIDInPlace(changeID);
   PendingSHistoryChange change = {changeID, aIndexDelta, aLengthDelta};
   mPendingSHistoryChanges.AppendElement(change);
   return changeID;

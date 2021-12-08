@@ -368,7 +368,7 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
                            nsILoadInfo::OPENER_POLICY_SAME_ORIGIN_ALLOW_POPUPS);
   }
 
-  fields.mHistoryID = nsID::GenerateUUID();
+  nsContentUtils::GenerateUUIDInPlace(fields.mHistoryID);
   fields.mExplicitActive = [&] {
     if (parentBC) {
       // Non-root browsing-contexts inherit their status from its parent.

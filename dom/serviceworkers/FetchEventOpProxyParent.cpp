@@ -11,6 +11,7 @@
 #include "mozilla/dom/FetchTypes.h"
 #include "mozilla/dom/ServiceWorkerOpArgs.h"
 #include "nsCOMPtr.h"
+#include "nsContentUtils.h"
 #include "nsIInputStream.h"
 
 #include "mozilla/Assertions.h"
@@ -49,7 +50,7 @@ nsresult MaybeDeserializeAndWrapForMainThread(
   aSink = Some(ParentToParentStream());
   auto& uuid = aSink->uuid();
 
-  MOZ_TRY(nsID::GenerateUUIDInPlace(uuid));
+  MOZ_TRY(nsContentUtils::GenerateUUIDInPlace(uuid));
 
   auto storageOrErr = RemoteLazyInputStreamStorage::Get();
 
