@@ -13,8 +13,14 @@ const TESTS = [
   { method: "trace", args: ["trace1"] },
 ];
 
+const TEST_PAGE = "https://example.com/document-builder.sjs?html=tab";
+
 add_task(async function test_method_and_arguments() {
   for (const { method, args } of TESTS) {
+    // Use a dedicated tab for each test to avoid cached messages.
+    gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, TEST_PAGE);
+    await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+
     info(`Test ConsoleApiListener for ${JSON.stringify({ method, args })}`);
 
     const listenerId = await listenToConsoleAPIMessage();
@@ -38,6 +44,8 @@ add_task(async function test_method_and_arguments() {
         `Message event has the expected argument at index ${i}`
       );
     }
+
+    gBrowser.removeTab(gBrowser.selectedTab);
   }
 });
 
