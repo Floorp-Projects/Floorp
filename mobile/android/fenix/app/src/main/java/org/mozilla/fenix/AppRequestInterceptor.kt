@@ -147,6 +147,7 @@ class AppRequestInterceptor(
         ErrorType.ERROR_PROXY_CONNECTION_REFUSED,
         ErrorType.ERROR_UNKNOWN_PROXY_HOST,
         ErrorType.ERROR_NO_INTERNET,
+        ErrorType.ERROR_HTTPS_ONLY,
         ErrorType.ERROR_UNKNOWN_PROTOCOL -> RiskLevel.Low
 
         ErrorType.ERROR_SECURITY_BAD_CERT,
