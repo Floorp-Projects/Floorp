@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/browser/NimbusFeatures.h"
+#include "mozilla/browser/NimbusFeatureManifest.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "jsapi.h"
@@ -33,14 +34,30 @@ bool NimbusFeatures::GetBool(const nsACString& aFeatureId,
                              const nsACString& aVariable, bool aDefault) {
   nsAutoCString pref;
   GetPrefName(aFeatureId, aVariable, pref);
-  return Preferences::GetBool(pref.get(), aDefault);
+  if (Preferences::HasUserValue(pref.get())) {
+    return Preferences::GetBool(pref.get(), aDefault);
+  }
+
+  auto prefName = GetNimbusFallbackPrefName(aFeatureId, aVariable);
+  if (prefName.isSome()) {
+    return Preferences::GetBool(prefName->get(), aDefault);
+  }
+  return aDefault;
 }
 
 int NimbusFeatures::GetInt(const nsACString& aFeatureId,
                            const nsACString& aVariable, int aDefault) {
   nsAutoCString pref;
   GetPrefName(aFeatureId, aVariable, pref);
-  return Preferences::GetInt(pref.get(), aDefault);
+  if (Preferences::HasUserValue(pref.get())) {
+    return Preferences::GetInt(pref.get(), aDefault);
+  }
+
+  auto prefName = GetNimbusFallbackPrefName(aFeatureId, aVariable);
+  if (prefName.isSome()) {
+    return Preferences::GetInt(prefName->get(), aDefault);
+  }
+  return aDefault;
 }
 
 nsresult NimbusFeatures::OnUpdate(const nsACString& aFeatureId,
