@@ -376,5 +376,5 @@ where
 {
     let mut stmt = conn.prepare_maybe_cached(sql, cache)?;
     let iter = stmt.query_and_then_named(params, mapper)?;
-    Ok(iter.collect::<Result<Coll, E>>()?)
+    iter.collect::<Result<Coll, E>>()
 }
