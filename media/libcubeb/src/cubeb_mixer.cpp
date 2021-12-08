@@ -410,9 +410,8 @@ sum2(TYPE_SAMPLE * out, uint32_t stride_out, const TYPE_SAMPLE * in1,
      TYPE_COEFF coeff2, F && operand, uint32_t frames)
 {
   static_assert(
-      std::is_same<TYPE_COEFF,
-                   typename std::result_of<F(TYPE_COEFF)>::type>::value,
-      "function must return the same type as used by matrix_coeff");
+      std::is_same<TYPE_COEFF, decltype(operand(coeff1))>::value,
+      "function must return the same type as used by coeff1 and coeff2");
   for (uint32_t i = 0; i < frames; i++) {
     *out = operand(coeff1 * *in1 + coeff2 * *in2);
     out += stride_out;
@@ -426,10 +425,8 @@ void
 copy(TYPE_SAMPLE * out, uint32_t stride_out, const TYPE_SAMPLE * in,
      uint32_t stride_in, TYPE_COEFF coeff, F && operand, uint32_t frames)
 {
-  static_assert(
-      std::is_same<TYPE_COEFF,
-                   typename std::result_of<F(TYPE_COEFF)>::type>::value,
-      "function must return the same type as used by matrix_coeff");
+  static_assert(std::is_same<TYPE_COEFF, decltype(operand(coeff))>::value,
+                "function must return the same type as used by coeff");
   for (uint32_t i = 0; i < frames; i++) {
     *out = operand(coeff * *in);
     out += stride_out;
@@ -443,8 +440,7 @@ rematrix(const MixerContext * s, TYPE * aOut, const TYPE * aIn,
          const TYPE_COEFF (&matrix_coeff)[COLS][COLS], F && aF, uint32_t frames)
 {
   static_assert(
-      std::is_same<TYPE_COEFF,
-                   typename std::result_of<F(TYPE_COEFF)>::type>::value,
+      std::is_same<TYPE_COEFF, decltype(aF(matrix_coeff[0][0]))>::value,
       "function must return the same type as used by matrix_coeff");
 
   for (uint32_t out_i = 0; out_i < s->_out_ch_count; out_i++) {
