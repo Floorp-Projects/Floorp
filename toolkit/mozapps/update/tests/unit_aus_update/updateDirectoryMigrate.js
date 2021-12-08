@@ -78,6 +78,19 @@ function writeOldStatusFile(aStatus) {
 }
 
 /**
+ * Writes the given data to the config file in the old (unmigrated)
+ * patch directory.
+ *
+ * @param  aData
+ *         The config data to write.
+ */
+function writeOldConfigFile(aData) {
+  let file = getOldUpdatesRootDir();
+  file.append(FILE_UPDATE_CONFIG_JSON);
+  writeFile(file, aData);
+}
+
+/**
  * Gets the specified update log from the old (unmigrated) update directory
  *
  * @param   aLogLeafName
@@ -107,9 +120,38 @@ async function run_test() {
   let updates = getLocalUpdateString({}, patches);
   writeUpdatesToOldXMLFile(getLocalUpdatesXMLString(updates), true);
   writeOldStatusFile(STATE_SUCCEEDED);
+  writeOldConfigFile('{"app.update.auto":false}');
 
   let log = getOldUpdateLog(FILE_UPDATE_LOG);
   writeFile(log, "Last Update Log");
+
+  let oldUninstallPingFile = getOldUpdatesRootDir();
+  const hash = oldUninstallPingFile.leafName;
+  const uninstallPingFilename = `uninstall_ping_${hash}_98537294-d37b-4b8b-a4e9-ab417a5d7a87.json`;
+  oldUninstallPingFile = oldUninstallPingFile.parent.parent;
+  oldUninstallPingFile.append(uninstallPingFilename);
+  const uninstallPingContents = "arbitrary uninstall ping file contents";
+  writeFile(oldUninstallPingFile, uninstallPingContents);
+
+  let oldBackgroundUpdateLog1File = getOldUpdatesRootDir();
+  const oldBackgroundUpdateLog1Filename = "backgroundupdate.moz_log";
+  oldBackgroundUpdateLog1File.append(oldBackgroundUpdateLog1Filename);
+  const oldBackgroundUpdateLog1Contents = "arbitrary log 1 contents";
+  writeFile(oldBackgroundUpdateLog1File, oldBackgroundUpdateLog1Contents);
+
+  let oldBackgroundUpdateLog2File = getOldUpdatesRootDir();
+  const oldBackgroundUpdateLog2Filename = "backgroundupdate.child-1.moz_log";
+  oldBackgroundUpdateLog2File.append(oldBackgroundUpdateLog2Filename);
+  const oldBackgroundUpdateLog2Contents = "arbitrary log 2 contents";
+  writeFile(oldBackgroundUpdateLog2File, oldBackgroundUpdateLog2Contents);
+
+  const pendingPingRelativePath =
+    "backgroundupdate\\datareporting\\glean\\pending_pings\\" +
+    "01234567-89ab-cdef-fedc-0123456789ab";
+  let oldPendingPingFile = getOldUpdatesRootDir();
+  oldPendingPingFile.appendRelativePath(pendingPingRelativePath);
+  const pendingPingContents = "arbitrary pending ping file contents";
+  writeFile(oldPendingPingFile, pendingPingContents);
 
   standardInit();
 
@@ -157,6 +199,48 @@ async function run_test() {
 
   let dir = getUpdateDirFile(DIR_PATCH);
   Assert.ok(dir.exists(), MSG_SHOULD_EXIST);
+
+  Assert.equal(
+    await UpdateUtils.getAppUpdateAutoEnabled(),
+    false,
+    "Automatic update download setting should have been migrated."
+  );
+
+  let newUninstallPing = newDir.parent.parent;
+  newUninstallPing.append(uninstallPingFilename);
+  Assert.ok(newUninstallPing.exists(), MSG_SHOULD_EXIST);
+  Assert.equal(
+    readFile(newUninstallPing),
+    uninstallPingContents,
+    "the uninstall ping contents" + MSG_SHOULD_EQUAL
+  );
+
+  let newBackgroundUpdateLog1File = newDir.clone();
+  newBackgroundUpdateLog1File.append(oldBackgroundUpdateLog1Filename);
+  Assert.ok(newBackgroundUpdateLog1File.exists(), MSG_SHOULD_EXIST);
+  Assert.equal(
+    readFile(newBackgroundUpdateLog1File),
+    oldBackgroundUpdateLog1Contents,
+    "background log file 1 contents" + MSG_SHOULD_EQUAL
+  );
+
+  let newBackgroundUpdateLog2File = newDir.clone();
+  newBackgroundUpdateLog2File.append(oldBackgroundUpdateLog2Filename);
+  Assert.ok(newBackgroundUpdateLog2File.exists(), MSG_SHOULD_EXIST);
+  Assert.equal(
+    readFile(newBackgroundUpdateLog2File),
+    oldBackgroundUpdateLog2Contents,
+    "background log file 2 contents" + MSG_SHOULD_EQUAL
+  );
+
+  let newPendingPing = newDir.clone();
+  newPendingPing.appendRelativePath(pendingPingRelativePath);
+  Assert.ok(newPendingPing.exists(), MSG_SHOULD_EXIST);
+  Assert.equal(
+    readFile(newPendingPing),
+    pendingPingContents,
+    "the pending ping contents" + MSG_SHOULD_EQUAL
+  );
 
   doTestFinish();
 }

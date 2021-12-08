@@ -1769,17 +1769,11 @@ function getMockUpdRootDWin(aGetOldLocation) {
   }
 
   let relPathUpdates = "";
-  let dataDirectory;
+  let dataDirectory = gCommonAppDataDir.clone();
   if (aGetOldLocation) {
-    dataDirectory = gLocalAppDataDir.clone();
-    if (MOZ_APP_VENDOR || MOZ_APP_BASENAME) {
-      relPathUpdates += MOZ_APP_VENDOR ? MOZ_APP_VENDOR : MOZ_APP_BASENAME;
-    } else {
-      relPathUpdates += "Mozilla";
-    }
-  } else {
-    dataDirectory = gCommonAppDataDir.clone();
     relPathUpdates += "Mozilla";
+  } else {
+    relPathUpdates += "Mozilla-1de4eec8-1241-4177-a864-e594e8d1fb38";
   }
 
   relPathUpdates += "\\" + DIR_UPDATES + "\\" + gInstallDirPathHash;
