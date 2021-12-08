@@ -11,7 +11,7 @@
 #include "mozilla/dom/TextTrackRegion.h"
 #include "nsComponentManagerUtils.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "unicode/ubidi.h"
+#include "mozilla/intl/Bidi.h"
 
 extern mozilla::LazyLogModule gTextTrackLog;
 
@@ -223,8 +223,7 @@ bool TextTrackCue::IsTextBaseDirectionLTR() const {
   // The returned result by `ubidi_getBaseDirection` might be `neutral` if the
   // text only contains netural charaters. In this case, we would treat its
   // base direction as LTR.
-  return ubidi_getBaseDirection(mText.BeginReading(), mText.Length()) !=
-         UBIDI_RTL;
+  return intl::Bidi::GetBaseDirection(mText) != intl::Bidi::BaseDirection::RTL;
 }
 
 void TextTrackCue::NotifyDisplayStatesChanged() {
