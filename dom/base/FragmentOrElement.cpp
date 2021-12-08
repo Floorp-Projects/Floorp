@@ -60,9 +60,7 @@
 #include "mozilla/MouseEvents.h"
 #include "nsAttrValueOrString.h"
 #include "nsQueryObject.h"
-#ifdef MOZ_XUL
-#  include "nsXULElement.h"
-#endif /* MOZ_XUL */
+#include "nsXULElement.h"
 #include "nsFrameSelection.h"
 #ifdef DEBUG
 #  include "nsRange.h"

@@ -160,9 +160,7 @@
 #include "UnitTransforms.h"
 #include "ViewportFrame.h"
 
-#ifdef MOZ_XUL
-#  include "nsXULPopupManager.h"
-#endif
+#include "nsXULPopupManager.h"
 
 // Make sure getpid() works.
 #ifdef XP_WIN
@@ -1734,7 +1732,6 @@ nsPoint nsLayoutUtils::GetEventCoordinatesRelativeTo(
 
 nsIFrame* nsLayoutUtils::GetPopupFrameForEventCoordinates(
     nsPresContext* aPresContext, const WidgetEvent* aEvent) {
-#ifdef MOZ_XUL
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (!pm) {
     return nullptr;
@@ -1751,7 +1748,6 @@ nsIFrame* nsLayoutUtils::GetPopupFrameForEventCoordinates(
       return popup;
     }
   }
-#endif
   return nullptr;
 }
 

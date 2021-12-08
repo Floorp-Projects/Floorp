@@ -1458,11 +1458,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
       return true;
     }
 
-#ifdef MOZ_XUL
     return DisplayOutside() == mozilla::StyleDisplayOutside::XUL;
-#else
-    return false;
-#endif
   }
 
   bool IsFloatingStyle() const { return mozilla::StyleFloat::None != mFloat; }

@@ -1404,7 +1404,6 @@ MOZ_OFFICIAL_BRANDING=
 MOZ_AUTH_EXTENSION=1
 MOZ_SPELLCHECK=1
 MOZ_UNIVERSALCHARDET=1
-MOZ_XUL=1
 MOZ_ZIPWRITER=1
 MOZ_NO_SMART_CARDS=
 MOZ_SANDBOX=1
@@ -2239,21 +2238,6 @@ AC_SUBST(MOZ_ENABLE_CAIRO_FT)
 AC_SUBST(MOZ_ENABLE_D3D10_LAYER)
 
 AC_SUBST(MOZ_TREE_PIXMAN)
-
-dnl ========================================================
-dnl disable xul
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(xul,
-[  --disable-xul           Disable XUL],
-    MOZ_XUL= )
-if test "$MOZ_XUL"; then
-  AC_DEFINE(MOZ_XUL)
-else
-  dnl remove extensions that require XUL
-  MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's/inspector//' -e 's/irc//' -e 's/tasks//'`
-fi
-
-AC_SUBST(MOZ_XUL)
 
 dnl ========================================================
 dnl necko configuration options
