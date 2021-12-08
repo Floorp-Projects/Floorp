@@ -22,7 +22,6 @@ import mozilla.components.support.base.feature.UserInteractionHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.view.enterToImmersiveMode
 import mozilla.components.support.ktx.android.view.exitImmersiveModeIfNeeded
-import mozilla.components.support.ktx.android.view.onWindowFocusChangeListener
 import org.mozilla.samples.browser.ext.components
 import org.mozilla.samples.browser.integration.ReaderViewIntegration
 
@@ -103,8 +102,6 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
             view = binding.root
         )
 
-        val onWindowFocusChangeListener = activity?.onWindowFocusChangeListener
-
         fullScreenFeature.set(
             feature = FullScreenFeature(
                 components.store,
@@ -112,9 +109,9 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
                 sessionId
             ) { inFullScreen ->
                 if (inFullScreen) {
-                    activity?.enterToImmersiveMode(onWindowFocusChangeListener)
+                    activity?.enterToImmersiveMode()
                 } else {
-                    activity?.exitImmersiveModeIfNeeded(onWindowFocusChangeListener)
+                    activity?.exitImmersiveModeIfNeeded()
                 }
             },
             owner = this,

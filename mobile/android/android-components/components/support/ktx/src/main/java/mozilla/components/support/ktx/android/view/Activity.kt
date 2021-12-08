@@ -16,20 +16,18 @@ import androidx.core.view.WindowInsetsControllerCompat
 import mozilla.components.support.base.log.logger.Logger
 
 /**
- * Attempts to call immersive mode using the View to hide the status bar and navigation buttons.
- * This will automatically register and use an [View.OnApplyWindowInsetsListener] on API 30+ or an
- * [View.OnSystemUiVisibilityChangeListener] for below APIs to restore immersive mode if interactions
- * with various other widgets like the keyboard or dialogs broken the activity out of immersive mode without
- * [exitImmersiveModeIfNeeded] being called.
+ * Attempts to enter immersive mode - fullscreen with the status bar and navigation buttons hidden.
+ * This will automatically register and use an
+ * - an inset listener: [View.OnApplyWindowInsetsListener] on API 30+ or
+ * [View.OnSystemUiVisibilityChangeListener] for below APIs
+ * - a focus listener: [ViewTreeObserver.OnWindowFocusChangeListener]
  *
- * @param onWindowFocusChangeListener optional callback to ensure immersive mode is stable
- * Note that the callback reference should be kept by the caller and be used for [exitImmersiveModeIfNeeded] call.
+ * to restore immersive mode if interactions with various other widgets like the keyboard or dialogs
+ * got the activity out of immersive mode without [exitImmersiveModeIfNeeded] being called.
  */
-fun Activity.enterToImmersiveMode(
-    onWindowFocusChangeListener: ViewTreeObserver.OnWindowFocusChangeListener? = null
-) {
+fun Activity.enterToImmersiveMode() {
     setAsImmersive()
-    enableImmersiveModeRestore(onWindowFocusChangeListener)
+    enableImmersiveModeRestore()
 }
 
 @VisibleForTesting
@@ -48,16 +46,11 @@ internal fun Activity.setAsImmersive() {
  * the next time it gets focused.
  */
 @VisibleForTesting
-internal fun Activity.enableImmersiveModeRestore(
-    onWindowFocusChangeListener: ViewTreeObserver.OnWindowFocusChangeListener?
-) {
-    onWindowFocusChangeListener?.let {
-        window.decorView.viewTreeObserver?.addOnWindowFocusChangeListener(it)
-    }
+internal fun Activity.enableImmersiveModeRestore() {
+    window.decorView.viewTreeObserver?.addOnWindowFocusChangeListener(onWindowFocusChangeListener)
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-        window.decorView.setOnApplyWindowInsetsListener { view, insets ->
-            println(view)
+        window.decorView.setOnApplyWindowInsetsListener { _, insets ->
             if (insets.isVisible(statusBars())) {
                 setAsImmersive()
             }
@@ -74,21 +67,15 @@ internal fun Activity.enableImmersiveModeRestore(
 }
 
 /**
- * Attempts to come out from immersive mode using the View.
- * @param onWindowFocusChangeListener optional callback to ensure immersive mode is stable
- * Note that the callback reference should be kept by the caller and be the same used for [enterToImmersiveMode] call.
+ * Attempts to come out from immersive mode.
  */
-fun Activity.exitImmersiveModeIfNeeded(
-    onWindowFocusChangeListener: ViewTreeObserver.OnWindowFocusChangeListener? = null
-) {
+fun Activity.exitImmersiveModeIfNeeded() {
     if (WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON and window.attributes.flags == 0) {
         // We left immersive mode already.
         return
     }
 
-    onWindowFocusChangeListener?.let {
-        window.decorView.viewTreeObserver?.removeOnWindowFocusChangeListener(it)
-    }
+    window.decorView.viewTreeObserver?.removeOnWindowFocusChangeListener(onWindowFocusChangeListener)
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
         window.decorView.setOnApplyWindowInsetsListener(null)
@@ -107,7 +94,7 @@ fun Activity.exitImmersiveModeIfNeeded(
  * OnWindowFocusChangeListener used to ensure immersive mode is not broken by other views interactions.
  */
 @VisibleForTesting
-val Activity.onWindowFocusChangeListener: ViewTreeObserver.OnWindowFocusChangeListener
+internal val Activity.onWindowFocusChangeListener: ViewTreeObserver.OnWindowFocusChangeListener
     get() = ViewTreeObserver.OnWindowFocusChangeListener { hasFocus ->
         if (hasFocus) {
             setAsImmersive()

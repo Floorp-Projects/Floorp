@@ -13,6 +13,7 @@ permalink: /changelog/
 
 * **support-ktx**
   * 🚒 Bug fixed [issue #11374](https://github.com/mozilla-mobile/android-components/issues/11374) - Restore immersive mode after interacting with other Windows.
+  * ⚠️ **This is a breaking change**: `OnWindowFocusChangeListener` parameter is removed from `Activity.enterToImmersiveMode()`. There was no way to guarantee that the argument knew to handle immersive mode. Now everything is handled internally.
 
 * **feature-prompts**:
   * Removes deprecated constructor in `PromptFeature`.
