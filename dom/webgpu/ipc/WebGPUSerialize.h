@@ -31,7 +31,7 @@ DEFINE_IPC_SERIALIZER_FFI_ENUM(mozilla::webgpu::ffi::WGPUHostMap);
 DEFINE_IPC_SERIALIZER_WITHOUT_FIELDS(mozilla::dom::GPUCommandBufferDescriptor);
 
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::dom::GPURequestAdapterOptions,
-                                  mPowerPreference);
+                                  mPowerPreference, mForceFallbackAdapter);
 
 DEFINE_IPC_SERIALIZER_WITH_FIELDS(mozilla::webgpu::ScopedError, operationError,
                                   validationMessage);
