@@ -246,8 +246,8 @@ already_AddRefed<Texture> Device::InitSwapChain(
     } else {
       MOZ_CRASH("Unexpected union");
     }
+    *aCanvasSize = size;
   }
-  *aCanvasSize = size;
 
   const layers::RGBDescriptor rgbDesc(size, aFormat);
   // buffer count doesn't matter much, will be created on demand

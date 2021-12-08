@@ -1171,5 +1171,6 @@ interface GPUCanvasContext {
     void unconfigure();
 
     GPUTextureFormat getPreferredFormat(GPUAdapter adapter);
+    [Throws]
     GPUTexture getCurrentTexture();
 };
