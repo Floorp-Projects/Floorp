@@ -2815,7 +2815,7 @@ nsresult ScriptLoader::ProcessRequest(ScriptLoadRequest* aRequest) {
     if (doc) {
       doc->IncrementIgnoreDestructiveWritesCounter();
     }
-    rv = EvaluateScript(aRequest);
+    rv = EvaluateScriptElement(aRequest);
     if (doc) {
       doc->DecrementIgnoreDestructiveWritesCounter();
     }
@@ -2864,7 +2864,7 @@ void ScriptLoader::ProcessDynamicImport(ModuleLoadRequest* aRequest) {
 
   nsresult rv = NS_ERROR_FAILURE;
   if (aRequest->mModuleScript) {
-    rv = EvaluateScript(aRequest);
+    rv = EvaluateModule(aRequest);
   }
 
   if (NS_FAILED(rv)) {
@@ -3098,7 +3098,7 @@ static nsresult ExecuteCompiledScript(JSContext* aCx,
   return aExec.ExecScript();
 }
 
-nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
+nsresult ScriptLoader::EvaluateScriptElement(ScriptLoadRequest* aRequest) {
   using namespace mozilla::Telemetry;
   MOZ_ASSERT(aRequest->IsReadyToRun());
 
@@ -3107,17 +3107,13 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
     return NS_ERROR_FAILURE;
   }
 
-  bool isDynamicImport = aRequest->IsModuleRequest() &&
-                         aRequest->AsModuleRequest()->IsDynamicImport();
-  if (!isDynamicImport) {
-    nsCOMPtr<nsIContent> scriptContent(
-        do_QueryInterface(aRequest->GetScriptElement()));
-    MOZ_ASSERT(scriptContent);
-    Document* ownerDoc = scriptContent->OwnerDoc();
-    if (ownerDoc != mDocument) {
-      // Willful violation of HTML5 as of 2010-12-01
-      return NS_ERROR_FAILURE;
-    }
+  nsCOMPtr<nsIContent> scriptContent(
+      do_QueryInterface(aRequest->GetScriptElement()));
+  MOZ_ASSERT(scriptContent);
+  Document* ownerDoc = scriptContent->OwnerDoc();
+  if (ownerDoc != mDocument) {
+    // Willful violation of HTML5 as of 2010-12-01
+    return NS_ERROR_FAILURE;
   }
 
   nsCOMPtr<nsIGlobalObject> globalObject;
@@ -3144,9 +3140,6 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
     globalObject = scriptGlobal;
   }
 
-  nsAutoCString profilerLabelString;
-  GetProfilerLabelForRequest(aRequest, profilerLabelString);
-
   // Update our current script
   // This must be destroyed after destroying nsAutoMicroTask, see:
   // https://bugzilla.mozilla.org/show_bug.cgi?id=1620505#c4
@@ -3154,216 +3147,250 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
       aRequest->IsModuleRequest() ? nullptr : aRequest->GetScriptElement();
   AutoCurrentScriptUpdater scriptUpdater(this, currentScript);
 
-  // New script entry point required, due to the "Create a script" sub-step of
-  // http://html.spec.whatwg.org/multipage/#execute-the-script-block
-  nsAutoMicroTask mt;
-  AutoEntryScript aes(globalObject, profilerLabelString.get(), true);
-  JSContext* cx = aes.cx();
-  JS::Rooted<JSObject*> global(cx, globalObject->GetGlobalJSObject());
-
   Maybe<AutoSetProcessingScriptTag> setProcessingScriptTag;
   if (context) {
     setProcessingScriptTag.emplace(context);
   }
 
-  nsresult rv;
-  {
-    if (aRequest->IsModuleRequest()) {
-      // When a module is already loaded, it is not feched a second time and the
-      // mDataType of the request might remain set to DataType::Unknown.
-      MOZ_ASSERT(aRequest->IsTextSource() || aRequest->IsUnknownDataType());
-      LOG(("ScriptLoadRequest (%p): Evaluate Module", aRequest));
-      AUTO_PROFILER_MARKER_TEXT("ModuleEvaluation", JS,
-                                MarkerInnerWindowIdFromJSContext(cx),
-                                profilerLabelString);
+  if (aRequest->IsModuleRequest()) {
+    return EvaluateModule(globalObject, aRequest);
+  }
+  return EvaluateScript(globalObject, aRequest);
+}
 
-      ModuleLoadRequest* request = aRequest->AsModuleRequest();
-      MOZ_ASSERT(request->mModuleScript);
-      MOZ_ASSERT(!request->mOffThreadToken);
+nsresult ScriptLoader::EvaluateModule(nsIGlobalObject* aGlobalObject,
+                                      ScriptLoadRequest* aRequest) {
+  nsAutoMicroTask mt;
+  AutoEntryScript aes(aGlobalObject, "EvaluateModule", true);
+  JSContext* cx = aes.cx();
 
-      ModuleScript* moduleScript = request->mModuleScript;
-      if (moduleScript->HasErrorToRethrow()) {
-        LOG(("ScriptLoadRequest (%p):   module has error to rethrow",
-             aRequest));
-        JS::Rooted<JS::Value> error(cx, moduleScript->ErrorToRethrow());
-        JS_SetPendingException(cx, error);
-        // For a dynamic import, the promise is rejected.  Otherwise an error
-        // is either reported by AutoEntryScript.
-        if (request->IsDynamicImport()) {
-          FinishDynamicImport(cx, request, NS_OK, nullptr);
-        }
-        return NS_OK;
-      }
+  nsAutoCString profilerLabelString;
+  GetProfilerLabelForRequest(aRequest, profilerLabelString);
 
-      JS::Rooted<JSObject*> module(cx, moduleScript->ModuleRecord());
-      MOZ_ASSERT(module);
+  LOG(("ScriptLoadRequest (%p): Evaluate Module", aRequest));
+  AUTO_PROFILER_MARKER_TEXT("ModuleEvaluation", JS,
+                            MarkerInnerWindowIdFromJSContext(cx),
+                            profilerLabelString);
 
-      rv = InitDebuggerDataForModuleTree(cx, request);
-      NS_ENSURE_SUCCESS(rv, rv);
+  // When a module is already loaded, it is not feched a second time and the
+  // mDataType of the request might remain set to DataType::Unknown.
+  MOZ_ASSERT(aRequest->IsTextSource() || aRequest->IsUnknownDataType());
 
-      TRACE_FOR_TEST(aRequest->GetScriptElement(),
-                     "scriptloader_evaluate_module");
+  ModuleLoadRequest* request = aRequest->AsModuleRequest();
+  MOZ_ASSERT(request->mModuleScript);
+  MOZ_ASSERT(!request->mOffThreadToken);
 
-      JS::Rooted<JS::Value> rval(cx);
-
-      rv = nsJSUtils::ModuleEvaluate(cx, module, &rval);
-
-      if (NS_SUCCEEDED(rv)) {
-        // If we have an infinite loop in a module, which is stopped by the
-        // user, the module evaluation will fail, but we will not have an
-        // AutoEntryScript exception.
-        MOZ_ASSERT(!aes.HasException());
-      }
-
-      if (NS_FAILED(rv)) {
-        LOG(("ScriptLoadRequest (%p):   evaluation failed", aRequest));
-        // For a dynamic import, the promise is rejected.  Otherwise an error is
-        // either reported by AutoEntryScript.
-        rv = NS_OK;
-      }
-
-      JS::Rooted<JSObject*> aEvaluationPromise(cx);
-      if (rval.isObject()) {
-        // If the user cancels the evaluation on an infinite loop, we need
-        // to skip this step. In that case, ModuleEvaluate will not return a
-        // promise, rval will be undefined. We should treat it as a failed
-        // evaluation, and reject appropriately.
-        aEvaluationPromise.set(&rval.toObject());
-      }
-      if (request->IsDynamicImport()) {
-        FinishDynamicImport(cx, request, rv, aEvaluationPromise);
-      } else {
-        // If this is not a dynamic import, and if the promise is rejected,
-        // the value is unwrapped from the promise value.
-        if (!JS::ThrowOnModuleEvaluationFailure(cx, aEvaluationPromise)) {
-          LOG(("ScriptLoadRequest (%p):   evaluation failed on throw",
-               aRequest));
-          // For a dynamic import, the promise is rejected.  Otherwise an
-          // error is either reported by AutoEntryScript.
-          rv = NS_OK;
-        }
-      }
-
-      TRACE_FOR_TEST_NONE(aRequest->GetScriptElement(),
-                          "scriptloader_no_encode");
-      aRequest->mCacheInfo = nullptr;
-    } else {
-      // Create a ClassicScript object and associate it with the JSScript.
-      RefPtr<ClassicScript> classicScript =
-          new ClassicScript(aRequest->mFetchOptions, aRequest->mBaseURL);
-      JS::RootedValue classicScriptValue(cx, JS::PrivateValue(classicScript));
-
-      JS::CompileOptions options(cx);
-      JS::RootedScript introductionScript(cx);
-      rv = FillCompileOptionsForRequest(aes, aRequest, global, &options,
-                                        &introductionScript);
-
-      if (NS_SUCCEEDED(rv)) {
-        if (aRequest->IsBytecode()) {
-          TRACE_FOR_TEST(aRequest->GetScriptElement(), "scriptloader_execute");
-          JSExecutionContext exec(cx, global, options, classicScriptValue,
-                                  introductionScript);
-          if (aRequest->mOffThreadToken) {
-            LOG(("ScriptLoadRequest (%p): Decode Bytecode & Join and Execute",
-                 aRequest));
-            rv = exec.JoinDecode(&aRequest->mOffThreadToken);
-          } else {
-            LOG(("ScriptLoadRequest (%p): Decode Bytecode and Execute",
-                 aRequest));
-            AUTO_PROFILER_MARKER_TEXT("BytecodeDecodeMainThread", JS,
-                                      MarkerInnerWindowIdFromJSContext(cx),
-                                      profilerLabelString);
-
-            rv = exec.Decode(aRequest->mScriptBytecode,
-                             aRequest->mBytecodeOffset);
-          }
-
-          if (rv == NS_OK) {
-            AUTO_PROFILER_MARKER_TEXT("ScriptExecution", JS,
-                                      MarkerInnerWindowIdFromJSContext(cx),
-                                      profilerLabelString);
-            rv = ExecuteCompiledScript(cx, aRequest, exec, classicScript);
-          }
-
-          // We do not expect to be saving anything when we already have some
-          // bytecode.
-          MOZ_ASSERT(!aRequest->mCacheInfo);
-        } else {
-          MOZ_ASSERT(aRequest->IsSource());
-          JS::Rooted<JSScript*> script(cx);
-          bool encodeBytecode = ShouldCacheBytecode(aRequest);
-
-          {
-            JSExecutionContext exec(cx, global, options, classicScriptValue,
-                                    introductionScript);
-            exec.SetEncodeBytecode(encodeBytecode);
-            TRACE_FOR_TEST(aRequest->GetScriptElement(),
-                           "scriptloader_execute");
-            if (aRequest->mOffThreadToken) {
-              // Off-main-thread parsing.
-              LOG(
-                  ("ScriptLoadRequest (%p): Join (off-thread parsing) and "
-                   "Execute",
-                   aRequest));
-              MOZ_ASSERT(aRequest->IsTextSource());
-              rv = exec.JoinCompile(&aRequest->mOffThreadToken);
-            } else {
-              // Main thread parsing (inline and small scripts)
-              LOG(("ScriptLoadRequest (%p): Compile And Exec", aRequest));
-              MOZ_ASSERT(aRequest->IsTextSource());
-              MaybeSourceText maybeSource;
-              rv = GetScriptSource(cx, aRequest, &maybeSource);
-              if (NS_SUCCEEDED(rv)) {
-                AUTO_PROFILER_MARKER_TEXT("ScriptCompileMainThread", JS,
-                                          MarkerInnerWindowIdFromJSContext(cx),
-                                          profilerLabelString);
-
-                TimeStamp startTime = TimeStamp::Now();
-                rv =
-                    maybeSource.constructed<SourceText<char16_t>>()
-                        ? exec.Compile(maybeSource.ref<SourceText<char16_t>>())
-                        : exec.Compile(maybeSource.ref<SourceText<Utf8Unit>>());
-                mMainThreadParseTime += TimeStamp::Now() - startTime;
-              }
-            }
-
-            if (rv == NS_OK) {
-              script = exec.GetScript();
-              AUTO_PROFILER_MARKER_TEXT("ScriptExecution", JS,
-                                        MarkerInnerWindowIdFromJSContext(cx),
-                                        profilerLabelString);
-              rv = ExecuteCompiledScript(cx, aRequest, exec, classicScript);
-            }
-          }
-
-          // Queue the current script load request to later save the bytecode.
-          if (script && encodeBytecode) {
-            aRequest->SetScript(script);
-            TRACE_FOR_TEST(aRequest->GetScriptElement(), "scriptloader_encode");
-            MOZ_ASSERT(aRequest->mBytecodeOffset ==
-                       aRequest->mScriptBytecode.length());
-            RegisterForBytecodeEncoding(aRequest);
-          } else {
-            LOG(
-                ("ScriptLoadRequest (%p): Bytecode-cache: disabled (rv = %X, "
-                 "script = %p)",
-                 aRequest, unsigned(rv), script.get()));
-            TRACE_FOR_TEST_NONE(aRequest->GetScriptElement(),
-                                "scriptloader_no_encode");
-            aRequest->mCacheInfo = nullptr;
-          }
-        }
-      }
+  ModuleScript* moduleScript = request->mModuleScript;
+  if (moduleScript->HasErrorToRethrow()) {
+    LOG(("ScriptLoadRequest (%p):   module has error to rethrow", aRequest));
+    JS::Rooted<JS::Value> error(cx, moduleScript->ErrorToRethrow());
+    JS_SetPendingException(cx, error);
+    // For a dynamic import, the promise is rejected.  Otherwise an error
+    // is either reported by AutoEntryScript.
+    if (request->IsDynamicImport()) {
+      FinishDynamicImport(cx, request, NS_OK, nullptr);
     }
-
-    // Even if we are not saving the bytecode of the current script, we have
-    // to trigger the encoding of the bytecode, as the current script can
-    // call functions of a script for which we are recording the bytecode.
-    LOG(("ScriptLoadRequest (%p): ScriptLoader = %p", aRequest, this));
-    MaybeTriggerBytecodeEncoding();
+    return NS_OK;
   }
 
+  JS::Rooted<JSObject*> module(cx, moduleScript->ModuleRecord());
+  MOZ_ASSERT(module);
+
+  nsresult rv = InitDebuggerDataForModuleTree(cx, request);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  TRACE_FOR_TEST(aRequest->GetScriptElement(), "scriptloader_evaluate_module");
+
+  JS::Rooted<JS::Value> rval(cx);
+
+  rv = nsJSUtils::ModuleEvaluate(cx, module, &rval);
+
+  if (NS_SUCCEEDED(rv)) {
+    // If we have an infinite loop in a module, which is stopped by the
+    // user, the module evaluation will fail, but we will not have an
+    // AutoEntryScript exception.
+    MOZ_ASSERT(!aes.HasException());
+  }
+
+  if (NS_FAILED(rv)) {
+    LOG(("ScriptLoadRequest (%p):   evaluation failed", aRequest));
+    // For a dynamic import, the promise is rejected.  Otherwise an error is
+    // either reported by AutoEntryScript.
+    rv = NS_OK;
+  }
+
+  JS::Rooted<JSObject*> aEvaluationPromise(cx);
+  if (rval.isObject()) {
+    // If the user cancels the evaluation on an infinite loop, we need
+    // to skip this step. In that case, ModuleEvaluate will not return a
+    // promise, rval will be undefined. We should treat it as a failed
+    // evaluation, and reject appropriately.
+    aEvaluationPromise.set(&rval.toObject());
+  }
+  if (request->IsDynamicImport()) {
+    FinishDynamicImport(cx, request, rv, aEvaluationPromise);
+  } else {
+    // If this is not a dynamic import, and if the promise is rejected,
+    // the value is unwrapped from the promise value.
+    if (!JS::ThrowOnModuleEvaluationFailure(cx, aEvaluationPromise)) {
+      LOG(("ScriptLoadRequest (%p):   evaluation failed on throw", aRequest));
+      // For a dynamic import, the promise is rejected.  Otherwise an
+      // error is either reported by AutoEntryScript.
+      rv = NS_OK;
+    }
+  }
+
+  TRACE_FOR_TEST_NONE(aRequest->GetScriptElement(), "scriptloader_no_encode");
+  aRequest->mCacheInfo = nullptr;
   return rv;
+}
+
+nsresult ScriptLoader::CompileOrDecodeClassicScript(
+    JSContext* aCx, JSExecutionContext& aExec, ScriptLoadRequest* aRequest) {
+  nsAutoCString profilerLabelString;
+  GetProfilerLabelForRequest(aRequest, profilerLabelString);
+
+  nsresult rv;
+  if (aRequest->IsBytecode()) {
+    if (aRequest->mOffThreadToken) {
+      LOG(("ScriptLoadRequest (%p): Decode Bytecode & Join and Execute",
+           aRequest));
+      rv = aExec.JoinDecode(&aRequest->mOffThreadToken);
+    } else {
+      LOG(("ScriptLoadRequest (%p): Decode Bytecode and Execute", aRequest));
+      AUTO_PROFILER_MARKER_TEXT("BytecodeDecodeMainThread", JS,
+                                MarkerInnerWindowIdFromJSContext(aCx),
+                                profilerLabelString);
+
+      rv = aExec.Decode(aRequest->mScriptBytecode, aRequest->mBytecodeOffset);
+    }
+
+    // We do not expect to be saving anything when we already have some
+    // bytecode.
+    MOZ_ASSERT(!aRequest->mCacheInfo);
+    return rv;
+  }
+
+  MOZ_ASSERT(aRequest->IsSource());
+  bool encodeBytecode = ShouldCacheBytecode(aRequest);
+  aExec.SetEncodeBytecode(encodeBytecode);
+
+  if (aRequest->mOffThreadToken) {
+    // Off-main-thread parsing.
+    LOG(
+        ("ScriptLoadRequest (%p): Join (off-thread parsing) and "
+         "Execute",
+         aRequest));
+    MOZ_ASSERT(aRequest->IsTextSource());
+    rv = aExec.JoinCompile(&aRequest->mOffThreadToken);
+  } else {
+    // Main thread parsing (inline and small scripts)
+    LOG(("ScriptLoadRequest (%p): Compile And Exec", aRequest));
+    MOZ_ASSERT(aRequest->IsTextSource());
+    MaybeSourceText maybeSource;
+    rv = GetScriptSource(aCx, aRequest, &maybeSource);
+    if (NS_SUCCEEDED(rv)) {
+      AUTO_PROFILER_MARKER_TEXT("ScriptCompileMainThread", JS,
+                                MarkerInnerWindowIdFromJSContext(aCx),
+                                profilerLabelString);
+
+      TimeStamp startTime = TimeStamp::Now();
+      rv = maybeSource.constructed<SourceText<char16_t>>()
+               ? aExec.Compile(maybeSource.ref<SourceText<char16_t>>())
+               : aExec.Compile(maybeSource.ref<SourceText<Utf8Unit>>());
+      mMainThreadParseTime += TimeStamp::Now() - startTime;
+    }
+  }
+  return rv;
+}
+
+nsresult ScriptLoader::MaybePrepareForBytecodeEncoding(
+    JS::Handle<JSScript*> aScript, ScriptLoadRequest* aRequest, nsresult aRv) {
+  MOZ_ASSERT(aRequest->IsSource());
+  bool encodeBytecode = ShouldCacheBytecode(aRequest);
+
+  // Queue the current script load request to later save the bytecode.
+  if (aScript && encodeBytecode) {
+    aRequest->SetScript(aScript);
+    TRACE_FOR_TEST(aRequest->GetScriptElement(), "scriptloader_encode");
+    MOZ_ASSERT(aRequest->mBytecodeOffset == aRequest->mScriptBytecode.length());
+    RegisterForBytecodeEncoding(aRequest);
+  } else {
+    LOG(
+        ("ScriptLoadRequest (%p): Bytecode-cache: disabled (rv = %X, "
+         "script = %p)",
+         aRequest, unsigned(aRv), aScript.get()));
+    TRACE_FOR_TEST_NONE(aRequest->GetScriptElement(), "scriptloader_no_encode");
+    aRequest->mCacheInfo = nullptr;
+  }
+  return NS_OK;
+}
+
+nsresult ScriptLoader::EvaluateScript(nsIGlobalObject* aGlobalObject,
+                                      ScriptLoadRequest* aRequest) {
+  nsAutoMicroTask mt;
+  AutoEntryScript aes(aGlobalObject, "EvaluateScript", true);
+  JSContext* cx = aes.cx();
+  JS::Rooted<JSObject*> global(cx, aGlobalObject->GetGlobalJSObject());
+
+  nsAutoCString profilerLabelString;
+  GetProfilerLabelForRequest(aRequest, profilerLabelString);
+
+  // Create a ClassicScript object and associate it with the JSScript.
+  RefPtr<ClassicScript> classicScript =
+      new ClassicScript(aRequest->mFetchOptions, aRequest->mBaseURL);
+  JS::RootedValue classicScriptValue(cx, JS::PrivateValue(classicScript));
+
+  JS::CompileOptions options(cx);
+  JS::RootedScript introductionScript(cx);
+  nsresult rv = FillCompileOptionsForRequest(aes, aRequest, global, &options,
+                                             &introductionScript);
+
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  TRACE_FOR_TEST(aRequest->GetScriptElement(), "scriptloader_execute");
+  JSExecutionContext exec(cx, global, options, classicScriptValue,
+                          introductionScript);
+
+  rv = CompileOrDecodeClassicScript(cx, exec, aRequest);
+
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // TODO (yulia): rewrite this section. rv can be a failing pattern other than
+  // NS_OK which will pass the NS_FAILED check above. If we call exec.GetScript
+  // in that case, it will crash. There is a better way to do this, but not as
+  // part of the module refactor.
+  JS::Rooted<JSScript*> script(cx);
+  if (rv == NS_OK) {
+    script = exec.GetScript();
+    LOG(("ScriptLoadRequest (%p): Evaluate Script", aRequest));
+    AUTO_PROFILER_MARKER_TEXT("ScriptExecution", JS,
+                              MarkerInnerWindowIdFromJSContext(cx),
+                              profilerLabelString);
+
+    rv = ExecuteCompiledScript(cx, aRequest, exec, classicScript);
+  }
+
+  // Even if we are not saving the bytecode of the current script, we have
+  // to trigger the encoding of the bytecode, as the current script can
+  // call functions of a script for which we are recording the bytecode.
+  LOG(("ScriptLoadRequest (%p): ScriptLoader = %p", aRequest, this));
+  MaybeTriggerBytecodeEncoding();
+
+  return rv;
+}
+
+nsresult ScriptLoader::EvaluateModule(ScriptLoadRequest* aRequest) {
+  nsCOMPtr<nsIGlobalObject> globalObject = GetGlobalForRequest(aRequest);
+  if (!globalObject) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return EvaluateModule(globalObject, aRequest);
 }
 
 /* static */
