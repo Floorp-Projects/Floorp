@@ -100,6 +100,13 @@ add_task(async function test_hawk_authenticated_request() {
   let timeOffset = -1 * clockSkew;
   let localTime = then + clockSkew;
 
+  // XXX: This test fails if run with socket process enabled. It passes if
+  // we force the permission manager to be initialized, but this might just
+  // trigger some side effect and seems not a clean solution so we disabled
+  // the entire test, see bug 1743079.
+  // var pm = Services.perms;
+  // Assert.ok(pm.all.length >= 0, "Permission manager not initialized?");
+
   // Set the accept-languages pref to the Nepalese dialect of Zulu.
   let acceptLanguage = "zu-NP"; // omit trailing ';', which our HTTP libs snip
   Services.prefs.setStringPref("intl.accept_languages", acceptLanguage);
