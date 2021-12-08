@@ -43,19 +43,14 @@ fn skip_encoding(hay: &[u8]) -> Option<&[u8]> {
 }
 
 /// Extracts an encoding from an ASCII-based bogo-XML declaration.
-/// `bytes` must the prefix of a `text/html` resource. If it is longer
-/// than 1024 bytes, only the first 1024 bytes are examined.
+/// `bytes` must the prefix of a `text/html` resource.
 ///
 /// The intended use is that when the `meta` prescan fails, the HTML
-/// parser will have buffered the first 1024 bytes at which point they
-/// should be passed to this function.
+/// parser will have buffered the head section or the first 1024
+/// bytes (whichever is larger) at which point the should be passed to
+/// this function.
 pub fn parse(bytes: &[u8]) -> Option<&'static encoding_rs::Encoding> {
-    let up_to_kilobyte = if bytes.len() > 1024 {
-        &bytes[..1024]
-    } else {
-        bytes
-    };
-    if let Some(after_xml) = up_to_kilobyte.strip_prefix(b"<?xml") {
+    if let Some(after_xml) = bytes.strip_prefix(b"<?xml") {
         if let Some(gt) = position(b'>', after_xml) {
             let until_gt = &after_xml[..gt];
             if let Some(tail) = skip_encoding(until_gt) {
@@ -371,6 +366,6 @@ mod tests {
         }
         v.extend_from_slice(b"?>AAAA");
         assert_eq!(v.len(), 1029);
-        assert_eq!(parse(&v), None);
+        assert_eq!(parse(&v), Some(encoding_rs::WINDOWS_1251));
     }
 }

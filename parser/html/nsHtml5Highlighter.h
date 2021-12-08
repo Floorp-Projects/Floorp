@@ -31,6 +31,17 @@ class nsHtml5Highlighter {
   ~nsHtml5Highlighter();
 
   /**
+   * Set the op sink (for speculation).
+   */
+  void SetOpSink(nsAHtml5TreeOpSink* aOpSink);
+
+  /**
+   * Reset state to after generated head but before processing any of the input
+   * stream.
+   */
+  void Rewind();
+
+  /**
    * Starts the generated document.
    */
   void Start(const nsAutoString& aTitle);
@@ -146,6 +157,11 @@ class nsHtml5Highlighter {
    */
   void AddBase(nsHtml5String aValue);
 
+  /**
+   * Starts a wrapper around a run of characters.
+   */
+  void StartCharacters();
+
  private:
   /**
    * Starts a span with no class.
@@ -164,11 +180,6 @@ class nsHtml5Highlighter {
    * End the current <span> or <a> in the highlighter output.
    */
   void EndSpanOrA();
-
-  /**
-   * Starts a wrapper around a run of characters.
-   */
-  void StartCharacters();
 
   /**
    * Ends a wrapper around a run of characters.
@@ -317,7 +328,13 @@ class nsHtml5Highlighter {
   nsTArray<nsHtml5TreeOperation> mOpQueue;
 
   /**
-   * The tree op stage for the tree op executor.
+   * The tree op stage for the tree op executor or a speculation when looking
+   * for meta charset.
+   *
+   * The op sink is owned by the nsHtml5TreeOpExecutor, which outlives this
+   * object, because this object is owned by the nsHtml5Tokenizer instance that
+   * is owned by the nsHtml5StreamParser, which keeps the executor alive via
+   * nsHtml5Streamparser::mExecutorFlusher.
    */
   nsAHtml5TreeOpSink* mOpSink;
 
