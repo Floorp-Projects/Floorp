@@ -214,9 +214,9 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTION(ScriptLoader, mNonAsyncExternalScriptInsertedRequests,
                          mLoadingAsyncRequests, mLoadedAsyncRequests,
                          mOffThreadCompilingRequests, mDeferRequests,
-                         mXSLTRequests, mDynamicImportRequests,
-                         mParserBlockingRequest, mBytecodeEncodingQueue,
-                         mPreloads, mPendingChildLoaders, mModuleLoader)
+                         mXSLTRequests, mParserBlockingRequest,
+                         mBytecodeEncodingQueue, mPreloads,
+                         mPendingChildLoaders, mModuleLoader)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ScriptLoader)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ScriptLoader)
@@ -224,7 +224,8 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(ScriptLoader)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ModuleLoader)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_CYCLE_COLLECTION(ModuleLoader, mFetchingModules, mFetchedModules)
+NS_IMPL_CYCLE_COLLECTION(ModuleLoader, mFetchingModules, mFetchedModules,
+                         mDynamicImportRequests, mLoader)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ModuleLoader)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ModuleLoader)
@@ -244,7 +245,7 @@ ScriptLoader::ScriptLoader(Document* aDocument)
       mLoadEventFired(false),
       mGiveUpEncoding(false),
       mReporter(new ConsoleReportCollector()),
-      mModuleLoader(new ModuleLoader()) {
+      mModuleLoader(new ModuleLoader(this)) {
   LOG(("ScriptLoader::ScriptLoader %p", this));
   EnsureModuleHooksInitialized();
 
@@ -284,11 +285,6 @@ ScriptLoader::~ScriptLoader() {
     req->FireScriptAvailable(NS_ERROR_ABORT);
   }
 
-  for (ScriptLoadRequest* req = mDynamicImportRequests.getFirst(); req;
-       req = req->getNext()) {
-    FinishDynamicImportAndReject(req->AsModuleRequest(), NS_ERROR_ABORT);
-  }
-
   for (ScriptLoadRequest* req =
            mNonAsyncExternalScriptInsertedRequests.getFirst();
        req; req = req->getNext()) {
@@ -309,6 +305,8 @@ ScriptLoader::~ScriptLoader() {
     mShutdownObserver->Unregister();
     mShutdownObserver = nullptr;
   }
+
+  mModuleLoader = nullptr;
 }
 
 // Collect telemtry data about the cache information, and the kind of source
@@ -597,7 +595,7 @@ ModuleScript* ModuleLoader::GetFetchedModule(nsIURI* aURL,
   return ms;
 }
 
-nsresult ScriptLoader::ProcessFetchedModuleSource(ModuleLoadRequest* aRequest) {
+nsresult ModuleLoader::ProcessFetchedModuleSource(ModuleLoadRequest* aRequest) {
   MOZ_ASSERT(!aRequest->mModuleScript);
 
   nsresult rv = CreateModuleScript(aRequest);
@@ -611,7 +609,7 @@ nsresult ScriptLoader::ProcessFetchedModuleSource(ModuleLoadRequest* aRequest) {
   }
 
   if (!aRequest->mIsInline) {
-    mModuleLoader->SetModuleFetchFinishedAndResumeWaitingRequests(aRequest, rv);
+    SetModuleFetchFinishedAndResumeWaitingRequests(aRequest, rv);
   }
 
   if (!aRequest->mModuleScript->HasParseError()) {
@@ -621,13 +619,14 @@ nsresult ScriptLoader::ProcessFetchedModuleSource(ModuleLoadRequest* aRequest) {
   return NS_OK;
 }
 
-nsresult ScriptLoader::CreateModuleScript(ModuleLoadRequest* aRequest) {
+nsresult ModuleLoader::CreateModuleScript(ModuleLoadRequest* aRequest) {
   MOZ_ASSERT(!aRequest->mModuleScript);
   MOZ_ASSERT(aRequest->mBaseURL);
 
   LOG(("ScriptLoadRequest (%p): Create module script", aRequest));
 
-  nsCOMPtr<nsIGlobalObject> globalObject = GetGlobalForRequest(aRequest);
+  nsCOMPtr<nsIGlobalObject> globalObject =
+      mLoader->GetGlobalForRequest(aRequest);
   if (!globalObject) {
     return NS_ERROR_FAILURE;
   }
@@ -646,8 +645,8 @@ nsresult ScriptLoader::CreateModuleScript(ModuleLoadRequest* aRequest) {
 
     JS::CompileOptions options(cx);
     JS::RootedScript introductionScript(cx);
-    rv = FillCompileOptionsForRequest(cx, aRequest, global, &options,
-                                      &introductionScript);
+    rv = mLoader->FillCompileOptionsForRequest(cx, aRequest, global, &options,
+                                               &introductionScript);
 
     if (NS_SUCCEEDED(rv)) {
       if (aRequest->mWasCompiledOMT) {
@@ -656,7 +655,7 @@ nsresult ScriptLoader::CreateModuleScript(ModuleLoadRequest* aRequest) {
         rv = module ? NS_OK : NS_ERROR_FAILURE;
       } else {
         MaybeSourceText maybeSource;
-        rv = GetScriptSource(cx, aRequest, &maybeSource);
+        rv = mLoader->GetScriptSource(cx, aRequest, &maybeSource);
         if (NS_SUCCEEDED(rv)) {
           rv = maybeSource.constructed<SourceText<char16_t>>()
                    ? nsJSUtils::CompileModule(
@@ -859,7 +858,7 @@ nsresult ModuleLoader::ResolveRequestedModules(ModuleLoadRequest* aRequest,
   return NS_OK;
 }
 
-void ScriptLoader::StartFetchingModuleDependencies(
+void ModuleLoader::StartFetchingModuleDependencies(
     ModuleLoadRequest* aRequest) {
   LOG(("ScriptLoadRequest (%p): Start fetching module dependencies", aRequest));
 
@@ -920,7 +919,7 @@ void ScriptLoader::StartFetchingModuleDependencies(
                  &ModuleLoadRequest::ModuleErrored);
 }
 
-RefPtr<GenericPromise> ScriptLoader::StartFetchingModuleAndDependencies(
+RefPtr<GenericPromise> ModuleLoader::StartFetchingModuleAndDependencies(
     ModuleLoadRequest* aParent, nsIURI* aURI) {
   MOZ_ASSERT(aURI);
 
@@ -944,13 +943,13 @@ RefPtr<GenericPromise> ScriptLoader::StartFetchingModuleAndDependencies(
 
   RefPtr<GenericPromise> ready = childRequest->mReady.Ensure(__func__);
 
-  nsresult rv = StartModuleLoad(childRequest);
+  nsresult rv = mLoader->StartModuleLoad(childRequest);
   if (NS_FAILED(rv)) {
     MOZ_ASSERT(!childRequest->mModuleScript);
     LOG(("ScriptLoadRequest (%p):   rejecting %p", aParent,
          &childRequest->mReady));
 
-    ReportErrorToConsole(childRequest, rv);
+    mLoader->ReportErrorToConsole(childRequest, rv);
     childRequest->mReady.Reject(rv, __func__);
     return ready;
   }
@@ -1195,23 +1194,23 @@ bool HostImportModuleDynamically(JSContext* aCx,
       uri, options, baseURL, loader, aReferencingPrivate, specifierString,
       aPromise);
 
-  loader->StartDynamicImport(request);
+  loader->GetModuleLoader()->StartDynamicImport(request);
   return true;
 }
 
-void ScriptLoader::StartDynamicImport(ModuleLoadRequest* aRequest) {
+void ModuleLoader::StartDynamicImport(ModuleLoadRequest* aRequest) {
   LOG(("ScriptLoadRequest (%p): Start dynamic import", aRequest));
 
   mDynamicImportRequests.AppendElement(aRequest);
 
-  nsresult rv = StartModuleLoad(aRequest);
+  nsresult rv = mLoader->StartModuleLoad(aRequest);
   if (NS_FAILED(rv)) {
-    ReportErrorToConsole(aRequest, rv);
+    mLoader->ReportErrorToConsole(aRequest, rv);
     FinishDynamicImportAndReject(aRequest, rv);
   }
 }
 
-void ScriptLoader::FinishDynamicImportAndReject(ModuleLoadRequest* aRequest,
+void ModuleLoader::FinishDynamicImportAndReject(ModuleLoadRequest* aRequest,
                                                 nsresult aResult) {
   AutoJSAPI jsapi;
   MOZ_ASSERT(NS_FAILED(aResult));
@@ -1219,7 +1218,7 @@ void ScriptLoader::FinishDynamicImportAndReject(ModuleLoadRequest* aRequest,
   FinishDynamicImport(jsapi.cx(), aRequest, aResult, nullptr);
 }
 
-void ScriptLoader::FinishDynamicImport(
+void ModuleLoader::FinishDynamicImport(
     JSContext* aCx, ModuleLoadRequest* aRequest, nsresult aResult,
     JS::Handle<JSObject*> aEvaluationPromise) {
   // If aResult is a failed result, we don't have an EvaluationPromise. If it
@@ -1289,7 +1288,13 @@ void ScriptLoader::EnsureModuleHooksInitialized() {
                                        (void*)nullptr);
 }
 
-ModuleLoader::~ModuleLoader() { LOG(("ModuleLoader::~ModuleLoader %p", this)); }
+ModuleLoader::ModuleLoader(ScriptLoader* aLoader) : mLoader(aLoader) {}
+
+ModuleLoader::~ModuleLoader() {
+  mDynamicImportRequests.CancelRequestsAndClear();
+
+  LOG(("ModuleLoader::~ModuleLoader %p", this));
+}
 
 class ScriptRequestProcessor : public Runnable {
  private:
@@ -1304,7 +1309,8 @@ class ScriptRequestProcessor : public Runnable {
   NS_IMETHOD Run() override {
     if (mRequest->IsModuleRequest() &&
         mRequest->AsModuleRequest()->IsDynamicImport()) {
-      mLoader->ProcessDynamicImport(mRequest->AsModuleRequest());
+      mLoader->GetModuleLoader()->ProcessDynamicImport(
+          mRequest->AsModuleRequest());
       return NS_OK;
     }
 
@@ -1317,16 +1323,24 @@ void ScriptLoader::RunScriptWhenSafe(ScriptLoadRequest* aRequest) {
   nsContentUtils::AddScriptRunner(runnable);
 }
 
+void ModuleLoader::ProcessLoadedModuleTree(ModuleLoadRequest* aRequest) {
+  MOZ_ASSERT(aRequest->IsReadyToRun());
+
+  if (aRequest->IsDynamicImport()) {
+    MOZ_ASSERT(aRequest->isInList());
+    RefPtr<ScriptLoadRequest> req = mDynamicImportRequests.Steal(aRequest);
+    mLoader->RunScriptWhenSafe(aRequest);
+  } else {
+    mLoader->ProcessLoadedModuleTree(aRequest);
+  }
+}
+
 void ScriptLoader::ProcessLoadedModuleTree(ModuleLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->IsReadyToRun());
 
   if (aRequest->IsTopLevel()) {
-    if (aRequest->IsDynamicImport()) {
-      MOZ_ASSERT(aRequest->isInList());
-      RefPtr<ScriptLoadRequest> req = mDynamicImportRequests.Steal(aRequest);
-      RunScriptWhenSafe(req);
-    } else if (aRequest->mIsInline &&
-               aRequest->GetParserCreated() == NOT_FROM_PARSER) {
+    if (aRequest->mIsInline &&
+        aRequest->GetParserCreated() == NOT_FROM_PARSER) {
       MOZ_ASSERT(!aRequest->isInList());
       RunScriptWhenSafe(aRequest);
     } else {
@@ -2113,7 +2127,7 @@ bool ScriptLoader::ProcessInlineScript(nsIScriptElement* aElement,
       }
     }
 
-    nsresult rv = ProcessFetchedModuleSource(modReq);
+    nsresult rv = mModuleLoader->ProcessFetchedModuleSource(modReq);
     if (NS_FAILED(rv)) {
       ReportErrorToConsole(modReq, rv);
       HandleLoadError(modReq, rv);
@@ -2316,11 +2330,6 @@ void ScriptLoader::CancelScriptLoadRequests() {
     req->Cancel();
   }
 
-  for (ScriptLoadRequest* req = mDynamicImportRequests.getFirst(); req;
-       req = req->getNext()) {
-    req->Cancel();
-  }
-
   for (ScriptLoadRequest* req =
            mNonAsyncExternalScriptInsertedRequests.getFirst();
        req; req = req->getNext()) {
@@ -2352,7 +2361,7 @@ nsresult ScriptLoader::ProcessOffThreadRequest(ScriptLoadRequest* aRequest) {
   if (aRequest->IsModuleRequest()) {
     MOZ_ASSERT(aRequest->mOffThreadToken);
     ModuleLoadRequest* request = aRequest->AsModuleRequest();
-    return ProcessFetchedModuleSource(request);
+    return mModuleLoader->ProcessFetchedModuleSource(request);
   }
 
   // Element may not be ready yet if speculatively compiling, so process the
@@ -2846,16 +2855,16 @@ nsresult ScriptLoader::ProcessRequest(ScriptLoadRequest* aRequest) {
   return rv;
 }
 
-void ScriptLoader::ProcessDynamicImport(ModuleLoadRequest* aRequest) {
+void ModuleLoader::ProcessDynamicImport(ModuleLoadRequest* aRequest) {
   if (aRequest->mModuleScript) {
-    if (!mModuleLoader->InstantiateModuleTree(aRequest)) {
+    if (!InstantiateModuleTree(aRequest)) {
       aRequest->mModuleScript = nullptr;
     }
   }
 
   nsresult rv = NS_ERROR_FAILURE;
   if (aRequest->mModuleScript) {
-    rv = EvaluateModule(aRequest);
+    rv = mLoader->EvaluateModule(aRequest);
   }
 
   if (NS_FAILED(rv)) {
@@ -3179,7 +3188,7 @@ nsresult ScriptLoader::EvaluateModule(nsIGlobalObject* aGlobalObject,
     // For a dynamic import, the promise is rejected.  Otherwise an error
     // is either reported by AutoEntryScript.
     if (request->IsDynamicImport()) {
-      FinishDynamicImport(cx, request, NS_OK, nullptr);
+      mModuleLoader->FinishDynamicImport(cx, request, NS_OK, nullptr);
     }
     return NS_OK;
   }
@@ -3219,7 +3228,7 @@ nsresult ScriptLoader::EvaluateModule(nsIGlobalObject* aGlobalObject,
     aEvaluationPromise.set(&rval.toObject());
   }
   if (request->IsDynamicImport()) {
-    FinishDynamicImport(cx, request, rv, aEvaluationPromise);
+    mModuleLoader->FinishDynamicImport(cx, request, rv, aEvaluationPromise);
   } else {
     // If this is not a dynamic import, and if the promise is rejected,
     // the value is unwrapped from the promise value.
@@ -3616,7 +3625,8 @@ bool ScriptLoader::HasPendingRequests() {
   return mParserBlockingRequest || !mXSLTRequests.isEmpty() ||
          !mLoadedAsyncRequests.isEmpty() ||
          !mNonAsyncExternalScriptInsertedRequests.isEmpty() ||
-         !mDeferRequests.isEmpty() || !mDynamicImportRequests.isEmpty() ||
+         !mDeferRequests.isEmpty() ||
+         !mModuleLoader->mDynamicImportRequests.isEmpty() ||
          !mPendingChildLoaders.IsEmpty();
   // mOffThreadCompilingRequests are already being processed.
 }
@@ -4080,12 +4090,13 @@ void ScriptLoader::HandleLoadError(ScriptLoadRequest* aRequest,
     if (modReq->IsDynamicImport()) {
       MOZ_ASSERT(modReq->IsTopLevel());
       if (aRequest->isInList()) {
-        RefPtr<ScriptLoadRequest> req = mDynamicImportRequests.Steal(aRequest);
+        RefPtr<ScriptLoadRequest> req =
+            mModuleLoader->mDynamicImportRequests.Steal(aRequest);
         modReq->Cancel();
         // FinishDynamicImport must happen exactly once for each dynamic import
         // request. If the load is aborted we do it when we remove the request
         // from mDynamicImportRequests.
-        FinishDynamicImportAndReject(modReq, aResult);
+        mModuleLoader->FinishDynamicImportAndReject(modReq, aResult);
       }
     } else {
       MOZ_ASSERT(!modReq->IsTopLevel());
@@ -4287,7 +4298,7 @@ nsresult ScriptLoader::PrepareLoadedRequest(ScriptLoadRequest* aRequest,
                    mLoadingAsyncRequests.Contains(aRequest) ||
                    mNonAsyncExternalScriptInsertedRequests.Contains(aRequest) ||
                    mXSLTRequests.Contains(aRequest) ||
-                   mDynamicImportRequests.Contains(aRequest) ||
+                   mModuleLoader->mDynamicImportRequests.Contains(aRequest) ||
                    (aRequest->IsModuleRequest() &&
                     !aRequest->AsModuleRequest()->IsTopLevel() &&
                     !aRequest->isInList()) ||
@@ -4329,7 +4340,7 @@ nsresult ScriptLoader::PrepareLoadedRequest(ScriptLoadRequest* aRequest,
     }
 
     // Otherwise compile it right away and start fetching descendents.
-    return ProcessFetchedModuleSource(request);
+    return mModuleLoader->ProcessFetchedModuleSource(request);
   }
 
   // The script is now loaded and ready to run.
@@ -4378,15 +4389,7 @@ void ScriptLoader::ParsingComplete(bool aTerminated) {
   mNonAsyncExternalScriptInsertedRequests.CancelRequestsAndClear();
   mXSLTRequests.CancelRequestsAndClear();
 
-  for (ScriptLoadRequest* req = mDynamicImportRequests.getFirst(); req;
-       req = req->getNext()) {
-    req->Cancel();
-    // FinishDynamicImport must happen exactly once for each dynamic import
-    // request. If the load is aborted we do it when we remove the request
-    // from mDynamicImportRequests.
-    FinishDynamicImportAndReject(req->AsModuleRequest(), NS_ERROR_ABORT);
-  }
-  mDynamicImportRequests.CancelRequestsAndClear();
+  mModuleLoader->CancelAndClearDynamicImports();
 
   if (mParserBlockingRequest) {
     mParserBlockingRequest->Cancel();
@@ -4401,6 +4404,18 @@ void ScriptLoader::ParsingComplete(bool aTerminated) {
   // Have to call this even if aTerminated so we'll correctly unblock
   // onload and all.
   DeferCheckpointReached();
+}
+
+void ModuleLoader::CancelAndClearDynamicImports() {
+  for (ScriptLoadRequest* req = mDynamicImportRequests.getFirst(); req;
+       req = req->getNext()) {
+    req->Cancel();
+    // FinishDynamicImport must happen exactly once for each dynamic import
+    // request. If the load is aborted we do it when we remove the request
+    // from mDynamicImportRequests.
+    FinishDynamicImportAndReject(req->AsModuleRequest(), NS_ERROR_ABORT);
+  }
+  mDynamicImportRequests.CancelRequestsAndClear();
 }
 
 void ScriptLoader::PreloadURI(nsIURI* aURI, const nsAString& aCharset,
