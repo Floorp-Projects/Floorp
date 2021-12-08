@@ -309,7 +309,7 @@ public final class GeckoRuntime implements Parcelable {
             mDelegate.onShutdown();
             EventDispatcher.getInstance()
                 .unregisterUiThreadListener(mEventListener, "Gecko:Exited");
-          } else if ("GeckoView:ContentCrashReport".equals(event) && crashHandler != null) {
+          } else if ("GeckoView:ChildCrashReport".equals(event) && crashHandler != null) {
             final Context context = GeckoAppShell.getApplicationContext();
             final Intent i = new Intent(ACTION_CRASHED, null, context, crashHandler);
             i.putExtra(EXTRA_MINIDUMP_PATH, message.getString(EXTRA_MINIDUMP_PATH));
@@ -364,7 +364,7 @@ public final class GeckoRuntime implements Parcelable {
         }
 
         EventDispatcher.getInstance()
-            .registerUiThreadListener(mEventListener, "GeckoView:ContentCrashReport");
+            .registerUiThreadListener(mEventListener, "GeckoView:ChildCrashReport");
 
         flags |= GeckoThread.FLAG_ENABLE_NATIVE_CRASHREPORTER;
       } catch (final PackageManager.NameNotFoundException e) {

@@ -138,9 +138,9 @@ class GeckoViewStartup {
         ) {
           ActorManagerParent.addJSWindowActors(JSWINDOWACTORS);
 
-          GeckoViewUtils.addLazyGetter(this, "ContentCrashHandler", {
-            module: "resource://gre/modules/ContentCrashHandler.jsm",
-            observers: ["ipc:content-shutdown"],
+          GeckoViewUtils.addLazyGetter(this, "ChildCrashHandler", {
+            module: "resource://gre/modules/ChildCrashHandler.jsm",
+            observers: ["ipc:content-shutdown", "compositor:process-aborted"],
           });
         }
         break;
