@@ -98,7 +98,7 @@ class CanvasContext final : public nsICanvasRenderingContextInternal,
   void Unconfigure();
 
   dom::GPUTextureFormat GetPreferredFormat(Adapter& aAdapter) const;
-  RefPtr<Texture> GetCurrentTexture();
+  RefPtr<Texture> GetCurrentTexture(ErrorResult& aRv);
 
  private:
   uint32_t mWidth = 0, mHeight = 0;
