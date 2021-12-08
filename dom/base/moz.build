@@ -12,11 +12,9 @@ with Files("**"):
 
 TEST_DIRS += ["test"]
 
-if CONFIG['FUZZING']:
-    if CONFIG['FUZZING_INTERFACES']:
-        TEST_DIRS += [
-            'fuzztest'
-        ]
+if CONFIG["FUZZING"]:
+    if CONFIG["FUZZING_INTERFACES"]:
+        TEST_DIRS += ["fuzztest"]
 
 # Add libFuzzer configuration directives
 include("/tools/fuzzing/libfuzzer-config.mozbuild")
