@@ -34,6 +34,26 @@ static void FooValueUpdated(const char* aPref, void* aUserData) {
   ASSERT_EQ(NimbusFeatures::GetInt("foo"_ns, "value"_ns, 0), 24);
 }
 
+TEST(NimbusFeaturesGetFallback, Errors)
+{
+  // No experiment is set and we expect to return fallback pref values
+
+  // As defined by fallbackPref browser.aboutwelcome.skipFocus
+  // in FeatureManifest.yaml
+  Preferences::SetBool("browser.aboutwelcome.skipFocus", true,
+                       PrefValueKind::Default);
+  ASSERT_EQ(NimbusFeatures::GetBool("aboutwelcome"_ns, "skipFocus"_ns, false),
+            true);
+  Preferences::SetBool("browser.aboutwelcome.skipFocus", false,
+                       PrefValueKind::User);
+  ASSERT_EQ(NimbusFeatures::GetBool("aboutwelcome"_ns, "skipFocus"_ns, true),
+            false);
+  Preferences::ClearUser("browser.aboutwelcome.skipFocus");
+
+  Preferences::SetInt("nimbus.testing.testInt", 5, PrefValueKind::Default);
+  ASSERT_EQ(NimbusFeatures::GetInt("testFeature"_ns, "testInt"_ns, 42), 5);
+}
+
 TEST(NimbusFeaturesUpdate, Errors)
 {
   // Verify updating foo.value calls FooValueUpdated.

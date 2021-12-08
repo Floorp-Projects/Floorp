@@ -4,6 +4,15 @@
 
 # Features must be added here to be accessible through the NimbusFeature API.
 
+testFeature:
+  description: Test only feature
+  hasExposure: false
+  isEarlyStartup: true
+  variables:
+    testInt:
+      type: int
+      fallbackPref: nimbus.testing.testInt
+      description: Int pref used by platform API tests
 search:
   description: The Search Services
   hasExposure: false
