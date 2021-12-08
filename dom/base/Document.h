@@ -1279,6 +1279,7 @@ class Document : public nsINode,
 
   Selection* GetSelection(ErrorResult& aRv);
 
+  nsresult HasStorageAccessSync(bool& aHasStorageAccess);
   already_AddRefed<Promise> HasStorageAccess(ErrorResult& aRv);
   already_AddRefed<Promise> RequestStorageAccess(ErrorResult& aRv);
 

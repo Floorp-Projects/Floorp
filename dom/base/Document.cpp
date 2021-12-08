@@ -16385,9 +16385,14 @@ NS_IMPL_ISUPPORTS_INHERITED(UserInteractionTimer, Runnable, nsITimerCallback,
 }  // namespace
 
 void Document::MaybeStoreUserInteractionAsPermission() {
-  // We care about user-interaction stored only for top-level documents.
+  // We care about user-interaction stored only for top-level documents
+  // and documents with access to the Storage Access API
   if (!IsTopLevelContentDocument()) {
-    return;
+    bool hasSA;
+    nsresult rv = HasStorageAccessSync(hasSA);
+    if (NS_FAILED(rv) || !hasSA) {
+      return;
+    }
   }
 
   if (!mUserHasInteracted) {
@@ -16640,39 +16645,26 @@ Selection* Document::GetSelection(ErrorResult& aRv) {
   return nsGlobalWindowInner::Cast(window)->GetSelection(aRv);
 }
 
-already_AddRefed<mozilla::dom::Promise> Document::HasStorageAccess(
-    mozilla::ErrorResult& aRv) {
-  nsIGlobalObject* global = GetScopeObject();
-  if (!global) {
-    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
-    return nullptr;
-  }
-
-  RefPtr<Promise> promise =
-      Promise::Create(global, aRv, Promise::ePropagateUserInteraction);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
+nsresult Document::HasStorageAccessSync(bool& aHasStorageAccess) {
   if (NodePrincipal()->GetIsNullPrincipal()) {
-    promise->MaybeResolve(false);
-    return promise.forget();
+    aHasStorageAccess = false;
+    return NS_OK;
   }
 
   if (CookieJarSettings()->GetBlockingAllContexts()) {
-    promise->MaybeResolve(false);
-    return promise.forget();
+    aHasStorageAccess = false;
+    return NS_OK;
   }
 
   if (IsTopLevelContentDocument()) {
-    promise->MaybeResolve(true);
-    return promise.forget();
+    aHasStorageAccess = true;
+    return NS_OK;
   }
 
   RefPtr<BrowsingContext> bc = GetBrowsingContext();
   if (!bc) {
-    promise->MaybeResolve(false);
-    return promise.forget();
+    aHasStorageAccess = false;
+    return NS_OK;
   }
 
   RefPtr<BrowsingContext> topBC = bc->Top();
@@ -16688,19 +16680,42 @@ already_AddRefed<mozilla::dom::Promise> Document::HasStorageAccess(
     if (nsGlobalWindowOuter::Cast(topOuterWindow)
             ->GetPrincipal()
             ->Equals(NodePrincipal())) {
-      promise->MaybeResolve(true);
-      return promise.forget();
+      aHasStorageAccess = true;
+      return NS_OK;
     }
   }
 
   nsPIDOMWindowInner* inner = GetInnerWindow();
   nsGlobalWindowOuter* outer = nullptr;
-  if (inner) {
-    outer = nsGlobalWindowOuter::Cast(inner->GetOuterWindow());
-    promise->MaybeResolve(outer->IsStorageAccessPermissionGranted());
-  } else {
-    promise->MaybeRejectWithUndefined();
+  NS_ENSURE_TRUE(inner, NS_ERROR_FAILURE);
+  outer = nsGlobalWindowOuter::Cast(inner->GetOuterWindow());
+  NS_ENSURE_TRUE(outer, NS_ERROR_FAILURE);
+  aHasStorageAccess = outer->IsStorageAccessPermissionGranted();
+  return NS_OK;
+}
+
+already_AddRefed<mozilla::dom::Promise> Document::HasStorageAccess(
+    mozilla::ErrorResult& aRv) {
+  nsIGlobalObject* global = GetScopeObject();
+  if (!global) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return nullptr;
   }
+
+  RefPtr<Promise> promise =
+      Promise::Create(global, aRv, Promise::ePropagateUserInteraction);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  bool hasStorageAccess;
+  nsresult rv = HasStorageAccessSync(hasStorageAccess);
+  if (NS_FAILED(rv)) {
+    promise->MaybeRejectWithUndefined();
+  } else {
+    promise->MaybeResolve(hasStorageAccess);
+  }
+
   return promise.forget();
 }
 
