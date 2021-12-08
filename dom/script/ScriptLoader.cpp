@@ -216,11 +216,18 @@ NS_IMPL_CYCLE_COLLECTION(ScriptLoader, mNonAsyncExternalScriptInsertedRequests,
                          mOffThreadCompilingRequests, mDeferRequests,
                          mXSLTRequests, mDynamicImportRequests,
                          mParserBlockingRequest, mBytecodeEncodingQueue,
-                         mPreloads, mPendingChildLoaders, mFetchedModules,
-                         mFetchingModules)
+                         mPreloads, mPendingChildLoaders, mModuleLoader)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ScriptLoader)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ScriptLoader)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ModuleLoader)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_CYCLE_COLLECTION(ModuleLoader, mFetchingModules, mFetchedModules)
+
+NS_IMPL_CYCLE_COLLECTING_ADDREF(ModuleLoader)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(ModuleLoader)
 
 ScriptLoader::ScriptLoader(Document* aDocument)
     : mDocument(aDocument),
@@ -236,7 +243,8 @@ ScriptLoader::ScriptLoader(Document* aDocument)
       mBlockingDOMContentLoaded(false),
       mLoadEventFired(false),
       mGiveUpEncoding(false),
-      mReporter(new ConsoleReportCollector()) {
+      mReporter(new ConsoleReportCollector()),
+      mModuleLoader(new ModuleLoader()) {
   LOG(("ScriptLoader::ScriptLoader %p", this));
   EnsureModuleHooksInitialized();
 
@@ -496,7 +504,7 @@ bool ScriptLoader::IsAboutPageLoadingChromeURI(ScriptLoadRequest* aRequest,
   return true;
 }
 
-bool ScriptLoader::ModuleMapContainsURL(nsIURI* aURL,
+bool ModuleLoader::ModuleMapContainsURL(nsIURI* aURL,
                                         nsIGlobalObject* aGlobal) const {
   // Returns whether we have fetched, or are currently fetching, a module script
   // for a URL.
@@ -504,7 +512,7 @@ bool ScriptLoader::ModuleMapContainsURL(nsIURI* aURL,
   return mFetchingModules.Contains(key) || mFetchedModules.Contains(key);
 }
 
-void ScriptLoader::SetModuleFetchStarted(ModuleLoadRequest* aRequest) {
+void ModuleLoader::SetModuleFetchStarted(ModuleLoadRequest* aRequest) {
   // Update the module map to indicate that a module is currently being fetched.
 
   MOZ_ASSERT(aRequest->IsLoading());
@@ -515,7 +523,7 @@ void ScriptLoader::SetModuleFetchStarted(ModuleLoadRequest* aRequest) {
       key, RefPtr<GenericNonExclusivePromise::Private>{});
 }
 
-void ScriptLoader::SetModuleFetchFinishedAndResumeWaitingRequests(
+void ModuleLoader::SetModuleFetchFinishedAndResumeWaitingRequests(
     ModuleLoadRequest* aRequest, nsresult aResult) {
   // Update module map with the result of fetching a single module script.
   //
@@ -552,7 +560,7 @@ void ScriptLoader::SetModuleFetchFinishedAndResumeWaitingRequests(
   }
 }
 
-RefPtr<GenericNonExclusivePromise> ScriptLoader::WaitForModuleFetch(
+RefPtr<GenericNonExclusivePromise> ModuleLoader::WaitForModuleFetch(
     nsIURI* aURL, nsIGlobalObject* aGlobal) {
   MOZ_ASSERT(ModuleMapContainsURL(aURL, aGlobal));
 
@@ -574,7 +582,7 @@ RefPtr<GenericNonExclusivePromise> ScriptLoader::WaitForModuleFetch(
   return GenericNonExclusivePromise::CreateAndResolve(true, __func__);
 }
 
-ModuleScript* ScriptLoader::GetFetchedModule(nsIURI* aURL,
+ModuleScript* ModuleLoader::GetFetchedModule(nsIURI* aURL,
                                              nsIGlobalObject* aGlobal) const {
   if (LOG_ENABLED()) {
     nsAutoCString url;
@@ -603,7 +611,7 @@ nsresult ScriptLoader::ProcessFetchedModuleSource(ModuleLoadRequest* aRequest) {
   }
 
   if (!aRequest->mIsInline) {
-    SetModuleFetchFinishedAndResumeWaitingRequests(aRequest, rv);
+    mModuleLoader->SetModuleFetchFinishedAndResumeWaitingRequests(aRequest, rv);
   }
 
   if (!aRequest->mModuleScript->HasParseError()) {
@@ -1082,7 +1090,7 @@ void ScriptLoader::ResolveImportedModule(
 
   // Let resolved module script be moduleMap[url]. (This entry must exist for us
   // to have gotten to this point.)
-  ModuleScript* ms = loader->GetFetchedModule(uri, global);
+  ModuleScript* ms = loader->GetModuleLoader()->GetFetchedModule(uri, global);
   MOZ_ASSERT(ms, "Resolved module not found in module map");
   MOZ_ASSERT(!ms->HasParseError());
   MOZ_ASSERT(ms->ModuleRecord());
@@ -1250,8 +1258,7 @@ void ScriptLoader::FinishDynamicImport(
   aRequest->ClearDynamicImport();
 }
 
-static void DynamicImportPrefChangedCallback(const char* aPrefName,
-                                             void* aClosure) {
+void DynamicImportPrefChangedCallback(const char* aPrefName, void* aClosure) {
   bool enabled = Preferences::GetBool(aPrefName);
   JS::ModuleDynamicImportHook hook =
       enabled ? HostImportModuleDynamically : nullptr;
@@ -1281,6 +1288,8 @@ void ScriptLoader::EnsureModuleHooksInitialized() {
                                        (void*)nullptr);
 }
 
+ModuleLoader::~ModuleLoader() { LOG(("ModuleLoader::~ModuleLoader %p", this)); }
+
 void ScriptLoader::CheckModuleDependenciesLoaded(ModuleLoadRequest* aRequest) {
   LOG(("ScriptLoadRequest (%p): Check dependencies loaded", aRequest));
 
@@ -1288,7 +1297,6 @@ void ScriptLoader::CheckModuleDependenciesLoaded(ModuleLoadRequest* aRequest) {
   if (!moduleScript || moduleScript->HasParseError()) {
     return;
   }
-
   for (auto childRequest : aRequest->mImports) {
     ModuleScript* childScript = childRequest->mModuleScript;
     if (!childScript) {
@@ -1527,9 +1535,11 @@ nsresult ScriptLoader::StartModuleLoad(ScriptLoadRequest* aRequest) {
   // Check whether the module has been fetched or is currently being fetched,
   // and if so wait for it rather than starting a new fetch.
   ModuleLoadRequest* request = aRequest->AsModuleRequest();
-  if (ModuleMapContainsURL(request->mURI, aRequest->GetWebExtGlobal())) {
+  if (mModuleLoader->ModuleMapContainsURL(request->mURI,
+                                          aRequest->GetWebExtGlobal())) {
     LOG(("ScriptLoadRequest (%p): Waiting for module fetch", aRequest));
-    WaitForModuleFetch(request->mURI, aRequest->GetWebExtGlobal())
+    mModuleLoader
+        ->WaitForModuleFetch(request->mURI, aRequest->GetWebExtGlobal())
         ->Then(GetMainThreadSerialEventTarget(), __func__, request,
                &ModuleLoadRequest::ModuleLoaded,
                &ModuleLoadRequest::LoadFailed);
@@ -1562,7 +1572,7 @@ nsresult ScriptLoader::StartModuleLoad(ScriptLoadRequest* aRequest) {
 
   // We successfully started fetching a module so put its URL in the module
   // map and mark it as fetching.
-  SetModuleFetchStarted(aRequest->AsModuleRequest());
+  mModuleLoader->SetModuleFetchStarted(aRequest->AsModuleRequest());
   LOG(("ScriptLoadRequest (%p): Start fetching module", aRequest));
 
   return NS_OK;
@@ -4046,7 +4056,8 @@ void ScriptLoader::HandleLoadError(ScriptLoadRequest* aRequest,
 
   if (aRequest->IsModuleRequest() && !aRequest->mIsInline) {
     auto request = aRequest->AsModuleRequest();
-    SetModuleFetchFinishedAndResumeWaitingRequests(request, aResult);
+    mModuleLoader->SetModuleFetchFinishedAndResumeWaitingRequests(request,
+                                                                  aResult);
   }
 
   if (aRequest->mInDeferList) {

@@ -149,7 +149,8 @@ void ModuleLoadRequest::ModuleLoaded() {
 
   LOG(("ScriptLoadRequest (%p): Module loaded", this));
 
-  mModuleScript = mLoader->GetFetchedModule(mURI, GetWebExtGlobal());
+  mModuleScript =
+      mLoader->GetModuleLoader()->GetFetchedModule(mURI, GetWebExtGlobal());
   if (!mModuleScript || mModuleScript->HasParseError()) {
     ModuleErrored();
     return;
