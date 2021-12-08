@@ -60,6 +60,25 @@ void Bidi::ReorderVisual(const BidiEmbeddingLevel* aLevels, int32_t aLength,
                       aIndexMap);
 }
 
+/* static */
+Bidi::BaseDirection Bidi::GetBaseDirection(Span<const char16_t> aParagraph) {
+  UBiDiDirection direction = ubidi_getBaseDirection(
+      aParagraph.Elements(), AssertedCast<int32_t>(aParagraph.Length()));
+
+  switch (direction) {
+    case UBIDI_LTR:
+      return Bidi::BaseDirection::LTR;
+    case UBIDI_RTL:
+      return Bidi::BaseDirection::RTL;
+    case UBIDI_NEUTRAL:
+      return Bidi::BaseDirection::Neutral;
+    case UBIDI_MIXED:
+      MOZ_ASSERT_UNREACHABLE("Unexpected UBiDiDirection value.");
+  }
+
+  return Bidi::BaseDirection::Neutral;
+}
+
 static BidiDirection ToBidiDirection(UBiDiDirection aDirection) {
   switch (aDirection) {
     case UBIDI_LTR:

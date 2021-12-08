@@ -37,7 +37,7 @@ class Bidi final {
    * paragraph could use both LTR and RTL. In this case the paragraph's
    * direction would be mixed.
    */
-  enum ParagraphDirection { LTR, RTL, Mixed };
+  enum class ParagraphDirection { LTR, RTL, Mixed };
 
   /**
    * Set the current paragraph of text to analyze for its bidi properties. This
@@ -105,6 +105,20 @@ class Bidi final {
    */
   static void ReorderVisual(const BidiEmbeddingLevel* aLevels, int32_t aLength,
                             int32_t* aIndexMap);
+
+  /**
+   * This enum indicates the bidi character type of the first strong character
+   * for the set paragraph.
+   * LTR: bidi character type 'L'.
+   * RTL: bidi character type 'R' or 'AL'.
+   * Neutral: The rest of bidi character types.
+   */
+  enum class BaseDirection { LTR, RTL, Neutral };
+
+  /**
+   * Get the base direction of the paragraph.
+   */
+  static BaseDirection GetBaseDirection(Span<const char16_t> aParagraph);
 
   /**
    * Get one run's logical start, length, and directionality. In an RTL run, the
