@@ -154,10 +154,7 @@ class RLBoxExpatSandboxData : public mozilla::RLBoxSandboxDataBase {
   friend class nsExpatDriver;
 
  public:
-  explicit RLBoxExpatSandboxData(uint64_t aSize)
-      : mozilla::RLBoxSandboxDataBase(aSize) {
-    MOZ_COUNT_CTOR(RLBoxExpatSandboxData);
-  }
+  MOZ_COUNTED_DEFAULT_CTOR(RLBoxExpatSandboxData);
   ~RLBoxExpatSandboxData();
   rlbox_sandbox_expat* Sandbox() const { return mSandbox.get(); }
   // After getting a sandbox from the pool we need to register the
