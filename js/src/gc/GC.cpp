@@ -3642,25 +3642,6 @@ MOZ_NEVER_INLINE GCRuntime::IncrementalResult GCRuntime::gcCycle(
   return result;
 }
 
-void GCRuntime::waitForBackgroundTasksBeforeSlice() {
-  gcstats::AutoPhase ap(stats(), gcstats::PhaseKind::WAIT_BACKGROUND_THREAD);
-
-  // Background finalization and decommit are finished by definition before we
-  // can start a new major GC.
-  if (!isIncrementalGCInProgress()) {
-    assertBackgroundSweepingFinished();
-    MOZ_ASSERT(decommitTask.isIdle());
-  }
-
-  // We must also wait for background allocation to finish so we can avoid
-  // taking the GC lock when manipulating the chunks during the GC.  The
-  // background alloc task can run between slices, so we must wait for it at the
-  // start of every slice.
-  //
-  // TODO: Is this still necessary?
-  allocTask.cancelAndWait();
-}
-
 inline bool GCRuntime::mightSweepInThisSlice(bool nonIncremental) {
   MOZ_ASSERT(incrementalState < State::Sweep);
   return nonIncremental || lastMarkSlice || hasIncrementalTwoSliceZealMode();
