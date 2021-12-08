@@ -568,13 +568,6 @@ class ScriptLoader final : public nsISupports {
   nsresult EvaluateScript(nsIGlobalObject* aGlobalObject,
                           ScriptLoadRequest* aRequest);
 
-  // Helper function to set up the global correctly for dynamic imports.
-  nsresult EvaluateModule(ScriptLoadRequest* aRequest);
-
-  // Implements https://html.spec.whatwg.org/#run-a-module-script
-  nsresult EvaluateModule(nsIGlobalObject* aGlobalObject,
-                          ScriptLoadRequest* aRequest);
-
   /**
    * Queue the current script load request to be saved, when the page
    * initialization ends. The page initialization end is defined as being the
@@ -744,6 +737,13 @@ class ModuleLoader : public nsISupports {
 
   using MaybeSourceText =
       mozilla::MaybeOneOf<JS::SourceText<char16_t>, JS::SourceText<Utf8Unit>>;
+
+  // Helper function to set up the global correctly for dynamic imports.
+  nsresult EvaluateModule(ScriptLoadRequest* aRequest);
+
+  // Implements https://html.spec.whatwg.org/#run-a-module-script
+  nsresult EvaluateModule(nsIGlobalObject* aGlobalObject,
+                          ScriptLoadRequest* aRequest);
 
   void SetModuleFetchStarted(ModuleLoadRequest* aRequest);
   void SetModuleFetchFinishedAndResumeWaitingRequests(
