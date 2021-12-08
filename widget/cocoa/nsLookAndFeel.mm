@@ -205,6 +205,9 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor
     case ColorID::MozButtonactiveface:
     case ColorID::MozButtondisabledface:
       color = GetColorFromNSColor(NSColor.controlColor);
+      if (!NS_GET_A(color)) {
+        color = GetColorFromNSColor(NSColor.controlBackgroundColor);
+      }
       break;
     case ColorID::Buttonhighlight:
       color = GetColorFromNSColor(NSColor.selectedControlColor);
