@@ -210,7 +210,7 @@ void nsFontFaceUtils::MarkDirtyForFontChange(nsIFrame* aSubtreeRoot,
       }
 
       if (alreadyScheduled == ReflowAlreadyScheduled::No ||
-          pc->UsesExChUnits()) {
+          pc->UsesFontMetricDependentFontUnits()) {
         if (f->IsPlaceholderFrame()) {
           nsIFrame* oof = nsPlaceholderFrame::GetRealFrameForPlaceholder(f);
           if (!nsLayoutUtils::IsProperAncestorFrame(subtreeRoot, oof)) {
