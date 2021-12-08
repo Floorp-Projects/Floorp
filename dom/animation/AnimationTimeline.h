@@ -101,6 +101,8 @@ class AnimationTimeline : public nsISupports, public nsWrapperCache {
 
   virtual Document* GetDocument() const = 0;
 
+  virtual bool IsMonotonicallyIncreasing() const = 0;
+
   virtual bool IsScrollTimeline() const { return false; }
 
  protected:
