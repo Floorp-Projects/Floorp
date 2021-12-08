@@ -424,7 +424,8 @@ class Core(
 
     // Temporary. See https://github.com/mozilla-mobile/fenix/issues/19155
     private val lazySecurePrefs = lazyMonitored { getSecureAbove22Preferences() }
-    val trackingProtectionPolicyFactory = TrackingProtectionPolicyFactory(context.settings())
+    val trackingProtectionPolicyFactory =
+        TrackingProtectionPolicyFactory(context.settings(), context.resources)
 
     /**
      * Sets Preferred Color scheme based on Dark/Light Theme Settings or Current Configuration

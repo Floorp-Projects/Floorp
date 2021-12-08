@@ -4,15 +4,21 @@
 
 package org.mozilla.fenix.components
 
+import android.content.res.Resources
 import androidx.annotation.VisibleForTesting
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
+import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.CookiePolicy
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicyForSessionTypes
+import org.mozilla.fenix.R
 import org.mozilla.fenix.utils.Settings
 
 /**
  * Handles the logic behind creating new [TrackingProtectionPolicy]s.
  */
-class TrackingProtectionPolicyFactory(private val settings: Settings) {
+class TrackingProtectionPolicyFactory(
+    private val settings: Settings,
+    private val resources: Resources
+) {
 
     /**
      * Constructs a [TrackingProtectionPolicy] based on current preferences.
@@ -57,16 +63,16 @@ class TrackingProtectionPolicyFactory(private val settings: Settings) {
         }
     }
 
-    private fun getCustomCookiePolicy(): TrackingProtectionPolicy.CookiePolicy {
+    private fun getCustomCookiePolicy(): CookiePolicy {
         return if (!settings.blockCookiesInCustomTrackingProtection) {
-            TrackingProtectionPolicy.CookiePolicy.ACCEPT_ALL
+            CookiePolicy.ACCEPT_ALL
         } else {
             when (settings.blockCookiesSelectionInCustomTrackingProtection) {
-                "all" -> TrackingProtectionPolicy.CookiePolicy.ACCEPT_NONE
-                "social" -> TrackingProtectionPolicy.CookiePolicy.ACCEPT_NON_TRACKERS
-                "unvisited" -> TrackingProtectionPolicy.CookiePolicy.ACCEPT_VISITED
-                "third-party" -> TrackingProtectionPolicy.CookiePolicy.ACCEPT_ONLY_FIRST_PARTY
-                else -> TrackingProtectionPolicy.CookiePolicy.ACCEPT_NONE
+                resources.getString(R.string.all) -> CookiePolicy.ACCEPT_NONE
+                resources.getString(R.string.social) -> CookiePolicy.ACCEPT_NON_TRACKERS
+                resources.getString(R.string.unvisited) -> CookiePolicy.ACCEPT_VISITED
+                resources.getString(R.string.third_party) -> CookiePolicy.ACCEPT_ONLY_FIRST_PARTY
+                else -> CookiePolicy.ACCEPT_NONE
             }
         }
     }
