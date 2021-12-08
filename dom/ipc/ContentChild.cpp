@@ -2084,23 +2084,17 @@ bool ContentChild::DeallocPSpeechSynthesisChild(PSpeechSynthesisChild* aActor) {
 }
 #endif
 
-PWebrtcGlobalChild* ContentChild::AllocPWebrtcGlobalChild() {
 #ifdef MOZ_WEBRTC
+PWebrtcGlobalChild* ContentChild::AllocPWebrtcGlobalChild() {
   auto* child = new WebrtcGlobalChild();
   return child;
-#else
-  return nullptr;
-#endif
 }
 
 bool ContentChild::DeallocPWebrtcGlobalChild(PWebrtcGlobalChild* aActor) {
-#ifdef MOZ_WEBRTC
   delete static_cast<WebrtcGlobalChild*>(aActor);
   return true;
-#else
-  return false;
-#endif
 }
+#endif
 
 mozilla::ipc::IPCResult ContentChild::RecvRegisterChrome(
     nsTArray<ChromePackage>&& packages,
