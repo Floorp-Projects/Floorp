@@ -113,3 +113,6 @@ CXXFLAGS += [
 
 DEFINES["TRACING"] = True
 FINAL_LIBRARY = "xul"
+
+# Add libFuzzer configuration directives
+include("/tools/fuzzing/libfuzzer-config.mozbuild")
