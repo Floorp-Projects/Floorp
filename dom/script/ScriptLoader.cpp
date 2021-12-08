@@ -247,7 +247,6 @@ ScriptLoader::ScriptLoader(Document* aDocument)
       mReporter(new ConsoleReportCollector()),
       mModuleLoader(new ModuleLoader(this)) {
   LOG(("ScriptLoader::ScriptLoader %p", this));
-  EnsureModuleHooksInitialized();
 
   mSpeculativeOMTParsingEnabled = StaticPrefs::
       dom_script_loader_external_scripts_speculative_omt_parse_enabled();
@@ -1289,7 +1288,9 @@ void ScriptLoader::EnsureModuleHooksInitialized() {
                                        (void*)nullptr);
 }
 
-ModuleLoader::ModuleLoader(ScriptLoader* aLoader) : mLoader(aLoader) {}
+ModuleLoader::ModuleLoader(ScriptLoader* aLoader) : mLoader(aLoader) {
+  aLoader->EnsureModuleHooksInitialized();
+}
 
 ModuleLoader::~ModuleLoader() {
   mDynamicImportRequests.CancelRequestsAndClear();
