@@ -124,8 +124,20 @@ browser.urlbar.maxHistoricalSearchSuggestions (integer, default: 2)
 browser.urlbar.maxRichResults (integer, default: 10)
   The maximum number of results in the urlbar popup.
 
+browser.urlbar.merino.clientVariants (string, default: "")
+  Comma separated list of client variants to send to send to Merino. See
+  `Merino API docs <https://mozilla-services.github.io/merino/api.html#suggest>`_
+  for more details. This is intended to be used by experiments, not directly set
+  by users.
+
 browser.urlbar.merino.enabled (boolean, default: false)
   Whether Merino is enabled as a quick suggest source.
+
+browser.urlbar.merino.providers (string, default: "")
+  Comma separated list of client variants to send to send to Merino. See
+  `Merino API docs <https://mozilla-services.github.io/merino/api.html#suggest>`_
+  for more details. This is currently intended for development and QA, but may
+  be exposed to users in the future.
 
 browser.urlbar.openintab (boolean, default: false)
   Whether address bar results should be opened in new tabs by default.
