@@ -77,6 +77,7 @@ if CONFIG['OS_TARGET'] == 'WINNT':
     DEFINES['USE_WASAPI'] = True
     OS_LIBS += [
       "avrt",
+      "ksuser",
     ]
     if CONFIG['CC_TYPE'] == 'clang-cl':
         CXXFLAGS += ['-Wno-macro-redefined'] # '_USE_MATH_DEFINES' : macro redefinition
