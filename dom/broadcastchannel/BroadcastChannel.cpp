@@ -23,6 +23,7 @@
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/StorageAccess.h"
+#include "nsContentUtils.h"
 
 #include "nsICookieJarSettings.h"
 #include "mozilla/dom/Document.h"
@@ -149,7 +150,7 @@ already_AddRefed<BroadcastChannel> BroadcastChannel::Constructor(
   }
 
   nsID portUUID = {};
-  aRv = nsID::GenerateUUIDInPlace(portUUID);
+  aRv = nsContentUtils::GenerateUUIDInPlace(portUUID);
   if (aRv.Failed()) {
     return nullptr;
   }

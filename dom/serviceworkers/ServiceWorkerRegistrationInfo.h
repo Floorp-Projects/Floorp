@@ -13,6 +13,7 @@
 #include "mozilla/dom/ServiceWorkerInfo.h"
 #include "mozilla/dom/ServiceWorkerRegistrationBinding.h"
 #include "mozilla/dom/ServiceWorkerRegistrationDescriptor.h"
+#include "nsContentUtils.h"
 #include "nsProxyRelease.h"
 #include "nsTObserverArray.h"
 
@@ -38,7 +39,7 @@ class ServiceWorkerRegistrationInfo final
   };
   nsTArray<UniquePtr<VersionEntry>> mVersionList;
 
-  const nsID mAgentClusterId = nsID::GenerateUUID();
+  const nsID mAgentClusterId = nsContentUtils::GenerateUUID();
 
   uint32_t mControlledClientsCounter;
   uint32_t mDelayMultiplier;
