@@ -13,8 +13,6 @@
 #include "mozilla/TimingParams.h"
 #include "mozilla/WritingModes.h"
 
-#define SCROLL_TIMELINE_DURATION_MILLISEC 100000
-
 namespace mozilla {
 namespace dom {
 
@@ -99,18 +97,7 @@ class ScrollTimeline final : public AnimationTimeline {
     Tick();
   }
 
-  static const TimingParams& GetTiming() {
-    // Use default values except for mDuration and mFill.
-    // Use a fixed duration defined in SCROLL_TIMELINE_DURATIONMILLISEC, and use
-    // FillMode::Both to make sure the animation is in effect at 100%.
-    // Note: it's unfortunate TimingParams cannot be a const variable because
-    // we have to use StickyTimingDuration::FromMilliseconds() in its
-    // constructor.
-    static TimingParams sTiming =
-        TimingParams(SCROLL_TIMELINE_DURATION_MILLISEC, 0.0, 1.0,
-                     PlaybackDirection::Normal, FillMode::Both);
-    return sTiming;
-  }
+  static constexpr const TimingParams& GetTiming() { return sTiming; }
 
  protected:
   virtual ~ScrollTimeline() { Teardown(); }
@@ -152,6 +139,11 @@ class ScrollTimeline final : public AnimationTimeline {
   // So now we will only use the scroll direction from @scroll-timeline rule.
   RefPtr<Element> mSource;
   StyleScrollDirection mDirection;
+
+  // Note: it's unfortunate TimingParams cannot be a const variable because
+  // we have to use StickyTimingDuration::FromMilliseconds() in its
+  // constructor.
+  static TimingParams sTiming;
 };
 
 /**

@@ -17,7 +17,7 @@ namespace mozilla {
  */
 class SMILKeySpline {
  public:
-  SMILKeySpline() : mX1(0), mY1(0), mX2(0), mY2(0) {
+  constexpr SMILKeySpline() : mX1(0), mY1(0), mX2(0), mY2(0) {
     /* caller must call Init later */\
   }
 
@@ -97,7 +97,7 @@ class SMILKeySpline {
     double mY2;
 
     enum { kSplineTableSize = 11 };
-    double mSampleValues[kSplineTableSize];
+    double mSampleValues[kSplineTableSize] = {};
 
     static const double kSampleStepSize;
 };
