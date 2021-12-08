@@ -173,8 +173,11 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
   // true if the message was sent, false if not.
   bool NotifyGpuObservers(const char* aTopic);
 
-  // Used for tests and diagnostics
+  // Kills the GPU process. Used for tests and diagnostics
   void KillProcess();
+
+  // Causes the GPU process to crash. Used for tests and diagnostics
+  void CrashProcess();
 
   // Returns -1 if there is no GPU process, or the platform pid for it.
   base::ProcessId GPUProcessPid();

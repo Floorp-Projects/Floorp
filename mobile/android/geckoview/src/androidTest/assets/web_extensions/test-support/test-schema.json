@@ -197,6 +197,21 @@
             "name": "tabId"
           }
         ]
+      },
+      {
+        "name": "usingGpuProcess",
+        "type": "function",
+        "async": true,
+        "description": "Returns true if Gecko is using a GPU process.",
+        "parameters": []
+      },
+
+      {
+        "name": "crashGpuProcess",
+        "type": "function",
+        "async": true,
+        "description": "Causes the GPU process to crash.",
+        "parameters": []
       }
     ]
   }

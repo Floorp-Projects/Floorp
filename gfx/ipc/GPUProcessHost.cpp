@@ -239,6 +239,8 @@ uint64_t GPUProcessHost::GetProcessToken() const { return mProcessToken; }
 
 void GPUProcessHost::KillProcess() { KillHard("DiagnosticKill"); }
 
+void GPUProcessHost::CrashProcess() { mGPUChild->SendCrashProcess(); }
+
 void GPUProcessHost::DestroyProcess() {
   // Cancel all tasks. We don't want anything triggering after our caller
   // expects this to go away.

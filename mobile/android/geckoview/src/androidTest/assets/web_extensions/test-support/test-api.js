@@ -243,6 +243,20 @@ this.test = class extends ExtensionAPI {
             .getActor("TestSupport")
             .sendQuery("PromiseAllPaintsDone");
         },
+
+        async usingGpuProcess() {
+          const gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(
+            Ci.nsIGfxInfo
+          );
+          return gfxInfo.usingGPUProcess;
+        },
+
+        async crashGpuProcess() {
+          const gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(
+            Ci.nsIGfxInfo
+          );
+          return gfxInfo.crashGPUProcessForTests();
+        },
       },
     };
   }

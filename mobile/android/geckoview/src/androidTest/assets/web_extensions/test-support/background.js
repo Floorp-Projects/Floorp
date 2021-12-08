@@ -59,6 +59,12 @@ const APIS = {
   PromiseAllPaintsDone({ tab }) {
     return browser.test.promiseAllPaintsDone(tab.id);
   },
+  UsingGpuProcess() {
+    return browser.test.usingGpuProcess();
+  },
+  CrashGpuProcess() {
+    return browser.test.crashGpuProcess();
+  },
 };
 
 port.onMessage.addListener(async message => {

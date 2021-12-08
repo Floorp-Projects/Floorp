@@ -122,6 +122,9 @@ parent:
   // Asks the gpu process to trigger test-only instrumentation.
   async TestTriggerMetrics();
 
+  // Causes the GPU process to crash. Used for tests and diagnostics.
+  async CrashProcess();
+
 child:
   // Sent when the GPU process has initialized devices. This occurs once, after
   // Init().

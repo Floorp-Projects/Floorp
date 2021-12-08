@@ -630,6 +630,11 @@ mozilla::ipc::IPCResult GPUParent::RecvTestTriggerMetrics() {
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult GPUParent::RecvCrashProcess() {
+  MOZ_CRASH("Deliberate GPU process crash");
+  return IPC_OK();
+}
+
 void GPUParent::ActorDestroy(ActorDestroyReason aWhy) {
   if (AbnormalShutdown == aWhy) {
     NS_WARNING("Shutting down GPU process early due to a crash!");

@@ -264,6 +264,10 @@ public class TestCrashHandler extends Service {
   public synchronized int onStartCommand(final Intent intent, final int flags, final int startId) {
     if (mMsgHandler != null) {
       mMsgHandler.reportResult(evalCrashInfo(intent));
+      // We must manually call stopSelf() here to ensure the Service gets killed once the client
+      // unbinds. If we don't, then when the next client attempts to bind for a different test,
+      // onBind() will not be called, and mMsgHandler will not get set.
+      stopSelf();
       return Service.START_NOT_STICKY;
     }
 

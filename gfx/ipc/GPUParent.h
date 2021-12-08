@@ -101,6 +101,8 @@ class GPUParent final : public PGPUParent {
 
   mozilla::ipc::IPCResult RecvTestTriggerMetrics();
 
+  mozilla::ipc::IPCResult RecvCrashProcess();
+
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:
