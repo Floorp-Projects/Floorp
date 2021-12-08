@@ -14,6 +14,8 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/intl/UnicodeScriptCodes.h"
 #include "mozilla/net/IDNBlocklistUtils.h"
+#include "mozilla/intl/IDNA.h"
+#include "mozilla/UniquePtr.h"
 
 #include "nsString.h"
 
@@ -160,7 +162,7 @@ class nsIDNService final : public nsIIDNService,
   nsresult IDNA2008StringPrep(const nsAString& input, nsAString& output,
                               stringPrepFlag flag);
 
-  UIDNA* mIDNA;
+  mozilla::UniquePtr<mozilla::intl::IDNA> mIDNA;
 
   // We use this mutex to guard access to:
   // |mIDNBlocklist|, |mShowPunycode|, |mRestrictionProfile|,

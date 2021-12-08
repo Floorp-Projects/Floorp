@@ -161,16 +161,9 @@ void ICUUtils::AssignUCharArrayToString(UChar* aICUString, int32_t aLength,
 }
 
 /* static */
-nsresult ICUUtils::UErrorToNsResult(const UErrorCode aErrorCode) {
-  if (U_SUCCESS(aErrorCode)) {
-    return NS_OK;
-  }
-
-  switch (aErrorCode) {
-    case U_ILLEGAL_ARGUMENT_ERROR:
-      return NS_ERROR_INVALID_ARG;
-
-    case U_MEMORY_ALLOCATION_ERROR:
+nsresult ICUUtils::ICUErrorToNsResult(const intl::ICUError aError) {
+  switch (aError) {
+    case intl::ICUError::OutOfMemory:
       return NS_ERROR_OUT_OF_MEMORY;
 
     default:
