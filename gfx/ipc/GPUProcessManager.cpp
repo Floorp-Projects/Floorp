@@ -642,7 +642,7 @@ void GPUProcessManager::OnProcessUnexpectedShutdown(GPUProcessHost* aHost) {
   }
 
   CompositorManagerChild::OnGPUProcessLost(aHost->GetProcessToken());
-  DestroyProcess();
+  DestroyProcess(/* aUnexpectedShutdown */ true);
 
   if (mUnstableProcessAttempts >
       uint32_t(StaticPrefs::layers_gpu_process_max_restarts())) {
@@ -812,12 +812,12 @@ void GPUProcessManager::KillProcess() {
   mProcess->KillProcess();
 }
 
-void GPUProcessManager::DestroyProcess() {
+void GPUProcessManager::DestroyProcess(bool aUnexpectedShutdown) {
   if (!mProcess) {
     return;
   }
 
-  mProcess->Shutdown();
+  mProcess->Shutdown(aUnexpectedShutdown);
   mProcessToken = 0;
   mProcess = nullptr;
   mGPUChild = nullptr;
