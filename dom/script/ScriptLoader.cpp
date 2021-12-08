@@ -1291,26 +1291,6 @@ void ScriptLoader::EnsureModuleHooksInitialized() {
 
 ModuleLoader::~ModuleLoader() { LOG(("ModuleLoader::~ModuleLoader %p", this)); }
 
-void ScriptLoader::CheckModuleDependenciesLoaded(ModuleLoadRequest* aRequest) {
-  LOG(("ScriptLoadRequest (%p): Check dependencies loaded", aRequest));
-
-  RefPtr<ModuleScript> moduleScript = aRequest->mModuleScript;
-  if (!moduleScript || moduleScript->HasParseError()) {
-    return;
-  }
-  for (auto childRequest : aRequest->mImports) {
-    ModuleScript* childScript = childRequest->mModuleScript;
-    if (!childScript) {
-      aRequest->mModuleScript = nullptr;
-      LOG(("ScriptLoadRequest (%p):   %p failed (load error)", aRequest,
-           childRequest.get()));
-      return;
-    }
-  }
-
-  LOG(("ScriptLoadRequest (%p):   all ok", aRequest));
-}
-
 class ScriptRequestProcessor : public Runnable {
  private:
   RefPtr<ScriptLoader> mLoader;
