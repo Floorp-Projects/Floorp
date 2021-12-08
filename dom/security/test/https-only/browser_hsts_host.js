@@ -104,6 +104,13 @@ function onNewMessage(msgObj) {
   if (message.includes("Upgrading insecure request")) {
     ok(false, "Top-Level upgrade shouldn't get logged");
     testFinished = true;
+  } else if (
+    message.includes("Upgrading insecure speculative TCP connection")
+  ) {
+    // TODO: Check assertion
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1735683
+    ok(true, "Top-Level upgrade shouldn't get logged");
+    testFinished = true;
   } else if (gBrowser.selectedBrowser.currentURI.scheme === "https") {
     ok(true, "Top-Level upgrade shouldn't get logged");
     testFinished = true;
