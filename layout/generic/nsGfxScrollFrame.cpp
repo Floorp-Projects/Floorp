@@ -59,6 +59,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/HTMLMarqueeElement.h"
+#include "mozilla/dom/ScrollTimeline.h"
 #include <stdint.h>
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Telemetry.h"
@@ -2269,6 +2270,7 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter, bool aIsRoot)
       mProcessingScrollEvent(false),
       mApzAnimationRequested(false),
       mReclampVVOffsetInReflowFinished(false),
+      mMayScheduleScrollAnimations(false),
       mVelocityQueue(aOuter->PresContext()) {
   AppendScrollUpdate(ScrollPositionUpdate::NewScrollframe(nsPoint()));
 
@@ -3238,6 +3240,11 @@ void ScrollFrameHelper::ScrollToImpl(
           presContext->PresShell()->GetVisualViewportOffset(), curPos);
     }
   }
+
+  // Schedule the scroll-timelines linked to its scrollable frame.
+  // if `pt == curPos`, we early return, so the position must be changed at
+  // this moment. Therefore, we can schedule scroll animations directly.
+  ScheduleScrollAnimations();
 
   // notify the listeners.
   for (uint32_t i = 0; i < mListeners.Length(); i++) {
@@ -6411,6 +6418,8 @@ void ScrollFrameHelper::UpdateMinimumScaleSize(
 bool ScrollFrameHelper::ReflowFinished() {
   mPostedReflowCallback = false;
 
+  TryScheduleScrollAnimations();
+
   if (mIsRoot) {
     if (mMinimumScaleSizeChanged &&
         mOuter->PresShell()->UsesMobileViewportSizing() &&
@@ -6659,7 +6668,14 @@ void ScrollFrameHelper::UpdateSticky() {
 }
 
 void ScrollFrameHelper::UpdatePrevScrolledRect() {
-  mPrevScrolledRect = GetScrolledRect();
+  // The layout scroll range is determinated by the scrolled rect and the scroll
+  // port, so if the scrolled rect is updated, we may have to schedule the
+  // associated scroll-linked animations' restyles.
+  nsRect currScrolledRect = GetScrolledRect();
+  if (!currScrolledRect.IsEqualEdges(mPrevScrolledRect)) {
+    mMayScheduleScrollAnimations = true;
+  }
+  mPrevScrolledRect = currScrolledRect;
 }
 
 void ScrollFrameHelper::AdjustScrollbarRectForResizer(
@@ -7958,4 +7974,20 @@ void ScrollFrameHelper::AppendScrollUpdate(
     const ScrollPositionUpdate& aUpdate) {
   mScrollGeneration = aUpdate.GetGeneration();
   mScrollUpdates.AppendElement(aUpdate);
+}
+
+void ScrollFrameHelper::ScheduleScrollAnimations() {
+  MOZ_ASSERT(mOuter);
+  nsIContent* content = mOuter->GetContent();
+  MOZ_ASSERT(content && content->IsElement(),
+             "The nsIScrollableFrame should have the element.");
+
+  const auto* set =
+      ScrollTimelineSet::GetScrollTimelineSet(content->AsElement());
+  if (!set) {
+    // We don't have scroll timelines associated with this frame.
+    return;
+  }
+
+  set->ScheduleAnimations();
 }

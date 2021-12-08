@@ -206,6 +206,9 @@ class ScrollFrameHelper : public nsIReflowCallback {
 
   const nsRect& ScrollPort() const { return mScrollPort; }
   void SetScrollPort(const nsRect& aNewScrollPort) {
+    if (!mScrollPort.IsEqualEdges(aNewScrollPort)) {
+      mMayScheduleScrollAnimations = true;
+    }
     mScrollPort = aNewScrollPort;
   }
 
@@ -398,6 +401,16 @@ class ScrollFrameHelper : public nsIReflowCallback {
       const Maybe<nsPoint>& aDestination) const;
 
   bool NeedsScrollSnap() const;
+
+  // Schedule the scroll-linked animations.
+  void ScheduleScrollAnimations();
+  void TryScheduleScrollAnimations() {
+    if (!mMayScheduleScrollAnimations) {
+      return;
+    }
+    ScheduleScrollAnimations();
+    mMayScheduleScrollAnimations = false;
+  }
 
  public:
   bool IsScrollbarOnRight() const;
@@ -749,6 +762,9 @@ class ScrollFrameHelper : public nsIReflowCallback {
 
   // Whether we need to reclamp the visual viewport offset in ReflowFinished.
   bool mReclampVVOffsetInReflowFinished : 1;
+
+  // Whether we need to schedule the scroll-linked animations.
+  bool mMayScheduleScrollAnimations : 1;
 
   mozilla::layout::ScrollVelocityQueue mVelocityQueue;
 
