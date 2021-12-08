@@ -76,7 +76,7 @@ pub fn get_outgoing(conn: &Connection, signal: &dyn Interruptee) -> Result<Vec<P
         .conn()
         .query_rows_and_then_named(sql, &[], |row| -> Result<_> {
             signal.err_if_interrupted()?;
-            Ok(outgoing_from_row(row)?)
+            outgoing_from_row(row)
         })?;
 
     log::debug!("get_outgoing found {} items", elts.len());

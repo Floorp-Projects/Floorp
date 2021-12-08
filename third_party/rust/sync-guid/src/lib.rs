@@ -209,7 +209,9 @@ impl Guid {
     pub fn is_valid_for_sync_server(&self) -> bool {
         !self.is_empty()
             && self.len() <= 64
-            && self.bytes().all(|b| b >= b' ' && b <= b'~' && b != b',')
+            && self
+                .bytes()
+                .all(|b| (b' '..=b'~').contains(&b) && b != b',')
     }
 
     /// Returns true for Guids that are valid places guids, and false for all others.
@@ -416,6 +418,7 @@ mod test {
         assert!(!Guid::from("aaaabbbbccc=").is_valid_for_places()); // right length, bad character
     }
 
+    #[allow(clippy::cmp_owned)] // See clippy note below.
     #[test]
     fn test_comparison() {
         assert_eq!(Guid::from("abcdabcdabcd"), "abcdabcdabcd");
@@ -440,6 +443,10 @@ mod test {
         );
 
         // order by data instead of length
+        // hrmph - clippy in 1.54-nightly complains about the below:
+        // 'error: this creates an owned instance just for comparison'
+        // '... help: try: `*"aaaaaa"`'
+        // and suggests a change that's wrong - so we've ignored the lint above.
         assert!(Guid::from("zzz") > Guid::from("aaaaaa"));
         assert!(Guid::from("ThisIsASolowGuid") < Guid::from("zzz"));
         assert!(Guid::from("ThisIsASolowGuid") > Guid::from("AnotherSlowGuid"));
