@@ -4,7 +4,6 @@
     "build_wasm": true,
     "wasi-compiler-rt": "{MOZ_FETCHES_DIR}/compiler-rt",
     "build_type": "Release",
-    "assertions": false,
     "cc": "/usr/bin/gcc",
     "cxx": "/usr/bin/g++",
     "as": "/usr/bin/gcc",
