@@ -72,7 +72,7 @@ processtools = { path = "../../../components/processtools" }
 qcms = { path = "../../../../gfx/qcms", features = ["c_bindings", "neon"], default-features = false }
 
 [target.'cfg(not(target_os = "android"))'.dependencies]
-viaduct = { git = "https://github.com/mozilla/application-services", rev = "8a576fbe79199fa8664f64285524017f74ebcc5f"}
+viaduct = { git = "https://github.com/mozilla/application-services", rev = "c51b63595a27a6ef45161012323e0261475c10c9"}
 webext_storage_bridge = { path = "../../../components/extensions/storage/webext_storage_bridge" }
 
 [features]
