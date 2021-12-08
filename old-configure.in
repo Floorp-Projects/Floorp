@@ -494,10 +494,6 @@ case "$target" in
 *-darwin*)
     MOZ_OPTIMIZE_FLAGS="-O3"
     DSO_LDOPTS=''
-    # The ExceptionHandling framework is needed for Objective-C exception
-    # logging code in nsObjCExceptions.h. Currently we only use that in debug
-    # builds.
-    MOZ_DEBUG_LDFLAGS="$MOZ_DEBUG_LDFLAGS -framework ExceptionHandling";
 
     dnl DTrace and -dead_strip don't interact well. See bug 403132.
     dnl ===================================================================

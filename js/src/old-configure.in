@@ -420,20 +420,6 @@ case "$target" in
     CXXFLAGS="$CXXFLAGS -fno-common"
     DSO_LDOPTS=''
     LDFLAGS="$LDFLAGS -lobjc"
-    # The ExceptionHandling framework is needed for Objective-C exception
-    # logging code in nsObjCExceptions.h. Currently we only use that in debug
-    # builds.
-    _SAVE_LDFLAGS=$LDFLAGS
-     AC_MSG_CHECKING([for -framework ExceptionHandling])
-    LDFLAGS="$LDFLAGS -framework ExceptionHandling"
-    AC_TRY_LINK(,[return 0;],
-                ac_cv_have_framework_exceptionhandling="yes",
-                ac_cv_have_framework_exceptionhandling="no")
-    AC_MSG_RESULT([$ac_cv_have_framework_exceptionhandling])
-    if test  "$ac_cv_have_framework_exceptionhandling" = "yes"; then
-      MOZ_DEBUG_LDFLAGS="$MOZ_DEBUG_LDFLAGS -framework ExceptionHandling";
-    fi
-    LDFLAGS=$_SAVE_LDFLAGS
 
     dnl DTrace and -dead_strip don't interact well. See bug 403132.
     dnl ===================================================================
