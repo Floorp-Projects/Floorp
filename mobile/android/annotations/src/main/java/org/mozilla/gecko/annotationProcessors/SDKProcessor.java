@@ -56,6 +56,7 @@ package org.mozilla.gecko.annotationProcessors;
  */
 import com.android.tools.lint.LintCliClient;
 import com.android.tools.lint.checks.ApiLookup;
+import com.android.tools.lint.client.api.LintClient;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -211,7 +212,7 @@ public class SDKProcessor {
     sMaxSdkVersion = Integer.parseInt(args[1]);
     final String outdir = args[2];
 
-    final LintCliClient lintClient = new LintCliClient();
+    final LintCliClient lintClient = new LintCliClient(LintClient.CLIENT_CLI);
     sApiLookup = ApiLookup.get(lintClient);
 
     for (int argIndex = 3; argIndex < args.length; argIndex += 2) {
