@@ -82,6 +82,7 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
  private:
   void LoadFinished();
   void CancelImports();
+  void CheckModuleDependenciesLoaded();
 
  public:
   // Is this a request for a top level module script or an import?
