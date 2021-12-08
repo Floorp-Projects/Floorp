@@ -377,8 +377,9 @@ async function gotoPref(
 
   search(category, "data-category");
 
-  let mainContent = document.querySelector(".main-content");
-  mainContent.scrollTop = 0;
+  if (aShowReason != "initial") {
+    document.querySelector(".main-content").scrollTop = 0;
+  }
 
   spotlight(subcategory, category);
 
