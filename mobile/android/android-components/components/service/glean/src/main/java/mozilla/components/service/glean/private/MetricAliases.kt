@@ -28,4 +28,5 @@ typealias StringMetricType = mozilla.telemetry.glean.private.StringMetricType
 typealias TimespanMetricType = mozilla.telemetry.glean.private.TimespanMetricType
 typealias TimeUnit = mozilla.telemetry.glean.private.TimeUnit
 typealias TimingDistributionMetricType = mozilla.telemetry.glean.private.TimingDistributionMetricType
+typealias UrlMetricType = mozilla.telemetry.glean.private.UrlMetricType
 typealias UuidMetricType = mozilla.telemetry.glean.private.UuidMetricType
