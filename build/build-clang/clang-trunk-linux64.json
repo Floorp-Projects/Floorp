@@ -2,7 +2,6 @@
   "stages": "2",
   "build_wasm": true,
   "build_type": "Release",
-  "assertions": false,
   "cc": "/usr/bin/gcc",
   "cxx": "/usr/bin/g++",
   "as": "/usr/bin/gcc",
