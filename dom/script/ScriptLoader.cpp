@@ -834,8 +834,9 @@ nsresult ModuleLoader::ResolveRequestedModules(ModuleLoadRequest* aRequest,
 
     // Let url be the result of resolving a module specifier given module script
     // and requested.
+    ModuleLoader* requestModuleLoader = aRequest->mLoader;
     nsCOMPtr<nsIURI> uri =
-        ResolveModuleSpecifier(aRequest->mLoader, ms, specifier);
+        ResolveModuleSpecifier(requestModuleLoader->mLoader, ms, specifier);
     if (!uri) {
       uint32_t lineNumber = 0;
       uint32_t columnNumber = 0;
