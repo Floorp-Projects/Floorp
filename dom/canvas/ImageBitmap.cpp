@@ -1136,14 +1136,48 @@ already_AddRefed<ImageBitmap> ImageBitmap::CreateInternal(
     return nullptr;
   }
 
-  RefPtr<layers::Image> data = aImageBitmap.mData;
-
-  RefPtr<SourceSurface> surface = data->GetAsSourceSurface();
+  IntRect cropRect = aImageBitmap.mPictureRect;
+  RefPtr<SourceSurface> surface;
 
   bool needToReportMemoryAllocation = false;
 
+  if (aImageBitmap.mSurface) {
+    // the source imageBitmap already has a cropped surface, just use this
+    surface = aImageBitmap.mSurface;
+    cropRect = aCropRect.valueOr(cropRect);
+  } else {
+    RefPtr<layers::Image> data = aImageBitmap.mData;
+    surface = data->GetAsSourceSurface();
+
+    if (aCropRect.isSome()) {
+      // get new crop rect relative to original uncropped surface
+      IntRect newCropRect = aCropRect.ref();
+      newCropRect = FixUpNegativeDimension(newCropRect, aRv);
+
+      newCropRect.MoveBy(cropRect.X(), cropRect.Y());
+
+      if (cropRect.Contains(newCropRect)) {
+        // new crop region within existing surface
+        // safe to just crop this with new rect
+        cropRect = newCropRect;
+      } else {
+        // crop includes area outside original cropped region
+        // create new surface cropped by original bitmap crop rect
+        RefPtr<DataSourceSurface> dataSurface = surface->GetDataSurface();
+
+        surface = CropAndCopyDataSourceSurface(dataSurface, cropRect);
+        if (NS_WARN_IF(!surface)) {
+          aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+          return nullptr;
+        }
+        needToReportMemoryAllocation = true;
+        cropRect = aCropRect.ref();
+      }
+    }
+  }
+
   return CreateImageBitmapInternal(
-      aGlobal, surface, aCropRect, aOptions, aImageBitmap.mWriteOnly,
+      aGlobal, surface, Some(cropRect), aOptions, aImageBitmap.mWriteOnly,
       needToReportMemoryAllocation, false, aImageBitmap.mAlphaType, aRv);
 }
 
