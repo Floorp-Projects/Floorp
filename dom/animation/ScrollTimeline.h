@@ -8,11 +8,53 @@
 #define mozilla_dom_ScrollTimeline_h
 
 #include "mozilla/dom/AnimationTimeline.h"
+#include "mozilla/HashTable.h"
 #include "mozilla/ServoStyleConsts.h"
 
 namespace mozilla {
 namespace dom {
 
+class Document;
+class Element;
+
+/**
+ * Implementation notes
+ * --------------------
+ *
+ * ScrollTimelines do not observe refreshes the way DocumentTimelines do.
+ * This is because the refresh driver keeps ticking while it has registered
+ * refresh observers. For a DocumentTimeline, it's appropriate to keep the
+ * refresh driver ticking as long as there are active animations, since the
+ * animations need to be sampled on every frame. Scroll-linked animations,
+ * however, only need to be sampled when scrolling has occurred, so keeping
+ * the refresh driver ticking is wasteful.
+ *
+ * As a result, we schedule an animation restyle when
+ * 1) there are any scroll offsets updated (from APZ or script), via
+ *    nsIScrollableFrame, or
+ * 2) there are any possible scroll range updated during the frame reflow.
+ *
+ * -------------
+ * | Animation |
+ * -------------
+ *   ^
+ *   | Call Animation::Tick() if there are any scroll updates.
+ *   |
+ * ------------------
+ * | ScrollTimeline |
+ * ------------------
+ *   ^
+ *   | Try schedule the scroll-linked animations, if there are any scroll
+ *   | offsets changed or the scroll range changed [1].
+ *   |
+ * ----------------------
+ * | nsIScrollableFrame |
+ * ----------------------
+ *
+ * [1] nsIScrollableFrame uses its associated dom::Element to lookup the
+ *     ScrollTimelineSet, and iterates the set to schedule the animations
+ *     linked to the ScrollTimelines.
+ */
 class ScrollTimeline final : public AnimationTimeline {
  public:
   ScrollTimeline() = delete;
@@ -47,15 +89,83 @@ class ScrollTimeline final : public AnimationTimeline {
   }
   Document* GetDocument() const override { return mDocument; }
 
+  void ScheduleAnimations() {
+    // FIXME: Bug 1737927: Need to check the animation mutation observers for
+    // animations with scroll timelines.
+    // nsAutoAnimationMutationBatch mb(mDocument);
+
+    Tick();
+  }
+
  protected:
-  virtual ~ScrollTimeline() = default;
+  virtual ~ScrollTimeline() { Teardown(); }
 
  private:
-  RefPtr<Document> mDocument;
+  // Note: This function is required to be idempotent, as it can be called from
+  // both cycleCollection::Unlink() and ~ScrollTimeline(). When modifying this
+  // function, be sure to preserve this property.
+  void Teardown() { UnregisterFromScrollSource(); }
 
-  // FIXME: We will use these data members in the following patches.
+  // Register/Unregister this scroll timeline to the element property.
+  void RegisterWithScrollSource();
+  void UnregisterFromScrollSource();
+
+  RefPtr<Document> mDocument;
   RefPtr<Element> mSource;
   StyleScrollDirection mDirection;
+};
+
+/**
+ *
+ * A wrapper around a hashset of ScrollTimeline objects to handle
+ * storing the set as a property of an element (i.e. source).
+ * This makes use easier to look up a ScrollTimeline from the element.
+ *
+ * Note:
+ * 1. "source" is the element which the ScrollTimeline hooks.
+ *    Each ScrollTimeline hooks an dom::Element, and a dom::Element may be
+ *    registered by multiple ScrollTimelines.
+ * 2. Element holds the ScrollTimelineSet as an element property. Also, the
+ *    owner document of this Element keeps a linked list of ScrollTimelines
+ *    (instead of ScrollTimelineSet).
+ */
+class ScrollTimelineSet {
+ public:
+  using NonOwningScrollTimelineSet = HashSet<ScrollTimeline*>;
+
+  ~ScrollTimelineSet() = default;
+
+  static ScrollTimelineSet* GetScrollTimelineSet(Element* aElement);
+  static ScrollTimelineSet* GetOrCreateScrollTimelineSet(Element* aElement);
+  static void DestroyScrollTimelineSet(Element* aElement);
+
+  void AddScrollTimeline(ScrollTimeline& aScrollTimeline) {
+    Unused << mScrollTimelines.put(&aScrollTimeline);
+  }
+  void RemoveScrollTimeline(ScrollTimeline& aScrollTimeline) {
+    mScrollTimelines.remove(&aScrollTimeline);
+  }
+
+  bool IsEmpty() const { return mScrollTimelines.empty(); }
+
+  void ScheduleAnimations() const {
+    for (auto iter = mScrollTimelines.iter(); !iter.done(); iter.next()) {
+      iter.get()->ScheduleAnimations();
+    }
+  }
+
+ private:
+  ScrollTimelineSet() = default;
+
+  // ScrollTimelineSet doesn't own ScrollTimeline. We let Animations own its
+  // scroll timeline. (Note: one ScrollTimeline could be owned by multiple
+  // associated Animations.)
+  // The ScrollTimeline is generated only by CSS, so if all the associated
+  // Animations are gone, we don't need the ScrollTimeline anymore, so
+  // ScrollTimelineSet doesn't have to keep it for the source element.
+  // FIXME: Bug 1676794: We may have to update here if it's possible to create
+  // ScrollTimeline via script.
+  NonOwningScrollTimelineSet mScrollTimelines;
 };
 
 }  // namespace dom

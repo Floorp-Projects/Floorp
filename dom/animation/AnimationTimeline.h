@@ -32,6 +32,10 @@ class AnimationTimeline : public nsISupports, public nsWrapperCache {
  protected:
   virtual ~AnimationTimeline();
 
+  // Tick animations and may remove them from the list if we don't need to
+  // tick it. Return true if any animations need to be ticked.
+  bool Tick();
+
  public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(AnimationTimeline)
