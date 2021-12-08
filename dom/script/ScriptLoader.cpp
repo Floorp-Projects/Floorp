@@ -2416,45 +2416,6 @@ NotifyOffThreadScriptLoadCompletedRunnable::
   }
 }
 
-static void GetProfilerLabelForRequest(ScriptLoadRequest* aRequest,
-                                       nsACString& aOutString) {
-  if (!profiler_is_active()) {
-    aOutString.Append("<script> element");
-    return;
-  }
-  aOutString.Append("<script");
-  if (aRequest->IsAsyncScript()) {
-    aOutString.Append(" async");
-  } else if (aRequest->IsDeferredScript()) {
-    aOutString.Append(" defer");
-  }
-  if (aRequest->IsModuleRequest()) {
-    aOutString.Append(" type=\"module\"");
-  }
-
-  nsAutoCString url;
-  if (aRequest->mURI) {
-    aRequest->mURI->GetAsciiSpec(url);
-  } else {
-    url = "<unknown>";
-  }
-
-  if (aRequest->mIsInline) {
-    if (aRequest->GetParserCreated() != NOT_FROM_PARSER) {
-      aOutString.Append("> inline at line ");
-      aOutString.AppendInt(aRequest->mLineNo);
-      aOutString.Append(" of ");
-    } else {
-      aOutString.Append("> inline (dynamically created) in ");
-    }
-    aOutString.Append(url);
-  } else {
-    aOutString.Append(" src=\"");
-    aOutString.Append(url);
-    aOutString.Append("\">");
-  }
-}
-
 NS_IMETHODIMP
 NotifyOffThreadScriptLoadCompletedRunnable::Run() {
   MOZ_ASSERT(NS_IsMainThread());
@@ -2476,7 +2437,7 @@ NotifyOffThreadScriptLoadCompletedRunnable::Run() {
     }
 
     nsAutoCString profilerLabelString;
-    GetProfilerLabelForRequest(request, profilerLabelString);
+    request->GetProfilerLabel(profilerLabelString);
     PROFILER_MARKER_TEXT(
         scriptSourceString, JS,
         MarkerTiming::Interval(request->mOffThreadParseStartTime,
@@ -3106,7 +3067,7 @@ nsresult ModuleLoader::EvaluateModule(nsIGlobalObject* aGlobalObject,
   JSContext* cx = aes.cx();
 
   nsAutoCString profilerLabelString;
-  GetProfilerLabelForRequest(aRequest, profilerLabelString);
+  aRequest->GetProfilerLabel(profilerLabelString);
 
   LOG(("ScriptLoadRequest (%p): Evaluate Module", aRequest));
   AUTO_PROFILER_MARKER_TEXT("ModuleEvaluation", JS,
@@ -3189,7 +3150,7 @@ nsresult ModuleLoader::EvaluateModule(nsIGlobalObject* aGlobalObject,
 nsresult ScriptLoader::CompileOrDecodeClassicScript(
     JSContext* aCx, JSExecutionContext& aExec, ScriptLoadRequest* aRequest) {
   nsAutoCString profilerLabelString;
-  GetProfilerLabelForRequest(aRequest, profilerLabelString);
+  aRequest->GetProfilerLabel(profilerLabelString);
 
   nsresult rv;
   if (aRequest->IsBytecode()) {
@@ -3274,7 +3235,7 @@ nsresult ScriptLoader::EvaluateScript(nsIGlobalObject* aGlobalObject,
   JS::Rooted<JSObject*> global(cx, aGlobalObject->GetGlobalJSObject());
 
   nsAutoCString profilerLabelString;
-  GetProfilerLabelForRequest(aRequest, profilerLabelString);
+  aRequest->GetProfilerLabel(profilerLabelString);
 
   // Create a ClassicScript object and associate it with the JSScript.
   RefPtr<ClassicScript> classicScript =
