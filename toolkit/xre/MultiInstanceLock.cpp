@@ -23,7 +23,7 @@ namespace mozilla {
 static bool GetLockFileName(const char* nameToken, const char16_t* installPath,
                             nsCString& filePath) {
   mozilla::UniquePtr<NS_tchar[]> pathHash;
-  if (!GetInstallHash(installPath, MOZ_APP_VENDOR, pathHash)) {
+  if (!GetInstallHash(installPath, pathHash)) {
     return false;
   }
 
