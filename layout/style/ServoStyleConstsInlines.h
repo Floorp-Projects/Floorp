@@ -1052,6 +1052,10 @@ inline AspectRatio StyleAspectRatio::ToLayoutRatio() const {
                     : AspectRatio();
 }
 
+inline nsAtom* StyleTimelineOrKeyframesName::AsAtom() const {
+  return IsIdent() ? AsIdent().AsAtom() : AsQuotedString().AsAtom();
+}
+
 }  // namespace mozilla
 
 #endif
