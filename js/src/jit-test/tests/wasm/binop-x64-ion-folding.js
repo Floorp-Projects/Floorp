@@ -210,26 +210,3 @@ test32('(i32.xor (get_local 0) (get_local 0))',
 test64('(i64.xor (get_local 0) (get_local 0))',
        '33 c0   xor %eax, %eax',
        1234n,5678n, 0n);
-
-// AND32 followed by `== 0`: check the two operations are merged into a 'test'
-// insn, so that 'and' doesn't appear in the disassembly.  The merging isn't
-// currently done for AND64, nor for {OR,XOR}{32,64}.  See bug 1741807.
-
-codegenTestX64_adhoc(
-    `(module
-       (func (export "f") (param $p1 i32) (param $p2 i32) (result i32)
-         (local $x i32)
-         (set_local $x (i32.const 1234))
-         (if (i32.eq (i32.and (local.get $p1) (local.get $p2)) (i32.const 0))
-           (set_local $x (i32.const 4567))
-         )
-         (get_local $x)
-       )
-    )`,
-    'f',
-    `85 ..               test %e.., %e..
-     0f 85 .. 00 00 00   jnz 0x00000000000000..
-     b8 d7 11 00 00      mov \\$0x11D7, %eax
-     e9 .. 00 00 00      jmp 0x00000000000000..
-     b8 d2 04 00 00      mov \\$0x4D2, %eax`
-);

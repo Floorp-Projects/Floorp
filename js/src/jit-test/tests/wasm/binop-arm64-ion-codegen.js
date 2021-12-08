@@ -318,3 +318,64 @@ codegenTestARM64_adhoc(
     'f',
     '1e60c020  fabs    d0, d1');
 
+// AND{32,64} followed by `== 0`: check the two operations are merged into a
+// single 'tst' insn, and no 'and' insn.  The merging isn't done for
+// {OR,XOR}{32,64}.  This is for both arguments being non-constant.
+
+for ( [ty, expect_tst] of
+      [['i32',   '6a01001f  tst w0, w1'],
+       ['i64',   'ea01001f  tst x0, x1']] ) {
+   codegenTestARM64_adhoc(
+    `(module
+       (func (export "f") (param $p1 ${ty}) (param $p2 ${ty}) (result i32)
+         (local $x i32)
+         (set_local $x (i32.const 0x4D2))
+         (if (${ty}.eq (${ty}.and (local.get $p1) (local.get $p2))
+                       (${ty}.const 0))
+           (set_local $x (i32.const 0x11D7))
+         )
+         (get_local $x)
+       )
+    )`,
+    'f',
+    `${expect_tst}
+     54000061  b\\.ne  #\\+0xc \\(addr .*\\)
+     52823ae0  mov     w0, #0x11d7
+     14000002  b       #\\+0x8 \\(addr .*\\)
+     52809a40  mov     w0, #0x4d2`
+   );
+}
+
+// AND64 followed by `== 0`, with one of the args being a constant.
+
+for ( [imm, expect1, expect2] of
+      [ // as a valid logical-immediate => imm in insn
+        ['0x0F0F0F0F0F0F0F0F',
+         'f200cc1f  tst  x0, #0xf0f0f0f0f0f0f0f',
+         ''],
+        // anything else => imm synth'd into a reg
+        ['-0x4771',
+         '9288ee10  mov  x16, #0xffffffffffffb88f',
+         'ea10001f  tst  x0, x16']]
+      ) {
+   codegenTestARM64_adhoc(
+    `(module
+       (func (export "f") (param $p1 i64) (result i32)
+         (local $x i32)
+         (set_local $x (i32.const 0x4D2))
+         (if (i64.eq (i64.and (i64.const ${imm}) (local.get $p1))
+                     (i64.const 0))
+           (set_local $x (i32.const 0x11D7))
+         )
+         (get_local $x)
+       )
+    )`,
+    'f',
+    `${expect1}
+     ${expect2}
+     54000061  b\\.ne  #\\+0xc \\(addr .*\\)
+     52823ae0  mov     w0, #0x11d7
+     14000002  b       #\\+0x8 \\(addr .*\\)
+     52809a40  mov     w0, #0x4d2`
+   );
+}

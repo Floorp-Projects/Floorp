@@ -167,3 +167,69 @@ codegenTestX64_adhoc(
 assertEq(wasmEvalText(subneg64).exports.f(-37000000000n), 37000000000n)
 assertEq(wasmEvalText(subneg64).exports.f(42000000000n), -42000000000n)
 
+// AND{32,64} followed by `== 0`: check the two operations are merged into a
+// single 'test' insn, and no 'and' insn.  The merging isn't done for
+// {OR,XOR}{32,64}.  This is for both arguments being non-constant.
+
+for ( [ty, expect_test] of
+      [['i32',   '85 ..     test %e.., %e..'],
+       ['i64',   '48 85 ..  test %r.., %r..']] ) {
+   codegenTestX64_adhoc(
+    `(module
+       (func (export "f") (param $p1 ${ty}) (param $p2 ${ty}) (result i32)
+         (local $x i32)
+         (set_local $x (i32.const 0x4D2))
+         (if (${ty}.eq (${ty}.and (local.get $p1) (local.get $p2))
+                       (${ty}.const 0))
+           (set_local $x (i32.const 0x11D7))
+         )
+         (get_local $x)
+       )
+    )`,
+    'f',
+    `${expect_test}
+     0f 85 .. 00 00 00   jnz 0x00000000000000..
+     b8 d7 11 00 00      mov \\$0x11D7, %eax
+     e9 .. 00 00 00      jmp 0x00000000000000..
+     b8 d2 04 00 00      mov \\$0x4D2, %eax`
+   );
+}
+
+// AND64 followed by `== 0`, with one of the args being a constant.  Depending
+// on the constant we can get one of three forms.
+
+for ( [imm, expect1, expect2] of
+      [ // in signed-32 range => imm in insn
+        ['0x17654321',
+         'f7 c. 21 43 65 17   test \\$0x17654321, %e..', // edi or ecx
+         ''],
+        // in unsigned-32 range => imm in reg via movl
+        ['0x87654321',
+         '41 bb 21 43 65 87   mov \\$0x87654321, %r11d',
+         '4c 85 d.            test %r11, %r..'], // rdi or rcx
+        // not in either range => imm in reg via mov(absq)
+        ['0x187654321',
+         '49 bb 21 43 65 87 01 00 00 00   mov \\$0x187654321, %r11',
+         '4c 85 d.   test %r11, %r..']] // rdi or rcx
+      ) {
+   codegenTestX64_adhoc(
+    `(module
+       (func (export "f") (param $p1 i64) (result i32)
+         (local $x i32)
+         (set_local $x (i32.const 0x4D2))
+         (if (i64.eq (i64.and (i64.const ${imm}) (local.get $p1))
+                     (i64.const 0))
+           (set_local $x (i32.const 0x11D7))
+         )
+         (get_local $x)
+       )
+    )`,
+    'f',
+    `${expect1}
+     ${expect2}
+     0f 85 .. 00 00 00   jnz 0x00000000000000..
+     b8 d7 11 00 00      mov \\$0x11D7, %eax
+     e9 .. 00 00 00      jmp 0x00000000000000..
+     b8 d2 04 00 00      mov \\$0x4D2, %eax`
+   );
+}
