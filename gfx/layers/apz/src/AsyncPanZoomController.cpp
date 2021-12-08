@@ -5488,9 +5488,14 @@ void AsyncPanZoomController::ZoomToRect(const ZoomTarget& aZoomTarget,
     // the composition bounds. If this happens, we can't fill the target
     // composited area with this frame.
     CSSToParentLayerScale localMinZoom(
-        std::max(mZoomConstraints.mMinZoom.scale,
-                 std::max(compositionBounds.Width() / cssPageRect.Width(),
-                          compositionBounds.Height() / cssPageRect.Height())));
+        std::max(compositionBounds.Width() / cssPageRect.Width(),
+                 compositionBounds.Height() / cssPageRect.Height()));
+
+    localMinZoom.scale =
+        clamped(localMinZoom.scale, mZoomConstraints.mMinZoom.scale,
+                mZoomConstraints.mMaxZoom.scale);
+
+    localMinZoom = std::max(mZoomConstraints.mMinZoom, localMinZoom);
     CSSToParentLayerScale localMaxZoom =
         std::max(localMinZoom, mZoomConstraints.mMaxZoom);
 
