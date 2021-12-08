@@ -87,6 +87,7 @@ class ScrollTimeline final : public AnimationTimeline {
     return {};
   }
   Document* GetDocument() const override { return mDocument; }
+  bool IsMonotonicallyIncreasing() const override { return false; }
   bool IsScrollTimeline() const override { return true; }
 
   void ScheduleAnimations() {

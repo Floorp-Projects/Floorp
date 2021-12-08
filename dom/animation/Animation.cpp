@@ -493,7 +493,7 @@ void Animation::UpdatePlaybackRate(double aPlaybackRate) {
 // https://drafts.csswg.org/web-animations/#play-state
 AnimationPlayState Animation::PlayState() const {
   Nullable<TimeDuration> currentTime = GetCurrentTimeAsDuration();
-  if (currentTime.IsNull() && !Pending()) {
+  if (currentTime.IsNull() && mStartTime.IsNull() && !Pending()) {
     return AnimationPlayState::Idle;
   }
 
@@ -1350,15 +1350,15 @@ void Animation::PlayNoUpdate(ErrorResult& aRv, LimitBehavior aLimitBehavior) {
   AutoMutationBatchForAnimation mb(*this);
 
   bool abortedPause = mPendingState == PendingState::PausePending;
-
   double effectivePlaybackRate = CurrentOrPendingPlaybackRate();
 
   Nullable<TimeDuration> currentTime = GetCurrentTimeAsDuration();
+  Nullable<TimeDuration> seekTime;
   if (effectivePlaybackRate > 0.0 &&
       (currentTime.IsNull() || (aLimitBehavior == LimitBehavior::AutoRewind &&
                                 (currentTime.Value() < TimeDuration() ||
                                  currentTime.Value() >= EffectEnd())))) {
-    mHoldTime.SetValue(TimeDuration(0));
+    seekTime.SetValue(TimeDuration(0));
   } else if (effectivePlaybackRate < 0.0 &&
              (currentTime.IsNull() ||
               (aLimitBehavior == LimitBehavior::AutoRewind &&
@@ -1368,9 +1368,19 @@ void Animation::PlayNoUpdate(ErrorResult& aRv, LimitBehavior aLimitBehavior) {
       return aRv.ThrowInvalidStateError(
           "Can't rewind animation with infinite effect end");
     }
-    mHoldTime.SetValue(TimeDuration(EffectEnd()));
+    seekTime.SetValue(TimeDuration(EffectEnd()));
   } else if (effectivePlaybackRate == 0.0 && currentTime.IsNull()) {
-    mHoldTime.SetValue(TimeDuration(0));
+    seekTime.SetValue(TimeDuration(0));
+  }
+
+  if (!seekTime.IsNull()) {
+    if (HasFiniteTimeline()) {
+      mStartTime = seekTime;
+      mHoldTime.SetNull();
+      ApplyPendingPlaybackRate();
+    } else {
+      mHoldTime = seekTime;
+    }
   }
 
   bool reuseReadyPromise = false;
@@ -1390,7 +1400,8 @@ void Animation::PlayNoUpdate(ErrorResult& aRv, LimitBehavior aLimitBehavior) {
   // (b) If we have timing changes (specifically a change to the playbackRate)
   //     that should be applied asynchronously.
   //
-  if (mHoldTime.IsNull() && !abortedPause && !mPendingPlaybackRate) {
+  if (mHoldTime.IsNull() && seekTime.IsNull() && !abortedPause &&
+      !mPendingPlaybackRate) {
     return;
   }
 
@@ -1443,15 +1454,24 @@ void Animation::Pause(ErrorResult& aRv) {
 
   AutoMutationBatchForAnimation mb(*this);
 
+  Nullable<TimeDuration> seekTime;
   // If we are transitioning from idle, fill in the current time
   if (GetCurrentTimeAsDuration().IsNull()) {
     if (mPlaybackRate >= 0.0) {
-      mHoldTime.SetValue(TimeDuration(0));
+      seekTime.SetValue(TimeDuration(0));
     } else {
       if (EffectEnd() == TimeDuration::Forever()) {
         return aRv.ThrowInvalidStateError("Can't seek to infinite effect end");
       }
-      mHoldTime.SetValue(TimeDuration(EffectEnd()));
+      seekTime.SetValue(TimeDuration(EffectEnd()));
+    }
+  }
+
+  if (!seekTime.IsNull()) {
+    if (HasFiniteTimeline()) {
+      mStartTime = seekTime;
+    } else {
+      mHoldTime = seekTime;
     }
   }
 
