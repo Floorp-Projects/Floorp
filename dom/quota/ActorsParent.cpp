@@ -2002,9 +2002,6 @@ using NormalOriginOpArray =
     nsTArray<CheckedUnsafePtr<NormalOriginOperationBase>>;
 StaticAutoPtr<NormalOriginOpArray> gNormalOriginOps;
 
-// Constants for temporary storage limit computing.
-static const uint32_t kDefaultChunkSizeKB = 10 * 1024;
-
 void RegisterNormalOriginOp(NormalOriginOperationBase& aNormalOriginOp) {
   AssertIsOnBackgroundThread();
 
@@ -2667,8 +2664,8 @@ Result<nsCOMPtr<nsIBinaryInputStream>, nsresult> GetBinaryInputStream(
 }
 
 // This method computes and returns our best guess for the temporary storage
-// limit (in bytes), based on available space.
-uint64_t GetTemporaryStorageLimit(uint64_t aAvailableSpaceBytes) {
+// limit (in bytes), based on disk capacity.
+Result<uint64_t, nsresult> GetTemporaryStorageLimit(nsIFile& aStorageDir) {
   // The fixed limit pref can be used to override temporary storage limit
   // calculation.
   if (StaticPrefs::dom_quotaManager_temporaryStorage_fixedLimit() >= 0) {
@@ -2677,23 +2674,14 @@ uint64_t GetTemporaryStorageLimit(uint64_t aAvailableSpaceBytes) {
            1024;
   }
 
-  uint64_t availableSpaceKB = aAvailableSpaceBytes / 1024;
+  // Check for disk capacity of user's device on which storage directory lives.
+  QM_TRY_INSPECT(const int64_t& diskCapacity,
+                 MOZ_TO_RESULT_INVOKE_MEMBER(aStorageDir, GetDiskCapacity));
 
-  // Prevent division by zero below.
-  uint32_t chunkSizeKB;
-  if (StaticPrefs::dom_quotaManager_temporaryStorage_chunkSize()) {
-    chunkSizeKB = StaticPrefs::dom_quotaManager_temporaryStorage_chunkSize();
-  } else {
-    chunkSizeKB = kDefaultChunkSizeKB;
-  }
+  MOZ_ASSERT(diskCapacity >= 0);
 
-  // Grow/shrink in chunkSizeKB units, deliberately, so that in the common case
-  // we don't shrink temporary storage and evict origin data every time we
-  // initialize.
-  availableSpaceKB = (availableSpaceKB / chunkSizeKB) * chunkSizeKB;
-
-  // Allow temporary storage to consume up to half the available space.
-  return availableSpaceKB * .50 * 1024;
+  // Allow temporary storage to consume up to 50% of disk capacity.
+  return diskCapacity / 2u;
 }
 
 bool IsOriginUnaccessed(const FullOriginMetadata& aFullOriginMetadata,
@@ -6390,30 +6378,17 @@ nsresult QuotaManager::EnsureTemporaryStorageIsInitialized() {
 
     QM_TRY(MOZ_TO_RESULT(storageDir->InitWithPath(GetStoragePath())));
 
-    // The storage directory must exist before calling GetDiskSpaceAvailable.
+    // The storage directory must exist before calling GetTemporaryStorageLimit.
     QM_TRY_INSPECT(const bool& created, EnsureDirectory(*storageDir));
 
     Unused << created;
 
-    // Check for available disk space users have on their device where storage
-    // directory lives.
-    QM_TRY_INSPECT(
-        const int64_t& diskSpaceAvailable,
-        MOZ_TO_RESULT_INVOKE_MEMBER(storageDir, GetDiskSpaceAvailable));
-
-    MOZ_ASSERT(diskSpaceAvailable >= 0);
+    QM_TRY_UNWRAP(mTemporaryStorageLimit,
+                  GetTemporaryStorageLimit(*storageDir));
 
     QM_TRY(MOZ_TO_RESULT(LoadQuota()));
 
     mTemporaryStorageInitialized = true;
-
-    // Available disk space shouldn't be used directly for temporary storage
-    // limit calculation since available disk space is affected by existing data
-    // stored in temporary storage. So we need to increase it by the temporary
-    // storage size (that has been calculated in LoadQuota) before passing to
-    // GetTemporaryStorageLimit.
-    mTemporaryStorageLimit = GetTemporaryStorageLimit(
-        /* aAvailableSpaceBytes */ diskSpaceAvailable + mTemporaryStorageUsage);
 
     CleanupTemporaryStorage();
 
@@ -6538,8 +6513,8 @@ uint64_t QuotaManager::GetGroupLimit() const {
   // To avoid one group evicting all the rest, limit the amount any one group
   // can use to 20% resp. a fifth. To prevent individual sites from using
   // exorbitant amounts of storage where there is a lot of free space, cap the
-  // group limit to 2GB.
-  const uint64_t x = std::min<uint64_t>(mTemporaryStorageLimit / 5, 2 GB);
+  // group limit to 10GB.
+  const auto x = std::min<uint64_t>(mTemporaryStorageLimit / 5, 10 GB);
 
   // In low-storage situations, make an exception (while not exceeding the total
   // storage limit).
