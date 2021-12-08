@@ -8,6 +8,9 @@
 
 #include "mozilla/dom/Animation.h"
 #include "mozilla/dom/Document.h"
+#include "nsIFrame.h"
+#include "nsIScrollableFrame.h"
+#include "nsLayoutUtils.h"
 
 namespace mozilla::dom {
 
@@ -52,6 +55,39 @@ ScrollTimeline::ScrollTimeline(Document* aDocument, Element* aScroller)
   MOZ_ASSERT(aDocument);
 
   RegisterWithScrollSource();
+}
+
+Nullable<TimeDuration> ScrollTimeline::GetCurrentTimeAsDuration() const {
+  const nsIFrame* frame = nsLayoutUtils::GetScrollFrameFromContent(mSource);
+  const nsIScrollableFrame* scrollFrame =
+      frame ? frame->GetScrollTargetFrame() : nullptr;
+  if (!scrollFrame) {
+    return nullptr;
+  }
+
+  const auto orientation = GetPhysicalOrientation(frame->GetWritingMode());
+  // If this orientation is not ready for scrolling (i.e. the scroll range is
+  // not larger than or equal to one device pixel), we make it 100%.
+  if (!scrollFrame->GetAvailableScrollingDirections().contains(orientation)) {
+    return TimeDuration::FromMilliseconds(SCROLL_TIMELINE_DURATION_MILLISEC);
+  }
+
+  const nsPoint& scrollOffset = scrollFrame->GetScrollPosition();
+  const nsRect& scrollRange = scrollFrame->GetScrollRange();
+  const bool isHorizontal = orientation == layers::ScrollDirection::eHorizontal;
+
+  // Note: For RTL, scrollOffset.x or scrollOffset.y may be negative, e.g. the
+  // range of its value is [0, -range], so we have to use the absolute value.
+  double position = std::abs(isHorizontal ? scrollOffset.x : scrollOffset.y);
+  double range = isHorizontal ? scrollRange.width : scrollRange.height;
+  MOZ_ASSERT(range > 0.0);
+  // Use the definition of interval progress to compute the progress.
+  // Note: We simplify the scroll offsets to [0%, 100%], so offset weight and
+  // offset index are ignored here.
+  // https://drafts.csswg.org/scroll-animations-1/#progress-calculation-algorithm
+  double progress = position / range;
+  return TimeDuration::FromMilliseconds(progress *
+                                        SCROLL_TIMELINE_DURATION_MILLISEC);
 }
 
 void ScrollTimeline::RegisterWithScrollSource() {

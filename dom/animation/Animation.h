@@ -441,6 +441,10 @@ class Animation : public DOMEventTargetHelper,
     PostUpdate();
   }
 
+  bool UsingScrollTimeline() const {
+    return mTimeline && mTimeline->IsScrollTimeline();
+  }
+
  protected:
   void SilentlySetCurrentTime(const TimeDuration& aNewCurrentTime);
   void CancelNoUpdate();
