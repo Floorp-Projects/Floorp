@@ -38,6 +38,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
  *      - `rawMessage` property pointing to the raw message
  */
 class ConsoleAPIListener {
+  #emittedMessages;
   #innerWindowId;
   #listening;
 
@@ -50,8 +51,9 @@ class ConsoleAPIListener {
   constructor(innerWindowId) {
     EventEmitter.decorate(this);
 
-    this.#listening = false;
+    this.#emittedMessages = new WeakSet();
     this.#innerWindowId = innerWindowId;
+    this.#listening = false;
   }
 
   destroy() {
@@ -63,12 +65,15 @@ class ConsoleAPIListener {
       return;
     }
 
-    // Bug 1731574: Retrieve cached messages first before registering the
-    // listener to avoid duplicated messages.
     Services.obs.addObserver(
       this.#onConsoleAPIMessage,
       "console-api-log-event"
     );
+
+    // Emit cached messages after registering the observer, to make sure we
+    // don't miss any message.
+    this.#emitCachedMessages();
+
     this.#listening = true;
   }
 
@@ -84,8 +89,27 @@ class ConsoleAPIListener {
     this.#listening = false;
   }
 
+  #emitCachedMessages() {
+    const ConsoleAPIStorage = Cc[
+      "@mozilla.org/consoleAPI-storage;1"
+    ].getService(Ci.nsIConsoleAPIStorage);
+
+    const cachedMessages = ConsoleAPIStorage.getEvents(this.#innerWindowId);
+    for (const message of cachedMessages) {
+      this.#onConsoleAPIMessage(message);
+    }
+  }
+
   #onConsoleAPIMessage = message => {
     const messageObject = message.wrappedJSObject;
+
+    // Bail if this message was already emitted, useful to filter out cached
+    // messages already received by the consumer.
+    if (this.#emittedMessages.has(messageObject)) {
+      return;
+    }
+
+    this.#emittedMessages.add(messageObject);
 
     if (messageObject.innerID !== this.#innerWindowId) {
       // If the message doesn't match the innerWindowId of the current context
