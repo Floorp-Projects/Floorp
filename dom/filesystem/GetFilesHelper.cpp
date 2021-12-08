@@ -14,6 +14,7 @@
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "FileSystemUtils.h"
+#include "nsContentUtils.h"
 #include "nsNetCID.h"
 #include "nsProxyRelease.h"
 
@@ -447,7 +448,7 @@ void GetFilesHelperChild::Work(ErrorResult& aRv) {
     return;
   }
 
-  aRv = nsID::GenerateUUIDInPlace(mUUID);
+  aRv = nsContentUtils::GenerateUUIDInPlace(mUUID);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }

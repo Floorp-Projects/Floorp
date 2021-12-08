@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsContentUtils.h"
 #include "nsThreadUtils.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/Logging.h"
@@ -217,7 +218,7 @@ RefPtr<RequestMetricsPromise>
 PerformanceMetricsCollector::RequestMetricsInternal() {
   // each request has its own UUID
   nsID uuid;
-  nsresult rv = nsID::GenerateUUIDInPlace(uuid);
+  nsresult rv = nsContentUtils::GenerateUUIDInPlace(uuid);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return RequestMetricsPromise::CreateAndReject(rv, __func__);
   }

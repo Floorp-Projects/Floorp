@@ -12,6 +12,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "nsBaseHashtable.h"
+#include "nsContentUtils.h"
 #include "nsDebug.h"
 
 namespace mozilla::dom {
@@ -57,7 +58,7 @@ const nsID RefMessageBodyService::Register(
   MOZ_ASSERT(body);
 
   nsID uuid = {};
-  aRv = nsID::GenerateUUIDInPlace(uuid);
+  aRv = nsContentUtils::GenerateUUIDInPlace(uuid);
   if (NS_WARN_IF(aRv.Failed())) {
     return nsID();
   }

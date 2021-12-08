@@ -102,7 +102,7 @@ LoadInfo::LoadInfo(
                                         : aLoadingPrincipal),
       mTriggeringPrincipal(aTriggeringPrincipal ? aTriggeringPrincipal
                                                 : mLoadingPrincipal.get()),
-      mSandboxedNullPrincipalID(nsID::GenerateUUID()),
+      mSandboxedNullPrincipalID(nsContentUtils::GenerateUUID()),
       mClientInfo(aLoadingClientInfo),
       mController(aController),
       mLoadingContext(do_GetWeakReference(aLoadingContext)),
@@ -315,7 +315,7 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
                    nsISupports* aContextForTopLevelLoad,
                    nsSecurityFlags aSecurityFlags, uint32_t aSandboxFlags)
     : mTriggeringPrincipal(aTriggeringPrincipal),
-      mSandboxedNullPrincipalID(nsID::GenerateUUID()),
+      mSandboxedNullPrincipalID(nsContentUtils::GenerateUUID()),
       mContextForTopLevelLoad(do_GetWeakReference(aContextForTopLevelLoad)),
       mSecurityFlags(aSecurityFlags),
       mSandboxFlags(aSandboxFlags),
@@ -374,7 +374,7 @@ LoadInfo::LoadInfo(dom::CanonicalBrowsingContext* aBrowsingContext,
                    const OriginAttributes& aOriginAttributes,
                    nsSecurityFlags aSecurityFlags, uint32_t aSandboxFlags)
     : mTriggeringPrincipal(aTriggeringPrincipal),
-      mSandboxedNullPrincipalID(nsID::GenerateUUID()),
+      mSandboxedNullPrincipalID(nsContentUtils::GenerateUUID()),
       mSecurityFlags(aSecurityFlags),
       mSandboxFlags(aSandboxFlags),
 
@@ -416,7 +416,7 @@ LoadInfo::LoadInfo(dom::WindowGlobalParent* aParentWGP,
                    nsContentPolicyType aContentPolicyType,
                    nsSecurityFlags aSecurityFlags, uint32_t aSandboxFlags)
     : mTriggeringPrincipal(aTriggeringPrincipal),
-      mSandboxedNullPrincipalID(nsID::GenerateUUID()),
+      mSandboxedNullPrincipalID(nsContentUtils::GenerateUUID()),
       mSecurityFlags(aSecurityFlags),
       mSandboxFlags(aSandboxFlags),
       mInternalContentPolicyType(aContentPolicyType) {
@@ -883,7 +883,7 @@ const nsID& LoadInfo::GetSandboxedNullPrincipalID() {
 }
 
 void LoadInfo::ResetSandboxedNullPrincipalID() {
-  mSandboxedNullPrincipalID = nsID::GenerateUUID();
+  mSandboxedNullPrincipalID = nsContentUtils::GenerateUUID();
 }
 
 nsIPrincipal* LoadInfo::GetTopLevelPrincipal() { return mTopLevelPrincipal; }
