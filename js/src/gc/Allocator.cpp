@@ -726,7 +726,7 @@ TenuredChunk* GCRuntime::getOrAllocChunk(AutoLockGCBgAlloc& lock) {
       return nullptr;
     }
 
-    chunk->init(this);
+    chunk->init(this, /* allMemoryCommitted = */ true);
     MOZ_ASSERT(chunk->info.numArenasFreeCommitted == 0);
   }
 
@@ -794,7 +794,7 @@ void BackgroundAllocTask::run(AutoLockHelperThreadState& lock) {
       if (!chunk) {
         break;
       }
-      chunk->init(gc);
+      chunk->init(gc, /* allMemoryCommitted = */ true);
     }
     chunkPool_.ref().push(chunk);
   }
@@ -811,7 +811,16 @@ TenuredChunk* TenuredChunk::allocate(GCRuntime* gc) {
   return static_cast<TenuredChunk*>(chunk);
 }
 
-void TenuredChunk::init(GCRuntime* gc) {
+static inline bool ShouldDecommitNewChunk(bool allMemoryCommitted,
+                                          const GCSchedulingState& state) {
+  if (!DecommitEnabled()) {
+    return false;
+  }
+
+  return !allMemoryCommitted || !state.inHighFrequencyGCMode();
+}
+
+void TenuredChunk::init(GCRuntime* gc, bool allMemoryCommitted) {
   /* The chunk may still have some regions marked as no-access. */
   MOZ_MAKE_MEM_UNDEFINED(this, ChunkSize);
 
@@ -824,28 +833,31 @@ void TenuredChunk::init(GCRuntime* gc) {
 
   new (this) TenuredChunk(gc->rt);
 
-  /*
-   * Decommit the arenas. We do this after poisoning so that if the OS does
-   * not have to recycle the pages, we still get the benefit of poisoning.
-   */
-  decommitAllArenas();
+  if (ShouldDecommitNewChunk(allMemoryCommitted, gc->schedulingState)) {
+    // Decommit the arenas. We do this after poisoning so that if the OS does
+    // not have to recycle the pages, we still get the benefit of poisoning.
+    decommitAllArenas();
+  } else {
+    // The chunk metadata is initialized as decommitted regardless, to avoid
+    // having to initialize the arenas at this time.
+    initAsDecommitted();
+  }
 
-#ifdef DEBUG
   verify();
-#endif
 }
 
 void TenuredChunk::decommitAllArenas() {
   MOZ_ASSERT(unused());
+  MarkPagesUnusedSoft(&arenas[0], ArenasPerChunk * ArenaSize);
+  initAsDecommitted();
+}
 
-  if (DecommitEnabled()) {
-    MarkPagesUnusedSoft(&arenas[0], ArenasPerChunk * ArenaSize);
-  }
-
+void TenuredChunkBase::initAsDecommitted() {
+  // Set the state of all arenas to free and decommitted. They might not
+  // actually be decommitted, but in that case the re-commit operation is a
+  // no-op so it doesn't matter.
   decommittedPages.SetAll();
   freeCommittedArenas.ResetAll();
   info.numArenasFree = ArenasPerChunk;
   info.numArenasFreeCommitted = 0;
-
-  verify();
 }
