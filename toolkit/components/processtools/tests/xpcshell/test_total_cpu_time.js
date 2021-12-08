@@ -4,15 +4,13 @@ Cu.importGlobalProperties(["Glean"]);
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const FOG = Cc["@mozilla.org/toolkit/glean;1"].createInstance(Ci.nsIFOG);
-
 var cpuThreadCount;
 
 add_task(async function setup() {
   // FOG needs a profile directory to put its data in.
   do_get_profile();
 
-  FOG.initializeFOG();
+  Services.fog.initializeFOG();
 
   cpuThreadCount = (await Services.sysinfo.processInfo).count;
 });
@@ -31,7 +29,7 @@ add_task(async function test_totalCpuTime_in_parent() {
   let startTime = Date.now();
 
   let initialProcInfoCpuTime = Math.floor(await getCpuTimeFromProcInfo());
-  await FOG.testFlushAllChildren();
+  await Services.fog.testFlushAllChildren();
 
   let initialCpuTime = Glean.power.totalCpuTimeMs.testGetValue();
   Assert.greater(
@@ -61,7 +59,7 @@ add_task(async function test_totalCpuTime_in_parent() {
 
   let additionalProcInfoCpuTime =
     Math.floor(await getCpuTimeFromProcInfo()) - initialProcInfoCpuTime2;
-  await FOG.testFlushAllChildren();
+  await Services.fog.testFlushAllChildren();
 
   let additionalCpuTime =
     Glean.power.totalCpuTimeMs.testGetValue() - initialCpuTime;
@@ -92,7 +90,7 @@ add_task(async function test_totalCpuTime_in_child() {
   const MESSAGE_CHILD_TEST_DONE = "ChildTest:Done";
 
   let startTime = Date.now();
-  await FOG.testFlushAllChildren();
+  await Services.fog.testFlushAllChildren();
   let initialCpuTime = Glean.power.totalCpuTimeMs.testGetValue();
 
   let initialProcInfoCpuTime = await getCpuTimeFromProcInfo();
@@ -101,7 +99,7 @@ add_task(async function test_totalCpuTime_in_child() {
   let additionalProcInfoCpuTime =
     (await getCpuTimeFromProcInfo()) - initialProcInfoCpuTime;
 
-  await FOG.testFlushAllChildren();
+  await Services.fog.testFlushAllChildren();
   let additionalCpuTime =
     Glean.power.totalCpuTimeMs.testGetValue() - initialCpuTime;
   info(

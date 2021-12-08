@@ -13,12 +13,11 @@ const LOCALHOST_PREF = "telemetry.fog.test.localhost_port";
 // FOG needs a profile directory to put its data in.
 do_get_profile();
 
-const FOG = Cc["@mozilla.org/toolkit/glean;1"].createInstance(Ci.nsIFOG);
 // We want Glean to use a localhost server so we can be SURE not to send data to the outside world.
 // Yes, the port spells GLEAN on a T9 keyboard, why do you ask?
 Services.prefs.setIntPref(LOCALHOST_PREF, 45326);
 // We need to initialize it once, otherwise operations will be stuck in the pre-init queue.
-FOG.initializeFOG();
+Services.fog.initializeFOG();
 
 add_task(function test_fog_upload_only() {
   // Don't forget to point the telemetry server to localhost, or Telemetry

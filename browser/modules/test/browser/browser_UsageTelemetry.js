@@ -113,8 +113,7 @@ let checkScalars = (countsObject, skipGleanCheck = false) => {
 add_task(async function test_tabsAndWindows() {
   // Let's reset the counts.
   Services.telemetry.clearScalars();
-  let FOG = Cc["@mozilla.org/toolkit/glean;1"].createInstance(Ci.nsIFOG);
-  FOG.testResetFOG();
+  Services.fog.testResetFOG();
 
   let openedTabs = [];
   let expectedTabOpenCount = 0;
