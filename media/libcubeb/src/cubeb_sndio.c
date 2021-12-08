@@ -28,7 +28,7 @@
 #ifdef DISABLE_LIBSNDIO_DLOPEN
 #define WRAP(x) x
 #else
-#define WRAP(x) cubeb_##x
+#define WRAP(x) (*cubeb_##x)
 #define LIBSNDIO_API_VISIT(X)                                                  \
   X(sio_close)                                                                 \
   X(sio_eof)                                                                   \
