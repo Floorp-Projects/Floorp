@@ -75,11 +75,12 @@ def create_console_api_message(current_session, inline, text):
 
 
 def create_javascript_error(current_session, inline, error_message="foo"):
-    expected_text = current_session.execute_script(
-        f"const err = new Error('{error_message}'); return err.toString()")
-    current_session.url = inline(
-        f"<script>function bar() {{ throw new Error('{error_message}'); }}; bar();</script>")
-    return expected_text
+    return current_session.execute_script(f"""
+        const script = document.createElement("script");
+        script.append(document.createTextNode(`(() => {{throw new Error('{error_message}')}})()`));
+        document.body.append(script);
+        const err = new Error('{error_message}'); return err.toString()
+    """)
 
 
 def create_log(current_session, inline, log_type, text="foo"):
