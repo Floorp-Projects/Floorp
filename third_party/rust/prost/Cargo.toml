@@ -13,15 +13,15 @@
 [package]
 edition = "2018"
 name = "prost"
-version = "0.8.0"
-authors = ["Dan Burkert <dan@danburkert.com>", "Tokio Contributors <team@tokio.rs>"]
+version = "0.6.1"
+authors = ["Dan Burkert <dan@danburkert.com>"]
 description = "A Protocol Buffers implementation for the Rust Language."
 documentation = "https://docs.rs/prost"
 readme = "README.md"
 keywords = ["protobuf", "serialization"]
 categories = ["encoding"]
 license = "Apache-2.0"
-repository = "https://github.com/tokio-rs/prost"
+repository = "https://github.com/danburkert/prost"
 [profile.bench]
 debug = true
 
@@ -32,29 +32,32 @@ bench = false
 name = "varint"
 harness = false
 [dependencies.bytes]
-version = "1"
-default-features = false
+version = "0.5"
 
 [dependencies.prost-derive]
-version = "0.8.0"
+version = "0.6.1"
 optional = true
 [dev-dependencies.criterion]
 version = "0.3"
 
 [dev-dependencies.env_logger]
-version = "0.8"
+version = "0.7"
 default-features = false
 
 [dev-dependencies.log]
 version = "0.4"
 
-[dev-dependencies.proptest]
-version = "1"
+[dev-dependencies.quickcheck]
+version = "0.9"
 
 [dev-dependencies.rand]
-version = "0.8"
+version = "0.7"
 
 [features]
-default = ["prost-derive", "std"]
+default = ["prost-derive"]
 no-recursion-limit = []
-std = []
+[badges.appveyor]
+repository = "danburkert/prost"
+
+[badges.travis-ci]
+repository = "danburkert/prost"

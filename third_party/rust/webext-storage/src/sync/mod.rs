@@ -43,7 +43,6 @@ pub enum RecordData {
     Tombstone,
 }
 
-#[allow(clippy::unnecessary_wraps)]
 fn deserialize_record_data<'de, D>(deserializer: D) -> Result<RecordData, D::Error>
 where
     D: Deserializer<'de>,
@@ -305,7 +304,7 @@ mod tests {
     }
 
     #[test]
-    fn test_3way_merging() {
+    fn test_3way_merging() -> Result<()> {
         // No conflict - identical local and remote.
         assert_eq!(
             merge(
@@ -410,10 +409,11 @@ mod tests {
                 changes: changes![],
             }
         );
+        Ok(())
     }
 
     #[test]
-    fn test_remove_matching_keys() {
+    fn test_remove_matching_keys() -> Result<()> {
         assert_eq!(
             remove_matching_keys(
                 map!({"key1": "value1", "key2": "value2"}),
@@ -424,6 +424,7 @@ mod tests {
                 changes![change!("key1", "value1", None)]
             )
         );
+        Ok(())
     }
 
     #[test]

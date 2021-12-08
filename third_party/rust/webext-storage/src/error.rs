@@ -47,8 +47,11 @@ pub enum ErrorKind {
     #[error("UTF8 Error: {0}")]
     Utf8Error(#[from] std::str::Utf8Error),
 
-    #[error("Error opening database: {0}")]
-    OpenDatabaseError(#[from] sql_support::open_database::Error),
+    #[error("Database cannot be upgraded")]
+    DatabaseUpgradeError,
+
+    #[error("Database version {0} is not supported")]
+    UnsupportedDatabaseVersion(i64),
 
     #[error("{0}")]
     IncomingPayloadError(#[from] bridged_engine::PayloadError),
@@ -61,7 +64,6 @@ error_support::define_error! {
         (IoError, std::io::Error),
         (InterruptedError, Interrupted),
         (Utf8Error, std::str::Utf8Error),
-        (IncomingPayloadError, bridged_engine::PayloadError),
-        (OpenDatabaseError, sql_support::open_database::Error),
+        (IncomingPayloadError, bridged_engine::PayloadError)
     }
 }

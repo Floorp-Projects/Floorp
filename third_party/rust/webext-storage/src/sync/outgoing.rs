@@ -76,7 +76,7 @@ pub fn get_outgoing(conn: &Connection, signal: &dyn Interruptee) -> Result<Vec<P
         .conn()
         .query_rows_and_then_named(sql, &[], |row| -> Result<_> {
             signal.err_if_interrupted()?;
-            outgoing_from_row(row)
+            Ok(outgoing_from_row(row)?)
         })?;
 
     log::debug!("get_outgoing found {} items", elts.len());
@@ -101,7 +101,7 @@ pub fn record_uploaded(
     // Updating the `was_uploaded` column fires the `record_uploaded` trigger,
     // which updates the local change counter and writes the uploaded record
     // data back to the mirror.
-    sql_support::each_chunk(items, |chunk, _| -> Result<()> {
+    sql_support::each_chunk(&items, |chunk, _| -> Result<()> {
         signal.err_if_interrupted()?;
         let sql = format!(
             "UPDATE storage_sync_outgoing_staging SET

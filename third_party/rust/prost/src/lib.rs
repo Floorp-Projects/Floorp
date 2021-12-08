@@ -1,13 +1,4 @@
-#![doc(html_root_url = "https://docs.rs/prost/0.8.0")]
-#![cfg_attr(not(feature = "std"), no_std)]
-
-// Re-export the alloc crate for use within derived code.
-#[doc(hidden)]
-pub extern crate alloc;
-
-// Re-export the bytes crate for use within derived code.
-#[doc(hidden)]
-pub use bytes;
+#![doc(html_root_url = "https://docs.rs/prost/0.6.1")]
 
 mod error;
 mod message;
@@ -88,6 +79,9 @@ where
 #[allow(unused_imports)]
 #[macro_use]
 extern crate prost_derive;
+#[cfg(feature = "prost-derive")]
+#[doc(hidden)]
+pub use bytes;
 #[cfg(feature = "prost-derive")]
 #[doc(hidden)]
 pub use prost_derive::*;
