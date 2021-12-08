@@ -352,27 +352,6 @@ clang-5.0:
         repo: https://github.com/llvm/llvm-project
         revision: 6a075b6de4cafebec9ca1ff9eec7229a617c93f6
 
-clang-7:
-    description: clang 7 source code
-    fetch:
-        type: git
-        repo: https://github.com/llvm/llvm-project
-        revision: d0d8eb2e5415b8be29343e3c17a18e49e67b5551
-
-clang-8:
-    description: clang 8.0.1 source code
-    fetch:
-        type: git
-        repo: https://github.com/llvm/llvm-project
-        revision: 19a71f6bdf2dddb10764939e7f0ec2b98dba76c9
-
-clang-10:
-    description: clang 10.0.0 source code
-    fetch:
-        type: git
-        repo: https://github.com/llvm/llvm-project
-        revision: d32170dbd5b0d54436537b6b75beaf44324e0c28
-
 clang-13:
     description: clang 13.0.0 source code
     fetch:

@@ -28,24 +28,6 @@ linux64-clang-5.0:
         toolchain:
             - linux64-toolchain-sysroot
 
-linux64-clang-7:
-    description: "Clang 7 toolchain build"
-    treeherder:
-        symbol: TL(clang7)
-    run:
-        using: toolchain-script
-        script: build-clang.sh
-        arguments:
-            - 'build/build-clang/clang-7-linux64.json'
-        resources:
-            - 'build/build-clang/clang-7-linux64.json'
-        toolchain-artifact: public/build/clang.tar.zst
-    fetches:
-        fetch:
-            - clang-7
-        toolchain:
-            - linux64-toolchain-sysroot
-
 linux64-clang-13-mingw-x86:
     description: "MinGW-Clang 13 x86 toolchain build"
     treeherder:
@@ -88,25 +70,6 @@ linux64-clang-13-mingw-x64:
             - gcc-9.3.0
         toolchain:
             - linux64-clang-13
-
-linux64-clang-10:
-    description: "Clang 10 toolchain build"
-    treeherder:
-        symbol: TL(clang10)
-    run:
-        using: toolchain-script
-        script: build-clang.sh
-        arguments:
-            - 'build/build-clang/clang-10-linux64.json'
-        resources:
-            - 'build/build-clang/clang-10-linux64.json'
-        toolchain-artifact: public/build/clang.tar.zst
-    fetches:
-        fetch:
-            - clang-10
-        toolchain:
-            - linux64-toolchain-sysroot
-            - wasm32-wasi-compiler-rt-10
 
 linux64-clang-trunk:
     description: "Clang trunk toolchain build"
