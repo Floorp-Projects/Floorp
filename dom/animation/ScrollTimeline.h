@@ -10,6 +10,10 @@
 #include "mozilla/dom/AnimationTimeline.h"
 #include "mozilla/HashTable.h"
 #include "mozilla/ServoStyleConsts.h"
+#include "mozilla/TimingParams.h"
+#include "mozilla/WritingModes.h"
+
+#define SCROLL_TIMELINE_DURATION_MILLISEC 100000
 
 namespace mozilla {
 namespace dom {
@@ -71,10 +75,7 @@ class ScrollTimeline final : public AnimationTimeline {
   }
 
   // AnimationTimeline methods.
-  Nullable<TimeDuration> GetCurrentTimeAsDuration() const override {
-    // FIXME: We will update this function in the patch series.
-    return nullptr;
-  }
+  Nullable<TimeDuration> GetCurrentTimeAsDuration() const override;
   bool TracksWallclockTime() const override { return false; }
   Nullable<TimeDuration> ToTimelineTime(
       const TimeStamp& aTimeStamp) const override {
@@ -88,6 +89,7 @@ class ScrollTimeline final : public AnimationTimeline {
     return {};
   }
   Document* GetDocument() const override { return mDocument; }
+  bool IsScrollTimeline() const override { return true; }
 
   void ScheduleAnimations() {
     // FIXME: Bug 1737927: Need to check the animation mutation observers for
@@ -95,6 +97,19 @@ class ScrollTimeline final : public AnimationTimeline {
     // nsAutoAnimationMutationBatch mb(mDocument);
 
     Tick();
+  }
+
+  static const TimingParams& GetTiming() {
+    // Use default values except for mDuration and mFill.
+    // Use a fixed duration defined in SCROLL_TIMELINE_DURATIONMILLISEC, and use
+    // FillMode::Both to make sure the animation is in effect at 100%.
+    // Note: it's unfortunate TimingParams cannot be a const variable because
+    // we have to use StickyTimingDuration::FromMilliseconds() in its
+    // constructor.
+    static TimingParams sTiming =
+        TimingParams(SCROLL_TIMELINE_DURATION_MILLISEC, 0.0, 1.0,
+                     PlaybackDirection::Normal, FillMode::Both);
+    return sTiming;
   }
 
  protected:
@@ -110,7 +125,31 @@ class ScrollTimeline final : public AnimationTimeline {
   void RegisterWithScrollSource();
   void UnregisterFromScrollSource();
 
+  // A helper to get the physical orientation of this scroll-timeline.
+  //
+  // The spec defines auto, but there is a spec issue:
+  // "ISSUE 5 Define these values." in this section. The DOM interface removed
+  // auto and use block as default value, so we treat auto as block now.
+  // https://drafts.csswg.org/scroll-animations-1/#descdef-scroll-timeline-orientation
+  layers::ScrollDirection GetPhysicalOrientation(WritingMode aWM) const {
+    return mDirection == StyleScrollDirection::Horizontal ||
+                   (!aWM.IsVertical() &&
+                    mDirection == StyleScrollDirection::Inline) ||
+                   (aWM.IsVertical() &&
+                    (mDirection == StyleScrollDirection::Block ||
+                     mDirection == StyleScrollDirection::Auto))
+               ? layers::ScrollDirection::eHorizontal
+               : layers::ScrollDirection::eVertical;
+  }
+
   RefPtr<Document> mDocument;
+
+  // FIXME: Bug 1733260: new spec proposal uses a new way to define scroller,
+  // and move the element-based offset into view-timeline, so here we only
+  // implement the default behavior of scroll timeline:
+  // 1. "source" is auto (use main viewport scroller), and
+  // 2. "scroll-offsets" is none (i.e. always 0% ~ 100%).
+  // So now we will only use the scroll direction from @scroll-timeline rule.
   RefPtr<Element> mSource;
   StyleScrollDirection mDirection;
 };
