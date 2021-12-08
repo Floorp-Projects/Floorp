@@ -621,9 +621,6 @@ nsresult ScriptLoader::ProcessFetchedModuleSource(ModuleLoadRequest* aRequest) {
   return NS_OK;
 }
 
-static nsresult ResolveRequestedModules(ModuleLoadRequest* aRequest,
-                                        nsCOMArray<nsIURI>* aUrlsOut);
-
 nsresult ScriptLoader::CreateModuleScript(ModuleLoadRequest* aRequest) {
   MOZ_ASSERT(!aRequest->mModuleScript);
   MOZ_ASSERT(aRequest->mBaseURL);
@@ -709,7 +706,7 @@ nsresult ScriptLoader::CreateModuleScript(ModuleLoadRequest* aRequest) {
 
     // Validate requested modules and treat failure to resolve module specifiers
     // the same as a parse error.
-    rv = ResolveRequestedModules(aRequest, nullptr);
+    rv = ModuleLoader::ResolveRequestedModules(aRequest, nullptr);
     if (NS_FAILED(rv)) {
       aRequest->ModuleErrored();
       return NS_OK;
@@ -722,11 +719,10 @@ nsresult ScriptLoader::CreateModuleScript(ModuleLoadRequest* aRequest) {
   return rv;
 }
 
-static nsresult HandleResolveFailure(JSContext* aCx, LoadedScript* aScript,
-                                     const nsAString& aSpecifier,
-                                     uint32_t aLineNumber,
-                                     uint32_t aColumnNumber,
-                                     JS::MutableHandle<JS::Value> errorOut) {
+nsresult ModuleLoader::HandleResolveFailure(
+    JSContext* aCx, LoadedScript* aScript, const nsAString& aSpecifier,
+    uint32_t aLineNumber, uint32_t aColumnNumber,
+    JS::MutableHandle<JS::Value> errorOut) {
   JS::Rooted<JSString*> filename(aCx);
   if (aScript) {
     nsAutoCString url;
@@ -762,7 +758,7 @@ static nsresult HandleResolveFailure(JSContext* aCx, LoadedScript* aScript,
   return NS_OK;
 }
 
-static already_AddRefed<nsIURI> ResolveModuleSpecifier(
+already_AddRefed<nsIURI> ModuleLoader::ResolveModuleSpecifier(
     ScriptLoader* aLoader, LoadedScript* aScript, const nsAString& aSpecifier) {
   // The following module specifiers are allowed by the spec:
   //  - a valid absolute URL
@@ -803,8 +799,8 @@ static already_AddRefed<nsIURI> ResolveModuleSpecifier(
   return nullptr;
 }
 
-static nsresult ResolveRequestedModules(ModuleLoadRequest* aRequest,
-                                        nsCOMArray<nsIURI>* aUrlsOut) {
+nsresult ModuleLoader::ResolveRequestedModules(ModuleLoadRequest* aRequest,
+                                               nsCOMArray<nsIURI>* aUrlsOut) {
   ModuleScript* ms = aRequest->mModuleScript;
 
   AutoJSAPI jsapi;
@@ -881,7 +877,7 @@ void ScriptLoader::StartFetchingModuleDependencies(
   aRequest->mProgress = ModuleLoadRequest::Progress::eFetchingImports;
 
   nsCOMArray<nsIURI> urls;
-  nsresult rv = ResolveRequestedModules(aRequest, &urls);
+  nsresult rv = ModuleLoader::ResolveRequestedModules(aRequest, &urls);
   if (NS_FAILED(rv)) {
     aRequest->mModuleScript = nullptr;
     aRequest->ModuleErrored();
@@ -1036,43 +1032,45 @@ bool HostGetSupportedImportAssertions(JSContext* aCx,
 }
 
 // 8.1.3.8.1 HostResolveImportedModule(referencingModule, moduleRequest)
+/**
+ * Implement the HostResolveImportedModule abstract operation.
+ *
+ * Resolve a module specifier string and look this up in the module
+ * map, returning the result. This is only called for previously
+ * loaded modules and always succeeds.
+ *
+ * @param aReferencingPrivate A JS::Value which is either undefined
+ *                            or contains a LoadedScript private pointer.
+ * @param aModuleRequest A module request object.
+ * @returns module This is set to the module found.
+ */
 JSObject* HostResolveImportedModule(JSContext* aCx,
                                     JS::Handle<JS::Value> aReferencingPrivate,
                                     JS::Handle<JSObject*> aModuleRequest) {
   JS::Rooted<JSObject*> module(aCx);
-  ScriptLoader::ResolveImportedModule(aCx, aReferencingPrivate, aModuleRequest,
-                                      &module);
-  return module;
-}
-
-/* static */
-void ScriptLoader::ResolveImportedModule(
-    JSContext* aCx, JS::Handle<JS::Value> aReferencingPrivate,
-    JS::Handle<JSObject*> aModuleRequest,
-    JS::MutableHandle<JSObject*> aModuleOut) {
-  MOZ_ASSERT(!aModuleOut);
 
   RefPtr<LoadedScript> script(GetLoadedScriptOrNull(aCx, aReferencingPrivate));
 
   JS::Rooted<JSString*> specifierString(
       aCx, JS::GetModuleRequestSpecifier(aCx, aModuleRequest));
   if (!specifierString) {
-    return;
+    return nullptr;
   }
 
   // Let url be the result of resolving a module specifier given referencing
   // module script and specifier.
   nsAutoJSString string;
   if (!string.init(aCx, specifierString)) {
-    return;
+    return nullptr;
   }
 
   RefPtr<ScriptLoader> loader = GetCurrentScriptLoader(aCx);
   if (!loader) {
-    return;
+    return nullptr;
   }
 
-  nsCOMPtr<nsIURI> uri = ResolveModuleSpecifier(loader, script, string);
+  nsCOMPtr<nsIURI> uri =
+      ModuleLoader::ResolveModuleSpecifier(loader, script, string);
 
   // This cannot fail because resolving a module specifier must have been
   // previously successful with these same two arguments.
@@ -1095,7 +1093,8 @@ void ScriptLoader::ResolveImportedModule(
   MOZ_ASSERT(!ms->HasParseError());
   MOZ_ASSERT(ms->ModuleRecord());
 
-  aModuleOut.set(ms->ModuleRecord());
+  module.set(ms->ModuleRecord());
+  return module;
 }
 
 bool HostPopulateImportMeta(JSContext* aCx,
@@ -1144,10 +1143,12 @@ bool HostImportModuleDynamically(JSContext* aCx,
     return false;
   }
 
-  nsCOMPtr<nsIURI> uri = ResolveModuleSpecifier(loader, script, specifier);
+  nsCOMPtr<nsIURI> uri =
+      ModuleLoader::ResolveModuleSpecifier(loader, script, specifier);
   if (!uri) {
     JS::Rooted<JS::Value> error(aCx);
-    nsresult rv = HandleResolveFailure(aCx, script, specifier, 0, 0, &error);
+    nsresult rv = ModuleLoader::HandleResolveFailure(aCx, script, specifier, 0,
+                                                     0, &error);
     if (NS_FAILED(rv)) {
       JS_ReportOutOfMemory(aCx);
       return false;
