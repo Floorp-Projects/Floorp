@@ -1,0 +1,51 @@
+<!DOCTYPE>
+<html>
+  <head>
+  <title>Checking zoomToFocusedInput does not zoom is meta viewport does not allow it</title>
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1, maximum-scale=1, user-scalable=no" />
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  </head>
+<body>
+<input id="input1" type="text" style="width:100%; height: 200px; border: 5px solid black"/>
+<script type="application/javascript">
+/* This test does not always exercise the bug it was written for, in the sense
+   that the test would fail without the corresponding patch. It seems as though
+   when hitting bug 1743602 the test does not exercise the bug. If bug 1743602
+   gets fixed hopefully this test will end up exercising the bug. A dev pixel
+   ratio of 1 seems to make it hard (but not impossible) for the test to
+   exercise the bug. This is what you get when running the emulator locally or
+   in our CI infrastructure. A dev pixel ratio of ~2.6 (23 appunits = 1 dev
+   pixel) seems to make it easier (but not 100%) for the test to exercise the
+   bug. This is what I got when running the test on a real phone locally (pixel 2).
+*/
+async function test() {
+  let utils = SpecialPowers.getDOMWindowUtils(window);
+
+  let resolution = await getResolution();
+  ok(resolution > 0,
+     "The initial_resolution is " + resolution + ", which is some sane value");
+
+  document.getElementById('input1').focus();
+  await waitToClearOutAnyPotentialScrolls(window);
+  await promiseApzFlushedRepaints();
+  let prev_resolution = resolution;
+  resolution = await getResolution();
+  ok(resolution == prev_resolution, "focusing input did not change resolution " + resolution);
+
+  let transformEndPromise = promiseTransformEnd();
+  utils.zoomToFocusedInput();
+  await waitToClearOutAnyPotentialScrolls(window);
+  await transformEndPromise;
+  await promiseApzFlushedRepaints();
+  resolution = await getResolution();
+  ok(resolution == prev_resolution, "zoomToFocusedInput input did not change resolution " + resolution);
+}
+
+SpecialPowers.getDOMWindowUtils(window).setDynamicToolbarMaxHeight(300);
+
+waitUntilApzStable().then(test).then(subtestDone, subtestFailed);
+</script>
+</body>
+</html>
