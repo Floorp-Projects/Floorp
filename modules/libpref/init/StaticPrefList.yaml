@@ -2991,13 +2991,6 @@
   value: -1
   mirror: always
 
-# Preference that users can set to override temporary storage smart limit
-# calculation.
-- name: dom.quotaManager.temporaryStorage.chunkSize
-  type: RelaxedAtomicUint32
-  value: 10 * 1024
-  mirror: always
-
 # A pref that is used to enable testing features.
 - name: dom.quotaManager.testing
   type: SequentiallyConsistentAtomicBool
