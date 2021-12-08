@@ -17313,6 +17313,10 @@ bool Document::AutomaticStorageAccessPermissionCanBeGranted(
   nsAutoCString prefix;
   AntiTrackingUtils::CreateStoragePermissionKey(aPrincipal, prefix);
 
+  if (!ContentBlockingUserInteraction::Exists(aPrincipal)) {
+    return false;
+  }
+
   PermissionManager* permManager = PermissionManager::GetInstance();
   if (NS_WARN_IF(!permManager)) {
     return false;
