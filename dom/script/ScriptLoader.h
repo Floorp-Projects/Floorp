@@ -58,6 +58,7 @@ class DocGroup;
 class Document;
 class LoadedScript;
 class ModuleLoader;
+class ScriptLoaderInterface;
 class ModuleLoadRequest;
 class ModuleScript;
 class SRICheckDataVerifier;
@@ -87,11 +88,39 @@ class AsyncCompileShutdownObserver final : public nsIObserver {
   ScriptLoader* mScriptLoader;
 };
 
+class ScriptLoaderInterface : public nsISupports {
+ public:
+  // In some environments, we will need to default to a base URI
+  virtual nsIURI* GetBaseURI() const = 0;
+
+  // Get the global for the associated request.
+  virtual already_AddRefed<nsIGlobalObject> GetGlobalForRequest(
+      ScriptLoadRequest* aRequest) = 0;
+
+  virtual void ReportErrorToConsole(ScriptLoadRequest* aRequest,
+                                    nsresult aResult) const = 0;
+
+  // Fill in CompileOptions, as well as produce the introducer script for
+  // subsequent calls to UpdateDebuggerMetadata
+  virtual nsresult FillCompileOptionsForRequest(
+      JSContext* cx, ScriptLoadRequest* aRequest,
+      JS::Handle<JSObject*> aScopeChain, JS::CompileOptions* aOptions,
+      JS::MutableHandle<JSScript*> aIntroductionScript) = 0;
+
+  virtual nsresult ProcessRequest(ScriptLoadRequest* aRequest) = 0;
+
+  virtual void RunScriptWhenSafe(ScriptLoadRequest* aRequest) = 0;
+
+  virtual void EnsureModuleHooksInitialized() = 0;
+  virtual nsresult StartModuleLoad(ScriptLoadRequest* aRequest) = 0;
+  virtual void ProcessLoadedModuleTree(ModuleLoadRequest* aRequest) = 0;
+};
+
 //////////////////////////////////////////////////////////////
 // Script loader implementation
 //////////////////////////////////////////////////////////////
 
-class ScriptLoader final : public nsISupports {
+class ScriptLoader final : public ScriptLoaderInterface {
   class MOZ_STACK_CLASS AutoCurrentScriptUpdater {
    public:
     AutoCurrentScriptUpdater(ScriptLoader* aScriptLoader,
@@ -131,7 +160,7 @@ class ScriptLoader final : public nsISupports {
    */
   void DropDocumentReference() { mDocument = nullptr; }
 
-  void EnsureModuleHooksInitialized();
+  void EnsureModuleHooksInitialized() override;
 
   /**
    * Add an observer for all scripts loaded through this loader.
@@ -410,6 +439,8 @@ class ScriptLoader final : public nsISupports {
 
   Document* GetDocument() const { return mDocument; }
 
+  nsIURI* GetBaseURI() const override;
+
  private:
   virtual ~ScriptLoader();
 
@@ -485,7 +516,7 @@ class ScriptLoader final : public nsISupports {
    * Sets up the necessary security flags before calling StartLoadInternal.
    * Short-circuits if the module is already being loaded.
    */
-  nsresult StartModuleLoad(ScriptLoadRequest* aRequest);
+  nsresult StartModuleLoad(ScriptLoadRequest* aRequest) override;
 
   /**
    * Start a load for a module script URI.
@@ -541,12 +572,12 @@ class ScriptLoader final : public nsISupports {
                        uint32_t* sriLength) const;
 
   void ReportErrorToConsole(ScriptLoadRequest* aRequest,
-                            nsresult aResult) const;
+                            nsresult aResult) const override;
   void ReportPreloadErrorsToConsole(ScriptLoadRequest* aRequest);
 
   nsresult AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
                                      bool* aCouldCompileOut);
-  nsresult ProcessRequest(ScriptLoadRequest* aRequest);
+  nsresult ProcessRequest(ScriptLoadRequest* aRequest) override;
   nsresult CompileOffThreadOrProcessRequest(ScriptLoadRequest* aRequest);
   void FireScriptAvailable(nsresult aResult, ScriptLoadRequest* aRequest);
   void FireScriptEvaluated(nsresult aResult, ScriptLoadRequest* aRequest);
@@ -593,7 +624,7 @@ class ScriptLoader final : public nsISupports {
   void GiveUpBytecodeEncoding();
 
   already_AddRefed<nsIGlobalObject> GetGlobalForRequest(
-      ScriptLoadRequest* aRequest);
+      ScriptLoadRequest* aRequest) override;
 
   // This is a marker class to ensure proper handling of requests with a
   // WebExtGlobal.
@@ -607,7 +638,7 @@ class ScriptLoader final : public nsISupports {
   nsresult FillCompileOptionsForRequest(
       JSContext* aCx, ScriptLoadRequest* aRequest,
       JS::Handle<JSObject*> aScopeChain, JS::CompileOptions* aOptions,
-      JS::MutableHandle<JSScript*> aIntroductionScript);
+      JS::MutableHandle<JSScript*> aIntroductionScript) override;
 
   uint32_t NumberOfProcessors();
   int32_t PhysicalSizeOfMemoryInGB();
@@ -615,7 +646,7 @@ class ScriptLoader final : public nsISupports {
   nsresult PrepareLoadedRequest(ScriptLoadRequest* aRequest,
                                 nsIIncrementalStreamLoader* aLoader,
                                 nsresult aStatus);
-  void ProcessLoadedModuleTree(ModuleLoadRequest* aRequest);
+  void ProcessLoadedModuleTree(ModuleLoadRequest* aRequest) override;
 
   void AddDeferRequest(ScriptLoadRequest* aRequest);
   void AddAsyncRequest(ScriptLoadRequest* aRequest);
@@ -633,7 +664,7 @@ class ScriptLoader final : public nsISupports {
   // execution of the script.
   static bool ShouldCacheBytecode(ScriptLoadRequest* aRequest);
 
-  void RunScriptWhenSafe(ScriptLoadRequest* aRequest);
+  void RunScriptWhenSafe(ScriptLoadRequest* aRequest) override;
 
   /**
    *  Wait for any unused off thread compilations to finish and then
@@ -720,14 +751,14 @@ class ModuleLoader : public nsISupports {
   nsRefPtrHashtable<ModuleMapKey, mozilla::GenericNonExclusivePromise::Private>
       mFetchingModules;
   nsRefPtrHashtable<ModuleMapKey, ModuleScript> mFetchedModules;
-  RefPtr<ScriptLoader> mLoader;
+  RefPtr<ScriptLoaderInterface> mLoader;
 
  public:
   ScriptLoadRequestList mDynamicImportRequests;
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS(ModuleLoader)
-  explicit ModuleLoader(ScriptLoader* aLoader);
+  explicit ModuleLoader(ScriptLoaderInterface* aLoader);
 
   using MaybeSourceText =
       mozilla::MaybeOneOf<JS::SourceText<char16_t>, JS::SourceText<Utf8Unit>>;
@@ -750,8 +781,8 @@ class ModuleLoader : public nsISupports {
 
   JS::Value FindFirstParseError(ModuleLoadRequest* aRequest);
   bool InstantiateModuleTree(ModuleLoadRequest* aRequest);
-  nsresult InitDebuggerDataForModuleTree(JSContext* aCx,
-                                         ModuleLoadRequest* aRequest);
+  static nsresult InitDebuggerDataForModuleTree(JSContext* aCx,
+                                                ModuleLoadRequest* aRequest);
   static nsresult ResolveRequestedModules(ModuleLoadRequest* aRequest,
                                           nsCOMArray<nsIURI>* aUrlsOut);
   static nsresult HandleResolveFailure(JSContext* aCx, LoadedScript* aScript,
@@ -761,7 +792,8 @@ class ModuleLoader : public nsISupports {
                                        JS::MutableHandle<JS::Value> errorOut);
 
   static already_AddRefed<nsIURI> ResolveModuleSpecifier(
-      ScriptLoader* loader, LoadedScript* aScript, const nsAString& aSpecifier);
+      ScriptLoaderInterface* loader, LoadedScript* aScript,
+      const nsAString& aSpecifier);
 
   void StartFetchingModuleDependencies(ModuleLoadRequest* aRequest);
 
@@ -781,8 +813,8 @@ class ModuleLoader : public nsISupports {
    *        The result of running ModuleEvaluate -- If this is successful, then
    *        we can await the associated EvaluationPromise.
    */
-  void FinishDynamicImportAndReject(ModuleLoadRequest* aRequest,
-                                    nsresult aResult);
+  static void FinishDynamicImportAndReject(ModuleLoadRequest* aRequest,
+                                           nsresult aResult);
 
   /**
    * Wrapper for JSAPI FinishDynamicImport function. Takes an optional argument
@@ -803,9 +835,9 @@ class ModuleLoader : public nsISupports {
    *        is null, JS::FinishDynamicImport will reject the dynamic import
    *        module promise.
    */
-  void FinishDynamicImport(JSContext* aCx, ModuleLoadRequest* aRequest,
-                           nsresult aResult,
-                           JS::Handle<JSObject*> aEvaluationPromise);
+  static void FinishDynamicImport(JSContext* aCx, ModuleLoadRequest* aRequest,
+                                  nsresult aResult,
+                                  JS::Handle<JSObject*> aEvaluationPromise);
 
   void ProcessLoadedModuleTree(ModuleLoadRequest* aRequest);
 
