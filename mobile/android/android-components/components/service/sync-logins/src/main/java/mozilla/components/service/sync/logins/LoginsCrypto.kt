@@ -9,16 +9,14 @@ import android.content.SharedPreferences
 import mozilla.appservices.logins.KeyRegenerationEventReason
 import mozilla.appservices.logins.checkCanary
 import mozilla.appservices.logins.createCanary
-import mozilla.appservices.logins.createKey
 import mozilla.appservices.logins.decryptFields
 import mozilla.appservices.logins.recordKeyRegenerationEvent
 import mozilla.components.concept.storage.EncryptedLogin
 import mozilla.components.concept.storage.KeyGenerationReason
-import mozilla.components.concept.storage.KeyProvider
+import mozilla.components.concept.storage.KeyManager
 import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.ManagedKey
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
-import mozilla.components.support.base.log.logger.Logger
 
 /**
  * A class that knows how to encrypt & decrypt strings, backed by application-services' logins lib.
@@ -34,9 +32,56 @@ class LoginsCrypto(
     private val context: Context,
     private val securePrefs: SecureAbove22Preferences,
     private val storage: SyncableLoginsStorage
-) : KeyProvider {
-    private val logger = Logger("LoginsCrypto")
+) : KeyManager() {
     private val plaintextPrefs by lazy { context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) }
+
+    override suspend fun recoverFromKeyLoss(reason: KeyGenerationReason.RecoveryNeeded) {
+        val telemetryEventReason = when (reason) {
+            is KeyGenerationReason.RecoveryNeeded.Lost -> KeyRegenerationEventReason.Lost
+            is KeyGenerationReason.RecoveryNeeded.Corrupt -> KeyRegenerationEventReason.Corrupt
+            is KeyGenerationReason.RecoveryNeeded.AbnormalState -> KeyRegenerationEventReason.Other
+        }
+        recordKeyRegenerationEvent(telemetryEventReason)
+        storage.conn.getStorage().wipeLocal()
+    }
+
+    override fun getStoredCanary(): String? {
+        return plaintextPrefs.getString(CANARY_PHRASE_CIPHERTEXT_KEY, null)
+    }
+
+    override fun getStoredKey(): String? {
+        return securePrefs.getString(LOGINS_KEY)
+    }
+
+    override fun storeKeyAndCanary(key: String) {
+        // To consider: should this be a non-destructive operation, just in case?
+        // e.g. if we thought we lost the key, but actually did not, that would let us recover data later on.
+        // otherwise, if we mess up and override a perfectly good key, the data is gone for good.
+        securePrefs.putString(LOGINS_KEY, key)
+        // To detect key corruption or absence, use the newly generated key to encrypt a known string.
+        // See isKeyValid below.
+        plaintextPrefs
+            .edit()
+            .putString(CANARY_PHRASE_CIPHERTEXT_KEY, createCanary(CANARY_PHRASE_PLAINTEXT, key))
+            .apply()
+    }
+
+    override fun createKey(): String {
+        return mozilla.appservices.logins.createKey()
+    }
+
+    override fun isKeyRecoveryNeeded(rawKey: String, canary: String): KeyGenerationReason.RecoveryNeeded? {
+        return try {
+            if (checkCanary(canary, CANARY_PHRASE_PLAINTEXT, rawKey)) {
+                null
+            } else {
+                // A bad key should trigger a CryptoException, but check this branch just in case.
+                KeyGenerationReason.RecoveryNeeded.Corrupt
+            }
+        } catch (e: CryptoException) {
+            KeyGenerationReason.RecoveryNeeded.Corrupt
+        }
+    }
 
     /**
      * Decrypts ciphertext fields within [login], producing a plaintext [Login].
@@ -73,100 +118,6 @@ class LoginsCrypto(
             timeLastUsed = login.timeLastUsed,
             timePasswordChanged = login.timePasswordChanged,
         )
-    }
-
-    override suspend fun getOrGenerateKey(): ManagedKey = synchronized(this) {
-        val managedKey = getManagedKey()
-
-        // Record abnormal events if any were detected.
-        // At this point, we should emit some telemetry.
-        // See https://github.com/mozilla-mobile/android-components/issues/10122
-        when (managedKey.wasGenerated) {
-            is KeyGenerationReason.RecoveryNeeded.Lost -> {
-                logger.warn("Key lost")
-                recordKeyRegenerationEvent(KeyRegenerationEventReason.Lost)
-            }
-            is KeyGenerationReason.RecoveryNeeded.Corrupt -> {
-                logger.warn("Key corrupted")
-                recordKeyRegenerationEvent(KeyRegenerationEventReason.Corrupt)
-            }
-            is KeyGenerationReason.RecoveryNeeded.AbnormalState -> {
-                logger.warn("Abnormal state while reading the key")
-                recordKeyRegenerationEvent(KeyRegenerationEventReason.Other)
-            }
-            null, KeyGenerationReason.New -> {
-                // All good! Got either a brand new key or read a valid key.
-            }
-        }
-        (managedKey.wasGenerated as? KeyGenerationReason.RecoveryNeeded)?.let {
-            // If the key needed to be regenerated, then we lose all
-            // usernames/passwords which were encrypted with the old key.  This
-            // means we can't really use the logins anymore and wipeLocal() is the
-            // best we can do.
-            storage.conn.getStorage().wipeLocal()
-        }
-        return managedKey
-    }
-
-    @Suppress("ComplexMethod")
-    private fun getManagedKey(): ManagedKey = synchronized(this) {
-        val encryptedCanaryPhrase = plaintextPrefs.getString(CANARY_PHRASE_CIPHERTEXT_KEY, null)
-        val storedKey = securePrefs.getString(LOGINS_KEY)
-
-        return@synchronized when {
-            // We expected the key to be present, and it is.
-            storedKey != null && encryptedCanaryPhrase != null -> {
-                // Make sure that the key is valid.
-                try {
-                    if (checkCanary(encryptedCanaryPhrase, CANARY_PHRASE_PLAINTEXT, storedKey)) {
-                        ManagedKey(storedKey)
-                    } else {
-                        // A bad key should trigger a CryptoException, but check this branch just in case.
-                        ManagedKey(generateAndStoreKey(), KeyGenerationReason.RecoveryNeeded.Corrupt)
-                    }
-                } catch (e: CryptoException) {
-                    ManagedKey(generateAndStoreKey(), KeyGenerationReason.RecoveryNeeded.Corrupt)
-                }
-            }
-
-            // The key is present, but we didn't expect it to be there.
-            storedKey != null && encryptedCanaryPhrase == null -> {
-                // This isn't expected to happen. We can't check this key's validity.
-                ManagedKey(generateAndStoreKey(), KeyGenerationReason.RecoveryNeeded.AbnormalState)
-            }
-
-            // We expected the key to be present, but it's gone missing on us.
-            storedKey == null && encryptedCanaryPhrase != null -> {
-                // At this point, we're forced to generate a new key to recover and move forward.
-                // However, that means that any data that was previously encrypted is now unreadable.
-                ManagedKey(generateAndStoreKey(), KeyGenerationReason.RecoveryNeeded.Lost)
-            }
-
-            // We didn't expect the key to be present, and it's not.
-            storedKey == null && encryptedCanaryPhrase == null -> {
-                // Normal case when interacting with this class for the first time.
-                ManagedKey(generateAndStoreKey(), KeyGenerationReason.New)
-            }
-
-            // The above cases seem exhaustive, but Kotlin doesn't think so.
-            // Throw IllegalStateException if we get here.
-            else -> throw IllegalStateException()
-        }
-    }
-
-    private fun generateAndStoreKey(): String {
-        return createKey().also { newKey ->
-            // To consider: should this be a non-destructive operation, just in case?
-            // e.g. if we thought we lost the key, but actually did not, that would let us recover data later on.
-            // otherwise, if we mess up and override a perfectly good key, the data is gone for good.
-            securePrefs.putString(LOGINS_KEY, newKey)
-            // To detect key corruption or absence, use the newly generated key to encrypt a known string.
-            // See isKeyValid below.
-            plaintextPrefs
-                .edit()
-                .putString(CANARY_PHRASE_CIPHERTEXT_KEY, createCanary(CANARY_PHRASE_PLAINTEXT, newKey))
-                .apply()
-        }
     }
 
     companion object {

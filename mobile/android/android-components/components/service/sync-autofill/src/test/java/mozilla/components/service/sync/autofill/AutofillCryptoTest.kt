@@ -5,6 +5,7 @@
 package mozilla.components.service.sync.autofill
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.storage.CreditCardNumber
 import mozilla.components.concept.storage.KeyGenerationReason
 import mozilla.components.concept.storage.ManagedKey
@@ -31,9 +32,9 @@ class AutofillCryptoTest {
     }
 
     @Test
-    fun `get key - new`() {
-        val handler = mock<KeyRecoveryHandler>()
-        val crypto = AutofillCrypto(testContext, securePrefs, handler)
+    fun `get key - new`() = runBlocking {
+        val storage = mock<AutofillCreditCardsAddressesStorage>()
+        val crypto = AutofillCrypto(testContext, securePrefs, storage)
         val key = crypto.getOrGenerateKey()
         assertEquals(KeyGenerationReason.New, key.wasGenerated)
 
@@ -42,13 +43,13 @@ class AutofillCryptoTest {
         assertNull(key2.wasGenerated)
 
         assertEquals(key.key, key2.key)
-        verifyNoInteractions(handler)
+        verifyNoInteractions(storage)
     }
 
     @Test
-    fun `get key - lost`() {
-        val handler = mock<KeyRecoveryHandler>()
-        val crypto = AutofillCrypto(testContext, securePrefs, handler)
+    fun `get key - lost`() = runBlocking {
+        val storage = mock<AutofillCreditCardsAddressesStorage>()
+        val crypto = AutofillCrypto(testContext, securePrefs, storage)
         val key = crypto.getOrGenerateKey()
         assertEquals(KeyGenerationReason.New, key.wasGenerated)
 
@@ -58,13 +59,13 @@ class AutofillCryptoTest {
         assertEquals(KeyGenerationReason.RecoveryNeeded.Lost, key2.wasGenerated)
 
         assertNotEquals(key.key, key2.key)
-        verify(handler).recoverFromBadKey(KeyGenerationReason.RecoveryNeeded.Lost)
+        verify(storage).scrubEncryptedData()
     }
 
     @Test
-    fun `get key - corrupted`() {
-        val handler = mock<KeyRecoveryHandler>()
-        val crypto = AutofillCrypto(testContext, securePrefs, handler)
+    fun `get key - corrupted`() = runBlocking {
+        val storage = mock<AutofillCreditCardsAddressesStorage>()
+        val crypto = AutofillCrypto(testContext, securePrefs, storage)
         val key = crypto.getOrGenerateKey()
         assertEquals(KeyGenerationReason.New, key.wasGenerated)
 
@@ -75,13 +76,13 @@ class AutofillCryptoTest {
         assertEquals(KeyGenerationReason.RecoveryNeeded.Corrupt, key2.wasGenerated)
 
         assertNotEquals(key.key, key2.key)
-        verify(handler).recoverFromBadKey(KeyGenerationReason.RecoveryNeeded.Corrupt)
+        verify(storage).scrubEncryptedData()
     }
 
     @Test
-    fun `get key - corrupted subtly`() {
-        val handler = mock<KeyRecoveryHandler>()
-        val crypto = AutofillCrypto(testContext, securePrefs, handler)
+    fun `get key - corrupted subtly`() = runBlocking {
+        val storage = mock<AutofillCreditCardsAddressesStorage>()
+        val crypto = AutofillCrypto(testContext, securePrefs, storage)
         val key = crypto.getOrGenerateKey()
         assertEquals(KeyGenerationReason.New, key.wasGenerated)
 
@@ -93,11 +94,11 @@ class AutofillCryptoTest {
         assertEquals(KeyGenerationReason.RecoveryNeeded.Corrupt, key2.wasGenerated)
 
         assertNotEquals(key.key, key2.key)
-        verify(handler).recoverFromBadKey(KeyGenerationReason.RecoveryNeeded.Corrupt)
+        verify(storage).scrubEncryptedData()
     }
 
     @Test
-    fun `encrypt and decrypt card - normal`() {
+    fun `encrypt and decrypt card - normal`() = runBlocking {
         val crypto = AutofillCrypto(testContext, securePrefs, mock())
         val key = crypto.getOrGenerateKey()
         val plaintext1 = CreditCardNumber.Plaintext("4111111111111111")
@@ -114,7 +115,7 @@ class AutofillCryptoTest {
     }
 
     @Test
-    fun `encrypt and decrypt card - bad keys`() {
+    fun `encrypt and decrypt card - bad keys`() = runBlocking {
         val crypto = AutofillCrypto(testContext, securePrefs, mock())
         val plaintext = CreditCardNumber.Plaintext("4111111111111111")
 

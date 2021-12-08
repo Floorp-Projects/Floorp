@@ -113,6 +113,11 @@ interface CreditCardsAddressesStorage {
      * @return [CreditCardCrypto] instance.
      */
     fun getCreditCardCrypto(): CreditCardCrypto
+
+    /**
+     * Removes any encrypted data from this storage. Useful after encountering key loss.
+     */
+    suspend fun scrubEncryptedData()
 }
 
 /**

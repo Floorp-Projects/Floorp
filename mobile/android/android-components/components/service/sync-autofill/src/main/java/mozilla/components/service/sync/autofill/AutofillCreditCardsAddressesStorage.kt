@@ -168,6 +168,10 @@ class AutofillCreditCardsAddressesStorage(
         return crypto
     }
 
+    override suspend fun scrubEncryptedData() = withContext(coroutineContext) {
+        conn.getStorage().scrubEncryptedData()
+    }
+
     override fun registerWithSyncManager() {
         conn.getStorage().registerWithSyncManager()
     }

@@ -5,7 +5,6 @@
 package mozilla.components.service.sync.logins
 
 import android.content.Context
-import android.content.SharedPreferences
 import androidx.annotation.GuardedBy
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
@@ -14,10 +13,8 @@ import kotlinx.coroutines.withContext
 import mozilla.appservices.logins.DatabaseLoginsStorage
 import mozilla.appservices.logins.migrateLoginsWithMetrics
 import mozilla.components.concept.storage.EncryptedLogin
-import mozilla.components.concept.storage.KeyGenerationReason
 import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginEntry
-import mozilla.components.concept.storage.ManagedKey
 import mozilla.components.concept.storage.LoginsStorage
 import mozilla.components.concept.sync.SyncableStore
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
@@ -291,10 +288,10 @@ class SyncableLoginsStorage(
         if (version == 0) {
             try {
                 migrateLoginsWithMetrics(
-                        context.getDatabasePath(DB_NAME).absolutePath,
-                        crypto.getOrGenerateKey().key,
-                        context.getDatabasePath(DB_NAME_SQLCIPHER).absolutePath,
-                        sqlcipherKey,
+                    context.getDatabasePath(DB_NAME).absolutePath,
+                    crypto.getOrGenerateKey().key,
+                    context.getDatabasePath(DB_NAME_SQLCIPHER).absolutePath,
+                    sqlcipherKey,
                 )
                 // Note: DatabaseLoginsStorage.migrateLogins, defined in
                 // application-services, is responsible for reporting the migration
