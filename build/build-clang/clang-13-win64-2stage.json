@@ -1,6 +1,5 @@
 {
     "stages": "2",
-    "build_libcxx": false,
     "build_type": "Release",
     "assertions": false,
     "cc": "cl.exe",
