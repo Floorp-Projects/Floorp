@@ -573,6 +573,32 @@ class BrowserRobot {
         mDevice.waitForIdle()
     }
 
+    fun verifyPrefilledLoginCredentials(userName: String, shortcutTitle: String) {
+        mDevice.waitForIdle(waitingTime)
+
+        var currentTries = 0
+        while (currentTries++ < 3) {
+            try {
+                assertTrue(submitLoginButton.waitForExists(waitingTime))
+                submitLoginButton.click()
+                assertTrue(userNameTextBox.text.equals(userName))
+                break
+            } catch (e: AssertionError) {
+                addToHomeScreen {
+                }.searchAndOpenHomeScreenShortcut(shortcutTitle) {}
+            }
+        }
+    }
+
+    fun verifySaveLoginPromptIsDisplayed() {
+        assertTrue(
+            mDevice.findObject(
+                UiSelector()
+                    .resourceId("$packageName:id/feature_prompt_login_fragment")
+            ).waitForExists(waitingTime)
+        )
+    }
+
     class Transition {
         private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         private fun threeDotButton() = onView(

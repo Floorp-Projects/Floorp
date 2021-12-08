@@ -39,8 +39,8 @@ class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
 
     fun tapSetupLater() = onView(withText("Later")).perform(ViewActions.click())
 
-    fun verifySavedLoginFromPrompt() =
-        mDevice.waitNotNull(Until.findObjects(By.text("test@example.com")))
+    fun verifySavedLoginFromPrompt(userName: String) =
+        mDevice.waitNotNull(Until.findObjects(By.text(userName)))
 
     fun verifyNotSavedLoginFromPrompt() = onView(withText("test@example.com"))
         .check(ViewAssertions.doesNotExist())

@@ -606,7 +606,7 @@ class SmokeTest {
             verifySecurityPromptForLogins()
             tapSetupLater()
             // Verify that the login appears correctly
-            verifySavedLoginFromPrompt()
+            verifySavedLoginFromPrompt("test@example.com")
             viewSavedLoginDetails("test@example.com")
             revealPassword()
             verifyPasswordSaved("test") // failing here locally
