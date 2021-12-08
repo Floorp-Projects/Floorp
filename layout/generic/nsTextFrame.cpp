@@ -71,6 +71,7 @@
 #include "nsIFrameInlines.h"
 #include "mozilla/intl/Bidi.h"
 #include "mozilla/intl/Segmenter.h"
+#include "mozilla/intl/UnicodeProperties.h"
 #include "mozilla/ServoStyleSet.h"
 
 #include <algorithm>
@@ -8369,6 +8370,7 @@ static bool FindFirstLetterRange(const nsTextFragment* aFrag,
   // should extend to entire orthographic "syllable" clusters, we don't
   // want to allow this to split a ligature.
   bool allowSplitLigature;
+  bool usesIndicHalfForms = false;
 
   typedef intl::Script Script;
   Script script = intl::UnicodeProperties::GetScriptCode(usv);
@@ -8392,6 +8394,9 @@ static bool FindFirstLetterRange(const nsTextFragment* aFrag,
     case Script::BENGALI:
     case Script::DEVANAGARI:
     case Script::GUJARATI:
+      usesIndicHalfForms = true;
+      [[fallthrough]];
+
     case Script::GURMUKHI:
     case Script::KANNADA:
     case Script::MALAYALAM:
@@ -8434,6 +8439,33 @@ static bool FindFirstLetterRange(const nsTextFragment* aFrag,
   FindClusterEnd(aTextRun, endOffset, &iter, allowSplitLigature);
 
   i = iter.GetOriginalOffset() - aOffset;
+
+  // Heuristic for Indic scripts that like to form conjuncts:
+  // If we ended at a virama that is ligated with the preceding character
+  // (e.g. creating a half-form), then don't stop here; include the next
+  // cluster as well so that we don't break a conjunct.
+  //
+  // Unfortunately this cannot distinguish between a letter+virama that ligate
+  // to create a half-form (in which case we have a conjunct that should not
+  // be broken) and a letter+virama that ligate purely for presentational
+  // reasons to position the (visible) virama component (in which case breaking
+  // after the virama would be acceptable). So results may be imperfect,
+  // depending how the font has chosen to implement visible viramas.
+  if (usesIndicHalfForms) {
+    while (i + 1 < length &&
+           !aTextRun->IsLigatureGroupStart(iter.GetSkippedOffset())) {
+      char32_t c = aFrag->ScalarValueAt(AssertedCast<uint32_t>(aOffset + i));
+      if (intl::UnicodeProperties::GetCombiningClass(c) ==
+          HB_UNICODE_COMBINING_CLASS_VIRAMA) {
+        iter.AdvanceOriginal(1);
+        FindClusterEnd(aTextRun, endOffset, &iter, allowSplitLigature);
+        i = iter.GetOriginalOffset() - aOffset;
+      } else {
+        break;
+      }
+    }
+  }
+
   if (i + 1 == length) {
     return true;
   }
