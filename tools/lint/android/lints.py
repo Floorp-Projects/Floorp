@@ -194,7 +194,10 @@ def javadoc(config, **lintargs):
             for issue in issues:
                 issue["path"] = issue["path"].replace(lintargs["root"], "")
                 # We want warnings to be errors for linting purposes.
-                issue["level"] = "error"
+                # TODO: Bug 1316188 - resolve missing javadoc comments
+                issue["level"] = (
+                    "error" if issue["message"] != ": no comment" else "warning"
+                )
                 results.append(result.from_config(config, **issue))
 
     return results
@@ -229,6 +232,10 @@ def lint(config, **lintargs):
 
     for issue in root.findall("issue"):
         location = issue[0]
+        if "third_party" in location.get("file") or "thirdparty" in location.get(
+            "file"
+        ):
+            continue
         err = {
             "level": issue.get("severity").lower(),
             "rule": issue.get("id"),

@@ -461,6 +461,17 @@ sonatype-nexus:
         strip-components: 1
         add-prefix: sonatype-nexus/
 
+jdk-8-linux64:
+    description: Java 8 JDK
+    fetch:
+        type: static-url
+        url: https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u312-b07/OpenJDK8U-jdk_x64_linux_hotspot_8u312b07.tar.gz
+        sha256: 699981083983b60a7eeb511ad640fae3ae4b879de5a3980fe837e8ade9c34a08
+        size: 103016010
+        artifact-name: jdk-8.tar.zst
+        strip-components: 1
+        add-prefix: jdk-8/
+
 makecab:
     description: makecab source code
     fetch:
