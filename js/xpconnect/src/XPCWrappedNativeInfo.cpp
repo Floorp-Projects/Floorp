@@ -83,10 +83,12 @@ bool XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface,
     callback = XPC_WN_GetterSetter;
   }
 
-  JSFunction* fun;
   jsid name = GetName();
+  JS_MarkCrossZoneId(ccx, name);
+
+  JSFunction* fun;
   if (JSID_IS_STRING(name)) {
-    fun = js::NewFunctionByIdWithReserved(ccx, callback, argc, 0, GetName());
+    fun = js::NewFunctionByIdWithReserved(ccx, callback, argc, 0, name);
   } else {
     fun = js::NewFunctionWithReserved(ccx, callback, argc, 0, nullptr);
   }
