@@ -16,9 +16,16 @@ exclude: true
 ## v97
 - ⚠️ Deprecated GeckoSession.PermissionDelegate.MediaSource.rawId [97.1],
   which now provides the same string as id [97.2].
+- Added [`EXTRA_CRASH_PROCESS_TYPE`][97.3] field to ACTION_CRASHED intents,
+  and corresponding [`CRASHED_PROCESS_TYPE_*`][97.4] constants, indicating which
+  type of process a crash occured in.
+- ⚠️ Deprecated [`EXTRA_CRASH_FATAL`][97.5]. Use `EXTRA_CRASH_PROCESS_TYPE` instead.
 
 [97.1]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.MediaSource.html#rawId
 [97.2]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.MediaSource.html#id
+[97.3]: {{javadoc_uri}}/GeckoRuntime.html#EXTRA_CRASH_PROCESS_TYPE
+[97.4]: {{javadoc_uri}}/GeckoRuntime.html#CRASHED_PROCESS_TYPE_MAIN
+[97.5]: {{javadoc_uri}}/GeckoRuntime.html#EXTRA_CRASH_FATAL
 
 ## v96
 - Added [`onLoginFetch`][96.1] which allows apps to provide all saved logins to
@@ -1100,4 +1107,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 88bad4c2e63abcc2cca4bf99df66991700aa2df1
+[api-version]: f109d55f4da6ba24b94fa8cb8f42fe7e68d11426
