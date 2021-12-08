@@ -90,14 +90,6 @@ slotmap = { git = "https://github.com/kvark/dummy-web" }
 wasm-bindgen = { git = "https://github.com/kvark/dummy-web" }
 web-sys = { git = "https://github.com/kvark/dummy-web" }
 
-[patch.crates-io.cranelift-codegen]
-git = "https://github.com/bytecodealliance/wasmtime"
-rev = "824fa69756523f2b6d49029fe25de94130b1f144"
-
-[patch.crates-io.cranelift-wasm]
-git = "https://github.com/bytecodealliance/wasmtime"
-rev = "824fa69756523f2b6d49029fe25de94130b1f144"
-
 # Patch autocfg to hide rustc output. Workaround for https://github.com/cuviper/autocfg/issues/30
 [patch.crates-io.autocfg]
 path = "third_party/rust/autocfg"
