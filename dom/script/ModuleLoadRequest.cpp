@@ -166,7 +166,7 @@ void ModuleLoadRequest::ModuleErrored() {
 
   LOG(("ScriptLoadRequest (%p): Module errored", this));
 
-  mLoader->CheckModuleDependenciesLoaded(this);
+  CheckModuleDependenciesLoaded();
   MOZ_ASSERT(!mModuleScript || mModuleScript->HasParseError());
 
   CancelImports();
@@ -186,9 +186,28 @@ void ModuleLoadRequest::DependenciesLoaded() {
 
   MOZ_ASSERT(mModuleScript);
 
-  mLoader->CheckModuleDependenciesLoaded(this);
+  CheckModuleDependenciesLoaded();
   SetReady();
   LoadFinished();
+}
+
+void ModuleLoadRequest::CheckModuleDependenciesLoaded() {
+  LOG(("ScriptLoadRequest (%p): Check dependencies loaded", this));
+
+  if (!mModuleScript || mModuleScript->HasParseError()) {
+    return;
+  }
+  for (const auto& childRequest : mImports) {
+    ModuleScript* childScript = childRequest->mModuleScript;
+    if (!childScript) {
+      mModuleScript = nullptr;
+      LOG(("ScriptLoadRequest (%p):   %p failed (load error)", this,
+           childRequest.get()));
+      return;
+    }
+  }
+
+  LOG(("ScriptLoadRequest (%p):   all ok", this));
 }
 
 void ModuleLoadRequest::LoadFailed() {
