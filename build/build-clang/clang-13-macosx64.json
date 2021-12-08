@@ -12,7 +12,6 @@
     "wasi-compiler-rt": "{MOZ_FETCHES_DIR}/compiler-rt",
     "patches": [
       "static-llvm-symbolizer_clang_12.patch",
-      "compiler-rt-cross-compile.patch",
       "revert-llvmorg-13-init-7827-g2a078c307204.patch",
       "revert-llvmorg-13-init-8182-gc2297544c047.patch",
       "llvmorg-14-init-2833-gbadcd5858972.patch",
