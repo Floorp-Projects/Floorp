@@ -231,10 +231,6 @@ extern "C" const char* __tsan_default_suppressions() {
          // Bug 1606803
          "race:ipv6_is_present\n"
 
-         // Bug 1615017
-         "race:CacheFileMetadata::SetHash\n"
-         "race:CacheFileMetadata::OnDataWritten\n"
-
          // Bug 1615123
          "race:_dl_deallocate_tls\n"
          "race:__libc_memalign\n"
