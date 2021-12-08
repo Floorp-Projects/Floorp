@@ -13419,7 +13419,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.scroll-linked-animations.enabled")) {
   gCSSProperties["animation"].subproperties.push("animation-timeline");
   gCSSProperties["animation"].initial_values.push(
     "none none 0s 0s ease normal running 1.0 auto",
-    "auto"
+    "none none auto"
   );
   gCSSProperties["animation"].other_values.push(
     "none none 0s 0s cubic-bezier(0.25, 0.1, 0.25, 1.0) normal running 1.0 auto",
@@ -13430,6 +13430,9 @@ if (IsCSSPropertyPrefEnabled("layout.css.scroll-linked-animations.enabled")) {
     "1s bounce timeline, 2s",
     "1s bounce none, 2s none auto"
   );
+
+  gCSSProperties["-moz-animation"].subproperties.push("animation-timeline");
+  gCSSProperties["-webkit-animation"].subproperties.push("animation-timeline");
 
   gCSSProperties["animation-timeline"] = {
     domProp: "animationTimeline",
@@ -13445,7 +13448,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.scroll-linked-animations.enabled")) {
       "color",
       "bounce, bubble, opacity",
       "foobar",
-      "auto",
       "\\32bounce",
       "-bounce",
       "-\\32bounce",

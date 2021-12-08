@@ -22,6 +22,7 @@ namespace dom {
 
 class Animation;
 class Document;
+class ScrollTimeline;
 
 class AnimationTimeline : public nsISupports, public nsWrapperCache {
  public:
@@ -104,6 +105,7 @@ class AnimationTimeline : public nsISupports, public nsWrapperCache {
   virtual bool IsMonotonicallyIncreasing() const = 0;
 
   virtual bool IsScrollTimeline() const { return false; }
+  virtual const ScrollTimeline* AsScrollTimeline() const { return nullptr; }
 
  protected:
   nsCOMPtr<nsIGlobalObject> mWindow;

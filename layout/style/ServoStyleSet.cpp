@@ -1190,6 +1190,12 @@ const RawServoCounterStyleRule* ServoStyleSet::CounterStyleRuleForName(
   return Servo_StyleSet_GetCounterStyleRule(mRawSet.get(), aName);
 }
 
+const RawServoScrollTimelineRule* ServoStyleSet::ScrollTimelineRuleForName(
+    nsAtom* aName) {
+  MOZ_ASSERT(!StylistNeedsUpdate());
+  return Servo_StyleSet_GetScrollTimelineRule(mRawSet.get(), aName);
+}
+
 already_AddRefed<gfxFontFeatureValueSet>
 ServoStyleSet::BuildFontFeatureValueSet() {
   MOZ_ASSERT(!StylistNeedsUpdate());

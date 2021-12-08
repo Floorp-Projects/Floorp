@@ -118,6 +118,7 @@ use style::string_cache::{Atom, WeakAtom};
 use style::style_adjuster::StyleAdjuster;
 use style::stylesheets::import_rule::ImportSheet;
 use style::stylesheets::keyframes_rule::{Keyframe, KeyframeSelector, KeyframesStepValue};
+use style::stylesheets::scroll_timeline_rule::ScrollDirection;
 use style::stylesheets::supports_rule::parse_condition_or_declaration;
 use style::stylesheets::{
     AllowImportRules, CounterStyleRule, CssRule, CssRuleType, CssRules, CssRulesHelpers,
@@ -2794,17 +2795,25 @@ pub extern "C" fn Servo_ScrollTimelineRule_GetSource(
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_ScrollTimelineRule_GetOrientation(
+pub extern "C" fn Servo_ScrollTimelineRule_GetOrientationAsString(
     rule: &RawServoScrollTimelineRule,
     result: &mut nsString,
 ) {
     read_locked_arc(rule, |rule: &ScrollTimelineRule| {
         rule.descriptors
             .orientation
-            .as_ref()
-            .unwrap_or(&Default::default())
+            .unwrap_or_default()
             .to_css(&mut CssWriter::new(result))
             .unwrap();
+    })
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_ScrollTimelineRule_GetOrientation(
+    rule: &RawServoScrollTimelineRule,
+) -> ScrollDirection {
+    read_locked_arc(rule, |rule: &ScrollTimelineRule| {
+        rule.descriptors.orientation.unwrap_or_default()
     })
 }
 
@@ -6331,6 +6340,21 @@ pub unsafe extern "C" fn Servo_StyleSet_GetCounterStyleRule(
         data.stylist
             .iter_extra_data_origins()
             .filter_map(|(d, _)| d.counter_styles.get(name))
+            .next()
+            .map_or(ptr::null(), |rule| rule.as_borrowed())
+    })
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn Servo_StyleSet_GetScrollTimelineRule(
+    raw_data: &RawServoStyleSet,
+    name: *mut nsAtom,
+) -> *const RawServoScrollTimelineRule {
+    let data = PerDocumentStyleData::from_ffi(raw_data).borrow();
+    Atom::with(name, |name| {
+        data.stylist
+            .iter_extra_data_origins()
+            .filter_map(|(d, _)| d.scroll_timelines.get(name))
             .next()
             .map_or(ptr::null(), |rule| rule.as_borrowed())
     })

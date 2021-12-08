@@ -1,0 +1,74 @@
+<!doctype html>
+<head>
+<meta charset=utf-8>
+<title>Test getAnimations() which doesn't return scroll animations</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script src="../testcommon.js"></script>
+<style>
+  @scroll-timeline test-timeline {
+    source: auto;
+  }
+  @keyframes animWidth {
+    from { width: 100px; }
+    to { width: 200px }
+  }
+  @keyframes animTop {
+    to { top: 100px }
+  }
+  .fill-vh {
+    width: 100px;
+    height: 100vh;
+  }
+</style>
+</head>
+<body>
+<div id="log"></div>
+<script>
+"use strict";
+
+// FIXME: getAnimations() doesn't return scroll-animations. We should fix this
+// in Bug 1676795.
+
+test(function(t) {
+  const div = addDiv(t,
+    { style: "width: 10px; height: 100px; " +
+             "animation: animWidth 100s test-timeline, animTop 200s;" });
+
+  // Sanity check to make sure the scroll animation is there.
+  addDiv(t, { class: "fill-vh" });
+  const scroller = document.scrollingElement;
+  const maxScroll = scroller.scrollHeight - scroller.clientHeight;
+  scroller.scrollTop = maxScroll;
+  assert_equals(getComputedStyle(div).width, "200px",
+                "The scroll animation is there");
+
+  const animations = div.getAnimations();
+  assert_equals(animations.length, 1,
+                'getAnimations() should not include scroll animations');
+  assert_equals(animations[0].animationName, "animTop",
+                'getAmimations() should not return scroll animations');
+}, 'Element.getAnimation() should not include scroll animations');
+
+test(function(t) {
+  const div = addDiv(t,
+    { style: "width: 10px; height: 100px; " +
+             "animation: animWidth 100s test-timeline, animTop 100s;" });
+
+  // Sanity check to make sure the scroll animation is there.
+  addDiv(t, { class: "fill-vh" });
+  const scroller = document.scrollingElement;
+  const maxScroll = scroller.scrollHeight - scroller.clientHeight;
+  scroller.scrollTop = maxScroll;
+  assert_equals(getComputedStyle(div).width, "200px",
+                "The scroll animation is there");
+
+  const animations = document.getAnimations();
+  assert_equals(animations.length, 1,
+                'getAnimations() should not include scroll animations');
+  assert_equals(animations[0].animationName, "animTop",
+                'getAmimations() should not return scroll animations');
+}, 'Document.getAnimation() should not include scroll animations');
+
+</script>
+</body>
