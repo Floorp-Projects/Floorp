@@ -777,8 +777,7 @@ function startup() {
     InitLater(() => {
       // It's enough to run this once to set up FOG.
       // (See also bug 1730026.)
-      const FOG = Cc["@mozilla.org/toolkit/glean;1"].createInstance(Ci.nsIFOG);
-      FOG.registerCustomPings();
+      Services.fog.registerCustomPings();
     });
 
     // This should always go last, since the idle tasks (except for the ones with
