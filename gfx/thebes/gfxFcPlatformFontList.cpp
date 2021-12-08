@@ -545,7 +545,8 @@ double gfxFontconfigFontEntry::GetAspect(uint8_t aSizeAdjustBasis) {
       case FontSizeAdjust::Tag::IcHeight: {
         bool vertical = FontSizeAdjust::Tag(aSizeAdjustBasis) ==
                         FontSizeAdjust::Tag::IcHeight;
-        gfxFloat advance = font->GetCharAdvance(0x6C34, vertical);
+        gfxFloat advance = font->GetCharAdvance(gfxFont::kWaterIdeograph,
+                                                vertical);
         return advance > 0 ? advance / metrics.emHeight : 1.0;
       }
       default:

@@ -1017,6 +1017,11 @@ impl FontMetricsProvider for GeckoFontMetricsProvider {
             } else {
                 None
             },
+            ic_width: if gecko_metrics.mIcWidth.px() >= 0. {
+                Some(gecko_metrics.mIcWidth)
+            } else {
+                None
+            },
             ascent: gecko_metrics.mAscent,
         }
     }

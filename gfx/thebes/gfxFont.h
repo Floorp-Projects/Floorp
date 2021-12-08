@@ -1632,11 +1632,14 @@ class gfxFont {
     gfxFloat aveCharWidth;
     gfxFloat spaceWidth;
     gfxFloat zeroWidth;  // -1 if there was no zero glyph
+    gfxFloat ideographicWidth;  // -1 if kWaterIdeograph is not supported
 
     gfxFloat ZeroOrAveCharWidth() const {
       return zeroWidth >= 0 ? zeroWidth : aveCharWidth;
     }
   };
+  // Unicode character used as basis for 'ic' unit:
+  static constexpr uint32_t kWaterIdeograph = 0x6C34;
 
   typedef nsFontMetrics::FontOrientation Orientation;
 
@@ -1645,7 +1648,7 @@ class gfxFont {
       return GetHorizontalMetrics();
     }
     if (!mVerticalMetrics) {
-      mVerticalMetrics = CreateVerticalMetrics();
+      CreateVerticalMetrics();
     }
     return *mVerticalMetrics;
   }
@@ -1959,7 +1962,7 @@ class gfxFont {
  protected:
   virtual const Metrics& GetHorizontalMetrics() = 0;
 
-  mozilla::UniquePtr<const Metrics> CreateVerticalMetrics();
+  void CreateVerticalMetrics();
 
   // Template parameters for DrawGlyphs/DrawOneGlyph, used to select
   // simplified versions of the methods in the most common cases.
@@ -2204,7 +2207,7 @@ class gfxFont {
   RefPtr<mozilla::gfx::ScaledFont> mAzureScaledFont;
 
   // For vertical metrics, created on demand.
-  mozilla::UniquePtr<const Metrics> mVerticalMetrics;
+  mozilla::UniquePtr<Metrics> mVerticalMetrics;
 
   // Table used for MathML layout.
   mozilla::UniquePtr<gfxMathTable> mMathTable;

@@ -311,7 +311,7 @@ void gfxMacFont::InitMetrics() {
       case FontSizeAdjust::Tag::IcHeight: {
         bool vertical = FontSizeAdjust::Tag(mStyle.sizeAdjustBasis) ==
                         FontSizeAdjust::Tag::IcHeight;
-        gfxFloat advance = GetCharAdvance(0x6C34, vertical);
+        gfxFloat advance = GetCharAdvance(kWaterIdeograph, vertical);
         aspect = advance > 0.0 ? advance / mAdjustedSize : 1.0;
         break;
       }
@@ -374,6 +374,13 @@ void gfxMacFont::InitMetrics() {
     mMetrics.spaceWidth = mMetrics.aveCharWidth;
   }
   mSpaceGlyph = glyphID;
+
+  mMetrics.ideographicWidth = GetCharWidth(cmap, kWaterIdeograph, &glyphID,
+                                           cgConvFactor);
+  if (glyphID == 0) {
+    // Indicate "not found".
+    mMetrics.ideographicWidth = -1.0;
+  }
 
   if (IsSyntheticBold()) {
     mMetrics.spaceWidth += GetSyntheticBoldOffset();

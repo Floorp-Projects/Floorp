@@ -154,7 +154,7 @@ void gfxGDIFont::Initialize() {
             case FontSizeAdjust::Tag::IcHeight: {
               bool vertical = FontSizeAdjust::Tag(mStyle.sizeAdjustBasis) ==
                               FontSizeAdjust::Tag::IcHeight;
-              gfxFloat advance = GetCharAdvance(0x6C34, vertical);
+              gfxFloat advance = GetCharAdvance(kWaterIdeograph, vertical);
               aspect = advance > 0.0 ? advance / mMetrics->emHeight : 1.0;
               break;
             }
@@ -348,6 +348,16 @@ void gfxGDIFont::Initialize() {
       mMetrics->zeroWidth = ROUND(size.cx);
     } else {
       mMetrics->zeroWidth = -1.0;  // indicates not found
+    }
+
+    wchar_t ch = kWaterIdeograph;
+    ret = GetGlyphIndicesW(dc.GetDC(), &ch, 1, &glyph,
+                           GGI_MARK_NONEXISTING_GLYPHS);
+    if (ret != GDI_ERROR && glyph != 0xFFFF) {
+      GetTextExtentPoint32W(dc.GetDC(), &ch, 1, &size);
+      mMetrics->ideographicWidth = ROUND(size.cx);
+    } else {
+      mMetrics->ideographicWidth = -1.0;
     }
 
     SanitizeMetrics(mMetrics, GetFontEntry()->mIsBadUnderlineFont);

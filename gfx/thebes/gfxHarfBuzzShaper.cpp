@@ -305,7 +305,9 @@ hb_position_t gfxHarfBuzzShaper::GetGlyphHAdvance(hb_codepoint_t glyph) const {
                       uint16_t(metrics->metrics[glyph].advanceWidth));
 }
 
-hb_position_t gfxHarfBuzzShaper::GetGlyphVAdvance(hb_codepoint_t glyph) const {
+hb_position_t gfxHarfBuzzShaper::GetGlyphVAdvance(hb_codepoint_t glyph) {
+  InitializeVertical();
+
   if (!mVmtxTable) {
     // Must be a "vertical" font that doesn't actually have vertical metrics;
     // use a fixed advance.
