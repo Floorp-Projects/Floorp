@@ -756,8 +756,14 @@ nsresult ModuleLoader::HandleResolveFailure(
   return NS_OK;
 }
 
+nsIURI* ScriptLoader::GetBaseURI() const {
+  MOZ_ASSERT(mDocument);
+  return mDocument->GetDocBaseURI();
+}
+
 already_AddRefed<nsIURI> ModuleLoader::ResolveModuleSpecifier(
-    ScriptLoader* aLoader, LoadedScript* aScript, const nsAString& aSpecifier) {
+    ScriptLoaderInterface* aLoader, LoadedScript* aScript,
+    const nsAString& aSpecifier) {
   // The following module specifiers are allowed by the spec:
   //  - a valid absolute URL
   //  - a valid relative URL that starts with "/", "./" or "../"
@@ -786,7 +792,7 @@ already_AddRefed<nsIURI> ModuleLoader::ResolveModuleSpecifier(
   if (aScript) {
     baseURL = aScript->BaseURL();
   } else {
-    baseURL = aLoader->GetDocument()->GetDocBaseURI();
+    baseURL = aLoader->GetBaseURI();
   }
 
   rv = NS_NewURI(getter_AddRefs(uri), aSpecifier, nullptr, baseURL);
@@ -1288,8 +1294,8 @@ void ScriptLoader::EnsureModuleHooksInitialized() {
                                        (void*)nullptr);
 }
 
-ModuleLoader::ModuleLoader(ScriptLoader* aLoader) : mLoader(aLoader) {
-  aLoader->EnsureModuleHooksInitialized();
+ModuleLoader::ModuleLoader(ScriptLoaderInterface* aLoader) : mLoader(aLoader) {
+  mLoader->EnsureModuleHooksInitialized();
 }
 
 ModuleLoader::~ModuleLoader() {
