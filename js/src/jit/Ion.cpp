@@ -1442,6 +1442,14 @@ bool OptimizeMIR(MIRGenerator* mir) {
     AssertGraphCoherency(graph);
   }
 
+  if (mir->optimizationInfo().eliminateRedundantShapeGuardsEnabled()) {
+    if (!EliminateRedundantShapeGuards(graph)) {
+      return false;
+    }
+    gs.spewPass("Shape Guard Elimination");
+    AssertGraphCoherency(graph);
+  }
+
   if (!mir->compilingWasm() && !mir->outerInfo().hadUnboxFoldingBailout()) {
     AutoTraceLog log(logger, TraceLogger_FoldLoadsWithUnbox);
     if (!FoldLoadsWithUnbox(mir, graph)) {
