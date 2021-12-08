@@ -205,3 +205,6 @@ if CONFIG["CC_TYPE"] in ("clang", "clang-cl"):
 
 if CONFIG["CC_TYPE"] == "gcc":
     CXXFLAGS += ["-Wno-error=unused-result"]  # GCC doesn't ignore (void)MustUse();
+
+# Add libFuzzer configuration directives
+include("/tools/fuzzing/libfuzzer-config.mozbuild")
