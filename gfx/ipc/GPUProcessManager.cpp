@@ -812,6 +812,14 @@ void GPUProcessManager::KillProcess() {
   mProcess->KillProcess();
 }
 
+void GPUProcessManager::CrashProcess() {
+  if (!mProcess) {
+    return;
+  }
+
+  mProcess->CrashProcess();
+}
+
 void GPUProcessManager::DestroyProcess(bool aUnexpectedShutdown) {
   if (!mProcess) {
     return;

@@ -1881,6 +1881,17 @@ GfxInfoBase::ControlGPUProcessForXPCShell(bool aEnable, bool* _retval) {
   return NS_OK;
 }
 
+NS_IMETHODIMP GfxInfoBase::CrashGPUProcessForTests() {
+  GPUProcessManager* gpm = GPUProcessManager::Get();
+  if (!gpm) {
+    // gfxPlatform has not been initialized.
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  gpm->CrashProcess();
+  return NS_OK;
+}
+
 GfxInfoCollectorBase::GfxInfoCollectorBase() {
   GfxInfoBase::AddCollector(this);
 }
