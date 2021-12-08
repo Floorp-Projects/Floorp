@@ -26,7 +26,7 @@ Adapter::Adapter(Instance* const aParent,
       mId(aInfo.id),
       mFeatures(new AdapterFeatures(this)),
       mLimits(new SupportedLimits(this, aInfo.limits)),
-      mIsSoftware(aInfo.ty == ffi::WGPUDeviceType_Cpu) {}
+      mIsFallbackAdapter(aInfo.ty == ffi::WGPUDeviceType_Cpu) {}
 
 Adapter::~Adapter() { Cleanup(); }
 
@@ -39,7 +39,6 @@ void Adapter::Cleanup() {
 
 const RefPtr<AdapterFeatures>& Adapter::Features() const { return mFeatures; }
 const RefPtr<SupportedLimits>& Adapter::Limits() const { return mLimits; }
-bool Adapter::IsSoftware() const { return mIsSoftware; }
 
 already_AddRefed<dom::Promise> Adapter::RequestDevice(
     const dom::GPUDeviceDescriptor& aDesc, ErrorResult& aRv) {

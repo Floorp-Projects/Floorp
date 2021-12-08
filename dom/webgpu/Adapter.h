@@ -47,14 +47,14 @@ class Adapter final : public ObjectBase, public ChildOf<Instance> {
   // to unlink them in CC unlink.
   RefPtr<AdapterFeatures> mFeatures;
   RefPtr<SupportedLimits> mLimits;
-  const bool mIsSoftware = false;
+  const bool mIsFallbackAdapter = false;
 
  public:
   Adapter(Instance* const aParent, const ffi::WGPUAdapterInformation& aInfo);
   void GetName(nsString& out) const { out = mName; }
   const RefPtr<AdapterFeatures>& Features() const;
   const RefPtr<SupportedLimits>& Limits() const;
-  bool IsSoftware() const;
+  bool IsFallbackAdapter() const { return mIsFallbackAdapter; }
 
   already_AddRefed<dom::Promise> RequestDevice(
       const dom::GPUDeviceDescriptor& aDesc, ErrorResult& aRv);
