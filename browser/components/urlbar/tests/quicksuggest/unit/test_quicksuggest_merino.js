@@ -19,10 +19,12 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 const TEST_MERINO_TIMEOUT_MS = 1000;
 
 // relative to `browser.urlbar`
-const PREF_MERINO_ENABLED = "merino.enabled";
-const PREF_REMOTE_SETTINGS_ENABLED = "quicksuggest.remoteSettings.enabled";
-const PREF_MERINO_ENDPOINT_URL = "merino.endpointURL";
 const PREF_DATA_COLLECTION_ENABLED = "quicksuggest.dataCollection.enabled";
+const PREF_MERINO_CLIENT_VARIANTS = "merino.clientVariants";
+const PREF_MERINO_ENABLED = "merino.enabled";
+const PREF_MERINO_ENDPOINT_URL = "merino.endpointURL";
+const PREF_MERINO_PROVIDERS = "merino.providers";
+const PREF_REMOTE_SETTINGS_ENABLED = "quicksuggest.remoteSettings.enabled";
 
 const TELEMETRY_MERINO_LATENCY = "FX_URLBAR_MERINO_LATENCY_MS";
 const TELEMETRY_MERINO_RESPONSE = "FX_URLBAR_MERINO_RESPONSE";
@@ -1049,6 +1051,66 @@ add_task(async function timestamps() {
   });
 });
 
+// Tests that Merino includes the clientVariants and providers urls, if set.
+add_task(async function oneEnabled_merino() {
+  UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
+  UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, false);
+  UrlbarPrefs.set(PREF_DATA_COLLECTION_ENABLED, true);
+  UrlbarPrefs.set(PREF_MERINO_CLIENT_VARIANTS, "");
+  UrlbarPrefs.set(PREF_MERINO_PROVIDERS, "");
+
+  function parseQueryString(queryString) {
+    return Object.fromEntries(queryString.split("&").map(p => p.split("=")));
+  }
+
+  let checksCalled = 0;
+
+  // Check that neither clientVariants or providers are added.
+  setMerinoResponse().checkRequest = req => {
+    let qs = parseQueryString(req.queryString);
+    Assert.ok(
+      !Object.hasOwn(qs, "providers"),
+      "providers should not be specified"
+    );
+    Assert.ok(
+      !Object.hasOwn(qs, "client_variants"),
+      "client_variants should not be specified"
+    );
+    checksCalled += 1;
+  };
+
+  let context = createContext(REMOTE_SETTINGS_SEARCH_STRING, {
+    providers: [UrlbarProviderQuickSuggest.name],
+    isPrivate: false,
+  });
+  await check_results({
+    context,
+    matches: [EXPECTED_MERINO_RESULT],
+  });
+
+  UrlbarPrefs.set(PREF_MERINO_CLIENT_VARIANTS, "green");
+  UrlbarPrefs.set(PREF_MERINO_PROVIDERS, "pink");
+
+  // Check that neither clientVariants or providers are added.
+  setMerinoResponse().checkRequest = req => {
+    let qs = parseQueryString(req.queryString);
+    Assert.equal(qs.client_variants, "green", "client variants should be set");
+    Assert.equal(qs.providers, "pink", "providers should be set");
+    checksCalled += 1;
+  };
+
+  context = createContext(REMOTE_SETTINGS_SEARCH_STRING, {
+    providers: [UrlbarProviderQuickSuggest.name],
+    isPrivate: false,
+  });
+  await check_results({
+    context,
+    matches: [EXPECTED_MERINO_RESULT],
+  });
+
+  Assert.equal(checksCalled, 2, "both checks should have been called");
+});
+
 function makeMerinoServer(endpointPath) {
   let server = makeTestServer();
   server.registerPathHandler(endpointPath, async (req, resp) => {
@@ -1071,6 +1133,9 @@ function makeMerinoServer(endpointPath) {
       resp.write(gMerinoResponse.body);
     } else if (gMerinoResponse.body) {
       resp.write(JSON.stringify(gMerinoResponse.body));
+    }
+    if (typeof gMerinoResponse.checkRequest == "function") {
+      gMerinoResponse.checkRequest(req);
     }
     resp.finish();
   });
