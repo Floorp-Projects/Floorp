@@ -940,7 +940,7 @@ RefPtr<GenericPromise> ScriptLoader::StartFetchingModuleAndDependencies(
 
   RefPtr<GenericPromise> ready = childRequest->mReady.Ensure(__func__);
 
-  nsresult rv = StartLoad(childRequest);
+  nsresult rv = StartModuleLoad(childRequest);
   if (NS_FAILED(rv)) {
     MOZ_ASSERT(!childRequest->mModuleScript);
     LOG(("ScriptLoadRequest (%p):   rejecting %p", aParent,
@@ -1195,7 +1195,7 @@ void ScriptLoader::StartDynamicImport(ModuleLoadRequest* aRequest) {
 
   mDynamicImportRequests.AppendElement(aRequest);
 
-  nsresult rv = StartLoad(aRequest);
+  nsresult rv = StartModuleLoad(aRequest);
   if (NS_FAILED(rv)) {
     ReportErrorToConsole(aRequest, rv);
     FinishDynamicImportAndReject(aRequest, rv);
@@ -1463,7 +1463,7 @@ nsresult ScriptLoader::RestartLoad(ScriptLoadRequest* aRequest) {
   return NS_BINDING_RETARGETED;
 }
 
-nsresult ScriptLoader::StartLoad(ScriptLoadRequest* aRequest) {
+nsresult ScriptLoader::StartClassicLoad(ScriptLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->IsLoading());
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NULL_POINTER);
   aRequest->SetUnknownDataType();
@@ -1476,31 +1476,100 @@ nsresult ScriptLoader::StartLoad(ScriptLoadRequest* aRequest) {
   if (LOG_ENABLED()) {
     nsAutoCString url;
     aRequest->mURI->GetAsciiSpec(url);
-    LOG(("ScriptLoadRequest (%p): Start Load (url = %s)", aRequest, url.get()));
+    LOG(("ScriptLoadRequest (%p): Start Classic Load (url = %s)", aRequest,
+         url.get()));
   }
 
-  if (aRequest->IsModuleRequest()) {
-    // To prevent dynamic code execution, content scripts can only
-    // load moz-extension URLs.
-    nsCOMPtr<nsIPrincipal> principal = aRequest->TriggeringPrincipal();
-    if (BasePrincipal::Cast(principal)->ContentScriptAddonPolicy() &&
-        !aRequest->mURI->SchemeIs("moz-extension")) {
-      return NS_ERROR_DOM_WEBEXT_CONTENT_SCRIPT_URI;
-    }
+  nsSecurityFlags securityFlags =
+      aRequest->CORSMode() == CORS_NONE
+          ? nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL
+          : nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT;
+  if (aRequest->CORSMode() == CORS_ANONYMOUS) {
+    securityFlags |= nsILoadInfo::SEC_COOKIES_SAME_ORIGIN;
+  } else if (aRequest->CORSMode() == CORS_USE_CREDENTIALS) {
+    securityFlags |= nsILoadInfo::SEC_COOKIES_INCLUDE;
+  }
 
-    // Check whether the module has been fetched or is currently being fetched,
-    // and if so wait for it rather than starting a new fetch.
-    ModuleLoadRequest* request = aRequest->AsModuleRequest();
-    if (ModuleMapContainsURL(request->mURI, aRequest->GetWebExtGlobal())) {
-      LOG(("ScriptLoadRequest (%p): Waiting for module fetch", aRequest));
-      WaitForModuleFetch(request->mURI, aRequest->GetWebExtGlobal())
-          ->Then(GetMainThreadSerialEventTarget(), __func__, request,
-                 &ModuleLoadRequest::ModuleLoaded,
-                 &ModuleLoadRequest::LoadFailed);
-      return NS_OK;
+  securityFlags |= nsILoadInfo::SEC_ALLOW_CHROME;
+
+  nsresult rv = StartLoadInternal(aRequest, securityFlags);
+
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+nsresult ScriptLoader::StartModuleLoad(ScriptLoadRequest* aRequest) {
+  MOZ_ASSERT(aRequest->IsLoading());
+  NS_ENSURE_TRUE(mDocument, NS_ERROR_NULL_POINTER);
+  aRequest->SetUnknownDataType();
+
+  // If this document is sandboxed without 'allow-scripts', abort.
+  if (mDocument->HasScriptsBlockedBySandbox()) {
+    return NS_OK;
+  }
+
+  if (LOG_ENABLED()) {
+    nsAutoCString url;
+    aRequest->mURI->GetAsciiSpec(url);
+    LOG(("ScriptLoadRequest (%p): Start Module Load (url = %s)", aRequest,
+         url.get()));
+  }
+
+  // To prevent dynamic code execution, content scripts can only
+  // load moz-extension URLs.
+  nsCOMPtr<nsIPrincipal> principal = aRequest->TriggeringPrincipal();
+  if (BasePrincipal::Cast(principal)->ContentScriptAddonPolicy() &&
+      !aRequest->mURI->SchemeIs("moz-extension")) {
+    return NS_ERROR_DOM_WEBEXT_CONTENT_SCRIPT_URI;
+  }
+
+  // Check whether the module has been fetched or is currently being fetched,
+  // and if so wait for it rather than starting a new fetch.
+  ModuleLoadRequest* request = aRequest->AsModuleRequest();
+  if (ModuleMapContainsURL(request->mURI, aRequest->GetWebExtGlobal())) {
+    LOG(("ScriptLoadRequest (%p): Waiting for module fetch", aRequest));
+    WaitForModuleFetch(request->mURI, aRequest->GetWebExtGlobal())
+        ->Then(GetMainThreadSerialEventTarget(), __func__, request,
+               &ModuleLoadRequest::ModuleLoaded,
+               &ModuleLoadRequest::LoadFailed);
+    return NS_OK;
+  }
+
+  nsSecurityFlags securityFlags;
+
+  // According to the spec, module scripts have different behaviour to classic
+  // scripts and always use CORS. Only exception: Non linkable about: pages
+  // which load local module scripts.
+  if (IsAboutPageLoadingChromeURI(aRequest, mDocument)) {
+    securityFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL;
+  } else {
+    securityFlags = nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT;
+    if (aRequest->CORSMode() == CORS_NONE ||
+        aRequest->CORSMode() == CORS_ANONYMOUS) {
+      securityFlags |= nsILoadInfo::SEC_COOKIES_SAME_ORIGIN;
+    } else {
+      MOZ_ASSERT(aRequest->CORSMode() == CORS_USE_CREDENTIALS);
+      securityFlags |= nsILoadInfo::SEC_COOKIES_INCLUDE;
     }
   }
 
+  securityFlags |= nsILoadInfo::SEC_ALLOW_CHROME;
+
+  nsresult rv = StartLoadInternal(aRequest, securityFlags);
+
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // We successfully started fetching a module so put its URL in the module
+  // map and mark it as fetching.
+  SetModuleFetchStarted(aRequest->AsModuleRequest());
+  LOG(("ScriptLoadRequest (%p): Start fetching module", aRequest));
+
+  return NS_OK;
+}
+
+nsresult ScriptLoader::StartLoadInternal(ScriptLoadRequest* aRequest,
+                                         nsSecurityFlags securityFlags) {
   nsContentPolicyType contentPolicyType =
       ScriptLoadRequestToContentPolicyType(aRequest);
   nsCOMPtr<nsINode> context;
@@ -1515,36 +1584,6 @@ nsresult ScriptLoader::StartLoad(ScriptLoadRequest* aRequest) {
   NS_ENSURE_TRUE(window, NS_ERROR_NULL_POINTER);
   nsIDocShell* docshell = window->GetDocShell();
   nsCOMPtr<nsIInterfaceRequestor> prompter(do_QueryInterface(docshell));
-
-  nsSecurityFlags securityFlags;
-  if (aRequest->IsModuleRequest()) {
-    // According to the spec, module scripts have different behaviour to classic
-    // scripts and always use CORS. Only exception: Non linkable about: pages
-    // which load local module scripts.
-    if (IsAboutPageLoadingChromeURI(aRequest, mDocument)) {
-      securityFlags = nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL;
-    } else {
-      securityFlags = nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT;
-      if (aRequest->CORSMode() == CORS_NONE ||
-          aRequest->CORSMode() == CORS_ANONYMOUS) {
-        securityFlags |= nsILoadInfo::SEC_COOKIES_SAME_ORIGIN;
-      } else {
-        MOZ_ASSERT(aRequest->CORSMode() == CORS_USE_CREDENTIALS);
-        securityFlags |= nsILoadInfo::SEC_COOKIES_INCLUDE;
-      }
-    }
-  } else {
-    securityFlags =
-        aRequest->CORSMode() == CORS_NONE
-            ? nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL
-            : nsILoadInfo::SEC_REQUIRE_CORS_INHERITS_SEC_CONTEXT;
-    if (aRequest->CORSMode() == CORS_ANONYMOUS) {
-      securityFlags |= nsILoadInfo::SEC_COOKIES_SAME_ORIGIN;
-    } else if (aRequest->CORSMode() == CORS_USE_CREDENTIALS) {
-      securityFlags |= nsILoadInfo::SEC_COOKIES_INCLUDE;
-    }
-  }
-  securityFlags |= nsILoadInfo::SEC_ALLOW_CHROME;
 
   nsCOMPtr<nsIChannel> channel;
   nsresult rv = NS_NewChannelWithTriggeringPrincipal(
@@ -1717,13 +1756,6 @@ nsresult ScriptLoader::StartLoad(ScriptLoadRequest* aRequest) {
   }
 
   NS_ENSURE_SUCCESS(rv, rv);
-
-  if (aRequest->IsModuleRequest()) {
-    // We successfully started fetching a module so put its URL in the module
-    // map and mark it as fetching.
-    SetModuleFetchStarted(aRequest->AsModuleRequest());
-    LOG(("ScriptLoadRequest (%p): Start fetching module", aRequest));
-  }
 
   return NS_OK;
 }
