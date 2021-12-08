@@ -1472,3 +1472,16 @@ void CodeGenerator::visitTestI64AndBranch(LTestI64AndBranch* lir) {
   masm.testl(input.low, input.low);
   emitBranch(Assembler::NonZero, lir->ifTrue(), lir->ifFalse());
 }
+
+void CodeGenerator::visitBitAndAndBranch(LBitAndAndBranch* baab) {
+  // LBitAndAndBranch only represents single-word ANDs, hence it can't be
+  // 64-bit here.
+  MOZ_ASSERT(!baab->is64());
+  Register regL = ToRegister(baab->left());
+  if (baab->right()->isConstant()) {
+    masm.test32(regL, Imm32(ToInt32(baab->right())));
+  } else {
+    masm.test32(regL, ToRegister(baab->right()));
+  }
+  emitBranch(baab->cond(), baab->ifTrue(), baab->ifFalse());
+}

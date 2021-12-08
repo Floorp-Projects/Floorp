@@ -1483,12 +1483,15 @@ void CodeGenerator::visitCompareFAndBranch(LCompareFAndBranch* comp) {
 }
 
 void CodeGenerator::visitBitAndAndBranch(LBitAndAndBranch* baab) {
-  ScratchRegisterScope scratch(masm);
+  // LBitAndAndBranch only represents single-word ANDs, hence it can't be
+  // 64-bit here.
+  MOZ_ASSERT(!baab->is64());
+  Register regL = ToRegister(baab->left());
   if (baab->right()->isConstant()) {
-    masm.ma_tst(ToRegister(baab->left()), Imm32(ToInt32(baab->right())),
-                scratch);
+    ScratchRegisterScope scratch(masm);
+    masm.ma_tst(regL, Imm32(ToInt32(baab->right())), scratch);
   } else {
-    masm.ma_tst(ToRegister(baab->left()), ToRegister(baab->right()));
+    masm.ma_tst(regL, ToRegister(baab->right()));
   }
   emitBranch(baab->cond(), baab->ifTrue(), baab->ifFalse());
 }
