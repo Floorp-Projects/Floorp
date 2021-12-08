@@ -177,10 +177,14 @@ static bool ReadPrincipalInfo(JSStructuredCloneReader* aReader,
     return false;
   }
 
-  MOZ_ASSERT(baseDomainIsVoid == 0 || baseDomainIsVoid == 1);
+  if (baseDomainIsVoid != 0 && baseDomainIsVoid != 1) {
+    return false;
+  }
 
   if (baseDomainIsVoid) {
-    MOZ_ASSERT(baseDomainLength == 0);
+    if (baseDomainLength != 0) {
+      return false;
+    }
 
     aBaseDomain.SetIsVoid(true);
     return true;
