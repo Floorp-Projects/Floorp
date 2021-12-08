@@ -49,19 +49,19 @@ tainted_woff2<BrotliDecoderResult> RLBoxBrotliDecoderDecompressCallback(
   return res;
 }
 
-UniquePtr<RLBoxSandboxDataBase> RLBoxWOFF2SandboxPool::CreateSandboxData() {
+UniquePtr<RLBoxSandboxDataBase> RLBoxWOFF2SandboxPool::CreateSandboxData(uint64_t aSize) {
   // Create woff2 sandbox
   auto sandbox = MakeUnique<rlbox_sandbox_woff2>();
 
-#ifdef MOZ_WASM_SANDBOXING_WOFF2
-  bool createOK = sandbox->create_sandbox(/* infallible = */ false);
+#if defined(MOZ_WASM_SANDBOXING_WOFF2)
+  bool createOK = sandbox->create_sandbox(/* infallible = */ false, aSize);
 #else
   bool createOK = sandbox->create_sandbox();
 #endif
   NS_ENSURE_TRUE(createOK, nullptr);
 
   UniquePtr<RLBoxWOFF2SandboxData> sbxData =
-      MakeUnique<RLBoxWOFF2SandboxData>(std::move(sandbox));
+      MakeUnique<RLBoxWOFF2SandboxData>(aSize, std::move(sandbox));
 
   // Register brotli callback
   sbxData->mDecompressCallback = sbxData->Sandbox()->register_callback(
@@ -80,9 +80,10 @@ void RLBoxWOFF2SandboxPool::Initalize(size_t aDelaySeconds) {
   ClearOnShutdown(&RLBoxWOFF2SandboxPool::sSingleton);
 }
 
-RLBoxWOFF2SandboxData::RLBoxWOFF2SandboxData(
+RLBoxWOFF2SandboxData::RLBoxWOFF2SandboxData(uint64_t aSize,
     mozilla::UniquePtr<rlbox_sandbox_woff2> aSandbox)
-    : mSandbox(std::move(aSandbox)) {
+    : mozilla::RLBoxSandboxDataBase(aSize),
+      mSandbox(std::move(aSandbox)) {
   MOZ_COUNT_CTOR(RLBoxWOFF2SandboxData);
 }
 
@@ -154,7 +155,12 @@ bool RLBoxProcessWOFF2(ots::FontFile* aHeader, ots::OTSStream* aOutput,
   uint32_t expectedSize = ComputeWOFF2FinalSize(aData, aLength);
   NS_ENSURE_TRUE(expectedSize > 0, false);
 
-  auto sandboxPoolData = RLBoxWOFF2SandboxPool::sSingleton->PopOrCreate();
+  // The sandbox should have space for the input, output and misc allocations
+  // To account for misc allocations, we'll set the sandbox size to
+  // input + output + 33% extra
+
+  const uint64_t expectedSandboxSize = static_cast<uint64_t>(1.33 * (aLength + expectedSize));
+  auto sandboxPoolData = RLBoxWOFF2SandboxPool::sSingleton->PopOrCreate(expectedSandboxSize);
   NS_ENSURE_TRUE(sandboxPoolData, false);
 
   const auto* sandboxData =
