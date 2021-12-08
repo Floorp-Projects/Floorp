@@ -13,43 +13,42 @@ if CONFIG["MOZ_BUILD_APP"] == "browser":
 MOCHITEST_CHROME_MANIFESTS += ["test/chrome.ini"]
 MOCHITEST_MANIFESTS += ["test/mochitest.ini"]
 
-if CONFIG["MOZ_XUL"]:
-    EXPORTS += [
-        "nsXULCommandDispatcher.h",
-        "nsXULElement.h",
-        "nsXULPrototypeDocument.h",
-        "nsXULSortService.h",
-    ]
+EXPORTS += [
+    "nsXULCommandDispatcher.h",
+    "nsXULElement.h",
+    "nsXULPrototypeDocument.h",
+    "nsXULSortService.h",
+]
 
-    EXPORTS.mozilla.dom += [
-        "XULBroadcastManager.h",
-        "XULFrameElement.h",
-        "XULMenuElement.h",
-        "XULPersist.h",
-        "XULPopupElement.h",
-        "XULTextElement.h",
-        "XULTooltipElement.h",
-        "XULTreeElement.h",
-    ]
+EXPORTS.mozilla.dom += [
+    "XULBroadcastManager.h",
+    "XULFrameElement.h",
+    "XULMenuElement.h",
+    "XULPersist.h",
+    "XULPopupElement.h",
+    "XULTextElement.h",
+    "XULTooltipElement.h",
+    "XULTreeElement.h",
+]
 
-    UNIFIED_SOURCES += [
-        "nsXULCommandDispatcher.cpp",
-        "nsXULContentSink.cpp",
-        "nsXULContentUtils.cpp",
-        "nsXULElement.cpp",
-        "nsXULPopupListener.cpp",
-        "nsXULPrototypeCache.cpp",
-        "nsXULPrototypeDocument.cpp",
-        "nsXULSortService.cpp",
-        "XULBroadcastManager.cpp",
-        "XULFrameElement.cpp",
-        "XULMenuElement.cpp",
-        "XULPersist.cpp",
-        "XULPopupElement.cpp",
-        "XULTextElement.cpp",
-        "XULTooltipElement.cpp",
-        "XULTreeElement.cpp",
-    ]
+UNIFIED_SOURCES += [
+    "nsXULCommandDispatcher.cpp",
+    "nsXULContentSink.cpp",
+    "nsXULContentUtils.cpp",
+    "nsXULElement.cpp",
+    "nsXULPopupListener.cpp",
+    "nsXULPrototypeCache.cpp",
+    "nsXULPrototypeDocument.cpp",
+    "nsXULSortService.cpp",
+    "XULBroadcastManager.cpp",
+    "XULFrameElement.cpp",
+    "XULMenuElement.cpp",
+    "XULPersist.cpp",
+    "XULPopupElement.cpp",
+    "XULTextElement.cpp",
+    "XULTooltipElement.cpp",
+    "XULTreeElement.cpp",
+]
 
 XPIDL_SOURCES += [
     "nsIBrowserController.idl",

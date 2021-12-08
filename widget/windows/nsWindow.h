@@ -246,12 +246,10 @@ class nsWindow final : public nsWindowBase {
   virtual InputContext GetInputContext() override;
   virtual TextEventDispatcherListener* GetNativeTextEventDispatcherListener()
       override;
-#ifdef MOZ_XUL
   virtual void SetTransparencyMode(nsTransparencyMode aMode) override;
   virtual nsTransparencyMode GetTransparencyMode() override;
   virtual void UpdateOpaqueRegion(
       const LayoutDeviceIntRegion& aOpaqueRegion) override;
-#endif  // MOZ_XUL
   virtual nsresult SetNonClientMargins(
       LayoutDeviceIntMargin& aMargins) override;
   void SetDrawsInTitlebar(bool aState) override;
@@ -529,7 +527,6 @@ class nsWindow final : public nsWindowBase {
   /**
    * Window transparency helpers
    */
-#ifdef MOZ_XUL
  private:
   void SetWindowTranslucencyInner(nsTransparencyMode aMode);
   nsTransparencyMode GetWindowTranslucencyInner() const {
@@ -544,8 +541,6 @@ class nsWindow final : public nsWindowBase {
                                        mozilla::MouseButton aButton);
 
  protected:
-#endif  // MOZ_XUL
-
   static bool IsAsyncResponseEvent(UINT aMsg, LRESULT& aResult);
   void IPCWindowProcHandler(UINT& msg, WPARAM& wParam, LPARAM& lParam);
 
@@ -689,11 +684,9 @@ class nsWindow final : public nsWindowBase {
   ResizeState mResizeState;
 
   // Transparency
-#ifdef MOZ_XUL
   nsTransparencyMode mTransparencyMode;
   nsIntRegion mPossiblyTransparentRegion;
   MARGINS mGlassMargins;
-#endif  // MOZ_XUL
 
   // Win7 Gesture processing and management
   nsWinGesture mGesture;

@@ -3968,12 +3968,10 @@ void nsGlobalWindowOuter::SetScreenYOuter(int32_t aScreenY,
 void nsGlobalWindowOuter::CheckSecurityWidthAndHeight(int32_t* aWidth,
                                                       int32_t* aHeight,
                                                       CallerType aCallerType) {
-#ifdef MOZ_XUL
   if (aCallerType != CallerType::System) {
     // if attempting to resize the window, hide any open popups
     nsContentUtils::HidePopupsInDocument(mDoc);
   }
-#endif
 
   // This one is easy. Just ensure the variable is greater than 100;
   if ((aWidth && *aWidth < 100) || (aHeight && *aHeight < 100)) {
@@ -4033,10 +4031,8 @@ void nsGlobalWindowOuter::CheckSecurityLeftAndTop(int32_t* aLeft, int32_t* aTop,
   // Check security state for use in determing window dimensions
 
   if (aCallerType != CallerType::System) {
-#ifdef MOZ_XUL
     // if attempting to move the window, hide any open popups
     nsContentUtils::HidePopupsInDocument(mDoc);
-#endif
 
     if (nsGlobalWindowOuter* rootWindow =
             nsGlobalWindowOuter::Cast(GetPrivateRoot())) {
