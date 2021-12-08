@@ -884,3 +884,8 @@ renaming_overrides_prefixing = true
  public:
   StyleAnimationTimeline(): tag(Tag::Auto) {}
 """
+
+"TimelineOrKeyframesName" = """
+ public:
+  inline nsAtom* AsAtom() const;
+"""

@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/Animation.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/AnimationTarget.h"
 #include "nsIFrame.h"
 #include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
@@ -48,12 +49,6 @@ ScrollTimeline::ScrollTimeline(Document* aDocument, Element* aScroller)
       // FIXME: Bug 1737918: We may have to udpate the constructor arguments
       // because this can be nearest, root, or a specific container. For now,
       // the input is a source element directly and it is the root element.
-      //
-      // FIXME: it seems we cannot use Document->GetScrollingElement() in the
-      // caller (i.e. nsAnimationManager::BuildAnimation()) because it flushes
-      // the layout, Perhaps we have to define a variant version, like
-      // GetScrollingElementNoLayout(), which doesn't do layout. So this causes
-      // a bug on quirks mode.
       mSource(aScroller),
       mDirection(StyleScrollDirection::Auto) {
   MOZ_ASSERT(aDocument);
@@ -65,6 +60,22 @@ ScrollTimeline::ScrollTimeline(Document* aDocument, Element* aScroller)
                          PlaybackDirection::Normal, FillMode::Both);
 
   RegisterWithScrollSource();
+}
+
+already_AddRefed<ScrollTimeline> ScrollTimeline::FromRule(
+    const RawServoScrollTimelineRule& aRule, Document* aDocument,
+    const NonOwningAnimationTarget& aTarget) {
+  // FIXME: Use ScrollingElement in the next patch.
+  RefPtr<ScrollTimeline> timeline = new ScrollTimeline(
+      aDocument, aTarget.mElement->OwnerDoc()->GetDocumentElement());
+  // FIXME: Bug 1737918: applying new spec update.
+  // Note: If the rules changes after we build the scroll-timeline rule, we
+  // rebuild the animtions, so does the timeline object (because now we create
+  // the scroll-timeline for each animation).
+  // FIXME: Bug 1738135: If the scroll timeline is hold by Element, we have to
+  // update it once the rule is changed.
+  timeline->mDirection = Servo_ScrollTimelineRule_GetOrientation(&aRule);
+  return timeline.forget();
 }
 
 Nullable<TimeDuration> ScrollTimeline::GetCurrentTimeAsDuration() const {

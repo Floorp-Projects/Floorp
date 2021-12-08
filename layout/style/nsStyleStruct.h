@@ -1151,6 +1151,7 @@ struct StyleAnimation {
   dom::FillMode GetFillMode() const { return mFillMode; }
   StyleAnimationPlayState GetPlayState() const { return mPlayState; }
   float GetIterationCount() const { return mIterationCount; }
+  const StyleAnimationTimeline& GetTimeline() const { return mTimeline; }
 
   void SetName(already_AddRefed<nsAtom> aName) { mName = aName; }
   void SetName(nsAtom* aName) { mName = aName; }
@@ -1314,6 +1315,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   const nsTimingFunction& GetAnimationTimingFunction(uint32_t aIndex) const {
     return mAnimations[aIndex % mAnimationTimingFunctionCount]
         .GetTimingFunction();
+  }
+  const mozilla::StyleAnimationTimeline& GetTimeline(uint32_t aIndex) const {
+    return mAnimations[aIndex % mAnimationTimelineCount].GetTimeline();
   }
 
   // The threshold used for extracting a shape from shape-outside: <image>.

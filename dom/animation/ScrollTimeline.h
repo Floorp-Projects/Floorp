@@ -14,6 +14,9 @@
 #include "mozilla/WritingModes.h"
 
 namespace mozilla {
+
+struct NonOwningAnimationTarget;
+
 namespace dom {
 
 class Document;
@@ -62,6 +65,16 @@ class ScrollTimeline final : public AnimationTimeline {
   ScrollTimeline() = delete;
   ScrollTimeline(Document* aDocument, Element* aScroller);
 
+  // FIXME: Bug 1737918: Rewrite this because @scroll-timeline will be obsolete.
+  static already_AddRefed<ScrollTimeline> FromRule(
+      const RawServoScrollTimelineRule& aRule, Document* aDocument,
+      const NonOwningAnimationTarget& aTarget);
+
+  bool operator==(const ScrollTimeline& aOther) const {
+    return mDocument == aOther.mDocument && mSource == aOther.mSource &&
+           mDirection == aOther.mDirection;
+  }
+
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(ScrollTimeline,
                                                          AnimationTimeline)
@@ -89,6 +102,7 @@ class ScrollTimeline final : public AnimationTimeline {
   Document* GetDocument() const override { return mDocument; }
   bool IsMonotonicallyIncreasing() const override { return false; }
   bool IsScrollTimeline() const override { return true; }
+  const ScrollTimeline* AsScrollTimeline() const override { return this; }
 
   void ScheduleAnimations() {
     // FIXME: Bug 1737927: Need to check the animation mutation observers for

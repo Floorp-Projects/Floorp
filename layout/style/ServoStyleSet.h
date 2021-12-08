@@ -356,6 +356,8 @@ class ServoStyleSet {
 
   const RawServoCounterStyleRule* CounterStyleRuleForName(nsAtom* aName);
 
+  const RawServoScrollTimelineRule* ScrollTimelineRuleForName(nsAtom* aName);
+
   // Get all the currently-active font feature values set.
   already_AddRefed<gfxFontFeatureValueSet> BuildFontFeatureValueSet();
 
