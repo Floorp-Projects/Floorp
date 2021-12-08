@@ -799,38 +799,63 @@ void LIRGenerator::visitTest(MTest* test) {
     return;
   }
 
+  // Try to match the pattern
+  //   test=MTest(
+  //          comp=MCompare(
+  //                 {EQ,NE} for {Int,UInt}{32,64},
+  //                 bitAnd={MBitAnd,MWasmBinaryBitwise(And{32,64})}(x, y),
+  //                 MConstant(0)
+  //               )
+  //        )
+  // and produce a single LBitAndAndBranch node.  This requires both `comp`
+  // and `bitAnd` to be marked emit-at-uses.  Since we can't use
+  // LBitAndAndBranch to represent a 64-bit AND on a 32-bit target, the 64-bit
+  // case is restricted to 64-bit targets.
   if (opd->isCompare() && opd->isEmittedAtUses()) {
-    // Emit LBitAndBranch for cases like |if ((x & y) === 0)|.
+#ifdef JS_64BIT
+    constexpr bool targetIs64 = true;
+#else
+    constexpr bool targetIs64 = false;
+#endif
     MCompare* comp = opd->toCompare();
-    if ((comp->isInt32Comparison() ||
-         comp->compareType() == MCompare::Compare_UInt32) &&
-        comp->getOperand(1)->isConstant() &&
-        comp->getOperand(1)->toConstant()->isInt32(0) &&
-        (comp->getOperand(0)->isBitAnd() ||
-         (comp->getOperand(0)->isWasmBinaryBitwise() &&
-          comp->getOperand(0)->toWasmBinaryBitwise()->subOpcode() ==
-              MWasmBinaryBitwise::SubOpcode::And)) &&
-        comp->getOperand(0)->isEmittedAtUses()) {
-      MDefinition* bitAnd = opd->getOperand(0);
-      MDefinition* lhs = bitAnd->getOperand(0);
-      MDefinition* rhs = bitAnd->getOperand(1);
-
-      Assembler::Condition cond =
-          JSOpToCondition(comp->compareType(), comp->jsop());
-
-      if (lhs->type() == MIRType::Int32 && rhs->type() == MIRType::Int32 &&
-          (cond == Assembler::Equal || cond == Assembler::NotEqual)) {
-        ReorderCommutative(&lhs, &rhs, test);
-        if (cond == Assembler::Equal) {
-          cond = Assembler::Zero;
-        } else if (cond == Assembler::NotEqual) {
-          cond = Assembler::NonZero;
+    Assembler::Condition compCond =
+        JSOpToCondition(comp->compareType(), comp->jsop());
+    MDefinition* compL = comp->getOperand(0);
+    MDefinition* compR = comp->getOperand(1);
+    if ((comp->compareType() == MCompare::Compare_Int32 ||
+         comp->compareType() == MCompare::Compare_UInt32 ||
+         (targetIs64 && comp->compareType() == MCompare::Compare_Int64) ||
+         (targetIs64 && comp->compareType() == MCompare::Compare_UInt64)) &&
+        (compCond == Assembler::Equal || compCond == Assembler::NotEqual) &&
+        compR->isConstant() &&
+        (compR->toConstant()->isInt32(0) ||
+         (targetIs64 && compR->toConstant()->isInt64(0))) &&
+        (compL->isBitAnd() || (compL->isWasmBinaryBitwise() &&
+                               compL->toWasmBinaryBitwise()->subOpcode() ==
+                                   MWasmBinaryBitwise::SubOpcode::And))) {
+      // The MCompare is OK; now check its first operand (the and-ish node).
+      MDefinition* bitAnd = compL;
+      MDefinition* bitAndL = bitAnd->getOperand(0);
+      MDefinition* bitAndR = bitAnd->getOperand(1);
+      MIRType bitAndLTy = bitAndL->type();
+      MIRType bitAndRTy = bitAndR->type();
+      if (bitAnd->isEmittedAtUses() && bitAndLTy == bitAndRTy &&
+          (bitAndLTy == MIRType::Int32 ||
+           (targetIs64 && bitAndLTy == MIRType::Int64))) {
+        // Pattern match succeeded.
+        ReorderCommutative(&bitAndL, &bitAndR, test);
+        if (compCond == Assembler::Equal) {
+          compCond = Assembler::Zero;
+        } else if (compCond == Assembler::NotEqual) {
+          compCond = Assembler::NonZero;
         } else {
           MOZ_ASSERT_UNREACHABLE("inequality operators cannot be folded");
         }
-        lowerForBitAndAndBranch(new (alloc())
-                                    LBitAndAndBranch(ifTrue, ifFalse, cond),
-                                test, lhs, rhs);
+        MOZ_ASSERT_IF(!targetIs64, bitAndLTy == MIRType::Int32);
+        lowerForBitAndAndBranch(
+            new (alloc()) LBitAndAndBranch(
+                ifTrue, ifFalse, bitAndLTy == MIRType::Int64, compCond),
+            test, bitAndL, bitAndR);
         return;
       }
     }
@@ -929,7 +954,8 @@ void LIRGenerator::visitTest(MTest* test) {
     MDefinition* rhs = opd->getOperand(1);
     if (lhs->type() == MIRType::Int32 && rhs->type() == MIRType::Int32) {
       ReorderCommutative(&lhs, &rhs, test);
-      lowerForBitAndAndBranch(new (alloc()) LBitAndAndBranch(ifTrue, ifFalse),
+      lowerForBitAndAndBranch(new (alloc()) LBitAndAndBranch(ifTrue, ifFalse,
+                                                             /*is64=*/false),
                               test, lhs, rhs);
       return;
     }
@@ -1349,8 +1375,9 @@ static bool CanEmitBitAndAtUses(MInstruction* ins) {
     return false;
   }
 
-  if (ins->getOperand(0)->type() != MIRType::Int32 ||
-      ins->getOperand(1)->type() != MIRType::Int32) {
+  MIRType tyL = ins->getOperand(0)->type();
+  MIRType tyR = ins->getOperand(1)->type();
+  if (tyL != tyR || (tyL != MIRType::Int32 && tyL != MIRType::Int64)) {
     return false;
   }
 

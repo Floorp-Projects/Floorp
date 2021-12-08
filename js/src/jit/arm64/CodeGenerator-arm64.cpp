@@ -1483,10 +1483,20 @@ void CodeGenerator::visitCompareFAndBranch(LCompareFAndBranch* comp) {
 }
 
 void CodeGenerator::visitBitAndAndBranch(LBitAndAndBranch* baab) {
-  if (baab->right()->isConstant()) {
-    masm.Tst(toWRegister(baab->left()), Operand(ToInt32(baab->right())));
+  if (baab->is64()) {
+    ARMRegister regL = toXRegister(baab->left());
+    if (baab->right()->isConstant()) {
+      masm.Tst(regL, Operand(ToInt64(baab->right())));
+    } else {
+      masm.Tst(regL, toXRegister(baab->right()));
+    }
   } else {
-    masm.Tst(toWRegister(baab->left()), toWRegister(baab->right()));
+    ARMRegister regL = toWRegister(baab->left());
+    if (baab->right()->isConstant()) {
+      masm.Tst(regL, Operand(ToInt32(baab->right())));
+    } else {
+      masm.Tst(regL, toWRegister(baab->right()));
+    }
   }
   emitBranch(baab->cond(), baab->ifTrue(), baab->ifFalse());
 }
