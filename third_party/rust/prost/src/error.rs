@@ -1,23 +1,17 @@
 //! Protobuf encoding and decoding errors.
 
-use alloc::borrow::Cow;
-use alloc::boxed::Box;
-use alloc::vec::Vec;
-
-use core::fmt;
+use std::borrow::Cow;
+use std::error;
+use std::fmt;
+use std::io;
 
 /// A Protobuf message decoding error.
 ///
 /// `DecodeError` indicates that the input buffer does not caontain a valid
 /// Protobuf message. The error details should be considered 'best effort': in
 /// general it is not possible to exactly pinpoint why data is malformed.
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DecodeError {
-    inner: Box<Inner>,
-}
-
-#[derive(Clone, PartialEq, Eq)]
-struct Inner {
     /// A 'best effort' root cause description.
     description: Cow<'static, str>,
     /// A stack of (message, field) name pairs, which identify the specific
@@ -31,13 +25,13 @@ impl DecodeError {
     ///
     /// Meant to be used only by `Message` implementations.
     #[doc(hidden)]
-    #[cold]
-    pub fn new(description: impl Into<Cow<'static, str>>) -> DecodeError {
+    pub fn new<S>(description: S) -> DecodeError
+    where
+        S: Into<Cow<'static, str>>,
+    {
         DecodeError {
-            inner: Box::new(Inner {
-                description: description.into(),
-                stack: Vec::new(),
-            }),
+            description: description.into(),
+            stack: Vec::new(),
         }
     }
 
@@ -46,36 +40,25 @@ impl DecodeError {
     /// Meant to be used only by `Message` implementations.
     #[doc(hidden)]
     pub fn push(&mut self, message: &'static str, field: &'static str) {
-        self.inner.stack.push((message, field));
-    }
-}
-
-impl fmt::Debug for DecodeError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("DecodeError")
-            .field("description", &self.inner.description)
-            .field("stack", &self.inner.stack)
-            .finish()
+        self.stack.push((message, field));
     }
 }
 
 impl fmt::Display for DecodeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str("failed to decode Protobuf message: ")?;
-        for &(message, field) in &self.inner.stack {
+        for &(message, field) in &self.stack {
             write!(f, "{}.{}: ", message, field)?;
         }
-        f.write_str(&self.inner.description)
+        f.write_str(&self.description)
     }
 }
 
-#[cfg(feature = "std")]
-impl std::error::Error for DecodeError {}
+impl error::Error for DecodeError {}
 
-#[cfg(feature = "std")]
-impl From<DecodeError> for std::io::Error {
-    fn from(error: DecodeError) -> std::io::Error {
-        std::io::Error::new(std::io::ErrorKind::InvalidData, error)
+impl From<DecodeError> for io::Error {
+    fn from(error: DecodeError) -> io::Error {
+        io::Error::new(io::ErrorKind::InvalidData, error)
     }
 }
 
@@ -120,12 +103,10 @@ impl fmt::Display for EncodeError {
     }
 }
 
-#[cfg(feature = "std")]
-impl std::error::Error for EncodeError {}
+impl error::Error for EncodeError {}
 
-#[cfg(feature = "std")]
-impl From<EncodeError> for std::io::Error {
-    fn from(error: EncodeError) -> std::io::Error {
-        std::io::Error::new(std::io::ErrorKind::InvalidInput, error)
+impl From<EncodeError> for io::Error {
+    fn from(error: EncodeError) -> io::Error {
+        io::Error::new(io::ErrorKind::InvalidInput, error)
     }
 }

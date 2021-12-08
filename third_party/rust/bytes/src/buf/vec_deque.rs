@@ -7,7 +7,7 @@ impl Buf for VecDeque<u8> {
         self.len()
     }
 
-    fn chunk(&self) -> &[u8] {
+    fn bytes(&self) -> &[u8] {
         let (s1, s2) = self.as_slices();
         if s1.is_empty() {
             s2

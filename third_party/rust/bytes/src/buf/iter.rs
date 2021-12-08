@@ -34,16 +34,17 @@ impl<T> IntoIter<T> {
     ///
     /// ```
     /// use bytes::Bytes;
+    /// use bytes::buf::IntoIter;
     ///
     /// let buf = Bytes::from_static(b"abc");
-    /// let mut iter = buf.into_iter();
+    /// let mut iter = IntoIter::new(buf);
     ///
     /// assert_eq!(iter.next(), Some(b'a'));
     /// assert_eq!(iter.next(), Some(b'b'));
     /// assert_eq!(iter.next(), Some(b'c'));
     /// assert_eq!(iter.next(), None);
     /// ```
-    pub(crate) fn new(inner: T) -> IntoIter<T> {
+    pub fn new(inner: T) -> IntoIter<T> {
         IntoIter { inner }
     }
 
@@ -117,7 +118,7 @@ impl<T: Buf> Iterator for IntoIter<T> {
             return None;
         }
 
-        let b = self.inner.chunk()[0];
+        let b = self.inner.bytes()[0];
         self.inner.advance(1);
 
         Some(b)

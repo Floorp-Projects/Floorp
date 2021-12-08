@@ -78,13 +78,6 @@ fn link_nss_libs(kind: LinkingKind) {
     for lib in libs {
         println!("cargo:rustc-link-lib={}={}", kind_str, lib);
     }
-    // Link against C++ stdlib (for mozpkix)
-    let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
-    if target_os == "android" || target_os == "linux" {
-        println!("cargo:rustc-link-lib=stdc++");
-    } else {
-        println!("cargo:rustc-link-lib=c++");
-    }
 }
 
 fn get_nss_libs(kind: LinkingKind) -> Vec<&'static str> {
@@ -95,7 +88,6 @@ fn get_nss_libs(kind: LinkingKind) -> Vec<&'static str> {
                 "certhi",
                 "cryptohi",
                 "freebl_static",
-                "mozpkix",
                 "nspr4",
                 "nss_static",
                 "nssb",

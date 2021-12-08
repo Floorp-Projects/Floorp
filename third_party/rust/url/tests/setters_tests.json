@@ -1,6 +1,5 @@
 {
     "comment": [
-        "AS OF https://github.com/jsdom/whatwg-url/commit/35f04dfd3048cf6362f4398745bb13375c5020c2",
         "## Tests for setters of https://url.spec.whatwg.org/#urlutils-members",
         "",
         "This file contains a JSON object.",
@@ -28,7 +27,7 @@
             "href": "a://example.net",
             "new_value": "",
             "expected": {
-                "href": "a://example.net",
+                "href": "a://example.net/",
                 "protocol": "a:"
             }
         },
@@ -36,16 +35,8 @@
             "href": "a://example.net",
             "new_value": "b",
             "expected": {
-                "href": "b://example.net",
+                "href": "b://example.net/",
                 "protocol": "b:"
-            }
-        },
-        {
-            "href": "javascript:alert(1)",
-            "new_value": "defuse",
-            "expected": {
-                "href": "defuse:alert(1)",
-                "protocol": "defuse:"
             }
         },
         {
@@ -53,7 +44,7 @@
             "href": "a://example.net",
             "new_value": "B",
             "expected": {
-                "href": "b://example.net",
+                "href": "b://example.net/",
                 "protocol": "b:"
             }
         },
@@ -62,7 +53,7 @@
             "href": "a://example.net",
             "new_value": "é",
             "expected": {
-                "href": "a://example.net",
+                "href": "a://example.net/",
                 "protocol": "a:"
             }
         },
@@ -71,7 +62,7 @@
             "href": "a://example.net",
             "new_value": "0b",
             "expected": {
-                "href": "a://example.net",
+                "href": "a://example.net/",
                 "protocol": "a:"
             }
         },
@@ -80,7 +71,7 @@
             "href": "a://example.net",
             "new_value": "+b",
             "expected": {
-                "href": "a://example.net",
+                "href": "a://example.net/",
                 "protocol": "a:"
             }
         },
@@ -88,7 +79,7 @@
             "href": "a://example.net",
             "new_value": "bC0+-.",
             "expected": {
-                "href": "bc0+-.://example.net",
+                "href": "bc0+-.://example.net/",
                 "protocol": "bc0+-.:"
             }
         },
@@ -97,7 +88,7 @@
             "href": "a://example.net",
             "new_value": "b,c",
             "expected": {
-                "href": "a://example.net",
+                "href": "a://example.net/",
                 "protocol": "a:"
             }
         },
@@ -106,33 +97,8 @@
             "href": "a://example.net",
             "new_value": "bé",
             "expected": {
-                "href": "a://example.net",
+                "href": "a://example.net/",
                 "protocol": "a:"
-            }
-        },
-        {
-            "comment": "Can’t switch from URL containing username/password/port to file",
-            "href": "http://test@example.net",
-            "new_value": "file",
-            "expected": {
-                "href": "http://test@example.net/",
-                "protocol": "http:"
-            }
-        },
-        {
-            "href": "gopher://example.net:1234",
-            "new_value": "file",
-            "expected": {
-                "href": "gopher://example.net:1234",
-                "protocol": "gopher:"
-            }
-        },
-        {
-            "href": "wss://x:x@example.net:1234",
-            "new_value": "file",
-            "expected": {
-                "href": "wss://x:x@example.net:1234/",
-                "protocol": "wss:"
             }
         },
         {
@@ -161,36 +127,12 @@
             }
         },
         {
-            "comment": "Can’t switch from special scheme to non-special",
+            "comment": "Spec deviation: from special scheme to not is not problematic. https://github.com/whatwg/url/issues/104",
             "href": "http://example.net",
             "new_value": "b",
             "expected": {
-                "href": "http://example.net/",
-                "protocol": "http:"
-            }
-        },
-        {
-            "href": "file://hi/path",
-            "new_value": "s",
-            "expected": {
-                "href": "file://hi/path",
-                "protocol": "file:"
-            }
-        },
-        {
-            "href": "https://example.net",
-            "new_value": "s",
-            "expected": {
-                "href": "https://example.net/",
-                "protocol": "https:"
-            }
-        },
-        {
-            "href": "ftp://example.net",
-            "new_value": "test",
-            "expected": {
-                "href": "ftp://example.net/",
-                "protocol": "ftp:"
+                "href": "b://example.net/",
+                "protocol": "b:"
             }
         },
         {
@@ -203,44 +145,12 @@
             }
         },
         {
-            "comment": "Can’t switch from non-special scheme to special",
+            "comment": "Spec deviation: from non-special scheme with a host to special is not problematic. https://github.com/whatwg/url/issues/104",
             "href": "ssh://me@example.net",
             "new_value": "http",
             "expected": {
-                "href": "ssh://me@example.net",
-                "protocol": "ssh:"
-            }
-        },
-        {
-            "href": "ssh://me@example.net",
-            "new_value": "https",
-            "expected": {
-                "href": "ssh://me@example.net",
-                "protocol": "ssh:"
-            }
-        },
-        {
-            "href": "ssh://me@example.net",
-            "new_value": "file",
-            "expected": {
-                "href": "ssh://me@example.net",
-                "protocol": "ssh:"
-            }
-        },
-        {
-            "href": "ssh://example.net",
-            "new_value": "file",
-            "expected": {
-                "href": "ssh://example.net",
-                "protocol": "ssh:"
-            }
-        },
-        {
-            "href": "nonsense:///test",
-            "new_value": "https",
-            "expected": {
-                "href": "nonsense:///test",
-                "protocol": "nonsense:"
+                "href": "http://me@example.net/",
+                "protocol": "http:"
             }
         },
         {
@@ -259,16 +169,6 @@
             "expected": {
                 "href": "view-source+data:text/html,<p>Test",
                 "protocol": "view-source+data:"
-            }
-        },
-        {
-            "comment": "Port is set to null if it is the default for new scheme.",
-            "href": "http://foo.com:443/",
-            "new_value": "https",
-            "expected": {
-                "href": "https://foo.com/",
-                "protocol": "https:",
-                "port": ""
             }
         }
     ],
@@ -367,19 +267,19 @@
             }
         },
         {
-            "href": "javascript://x/",
-            "new_value": "wario",
-            "expected": {
-                "href": "javascript://wario@x/",
-                "username": "wario"
-            }
-        },
-        {
             "href": "file://test/",
             "new_value": "test",
             "expected": {
                 "href": "file://test/",
                 "username": ""
+            }
+        },
+        {
+            "href": "javascript://x/",
+            "new_value": "wario",
+            "expected": {
+                "href": "javascript://wario@x/",
+                "username": "wario"
             }
         }
     ],
@@ -470,33 +370,23 @@
             }
         },
         {
-            "href": "javascript://x/",
-            "new_value": "bowser",
-            "expected": {
-                "href": "javascript://:bowser@x/",
-                "password": "bowser"
-            }
-        },
-        {
             "href": "file://test/",
             "new_value": "test",
             "expected": {
                 "href": "file://test/",
                 "password": ""
             }
+        },
+        {
+            "href": "javascript://x/",
+            "new_value": "bowser",
+            "expected": {
+                "href": "javascript://:bowser@x/",
+                "password": "bowser"
+            }
         }
     ],
     "host": [
-        {
-            "comment": "Non-special scheme",
-            "href": "sc://x/",
-            "new_value": "\u0000",
-            "expected": {
-                "href": "sc://x/",
-                "host": "x",
-                "hostname": "x"
-            }
-        },
         {
             "href": "sc://x/",
             "new_value": "\u0009",
@@ -522,15 +412,6 @@
                 "href": "sc:///",
                 "host": "",
                 "hostname": ""
-            }
-        },
-        {
-            "href": "sc://x/",
-            "new_value": " ",
-            "expected": {
-                "href": "sc://x/",
-                "host": "x",
-                "hostname": "x"
             }
         },
         {
@@ -579,16 +460,6 @@
             }
         },
         {
-            "comment": "IDNA Nontransitional_Processing",
-            "href": "https://x/",
-            "new_value": "ß",
-            "expected": {
-                "href": "https://xn--zca/",
-                "host": "xn--zca",
-                "hostname": "xn--zca"
-            }
-        },
-        {
             "comment": "Cannot-be-a-base means no host",
             "href": "mailto:me@example.net",
             "new_value": "example.com",
@@ -598,7 +469,7 @@
             }
         },
         {
-            "comment": "Cannot-be-a-base means no host",
+            "comment": "Cannot-be-a-base means no password",
             "href": "data:text/plain,Stuff",
             "new_value": "example.net",
             "expected": {
@@ -628,14 +499,14 @@
             }
         },
         {
-            "comment": "Port number is unchanged if not specified",
+            "comment": "Port number is removed if empty in the new value: https://github.com/whatwg/url/pull/113",
             "href": "http://example.net:8080",
             "new_value": "example.com:",
             "expected": {
-                "href": "http://example.com:8080/",
-                "host": "example.com:8080",
+                "href": "http://example.com/",
+                "host": "example.com",
                 "hostname": "example.com",
-                "port": "8080"
+                "port": ""
             }
         },
         {
@@ -688,17 +559,6 @@
             }
         },
         {
-            "comment": "IPv6 literal address with port, crbug.com/1012416",
-            "href": "http://example.net",
-            "new_value": "[2001:db8::2]:4002",
-            "expected": {
-                "href": "http://[2001:db8::2]:4002/",
-                "host": "[2001:db8::2]:4002",
-                "hostname": "[2001:db8::2]",
-                "port": "4002"
-             }
-        },
-        {
             "comment": "Default port number is removed",
             "href": "http://example.net",
             "new_value": "example.com:80",
@@ -729,17 +589,6 @@
                 "host": "example.com:80",
                 "hostname": "example.com",
                 "port": "80"
-            }
-        },
-        {
-            "comment": "Port number is removed if new port is scheme default and existing URL has a non-default port",
-            "href": "http://example.net:8080",
-            "new_value": "example.com:80",
-            "expected": {
-                "href": "http://example.com/",
-                "host": "example.com",
-                "hostname": "example.com",
-                "port": ""
             }
         },
         {
@@ -941,59 +790,9 @@
                 "host": "example.net",
                 "hostname": "example.net"
             }
-        },
-        {
-            "href": "file://y/",
-            "new_value": "x:123",
-            "expected": {
-                "href": "file://y/",
-                "host": "y",
-                "hostname": "y",
-                "port": ""
-            }
-        },
-        {
-            "href": "file://y/",
-            "new_value": "loc%41lhost",
-            "expected": {
-                "href": "file:///",
-                "host": "",
-                "hostname": "",
-                "port": ""
-            }
-        },
-        {
-            "href": "sc://test@test/",
-            "new_value": "",
-            "expected": {
-                "href": "sc://test@test/",
-                "host": "test",
-                "hostname": "test",
-                "username": "test"
-            }
-        },
-        {
-            "href": "sc://test:12/",
-            "new_value": "",
-            "expected": {
-                "href": "sc://test:12/",
-                "host": "test:12",
-                "hostname": "test",
-                "port": "12"
-            }
         }
     ],
     "hostname": [
-        {
-            "comment": "Non-special scheme",
-            "href": "sc://x/",
-            "new_value": "\u0000",
-            "expected": {
-                "href": "sc://x/",
-                "host": "x",
-                "hostname": "x"
-            }
-        },
         {
             "href": "sc://x/",
             "new_value": "\u0009",
@@ -1019,15 +818,6 @@
                 "href": "sc:///",
                 "host": "",
                 "hostname": ""
-            }
-        },
-        {
-            "href": "sc://x/",
-            "new_value": " ",
-            "expected": {
-                "href": "sc://x/",
-                "host": "x",
-                "hostname": "x"
             }
         },
         {
@@ -1076,7 +866,7 @@
             }
         },
         {
-            "comment": "Cannot-be-a-base means no host",
+            "comment": "Cannot-be-a-base means no password",
             "href": "data:text/plain,Stuff",
             "new_value": "example.net",
             "expected": {
@@ -1264,46 +1054,6 @@
                 "href": "http://example.net/",
                 "host": "example.net",
                 "hostname": "example.net"
-            }
-        },
-        {
-            "href": "file://y/",
-            "new_value": "x:123",
-            "expected": {
-                "href": "file://y/",
-                "host": "y",
-                "hostname": "y",
-                "port": ""
-            }
-        },
-        {
-            "href": "file://y/",
-            "new_value": "loc%41lhost",
-            "expected": {
-                "href": "file:///",
-                "host": "",
-                "hostname": "",
-                "port": ""
-            }
-        },
-        {
-            "href": "sc://test@test/",
-            "new_value": "",
-            "expected": {
-                "href": "sc://test@test/",
-                "host": "test",
-                "hostname": "test",
-                "username": "test"
-            }
-        },
-        {
-            "href": "sc://test:12/",
-            "new_value": "",
-            "expected": {
-                "href": "sc://test:12/",
-                "host": "test:12",
-                "hostname": "test",
-                "port": "12"
             }
         }
     ],
@@ -1574,12 +1324,12 @@
             }
         },
         {
-            "comment": "UTF-8 percent encoding with the default encode set. Tabs and newlines are removed.",
+            "comment": "UTF-8 percent encoding with the default encode set. Tabs and newlines are removed. Leading or training C0 controls and space are removed.",
             "href": "a:/",
-            "new_value": "\u0000\u0001\t\n\r\u001f !\"#$%&'()*+,-./09:;<=>?@AZ[\\]^_`az{|}~\u007f\u0080\u0081Éé",
+            "new_value": "\u0000\u0001\t\n\r\u001f !\u0000\u0001\t\n\r\u001f !\"#$%&'()*+,-./09:;<=>?@AZ[\\]^_`az{|}~\u007f\u0080\u0081Éé",
             "expected": {
-                "href": "a:/%00%01%1F%20!%22%23$%&'()*+,-./09:;%3C=%3E%3F@AZ[\\]^_%60az%7B|%7D~%7F%C2%80%C2%81%C3%89%C3%A9",
-                "pathname": "/%00%01%1F%20!%22%23$%&'()*+,-./09:;%3C=%3E%3F@AZ[\\]^_%60az%7B|%7D~%7F%C2%80%C2%81%C3%89%C3%A9"
+                "href": "a:/!%00%01%1F%20!%22%23$%&'()*+,-./09:;%3C=%3E%3F@AZ[\\]^_%60az%7B|%7D~%7F%C2%80%C2%81%C3%89%C3%A9",
+                "pathname": "/!%00%01%1F%20!%22%23$%&'()*+,-./09:;%3C=%3E%3F@AZ[\\]^_%60az%7B|%7D~%7F%C2%80%C2%81%C3%89%C3%A9"
             }
         },
         {
@@ -1625,33 +1375,6 @@
             "expected": {
                 "href": "sc://example.net/%23",
                 "pathname": "/%23"
-            }
-        },
-        {
-            "comment": "File URLs and (back)slashes",
-            "href": "file://monkey/",
-            "new_value": "\\\\",
-            "expected": {
-                "href": "file://monkey/",
-                "pathname": "/"
-            }
-        },
-        {
-            "comment": "File URLs and (back)slashes",
-            "href": "file:///unicorn",
-            "new_value": "//\\/",
-            "expected": {
-                "href": "file:///",
-                "pathname": "/"
-            }
-        },
-        {
-            "comment": "File URLs and (back)slashes",
-            "href": "file:///unicorn",
-            "new_value": "//monkey/..//",
-            "expected": {
-                "href": "file:///",
-                "pathname": "/"
             }
         }
     ],
@@ -1721,12 +1444,12 @@
             }
         },
         {
-            "comment": "UTF-8 percent encoding with the query encode set. Tabs and newlines are removed.",
+            "comment": "UTF-8 percent encoding with the query encode set. Tabs and newlines are removed. Leading or training C0 controls and space are removed.",
             "href": "a:/",
-            "new_value": "\u0000\u0001\t\n\r\u001f !\"#$%&'()*+,-./09:;<=>?@AZ[\\]^_`az{|}~\u007f\u0080\u0081Éé",
+            "new_value": "\u0000\u0001\t\n\r\u001f !\u0000\u0001\t\n\r\u001f !\"#$%&'()*+,-./09:;<=>?@AZ[\\]^_`az{|}~\u007f\u0080\u0081Éé",
             "expected": {
-                "href": "a:/?%00%01%1F%20!%22%23$%&'()*+,-./09:;%3C=%3E?@AZ[\\]^_`az{|}~%7F%C2%80%C2%81%C3%89%C3%A9",
-                "search": "?%00%01%1F%20!%22%23$%&'()*+,-./09:;%3C=%3E?@AZ[\\]^_`az{|}~%7F%C2%80%C2%81%C3%89%C3%A9"
+                "href": "a:/?!%00%01%1F%20!%22%23$%&'()*+,-./09:;%3C=%3E?@AZ[\\]^_`az{|}~%7F%C2%80%C2%81%C3%89%C3%A9",
+                "search": "?!%00%01%1F%20!%22%23$%&'()*+,-./09:;%3C=%3E?@AZ[\\]^_`az{|}~%7F%C2%80%C2%81%C3%89%C3%A9"
             }
         },
         {
@@ -1789,70 +1512,12 @@
             }
         },
         {
-            "href": "http://example.net",
-            "new_value": "#foo bar",
-            "expected": {
-                "href": "http://example.net/#foo%20bar",
-                "hash": "#foo%20bar"
-            }
-        },
-        {
-            "href": "http://example.net",
-            "new_value": "#foo\"bar",
-            "expected": {
-                "href": "http://example.net/#foo%22bar",
-                "hash": "#foo%22bar"
-            }
-        },
-        {
-            "href": "http://example.net",
-            "new_value": "#foo<bar",
-            "expected": {
-                "href": "http://example.net/#foo%3Cbar",
-                "hash": "#foo%3Cbar"
-            }
-        },
-        {
-            "href": "http://example.net",
-            "new_value": "#foo>bar",
-            "expected": {
-                "href": "http://example.net/#foo%3Ebar",
-                "hash": "#foo%3Ebar"
-            }
-        },
-        {
-            "href": "http://example.net",
-            "new_value": "#foo`bar",
-            "expected": {
-                "href": "http://example.net/#foo%60bar",
-                "hash": "#foo%60bar"
-            }
-        },
-        {
-            "comment": "Simple percent-encoding; tabs and newlines are removed",
+            "comment": "Simple percent-encoding; nuls, tabs, and newlines are removed",
             "href": "a:/",
-            "new_value": "\u0000\u0001\t\n\r\u001f !\"#$%&'()*+,-./09:;<=>?@AZ[\\]^_`az{|}~\u007f\u0080\u0081Éé",
+            "new_value": "\u0000\u0001\t\n\r\u001f !\u0000\u0001\t\n\r\u001f !\"#$%&'()*+,-./09:;<=>?@AZ[\\]^_`az{|}~\u007f\u0080\u0081Éé",
             "expected": {
-                "href": "a:/#%00%01%1F%20!%22#$%&'()*+,-./09:;%3C=%3E?@AZ[\\]^_%60az{|}~%7F%C2%80%C2%81%C3%89%C3%A9",
-                "hash": "#%00%01%1F%20!%22#$%&'()*+,-./09:;%3C=%3E?@AZ[\\]^_%60az{|}~%7F%C2%80%C2%81%C3%89%C3%A9"
-            }
-        },
-        {
-            "comment": "Percent-encode NULLs in fragment",
-            "href": "http://example.net",
-            "new_value": "a\u0000b",
-            "expected": {
-                "href": "http://example.net/#a%00b",
-                "hash": "#a%00b"
-            }
-        },
-        {
-            "comment": "Percent-encode NULLs in fragment",
-            "href": "non-spec:/",
-            "new_value": "a\u0000b",
-            "expected": {
-                "href": "non-spec:/#a%00b",
-                "hash": "#a%00b"
+                "href": "a:/#!%01%1F !\"#$%&'()*+,-./09:;<=>?@AZ[\\]^_`az{|}~%7F%C2%80%C2%81%C3%89%C3%A9",
+                "hash": "#!%01%1F !\"#$%&'()*+,-./09:;<=>?@AZ[\\]^_`az{|}~%7F%C2%80%C2%81%C3%89%C3%A9"
             }
         },
         {
@@ -1862,14 +1527,6 @@
             "expected": {
                 "href": "http://example.net/#%c3%89t%C3%A9",
                 "hash": "#%c3%89t%C3%A9"
-            }
-        },
-        {
-            "href": "javascript:alert(1)",
-            "new_value": "castle",
-            "expected": {
-                "href": "javascript:alert(1)#castle",
-                "hash": "#castle"
             }
         }
     ]
