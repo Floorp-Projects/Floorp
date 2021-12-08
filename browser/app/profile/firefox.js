@@ -497,6 +497,12 @@ pref("browser.urlbar.merino.endpointURL", "https://merino.services.mozilla.com/a
 // Timeout for Merino fetches (ms).
 pref("browser.urlbar.merino.timeoutMs", 200);
 
+// Comma-separated list of providers to request from Merino
+pref("browser.urlbar.merino.providers", "");
+
+// Comma-separated list of client variants to send to Merino
+pref("browser.urlbar.merino.clientVariants", "");
+
 pref("browser.altClickSave", false);
 
 // Enable logging downloads operations to the Console.
