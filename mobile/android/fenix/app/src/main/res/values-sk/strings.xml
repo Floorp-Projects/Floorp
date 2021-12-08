@@ -891,7 +891,7 @@
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
     <string name="history_delete_multiple_items_snackbar">História bola vymazaná</string>
     <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
-    <string name="history_delete_single_item_snackbar">Bola odstránená položka</string>
+    <string name="history_delete_single_item_snackbar">Položka %1$s odstránená</string>
     <!-- Text for positive action to delete history in deleting history dialog -->
     <string name="history_clear_dialog">Vymazať</string>
     <!-- History overflow menu copy button -->
