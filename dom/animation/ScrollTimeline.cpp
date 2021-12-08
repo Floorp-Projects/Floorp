@@ -12,6 +12,8 @@
 #include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
 
+#define SCROLL_TIMELINE_DURATION_MILLISEC 100000
+
 namespace mozilla::dom {
 
 // ---------------------------------
@@ -38,6 +40,8 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(ScrollTimeline,
                                                AnimationTimeline)
 
+TimingParams ScrollTimeline::sTiming;
+
 ScrollTimeline::ScrollTimeline(Document* aDocument, Element* aScroller)
     : AnimationTimeline(aDocument->GetParentObject()),
       mDocument(aDocument),
@@ -53,6 +57,12 @@ ScrollTimeline::ScrollTimeline(Document* aDocument, Element* aScroller)
       mSource(aScroller),
       mDirection(StyleScrollDirection::Auto) {
   MOZ_ASSERT(aDocument);
+
+  // Use default values except for |mDuration| and |mFill|.
+  // Use a fixed duration defined in SCROLL_TIMELINE_DURATIONMILLISEC, and use
+  // FillMode::Both to make sure the animation is in effect at 100%.
+  sTiming = TimingParams(SCROLL_TIMELINE_DURATION_MILLISEC, 0.0, 1.0,
+                         PlaybackDirection::Normal, FillMode::Both);
 
   RegisterWithScrollSource();
 }
