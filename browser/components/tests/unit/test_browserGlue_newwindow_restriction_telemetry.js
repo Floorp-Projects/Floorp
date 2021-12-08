@@ -19,8 +19,7 @@ function collectTelemetry() {
 }
 
 add_task(async function() {
-  const FOG = Cc["@mozilla.org/toolkit/glean;1"].createInstance(Ci.nsIFOG);
-  FOG.initializeFOG();
+  Services.fog.initializeFOG();
 
   Services.prefs.setIntPref(RESTRICTION_PREF, 0);
   collectTelemetry();
