@@ -2585,6 +2585,12 @@ nsDocumentViewer::GetReloadEncodingAndSource(int32_t* aSource) {
 NS_IMETHODIMP_(void)
 nsDocumentViewer::SetReloadEncodingAndSource(const Encoding* aEncoding,
                                              int32_t aSource) {
+  MOZ_ASSERT(
+      aSource == kCharsetUninitialized ||
+      (aSource >= kCharsetFromFinalAutoDetectionWouldHaveBeenUTF8 &&
+       aSource <=
+           kCharsetFromFinalAutoDetectionWouldNotHaveBeenUTF8DependedOnTLD) ||
+      aSource == kCharsetFromFinalUserForcedAutoDetection);
   mReloadEncoding = aEncoding;
   mReloadEncodingSource = aSource;
 }

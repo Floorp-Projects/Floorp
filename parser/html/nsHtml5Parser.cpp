@@ -98,8 +98,8 @@ void nsHtml5Parser::SetDocumentCharset(NotNull<const Encoding*> aEncoding,
                                        bool aForceAutoDetection) {
   MOZ_ASSERT(!mExecutor->HasStarted(), "Document charset set too late.");
   MOZ_ASSERT(GetStreamParser(), "Setting charset on a script-only parser.");
-  GetStreamParser()->SetDocumentCharset(aEncoding, aCharsetSource,
-                                        aForceAutoDetection);
+  GetStreamParser()->SetDocumentCharset(
+      aEncoding, (nsCharsetSource)aCharsetSource, aForceAutoDetection);
   mExecutor->SetDocumentCharsetAndSource(aEncoding, aCharsetSource);
 }
 
@@ -589,7 +589,7 @@ nsresult nsHtml5Parser::ParseUntilBlocked() {
               !mExecutor->IsScriptExecuting()) {
             mTreeBuilder->Flush();
             mReturnToStreamParserPermitted = false;
-            GetStreamParser()->ContinueAfterScripts(
+            GetStreamParser()->ContinueAfterScriptsOrEncodingCommitment(
                 mTokenizer.get(), mTreeBuilder.get(), mLastWasCR);
           }
         } else {
