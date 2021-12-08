@@ -654,7 +654,7 @@ nsresult ModuleLoader::CreateModuleScript(ModuleLoadRequest* aRequest) {
         rv = module ? NS_OK : NS_ERROR_FAILURE;
       } else {
         MaybeSourceText maybeSource;
-        rv = mLoader->GetScriptSource(cx, aRequest, &maybeSource);
+        rv = aRequest->GetScriptSource(cx, &maybeSource);
         if (NS_SUCCEEDED(rv)) {
           rv = maybeSource.constructed<SourceText<char16_t>>()
                    ? nsJSUtils::CompileModule(
@@ -2582,7 +2582,7 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
   if (aRequest->IsModuleRequest()) {
     MOZ_ASSERT(aRequest->IsTextSource());
     MaybeSourceText maybeSource;
-    nsresult rv = GetScriptSource(cx, aRequest, &maybeSource);
+    nsresult rv = aRequest->GetScriptSource(cx, &maybeSource);
     NS_ENSURE_SUCCESS(rv, rv);
 
     aRequest->mOffThreadToken =
@@ -2621,7 +2621,7 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
     }
 
     MaybeSourceText maybeSource;
-    nsresult rv = GetScriptSource(cx, aRequest, &maybeSource);
+    nsresult rv = aRequest->GetScriptSource(cx, &maybeSource);
     NS_ENSURE_SUCCESS(rv, rv);
 
     aRequest->mOffThreadToken =
@@ -2679,67 +2679,6 @@ nsresult ScriptLoader::CompileOffThreadOrProcessRequest(
   }
 
   return ProcessRequest(aRequest);
-}
-
-nsresult ScriptLoader::GetScriptSource(JSContext* aCx,
-                                       ScriptLoadRequest* aRequest,
-                                       MaybeSourceText* aMaybeSource) {
-  // If there's no script text, we try to get it from the element
-  if (aRequest->mIsInline) {
-    nsAutoString inlineData;
-    aRequest->GetScriptElement()->GetScriptText(inlineData);
-
-    size_t nbytes = inlineData.Length() * sizeof(char16_t);
-    JS::UniqueTwoByteChars chars(
-        static_cast<char16_t*>(JS_malloc(aCx, nbytes)));
-    if (!chars) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    memcpy(chars.get(), inlineData.get(), nbytes);
-
-    SourceText<char16_t> srcBuf;
-    if (!srcBuf.init(aCx, std::move(chars), inlineData.Length())) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    aMaybeSource->construct<SourceText<char16_t>>(std::move(srcBuf));
-    return NS_OK;
-  }
-
-  size_t length = aRequest->ScriptTextLength();
-  if (aRequest->IsUTF16Text()) {
-    JS::UniqueTwoByteChars chars;
-    chars.reset(aRequest->ScriptText<char16_t>().extractOrCopyRawBuffer());
-    if (!chars) {
-      JS_ReportOutOfMemory(aCx);
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    SourceText<char16_t> srcBuf;
-    if (!srcBuf.init(aCx, std::move(chars), length)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    aMaybeSource->construct<SourceText<char16_t>>(std::move(srcBuf));
-    return NS_OK;
-  }
-
-  MOZ_ASSERT(aRequest->IsUTF8Text());
-  UniquePtr<Utf8Unit[], JS::FreePolicy> chars;
-  chars.reset(aRequest->ScriptText<Utf8Unit>().extractOrCopyRawBuffer());
-  if (!chars) {
-    JS_ReportOutOfMemory(aCx);
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  SourceText<Utf8Unit> srcBuf;
-  if (!srcBuf.init(aCx, std::move(chars), length)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  aMaybeSource->construct<SourceText<Utf8Unit>>(std::move(srcBuf));
-  return NS_OK;
 }
 
 nsresult ScriptLoader::ProcessRequest(ScriptLoadRequest* aRequest) {
@@ -3290,7 +3229,7 @@ nsresult ScriptLoader::CompileOrDecodeClassicScript(
     LOG(("ScriptLoadRequest (%p): Compile And Exec", aRequest));
     MOZ_ASSERT(aRequest->IsTextSource());
     MaybeSourceText maybeSource;
-    rv = GetScriptSource(aCx, aRequest, &maybeSource);
+    rv = aRequest->GetScriptSource(aCx, &maybeSource);
     if (NS_SUCCEEDED(rv)) {
       AUTO_PROFILER_MARKER_TEXT("ScriptCompileMainThread", JS,
                                 MarkerInnerWindowIdFromJSContext(aCx),
