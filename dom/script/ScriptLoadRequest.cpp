@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ScriptLoadRequest.h"
+#include "GeckoProfiler.h"
 
 #include "mozilla/dom/Document.h"
 #include "mozilla/HoldDropJSObjects.h"
@@ -333,6 +334,44 @@ nsresult ScriptLoadRequest::GetScriptSource(JSContext* aCx,
 
   aMaybeSource->construct<SourceText<Utf8Unit>>(std::move(srcBuf));
   return NS_OK;
+}
+
+void ScriptLoadRequest::GetProfilerLabel(nsACString& aOutString) {
+  if (!profiler_is_active()) {
+    aOutString.Append("<script> element");
+    return;
+  }
+  aOutString.Append("<script");
+  if (IsAsyncScript()) {
+    aOutString.Append(" async");
+  } else if (IsDeferredScript()) {
+    aOutString.Append(" defer");
+  }
+  if (IsModuleRequest()) {
+    aOutString.Append(" type=\"module\"");
+  }
+
+  nsAutoCString url;
+  if (mURI) {
+    mURI->GetAsciiSpec(url);
+  } else {
+    url = "<unknown>";
+  }
+
+  if (mIsInline) {
+    if (GetParserCreated() != NOT_FROM_PARSER) {
+      aOutString.Append("> inline at line ");
+      aOutString.AppendInt(mLineNo);
+      aOutString.Append(" of ");
+    } else {
+      aOutString.Append("> inline (dynamically created) in ");
+    }
+    aOutString.Append(url);
+  } else {
+    aOutString.Append(" src=\"");
+    aOutString.Append(url);
+    aOutString.Append("\">");
+  }
 }
 
 //////////////////////////////////////////////////////////////
