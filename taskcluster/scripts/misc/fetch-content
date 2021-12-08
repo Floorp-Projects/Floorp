@@ -578,7 +578,10 @@ def git_checkout_archive(
 
         subprocess.run(["git", "clone", "-n", repo, str(git_dir)], check=True, env=env)
 
-        subprocess.run(["git", "checkout", commit], cwd=str(git_dir), check=True)
+        # Always use a detached head so that git prints out what it checked out.
+        subprocess.run(
+            ["git", "checkout", "--detach", commit], cwd=str(git_dir), check=True
+        )
 
         # When including the .git, we want --depth 1, but a direct clone would not
         # necessarily be able to give us the right commit.
