@@ -1357,7 +1357,7 @@ void ScriptLoader::ProcessLoadedModuleTree(ModuleLoadRequest* aRequest) {
   aRequest->MaybeUnblockOnload();
 }
 
-JS::Value ScriptLoader::FindFirstParseError(ModuleLoadRequest* aRequest) {
+JS::Value ModuleLoader::FindFirstParseError(ModuleLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest);
 
   ModuleScript* moduleScript = aRequest->mModuleScript;
@@ -1377,7 +1377,7 @@ JS::Value ScriptLoader::FindFirstParseError(ModuleLoadRequest* aRequest) {
   return JS::UndefinedValue();
 }
 
-bool ScriptLoader::InstantiateModuleTree(ModuleLoadRequest* aRequest) {
+bool ModuleLoader::InstantiateModuleTree(ModuleLoadRequest* aRequest) {
   // Instantiate a top-level module and record any error.
 
   MOZ_ASSERT(aRequest);
@@ -1420,7 +1420,7 @@ bool ScriptLoader::InstantiateModuleTree(ModuleLoadRequest* aRequest) {
   return true;
 }
 
-nsresult ScriptLoader::InitDebuggerDataForModuleTree(
+nsresult ModuleLoader::InitDebuggerDataForModuleTree(
     JSContext* aCx, ModuleLoadRequest* aRequest) {
   // JS scripts can be associated with a DOM element for use by the debugger,
   // but preloading can cause scripts to be compiled before DOM script element
@@ -2765,7 +2765,7 @@ nsresult ScriptLoader::ProcessRequest(ScriptLoadRequest* aRequest) {
   if (aRequest->IsModuleRequest()) {
     ModuleLoadRequest* request = aRequest->AsModuleRequest();
     if (request->mModuleScript) {
-      if (!InstantiateModuleTree(request)) {
+      if (!mModuleLoader->InstantiateModuleTree(request)) {
         request->mModuleScript = nullptr;
       }
     }
@@ -2867,7 +2867,7 @@ nsresult ScriptLoader::ProcessRequest(ScriptLoadRequest* aRequest) {
 
 void ScriptLoader::ProcessDynamicImport(ModuleLoadRequest* aRequest) {
   if (aRequest->mModuleScript) {
-    if (!InstantiateModuleTree(aRequest)) {
+    if (!mModuleLoader->InstantiateModuleTree(aRequest)) {
       aRequest->mModuleScript = nullptr;
     }
   }
@@ -3206,7 +3206,7 @@ nsresult ScriptLoader::EvaluateModule(nsIGlobalObject* aGlobalObject,
   JS::Rooted<JSObject*> module(cx, moduleScript->ModuleRecord());
   MOZ_ASSERT(module);
 
-  nsresult rv = InitDebuggerDataForModuleTree(cx, request);
+  nsresult rv = mModuleLoader->InitDebuggerDataForModuleTree(cx, request);
   NS_ENSURE_SUCCESS(rv, rv);
 
   TRACE_FOR_TEST(aRequest->GetScriptElement(), "scriptloader_evaluate_module");
