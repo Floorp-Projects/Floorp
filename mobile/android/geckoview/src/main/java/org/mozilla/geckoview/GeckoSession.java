@@ -5415,10 +5415,16 @@ public class GeckoSession {
       /** The media type is audio. */
       public static final int TYPE_AUDIO = 1;
 
-      /** A string giving the origin-specific source identifier. */
+      /** A string giving a unique source identifier. */
       public final @NonNull String id;
 
-      /** A string giving the non-origin-specific source identifier. */
+      /**
+       * A string giving a unique source identifier.
+       *
+       * @deprecated Instead use {@link #id}, which is the same string.
+       */
+      @Deprecated
+      @DeprecationSchedule(id = "media-source-rawId", version = 100)
       public final @NonNull String rawId;
 
       /**
@@ -5470,7 +5476,7 @@ public class GeckoSession {
 
       /* package */ MediaSource(final GeckoBundle media) {
         id = media.getString("id");
-        rawId = media.getString("rawId");
+        rawId = id;
         name = media.getString("name");
         source = getSourceFromString(media.getString("mediaSource"));
         type = getTypeFromString(media.getString("type"));
