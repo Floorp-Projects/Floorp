@@ -804,8 +804,10 @@ class GCRuntime {
 
   bool allCCVisibleZonesWereCollected();
   void sweepZones(JSFreeOp* fop, bool destroyingRuntime);
+  bool shouldDecommit() const;
   void startDecommit();
-  void decommitFreeArenas(const bool& canel, AutoLockGC& lock);
+  void decommitEmptyChunks(const bool& cancel, AutoLockGC& lock);
+  void decommitFreeArenas(const bool& cancel, AutoLockGC& lock);
   void decommitFreeArenasWithoutUnlocking(const AutoLockGC& lock);
 
   // Compacting GC. Implemented in Compacting.cpp.
