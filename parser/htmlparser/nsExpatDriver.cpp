@@ -1342,12 +1342,12 @@ nsExpatDriver::ConsumeToken(nsScanner& aScanner, bool& aFlushTokens) {
 }
 
 mozilla::UniquePtr<mozilla::RLBoxSandboxDataBase>
-RLBoxExpatSandboxPool::CreateSandboxData(uint64_t aSize) {
+RLBoxExpatSandboxPool::CreateSandboxData() {
   // Create expat sandbox
   auto sandbox = mozilla::MakeUnique<rlbox_sandbox_expat>();
 
 #ifdef MOZ_WASM_SANDBOXING_EXPAT
-  bool create_ok = sandbox->create_sandbox(/* infallible = */ false, aSize);
+  bool create_ok = sandbox->create_sandbox(/* infallible = */ false);
 #else
   bool create_ok = sandbox->create_sandbox();
 #endif
@@ -1355,7 +1355,7 @@ RLBoxExpatSandboxPool::CreateSandboxData(uint64_t aSize) {
   NS_ENSURE_TRUE(create_ok, nullptr);
 
   mozilla::UniquePtr<RLBoxExpatSandboxData> sbxData =
-      mozilla::MakeUnique<RLBoxExpatSandboxData>(aSize);
+      mozilla::MakeUnique<RLBoxExpatSandboxData>();
 
   // Register callbacks common to both system and non-system principals
   sbxData->mHandleXMLDeclaration =
