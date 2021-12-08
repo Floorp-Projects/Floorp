@@ -436,8 +436,10 @@ class BaseBootstrapper(object):
             def not_installed(package):
                 # We could check for "Error: No matching Packages to list", but
                 # checking `dnf`s exit code is sufficent.
+                # Ideally we'd invoke dnf with '--cacheonly', but there's:
+                # https://bugzilla.redhat.com/show_bug.cgi?id=2030255
                 is_installed = subprocess.run(
-                    ["dnf", "--cacheonly", "list", "--installed", package],
+                    ["dnf", "list", "--installed", package],
                     stdout=subprocess.PIPE,
                     stderr=subprocess.STDOUT,
                 )
@@ -466,11 +468,12 @@ class BaseBootstrapper(object):
     def dnf_groupinstall(self, *packages):
         if which("dnf"):
             installed = subprocess.run(
-                # This should actually be:
-                #   ["dnf", "--cacheonly", "group", "list", "--installed", "--hidden"],
-                # However, that's currently not working:
-                #   https://bugzilla.redhat.com/show_bug.cgi?id=1884616#c0
-                ["dnf", "--cacheonly", "group", "list", "installed", "--hidden"],
+                # Ideally we'd invoke dnf with '--cacheonly', but there's:
+                # https://bugzilla.redhat.com/show_bug.cgi?id=2030255
+                # Ideally we'd use `--installed` instead of the undocumented
+                # `installed` subcommand, but that doesn't currently work:
+                # https://bugzilla.redhat.com/show_bug.cgi?id=1884616#c0
+                ["dnf", "group", "list", "installed", "--hidden"],
                 universal_newlines=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
