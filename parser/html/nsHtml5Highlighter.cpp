@@ -66,6 +66,30 @@ nsHtml5Highlighter::~nsHtml5Highlighter() {
   NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
 }
 
+void nsHtml5Highlighter::SetOpSink(nsAHtml5TreeOpSink* aOpSink) {
+  mOpSink = aOpSink;
+}
+
+void nsHtml5Highlighter::Rewind() {
+  mState = 0;
+  mCStart = INT32_MAX;
+  mPos = 0;
+  mLineNumber = 1;
+  mInlinesOpen = 0;
+  mInCharacters = false;
+  mBuffer = nullptr;
+  mOpQueue.Clear();
+  mCurrentRun = nullptr;
+  mAmpersand = nullptr;
+  mSlash = nullptr;
+  // Pop until we have three elements on the stack:
+  // html, body, and pre.
+  while (mStack.Length() > 3) {
+    Pop();
+  }
+  mSeenBase = false;
+}
+
 void nsHtml5Highlighter::Start(const nsAutoString& aTitle) {
   // Doctype
   opAppendDoctypeToDocument operation(nsGkAtoms::html, u""_ns, u""_ns);
@@ -114,9 +138,12 @@ void nsHtml5Highlighter::Start(const nsAutoString& aTitle) {
   preAttrs->addAttribute(nsHtml5AttributeName::ATTR_ID, preId, -1);
   Push(nsGkAtoms::pre, preAttrs, NS_NewHTMLPreElement);
 
-  StartCharacters();
+  // Don't call StartCharacters here in order to be able to put it in
+  // a speculation.
 
   mOpQueue.AppendElement()->Init(mozilla::AsVariant(opStartLayout()));
+
+  FlushOps();
 }
 
 int32_t nsHtml5Highlighter::Transition(int32_t aState, bool aReconsume,
