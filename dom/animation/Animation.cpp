@@ -1035,6 +1035,8 @@ bool Animation::ShouldBeSynchronizedWithMainThread(
   // We check this before calling ShouldBlockAsyncTransformAnimations, partly
   // because it's cheaper, but also because it's often the most useful thing
   // to know when you're debugging performance.
+  // Note: |mSyncWithGeometricAnimations| wouldn't be set if the geometric
+  // animations use scroll-timeline.
   if (StaticPrefs::
           dom_animations_mainthread_synchronization_with_geometric_animations() &&
       mSyncWithGeometricAnimations &&
