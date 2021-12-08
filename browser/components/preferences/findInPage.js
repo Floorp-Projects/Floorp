@@ -47,9 +47,9 @@ var gSearchResultsPane = {
       this.searchInput.addEventListener("command", this);
       window.addEventListener("DOMContentLoaded", () => {
         this.searchInput.focus();
+        // Initialize other panes in an idle callback.
+        window.requestIdleCallback(() => this.initializeCategories());
       });
-      // Initialize other panes in an idle callback.
-      window.requestIdleCallback(() => this.initializeCategories());
     }
     let helpUrl =
       Services.urlFormatter.formatURLPref("app.support.baseURL") +
