@@ -29,6 +29,17 @@ function test(element) {
 
   element.value = "";
   assertChild(rootElement, "");
+
+  element.value = "foo";
+  const selection =
+    SpecialPowers.wrap(element).
+    editor.
+    selectionController.getSelection(
+      SpecialPowers.Ci.nsISelectionController.SELECTION_NORMAL
+    );
+  selection.setBaseAndExtent(rootElement, 0, rootElement, 1);
+  document.execCommand("delete");
+  assertChild(rootElement, "");
 }
 
 SimpleTest.waitForExplicitFinish();

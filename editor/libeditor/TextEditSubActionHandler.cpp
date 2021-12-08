@@ -673,6 +673,9 @@ EditActionResult TextEditor::HandleDeleteSelectionInternal(
     NS_WARNING("AutoRangeArray::ExtendAnchorFocusRangeFor() failed");
     return EditActionResult(result.unwrapErr());
   }
+  if (const Text* theTextNode = GetTextNode()) {
+    rangesToDelete.EnsureRangesInTextNode(*theTextNode);
+  }
 
   nsresult rv = DeleteRangesWithTransaction(
       result.unwrap(), nsIEditor::eNoStrip, rangesToDelete);
