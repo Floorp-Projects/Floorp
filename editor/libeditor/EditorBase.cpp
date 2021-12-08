@@ -4591,6 +4591,12 @@ nsresult EditorBase::DeleteSelectionWithTransaction(
     return NS_ERROR_FAILURE;
   }
 
+  if (IsTextEditor()) {
+    if (const Text* theTextNode = AsTextEditor()->GetTextNode()) {
+      rangesToDelete.EnsureRangesInTextNode(*theTextNode);
+    }
+  }
+
   nsresult rv = DeleteRangesWithTransaction(aDirectionAndAmount, aStripWrappers,
                                             rangesToDelete);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),

@@ -245,6 +245,14 @@ class MOZ_STACK_CLASS AutoRangeArray final {
    * be required by `TextEditor`.
    */
   void EnsureOnlyEditableRanges(const dom::Element& aEditingHost);
+
+  /**
+   * EnsureRangesInTextNode() is designed for TextEditor to guarantee that
+   * all ranges are in its text node which is first child of the anonymous <div>
+   * element and is first child.
+   */
+  void EnsureRangesInTextNode(const dom::Text& aTextNode);
+
   static bool IsEditableRange(const dom::AbstractRange& aRange,
                               const dom::Element& aEditingHost);
 
