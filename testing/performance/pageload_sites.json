@@ -146,7 +146,8 @@
     {
       "login": false,
       "name": "bing-search",
-      "test_url": "https://www.bing.com/search?q=barack+obama"
+      "test_url": "https://www.bing.com/search?q=barack+obama",
+      "secondary_url": "https://www.bing.com/search?q=barack+obama+quotes"
     },
     {
       "login": false,
