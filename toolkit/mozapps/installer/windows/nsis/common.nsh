@@ -3567,11 +3567,11 @@
           ${If} $R2 != ""
             ; Backup the old update directory logs and delete the directory
             ${If} ${FileExists} "$R2\updates\last-update.log"
-              Rename "$R2\updates\last-update.log" "$TEMP\moz-update-oldest-last-update.log"
+              Rename "$R2\updates\last-update.log" "$TEMP\moz-update-old-1-last-update.log"
             ${EndIf}
 
             ${If} ${FileExists} "$R2\updates\backup-update.log"
-              Rename "$R2\updates\backup-update.log" "$TEMP\moz-update-oldest-backup-update.log"
+              Rename "$R2\updates\backup-update.log" "$TEMP\moz-update-old-1-backup-update.log"
             ${EndIf}
 
             ${If} ${FileExists} "$R2\updates"
@@ -3592,11 +3592,11 @@
           StrCpy $R0 "$R9\$R8\$R1"
 
           ${If} ${FileExists} "$R0\updates\last-update.log"
-            Rename "$R0\updates\last-update.log" "$TEMP\moz-update-older-last-update.log"
+            Rename "$R0\updates\last-update.log" "$TEMP\moz-update-old-2-last-update.log"
           ${EndIf}
 
           ${If} ${FileExists} "$R0\updates\backup-update.log"
-            Rename "$R0\updates\backup-update.log" "$TEMP\moz-update-older-backup-update.log"
+            Rename "$R0\updates\backup-update.log" "$TEMP\moz-update-old-2-backup-update.log"
           ${EndIf}
 
           ; Remove the old updates directory, located in the user's Windows profile directory
@@ -3604,11 +3604,37 @@
             RmDir /r "$R0"
           ${EndIf}
 
-          ; Get the new updates directory so we can remove that too
-          ; The new update directory is in the Program Data directory
-          ; (currently C:\ProgramData).
           ${GetCommonAppDataFolder} $R0
           StrCpy $R0 "$R0\$R8\$R1"
+
+          ${If} ${FileExists} "$R0\updates\last-update.log"
+            Rename "$R0\updates\last-update.log" "$TEMP\moz-update-old-3-last-update.log"
+          ${EndIf}
+
+          ${If} ${FileExists} "$R0\updates\backup-update.log"
+            Rename "$R0\updates\backup-update.log" "$TEMP\moz-update-old-3-backup-update.log"
+          ${EndIf}
+
+          ; Even though this is an old update directory, completely clear it out
+          ; on uninstall only, not on installation. If this is an installation,
+          ; it may be a paveover install and there may be un-migrated settings
+          ; in the update directory that we don't want to lose.
+          ; On install though, we should still remove pending updates and update
+          ; metadata since migrating that data could potentially confuse Firefox
+          ; into thinking that it failed to apply an update.
+          !if "${_MOZFUNC_UN}" == "un."
+            ${If} ${FileExists} "$R0"
+              RmDir /r "$R0"
+            ${EndIf}
+          !else
+            ${If} ${FileExists} "$R0\updates"
+              RmDir /r "$R0\updates"
+            ${EndIf}
+            Delete "$R0\active-update.xml"
+          !endif
+
+          ${GetCommonAppDataFolder} $R0
+          StrCpy $R0 "$R0\Mozilla-1de4eec8-1241-4177-a864-e594e8d1fb38\updates\$R1"
 
           ${If} ${FileExists} "$R0\updates\last-update.log"
             Rename "$R0\updates\last-update.log" "$TEMP\moz-update-newest-last-update.log"
@@ -3705,84 +3731,6 @@
     !verbose pop
   !endif
 !macroend
-
-/**
- * Create the update directory and sets the permissions correctly
- *
- * @param   ROOT_DIR_NAME
- *          The name of the update directory to be created in the common
- *          application directory. For example, if ROOT_DIR_NAME is "Mozilla",
- *          the created directory will be "C:\ProgramData\Mozilla".
- *
- * $R0 = Used for checking errors
- * $R1 = The common application directory path
- * $R9 = An error message to be returned on the stack
- */
-!macro CreateUpdateDir ROOT_DIR_NAME
-  Push $R9
-  Push $R0
-  Push $R1
-
-  ; The update directory is in the Program Data directory
-  ; (currently C:\ProgramData).
-  ${GetCommonAppDataFolder} $R1
-  StrCpy $R1 "$R1\${ROOT_DIR_NAME}"
-
-  ClearErrors
-  ${IfNot} ${FileExists} "$R1"
-    CreateDirectory "$R1"
-    ${If} ${Errors}
-      StrCpy $R9 "Unable to create directory: $R1"
-      GoTo end
-    ${EndIf}
-  ${EndIf}
-
-  ; Grant Full Access to the Builtin User group
-  AccessControl::SetOnFile "$R1" "(BU)" "FullAccess"
-  Pop $R0
-  ${If} $R0 == error
-    Pop $R9  ; Get AccessControl's Error Message
-    SetErrors
-    GoTo end
-  ${EndIf}
-
-  ; Grant Full Access to the Builtin Administrator group
-  AccessControl::SetOnFile "$R1" "(BA)" "FullAccess"
-  Pop $R0
-  ${If} $R0 == error
-    Pop $R9  ; Get AccessControl's Error Message
-    SetErrors
-    GoTo end
-  ${EndIf}
-
-  ; Grant Full Access to the SYSTEM user
-  AccessControl::SetOnFile "$R1" "(SY)" "FullAccess"
-  Pop $R0
-  ${If} $R0 == error
-    Pop $R9  ; Get AccessControl's Error Message
-    SetErrors
-    GoTo end
-  ${EndIf}
-
-  ; Remove inherited permissions
-  AccessControl::DisableFileInheritance "$R1"
-  Pop $R0
-  ${If} $R0 == error
-    Pop $R9  ; Get AccessControl's Error Message
-    SetErrors
-    GoTo end
-  ${EndIf}
-
-end:
-  Pop $R1
-  Pop $R0
-  ${If} ${Errors}
-    Exch $R9
-  ${Else}
-    Pop $R9
-  ${EndIf}
-!macroend
-!define CreateUpdateDir "!insertmacro CreateUpdateDir"
 
 /**
  * Deletes shortcuts and Start Menu directories under Programs as specified by
