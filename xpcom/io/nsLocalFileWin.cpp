@@ -2647,6 +2647,22 @@ nsLocalFile::SetFileSize(int64_t aFileSize) {
   return rv;
 }
 
+static nsresult GetDiskSpaceAttributes(const nsString& aResolvedPath,
+                                       int64_t* aFreeBytesAvailable,
+                                       int64_t* aTotalBytes) {
+  ULARGE_INTEGER liFreeBytesAvailableToCaller;
+  ULARGE_INTEGER liTotalNumberOfBytes;
+  if (::GetDiskFreeSpaceExW(aResolvedPath.get(), &liFreeBytesAvailableToCaller,
+                            &liTotalNumberOfBytes, nullptr)) {
+    *aFreeBytesAvailable = liFreeBytesAvailableToCaller.QuadPart;
+    *aTotalBytes = liTotalNumberOfBytes.QuadPart;
+
+    return NS_OK;
+  }
+
+  return ConvertWinError(::GetLastError());
+}
+
 NS_IMETHODIMP
 nsLocalFile::GetDiskSpaceAvailable(int64_t* aDiskSpaceAvailable) {
   // Check we are correctly initialized.
@@ -2656,7 +2672,12 @@ nsLocalFile::GetDiskSpaceAvailable(int64_t* aDiskSpaceAvailable) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  ResolveAndStat();
+  *aDiskSpaceAvailable = 0;
+
+  nsresult rv = ResolveAndStat();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   if (mFileInfo64.type == PR_FILE_FILE) {
     // Since GetDiskFreeSpaceExW works only on directories, use the parent.
@@ -2666,20 +2687,36 @@ nsLocalFile::GetDiskSpaceAvailable(int64_t* aDiskSpaceAvailable) {
     }
   }
 
-  ULARGE_INTEGER liFreeBytesAvailableToCaller, liTotalNumberOfBytes;
-  if (::GetDiskFreeSpaceExW(mResolvedPath.get(), &liFreeBytesAvailableToCaller,
-                            &liTotalNumberOfBytes, nullptr)) {
-    *aDiskSpaceAvailable = liFreeBytesAvailableToCaller.QuadPart;
-    return NS_OK;
-  }
-  *aDiskSpaceAvailable = 0;
-  return NS_OK;
+  int64_t dummy = 0;
+  return GetDiskSpaceAttributes(mResolvedPath, aDiskSpaceAvailable, &dummy);
 }
 
 NS_IMETHODIMP
 nsLocalFile::GetDiskCapacity(int64_t* aDiskCapacity) {
+  // Check we are correctly initialized.
+  CHECK_mWorkingPath();
+
+  if (NS_WARN_IF(!aDiskCapacity)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   *aDiskCapacity = 0;
-  return NS_OK;
+
+  nsresult rv = ResolveAndStat();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (mFileInfo64.type == PR_FILE_FILE) {
+    // Since GetDiskFreeSpaceExW works only on directories, use the parent.
+    nsCOMPtr<nsIFile> parent;
+    if (NS_SUCCEEDED(GetParent(getter_AddRefs(parent))) && parent) {
+      return parent->GetDiskCapacity(aDiskCapacity);
+    }
+  }
+
+  int64_t dummy = 0;
+  return GetDiskSpaceAttributes(mResolvedPath, &dummy, aDiskCapacity);
 }
 
 NS_IMETHODIMP
