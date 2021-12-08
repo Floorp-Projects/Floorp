@@ -2246,7 +2246,7 @@ static bool ReportCantConvert(JSContext* cx, unsigned errorNumber,
   // Avoid recursive death when decompiling in ReportValueError.
   RootedString str(cx);
   if (hint == JSTYPE_STRING) {
-    str = JS_AtomizeAndPinString(cx, clasp->name);
+    str = JS_AtomizeString(cx, clasp->name);
     if (!str) {
       return false;
     }
