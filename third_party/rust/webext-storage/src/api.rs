@@ -348,7 +348,7 @@ pub fn get_bytes_in_use(conn: &Connection, ext_id: &str, keys: JsonValue) -> Res
     let mut size = 0;
     for key in keys.into_iter() {
         if let Some(v) = existing.get(key) {
-            size += get_quota_size_of(key, v);
+            size += get_quota_size_of(key, &v);
         }
     }
     Ok(size)
@@ -387,8 +387,8 @@ pub fn usage(db: &Connection) -> Result<Vec<UsageInfo>> {
         let num_keys = serde_json::from_str::<JsonObject>(&data)?.len();
         Ok(UsageInfo {
             ext_id,
-            num_keys,
             num_bytes,
+            num_keys,
         })
     })
 }
@@ -443,16 +443,16 @@ mod tests {
 
         // an empty store.
         for q in vec![JsonValue::Null, json!("foo"), json!(["foo"])].into_iter() {
-            assert_eq!(get(&tx, ext_id, q)?, json!({}));
+            assert_eq!(get(&tx, &ext_id, q)?, json!({}));
         }
 
         // Default values in an empty store.
         for q in vec![json!({ "foo": null }), json!({"foo": "default"})].into_iter() {
-            assert_eq!(get(&tx, ext_id, q.clone())?, q.clone());
+            assert_eq!(get(&tx, &ext_id, q.clone())?, q.clone());
         }
 
         // Single item in the store.
-        set(&tx, ext_id, json!({"foo": "bar" }))?;
+        set(&tx, &ext_id, json!({"foo": "bar" }))?;
         for q in vec![
             JsonValue::Null,
             json!("foo"),
@@ -462,7 +462,7 @@ mod tests {
         ]
         .into_iter()
         {
-            assert_eq!(get(&tx, ext_id, q)?, json!({"foo": "bar" }));
+            assert_eq!(get(&tx, &ext_id, q)?, json!({"foo": "bar" }));
         }
 
         // Default values in a non-empty store.
@@ -476,51 +476,51 @@ mod tests {
         ]
         .into_iter()
         {
-            assert_eq!(get(&tx, ext_id, q.clone())?, q.clone());
+            assert_eq!(get(&tx, &ext_id, q.clone())?, q.clone());
         }
 
         // more complex stuff, including changes checking.
         assert_eq!(
-            set(&tx, ext_id, json!({"foo": "new", "other": "also new" }))?,
+            set(&tx, &ext_id, json!({"foo": "new", "other": "also new" }))?,
             make_changes(&[
                 ("foo", Some(json!("bar")), Some(json!("new"))),
                 ("other", None, Some(json!("also new")))
             ])
         );
         assert_eq!(
-            get(&tx, ext_id, JsonValue::Null)?,
+            get(&tx, &ext_id, JsonValue::Null)?,
             json!({"foo": "new", "other": "also new"})
         );
-        assert_eq!(get(&tx, ext_id, json!("foo"))?, json!({"foo": "new"}));
+        assert_eq!(get(&tx, &ext_id, json!("foo"))?, json!({"foo": "new"}));
         assert_eq!(
-            get(&tx, ext_id, json!(["foo", "other"]))?,
+            get(&tx, &ext_id, json!(["foo", "other"]))?,
             json!({"foo": "new", "other": "also new"})
         );
         assert_eq!(
-            get(&tx, ext_id, json!({"foo": null, "default": "yo"}))?,
+            get(&tx, &ext_id, json!({"foo": null, "default": "yo"}))?,
             json!({"foo": "new", "default": "yo"})
         );
 
         assert_eq!(
-            remove(&tx, ext_id, json!("foo"))?,
+            remove(&tx, &ext_id, json!("foo"))?,
             make_changes(&[("foo", Some(json!("new")), None)]),
         );
 
         assert_eq!(
-            set(&tx, ext_id, json!({"foo": {"sub-object": "sub-value"}}))?,
+            set(&tx, &ext_id, json!({"foo": {"sub-object": "sub-value"}}))?,
             make_changes(&[("foo", None, Some(json!({"sub-object": "sub-value"}))),])
         );
 
         // XXX - other variants.
 
         assert_eq!(
-            clear(&tx, ext_id)?,
+            clear(&tx, &ext_id)?,
             make_changes(&[
                 ("foo", Some(json!({"sub-object": "sub-value"})), None),
                 ("other", Some(json!("also new")), None),
             ]),
         );
-        assert_eq!(get(&tx, ext_id, JsonValue::Null)?, json!({}));
+        assert_eq!(get(&tx, &ext_id, JsonValue::Null)?, json!({}));
 
         Ok(())
     }
@@ -538,10 +538,10 @@ mod tests {
         set(&tx, ext_id, json!({ prop: value }))?;
 
         // this is the checkGetImpl part!
-        let mut data = get(&tx, ext_id, json!(null))?;
+        let mut data = get(&tx, &ext_id, json!(null))?;
         assert_eq!(value, json!(data[prop]), "null getter worked for {}", prop);
 
-        data = get(&tx, ext_id, json!(prop))?;
+        data = get(&tx, &ext_id, json!(prop))?;
         assert_eq!(
             value,
             json!(data[prop]),
@@ -554,7 +554,7 @@ mod tests {
             "string getter should return an object with a single property"
         );
 
-        data = get(&tx, ext_id, json!([prop]))?;
+        data = get(&tx, &ext_id, json!([prop]))?;
         assert_eq!(value, json!(data[prop]), "array getter worked for {}", prop);
         assert_eq!(
             data.as_object().unwrap().len(),
@@ -564,7 +564,7 @@ mod tests {
 
         // checkGetImpl() uses `{ [prop]: undefined }` - but json!() can't do that :(
         // Hopefully it's just testing a simple object, so we use `{ prop: null }`
-        data = get(&tx, ext_id, json!({ prop: null }))?;
+        data = get(&tx, &ext_id, json!({ prop: null }))?;
         assert_eq!(
             value,
             json!(data[prop]),
@@ -588,10 +588,10 @@ mod tests {
         let tx = db.transaction()?;
         let ext_id = "xyz";
 
-        set(&tx, ext_id, json!({"foo": "bar" }))?;
+        set(&tx, &ext_id, json!({"foo": "bar" }))?;
 
         assert_eq!(
-            set(&tx, ext_id, json!({"foo": "bar" }))?,
+            set(&tx, &ext_id, json!({"foo": "bar" }))?,
             make_changes(&[("foo", Some(json!("bar")), Some(json!("bar")))]),
         );
         Ok(())
@@ -605,11 +605,11 @@ mod tests {
         for i in 1..SYNC_MAX_ITEMS + 1 {
             set(
                 &tx,
-                ext_id,
+                &ext_id,
                 json!({ format!("key-{}", i): format!("value-{}", i) }),
             )?;
         }
-        let e = set(&tx, ext_id, json!({"another": "another"})).unwrap_err();
+        let e = set(&tx, &ext_id, json!({"another": "another"})).unwrap_err();
         match e.kind() {
             ErrorKind::QuotaError(QuotaReason::MaxItems) => {}
             _ => panic!("unexpected error type"),
@@ -628,14 +628,14 @@ mod tests {
         let val = "x".repeat(SYNC_QUOTA_BYTES_PER_ITEM - 5);
 
         // Key length doesn't push it over.
-        set(&tx, ext_id, json!({ "x": val }))?;
+        set(&tx, &ext_id, json!({ "x": val }))?;
         assert_eq!(
-            get_bytes_in_use(&tx, ext_id, json!("x"))?,
+            get_bytes_in_use(&tx, &ext_id, json!("x"))?,
             SYNC_QUOTA_BYTES_PER_ITEM - 2
         );
 
         // Key length does push it over.
-        let e = set(&tx, ext_id, json!({ "xxxx": val })).unwrap_err();
+        let e = set(&tx, &ext_id, json!({ "xxxx": val })).unwrap_err();
         match e.kind() {
             ErrorKind::QuotaError(QuotaReason::ItemBytes) => {}
             _ => panic!("unexpected error type"),
@@ -658,14 +658,14 @@ mod tests {
         )?;
 
         // Adding more data fails.
-        let e = set(&tx, ext_id, json!({ "y": "newvalue" })).unwrap_err();
+        let e = set(&tx, &ext_id, json!({ "y": "newvalue" })).unwrap_err();
         match e.kind() {
             ErrorKind::QuotaError(QuotaReason::TotalBytes) => {}
             _ => panic!("unexpected error type"),
         };
 
         // Remove data does not fails.
-        remove(&tx, ext_id, json!["x"])?;
+        remove(&tx, &ext_id, json!["x"])?;
 
         // Restore the over quota data.
         save_to_db(
@@ -675,7 +675,7 @@ mod tests {
         )?;
 
         // Overwrite with less data does not fail.
-        set(&tx, ext_id, json!({ "y": "lessdata" }))?;
+        set(&tx, &ext_id, json!({ "y": "lessdata" }))?;
 
         Ok(())
     }
@@ -686,29 +686,29 @@ mod tests {
         let tx = db.transaction()?;
         let ext_id = "xyz";
 
-        assert_eq!(get_bytes_in_use(&tx, ext_id, json!(null))?, 0);
+        assert_eq!(get_bytes_in_use(&tx, &ext_id, json!(null))?, 0);
 
-        set(&tx, ext_id, json!({ "a": "a" }))?; // should be 4
-        set(&tx, ext_id, json!({ "b": "bb" }))?; // should be 5
-        set(&tx, ext_id, json!({ "c": "ccc" }))?; // should be 6
-        set(&tx, ext_id, json!({ "n": 999_999 }))?; // should be 7
+        set(&tx, &ext_id, json!({ "a": "a" }))?; // should be 4
+        set(&tx, &ext_id, json!({ "b": "bb" }))?; // should be 5
+        set(&tx, &ext_id, json!({ "c": "ccc" }))?; // should be 6
+        set(&tx, &ext_id, json!({ "n": 999_999 }))?; // should be 7
 
-        assert_eq!(get_bytes_in_use(&tx, ext_id, json!("x"))?, 0);
-        assert_eq!(get_bytes_in_use(&tx, ext_id, json!("a"))?, 4);
-        assert_eq!(get_bytes_in_use(&tx, ext_id, json!("b"))?, 5);
-        assert_eq!(get_bytes_in_use(&tx, ext_id, json!("c"))?, 6);
-        assert_eq!(get_bytes_in_use(&tx, ext_id, json!("n"))?, 7);
+        assert_eq!(get_bytes_in_use(&tx, &ext_id, json!("x"))?, 0);
+        assert_eq!(get_bytes_in_use(&tx, &ext_id, json!("a"))?, 4);
+        assert_eq!(get_bytes_in_use(&tx, &ext_id, json!("b"))?, 5);
+        assert_eq!(get_bytes_in_use(&tx, &ext_id, json!("c"))?, 6);
+        assert_eq!(get_bytes_in_use(&tx, &ext_id, json!("n"))?, 7);
 
-        assert_eq!(get_bytes_in_use(&tx, ext_id, json!(["a"]))?, 4);
-        assert_eq!(get_bytes_in_use(&tx, ext_id, json!(["a", "x"]))?, 4);
-        assert_eq!(get_bytes_in_use(&tx, ext_id, json!(["a", "b"]))?, 9);
-        assert_eq!(get_bytes_in_use(&tx, ext_id, json!(["a", "c"]))?, 10);
+        assert_eq!(get_bytes_in_use(&tx, &ext_id, json!(["a"]))?, 4);
+        assert_eq!(get_bytes_in_use(&tx, &ext_id, json!(["a", "x"]))?, 4);
+        assert_eq!(get_bytes_in_use(&tx, &ext_id, json!(["a", "b"]))?, 9);
+        assert_eq!(get_bytes_in_use(&tx, &ext_id, json!(["a", "c"]))?, 10);
 
         assert_eq!(
-            get_bytes_in_use(&tx, ext_id, json!(["a", "b", "c", "n"]))?,
+            get_bytes_in_use(&tx, &ext_id, json!(["a", "b", "c", "n"]))?,
             22
         );
-        assert_eq!(get_bytes_in_use(&tx, ext_id, json!(null))?, 22);
+        assert_eq!(get_bytes_in_use(&tx, &ext_id, json!(null))?, 22);
         Ok(())
     }
 

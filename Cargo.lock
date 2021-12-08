@@ -526,12 +526,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0e4cec68f03f32e44924783795810fa50a7035d8c8ebe78580ad7e6c703fba38"
 
 [[package]]
-name = "bytes"
-version = "1.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c4872d67bab6358e59559027aa3b9157c53d9358c51423c17554809a8858e0f8"
-
-[[package]]
 name = "cache-padded"
 version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1365,7 +1359,10 @@ checksum = "ff511d5dc435d703f4971bc399647c9bc38e20cb41452e3b9feb4765419ed3f3"
 [[package]]
 name = "error-support"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=df1a47fde89f49201b1e839f960e8f16eb95a55d#df1a47fde89f49201b1e839f960e8f16eb95a55d"
+source = "git+https://github.com/mozilla/application-services?rev=8a576fbe79199fa8664f64285524017f74ebcc5f#8a576fbe79199fa8664f64285524017f74ebcc5f"
+dependencies = [
+ "thiserror",
+]
 
 [[package]]
 name = "etagere"
@@ -1626,16 +1623,6 @@ name = "foreign-types-shared"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "00b0228411908ca8685dba7fc2cdd70ec9990a6e753e89b6ac91a84c40fbaf4b"
-
-[[package]]
-name = "form_urlencoded"
-version = "1.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5fc25a87fa4fd2094bffb06925852034d90a17f0d1e05197d4956d3555752191"
-dependencies = [
- "matches",
- "percent-encoding",
-]
 
 [[package]]
 name = "freetype"
@@ -2420,7 +2407,7 @@ dependencies = [
 [[package]]
 name = "interrupt-support"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=df1a47fde89f49201b1e839f960e8f16eb95a55d#df1a47fde89f49201b1e839f960e8f16eb95a55d"
+source = "git+https://github.com/mozilla/application-services?rev=8a576fbe79199fa8664f64285524017f74ebcc5f#8a576fbe79199fa8664f64285524017f74ebcc5f"
 
 [[package]]
 name = "intl-memoizer"
@@ -3413,7 +3400,7 @@ dependencies = [
 [[package]]
 name = "nss_build_common"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=df1a47fde89f49201b1e839f960e8f16eb95a55d#df1a47fde89f49201b1e839f960e8f16eb95a55d"
+source = "git+https://github.com/mozilla/application-services?rev=8a576fbe79199fa8664f64285524017f74ebcc5f#8a576fbe79199fa8664f64285524017f74ebcc5f"
 
 [[package]]
 name = "nsstring"
@@ -3923,22 +3910,20 @@ checksum = "0a7c000c0ce9d9bb94c0fbacdf20e5087fbe652c556ffb2c9387d980e17d51fb"
 
 [[package]]
 name = "prost"
-version = "0.8.0"
+version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "de5e2533f59d08fcf364fd374ebda0692a70bd6d7e66ef97f306f45c6c5d8020"
+checksum = "ce49aefe0a6144a45de32927c77bd2859a5f7677b55f220ae5b744e87389c212"
 dependencies = [
- "bytes 1.1.0",
+ "bytes 0.5.6",
  "prost-derive",
 ]
 
 [[package]]
 name = "prost-derive"
-version = "0.8.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "600d2f334aa05acb02a755e217ef1ab6dea4d51b58b7846588b747edec04efba"
+version = "0.6.1"
 dependencies = [
  "anyhow",
- "itertools 0.10.1",
+ "itertools 0.8.2",
  "proc-macro2",
  "quote",
  "syn",
@@ -4640,16 +4625,13 @@ dependencies = [
 [[package]]
 name = "sql-support"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=df1a47fde89f49201b1e839f960e8f16eb95a55d#df1a47fde89f49201b1e839f960e8f16eb95a55d"
+source = "git+https://github.com/mozilla/application-services?rev=8a576fbe79199fa8664f64285524017f74ebcc5f#8a576fbe79199fa8664f64285524017f74ebcc5f"
 dependencies = [
  "ffi-support",
  "interrupt-support",
  "lazy_static",
  "log",
- "nss_build_common",
  "rusqlite",
- "tempfile",
- "thiserror",
 ]
 
 [[package]]
@@ -4833,7 +4815,7 @@ dependencies = [
 [[package]]
 name = "sync-guid"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=df1a47fde89f49201b1e839f960e8f16eb95a55d#df1a47fde89f49201b1e839f960e8f16eb95a55d"
+source = "git+https://github.com/mozilla/application-services?rev=8a576fbe79199fa8664f64285524017f74ebcc5f#8a576fbe79199fa8664f64285524017f74ebcc5f"
 dependencies = [
  "base64 0.12.3",
  "rand",
@@ -4844,7 +4826,7 @@ dependencies = [
 [[package]]
 name = "sync15-traits"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=df1a47fde89f49201b1e839f960e8f16eb95a55d#df1a47fde89f49201b1e839f960e8f16eb95a55d"
+source = "git+https://github.com/mozilla/application-services?rev=8a576fbe79199fa8664f64285524017f74ebcc5f#8a576fbe79199fa8664f64285524017f74ebcc5f"
 dependencies = [
  "anyhow",
  "ffi-support",
@@ -5343,11 +5325,10 @@ checksum = "2ace0b4755d0a2959962769239d56267f8a024fef2d9b32666b3dcd0946b0906"
 
 [[package]]
 name = "url"
-version = "2.2.2"
+version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a507c383b2d33b5fc35d1861e77e6b383d158b2da5e14fe51b83dfedf6fd578c"
+checksum = "75b414f6c464c879d7f9babf951f23bc3743fb7313c081b2e6ca719067ea9d61"
 dependencies = [
- "form_urlencoded",
  "idna",
  "matches",
  "percent-encoding",
@@ -5385,7 +5366,7 @@ checksum = "5fecdca9a5291cc2b8dcf7dc02453fee791a280f3743cb0905f8822ae463b3fe"
 [[package]]
 name = "viaduct"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=df1a47fde89f49201b1e839f960e8f16eb95a55d#df1a47fde89f49201b1e839f960e8f16eb95a55d"
+source = "git+https://github.com/mozilla/application-services?rev=8a576fbe79199fa8664f64285524017f74ebcc5f#8a576fbe79199fa8664f64285524017f74ebcc5f"
 dependencies = [
  "ffi-support",
  "log",
@@ -5534,7 +5515,7 @@ dependencies = [
 [[package]]
 name = "webext-storage"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/application-services?rev=df1a47fde89f49201b1e839f960e8f16eb95a55d#df1a47fde89f49201b1e839f960e8f16eb95a55d"
+source = "git+https://github.com/mozilla/application-services?rev=8a576fbe79199fa8664f64285524017f74ebcc5f#8a576fbe79199fa8664f64285524017f74ebcc5f"
 dependencies = [
  "error-support",
  "ffi-support",
