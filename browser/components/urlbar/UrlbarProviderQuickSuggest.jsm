@@ -31,6 +31,8 @@ const TIMESTAMP_LENGTH = 10;
 const TIMESTAMP_REGEXP = /^\d{10}$/;
 
 const MERINO_ENDPOINT_PARAM_QUERY = "q";
+const MERINO_ENDPOINT_PARAM_CLIENT_VARIANTS = "client_variants";
+const MERINO_ENDPOINT_PARAM_PROVIDERS = "providers";
 
 const TELEMETRY_MERINO_LATENCY = "FX_URLBAR_MERINO_LATENCY_MS";
 const TELEMETRY_MERINO_RESPONSE = "FX_URLBAR_MERINO_RESPONSE";
@@ -511,6 +513,19 @@ class ProviderQuickSuggest extends UrlbarProvider {
       return null;
     }
     url.searchParams.set(MERINO_ENDPOINT_PARAM_QUERY, searchString);
+
+    let clientVariants = UrlbarPrefs.get("merino.clientVariants");
+    if (clientVariants) {
+      url.searchParams.set(
+        MERINO_ENDPOINT_PARAM_CLIENT_VARIANTS,
+        clientVariants
+      );
+    }
+
+    let providers = UrlbarPrefs.get("merino.providers");
+    if (providers) {
+      url.searchParams.set(MERINO_ENDPOINT_PARAM_PROVIDERS, providers);
+    }
 
     let responseHistogram = Services.telemetry.getHistogramById(
       TELEMETRY_MERINO_RESPONSE
