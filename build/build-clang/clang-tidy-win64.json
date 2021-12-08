@@ -1,6 +1,5 @@
 {
     "stages": "1",
-    "build_type": "Release",
     "build_clang_tidy": true,
     "cc": "cl.exe",
     "cxx": "cl.exe",
