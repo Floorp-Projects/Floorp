@@ -78,8 +78,14 @@ const size_t ArenaBitmapWords = HowMany(ArenaBitmapBits, JS_BITS_PER_WORD);
 // the chunk size.
 class alignas(CellAlignBytes) ChunkBase {
  protected:
-  ChunkBase(JSRuntime* rt, StoreBuffer* sb) : storeBuffer(sb), runtime(rt) {
+  ChunkBase(JSRuntime* rt, StoreBuffer* sb) {
     MOZ_ASSERT((uintptr_t(this) & ChunkMask) == 0);
+    initBase(rt, sb);
+  }
+
+  void initBase(JSRuntime* rt, StoreBuffer* sb) {
+    runtime = rt;
+    storeBuffer = sb;
   }
 
  public:
@@ -225,7 +231,9 @@ class TenuredChunkBase : public ChunkBase {
   ChunkPageBitmap decommittedPages;
 
  protected:
-  explicit TenuredChunkBase(JSRuntime* runtime) : ChunkBase(runtime, nullptr) {}
+  explicit TenuredChunkBase(JSRuntime* runtime) : ChunkBase(runtime, nullptr) {
+    info.numArenasFree = ArenasPerChunk;
+  }
 };
 
 /*

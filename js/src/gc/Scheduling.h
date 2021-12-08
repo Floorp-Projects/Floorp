@@ -705,15 +705,8 @@ class GCSchedulingState {
 
   void updateHighFrequencyMode(const mozilla::TimeStamp& lastGCTime,
                                const mozilla::TimeStamp& currentTime,
-                               const GCSchedulingTunables& tunables) {
-    if (js::SupportDifferentialTesting()) {
-      return;
-    }
-
-    inHighFrequencyGCMode_ =
-        !lastGCTime.IsNull() &&
-        lastGCTime + tunables.highFrequencyThreshold() > currentTime;
-  }
+                               const GCSchedulingTunables& tunables);
+  void updateHighFrequencyModeForReason(JS::GCReason reason);
 };
 
 struct TriggerResult {
