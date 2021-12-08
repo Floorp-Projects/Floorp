@@ -1069,7 +1069,8 @@ class XPCNativeInterface final {
 
  protected:
   static already_AddRefed<XPCNativeInterface> NewInstance(
-      JSContext* cx, const nsXPTInterfaceInfo* aInfo);
+      JSContext* cx, IID2NativeInterfaceMap* aMap,
+      const nsXPTInterfaceInfo* aInfo);
 
   XPCNativeInterface() = delete;
   XPCNativeInterface(const nsXPTInterfaceInfo* aInfo, jsid aName)

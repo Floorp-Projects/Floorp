@@ -138,20 +138,7 @@ already_AddRefed<XPCNativeInterface> XPCNativeInterface::GetNewOrUsed(
     return nullptr;
   }
 
-  iface = NewInstance(cx, info);
-  if (!iface) {
-    return nullptr;
-  }
-
-  XPCNativeInterface* iface2 = map->Add(iface);
-  if (!iface2) {
-    NS_ERROR("failed to add our interface!");
-    iface = nullptr;
-  } else if (iface2 != iface) {
-    iface = iface2;
-  }
-
-  return iface.forget();
+  return NewInstance(cx, map, info);
 }
 
 // static
@@ -172,20 +159,7 @@ already_AddRefed<XPCNativeInterface> XPCNativeInterface::GetNewOrUsed(
     return iface.forget();
   }
 
-  iface = NewInstance(cx, info);
-  if (!iface) {
-    return nullptr;
-  }
-
-  RefPtr<XPCNativeInterface> iface2 = map->Add(iface);
-  if (!iface2) {
-    NS_ERROR("failed to add our interface!");
-    iface = nullptr;
-  } else if (iface2 != iface) {
-    iface = iface2;
-  }
-
-  return iface.forget();
+  return NewInstance(cx, map, info);
 }
 
 // static
@@ -204,7 +178,8 @@ already_AddRefed<XPCNativeInterface> XPCNativeInterface::GetISupports(
 
 // static
 already_AddRefed<XPCNativeInterface> XPCNativeInterface::NewInstance(
-    JSContext* cx, const nsXPTInterfaceInfo* aInfo) {
+    JSContext* cx, IID2NativeInterfaceMap* aMap,
+    const nsXPTInterfaceInfo* aInfo) {
   // XXX Investigate lazy init? This is a problem given the
   // 'placement new' scheme - we need to at least know how big to make
   // the object. We might do a scan of methods to determine needed size,
@@ -232,6 +207,11 @@ already_AddRefed<XPCNativeInterface> XPCNativeInterface::NewInstance(
       console->LogMessage(error);
     }
   }
+
+  // Make sure the code below does not GC. This means we don't need to trace the
+  // PropertyKeys in the MemberVector, or the XPCNativeInterface we create
+  // before it's added to the map.
+  JS::AutoCheckCannotGC nogc;
 
   const uint16_t methodCount = aInfo->MethodCount();
   const uint16_t constCount = aInfo->ConstantCount();
@@ -350,6 +330,11 @@ already_AddRefed<XPCNativeInterface> XPCNativeInterface::NewInstance(
   if (!members.empty()) {
     memcpy(obj->mMembers, members.begin(),
            members.length() * sizeof(XPCNativeMember));
+  }
+
+  if (!aMap->AddNew(obj)) {
+    NS_ERROR("failed to add our interface!");
+    return nullptr;
   }
 
   return obj.forget();
