@@ -281,12 +281,12 @@ already_AddRefed<XPCNativeInterface> XPCNativeInterface::NewInstance(
       return nullptr;
     }
 
-    RootedString str(cx, JS_AtomizeAndPinString(cx, namestr.get()));
+    RootedString str(cx, JS_AtomizeString(cx, namestr.get()));
     if (!str) {
       NS_ERROR("bad constant name");
       return nullptr;
     }
-    jsid name = PropertyKey::fromPinnedString(str);
+    jsid name = PropertyKey::fromNonIntAtom(str);
 
     // XXX need better way to find dups
     // MOZ_ASSERT(!LookupMemberByID(name),"duplicate method/constant name");
@@ -306,12 +306,12 @@ already_AddRefed<XPCNativeInterface> XPCNativeInterface::NewInstance(
   if (!bytes) {
     return nullptr;
   }
-  RootedString str(cx, JS_AtomizeAndPinString(cx, bytes));
+  RootedString str(cx, JS_AtomizeString(cx, bytes));
   if (!str) {
     return nullptr;
   }
 
-  RootedId interfaceName(cx, PropertyKey::fromPinnedString(str));
+  RootedId interfaceName(cx, PropertyKey::fromNonIntAtom(str));
 
   // Use placement new to create an object with the right amount of space
   // to hold the members array
@@ -350,6 +350,23 @@ void XPCNativeInterface::DestroyInstance(XPCNativeInterface* inst) {
 
 size_t XPCNativeInterface::SizeOfIncludingThis(MallocSizeOf mallocSizeOf) {
   return mallocSizeOf(this);
+}
+
+void XPCNativeInterface::Trace(JSTracer* trc) {
+  JS::TraceRoot(trc, &mName, "XPCNativeInterface::mName");
+
+  for (size_t i = 0; i < mMemberCount; i++) {
+    JS::PropertyKey key = mMembers[i].GetName();
+    JS::TraceRoot(trc, &key, "XPCNativeInterface::mMembers");
+    MOZ_ASSERT(mMembers[i].GetName() == key);
+  }
+}
+
+void IID2NativeInterfaceMap::Trace(JSTracer* trc) {
+  for (Map::Enum e(mMap); !e.empty(); e.popFront()) {
+    XPCNativeInterface* iface = e.front().value();
+    iface->Trace(trc);
+  }
 }
 
 void XPCNativeInterface::DebugDump(int16_t depth) {
