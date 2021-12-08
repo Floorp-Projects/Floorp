@@ -61,7 +61,7 @@ load 443538-1.svg
 load 448615-1.html
 load 450383-1.html
 load 450385-1.html
-skip-if(Android||isDebugBuild) load 458637-1.html # bug 1519651
+load 458637-1.html
 load 462947.html
 load 467392.html
 load 472593-1.html
