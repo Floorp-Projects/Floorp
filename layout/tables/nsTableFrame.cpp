@@ -7521,9 +7521,6 @@ nsDisplayTableBackgroundSet::nsDisplayTableBackgroundSet(
       mBuilder->FindReferenceFrameFor(aTable, &mToReferenceFrame);
   MOZ_ASSERT(nsLayoutUtils::FindNearestCommonAncestorFrame(reference, aTable));
   mDirtyRect = mBuilder->GetDirtyRect();
-  mCombinedTableClipChain =
-      mBuilder->ClipState().GetCurrentCombinedClipChain(aBuilder);
-  mTableASR = mBuilder->CurrentActiveScrolledRoot();
 }
 
 // A display item that draws all collapsed borders for a table.
