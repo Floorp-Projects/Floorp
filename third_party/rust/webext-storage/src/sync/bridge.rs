@@ -52,7 +52,7 @@ impl<'a> sync15_traits::BridgedEngine for BridgedEngine<'a> {
     }
 
     fn sync_id(&self) -> Result<Option<String>> {
-        Ok(get_meta(self.db, SYNC_ID_META_KEY)?)
+        get_meta(self.db, SYNC_ID_META_KEY)
     }
 
     fn reset_sync_id(&self) -> Result<String> {
