@@ -257,13 +257,16 @@ abstract class AbstractBrowserTabViewHolder(
                     touchStartPoint = null
                 }
                 MotionEvent.ACTION_MOVE -> {
-                    val parent = itemView.parent as AbstractBrowserTrayList
                     val touchStart = touchStartPoint
                     val selected = holder.selectedItems
                     val selectsOnlyThis = (selected.size == 1 && selected.contains(item))
                     val featureEnabled = FeatureFlags.tabReorderingFeature &&
-                        !parent.context.settings().searchTermTabGroupsAreEnabled
+                        !itemView.context.settings().searchTermTabGroupsAreEnabled
                     if (featureEnabled && selectsOnlyThis && touchStart != null) {
+                        // In a tab group, we do not use a AbstractBrowserTrayList as the parent,
+                        // so we should return early and mark the event as unhandled (return false).
+                        val parent = itemView.parent as? AbstractBrowserTrayList ?: return@setOnTouchListener false
+
                         // Prevent scrolling if the user tries to start drag vertically
                         parent.requestDisallowInterceptTouchEvent(true)
                         // Only start deselect+drag if the user drags far enough
