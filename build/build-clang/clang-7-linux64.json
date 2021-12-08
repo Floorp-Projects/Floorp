@@ -1,6 +1,5 @@
 {
     "stages": "3",
-    "build_type": "Release",
     "cc": "/usr/bin/gcc",
     "cxx": "/usr/bin/g++",
     "as": "/usr/bin/gcc",

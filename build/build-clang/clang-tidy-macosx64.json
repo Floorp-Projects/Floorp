@@ -1,6 +1,5 @@
 {
     "stages": "1",
-    "build_type": "Release",
     "build_clang_tidy": true,
     "osx_cross_compile": true,
     "cc": "{MOZ_FETCHES_DIR}/clang/bin/clang",

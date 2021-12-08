@@ -2,7 +2,6 @@
     "stages": "4",
     "pgo" : true,
     "build_wasm": true,
-    "build_type": "Release",
     "cc": "/usr/bin/gcc",
     "cxx": "/usr/bin/g++",
     "as": "/usr/bin/gcc",

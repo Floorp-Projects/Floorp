@@ -3,7 +3,6 @@
     "pgo" : true,
     "build_wasm": true,
     "wasi-compiler-rt": "{MOZ_FETCHES_DIR}/compiler-rt",
-    "build_type": "Release",
     "cc": "/usr/bin/gcc",
     "cxx": "/usr/bin/g++",
     "as": "/usr/bin/gcc",
