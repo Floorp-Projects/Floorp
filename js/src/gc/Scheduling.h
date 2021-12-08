@@ -690,7 +690,7 @@ class GCSchedulingState {
    * growth factor is a measure of how large (as a percentage of the last GC)
    * the heap is allowed to grow before we try to schedule another GC.
    */
-  MainThreadOrGCTaskData<bool> inHighFrequencyGCMode_;
+  mozilla::Atomic<bool, mozilla::ReleaseAcquire> inHighFrequencyGCMode_;
 
  public:
   /*

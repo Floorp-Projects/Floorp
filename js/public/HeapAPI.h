@@ -234,6 +234,8 @@ class TenuredChunkBase : public ChunkBase {
   explicit TenuredChunkBase(JSRuntime* runtime) : ChunkBase(runtime, nullptr) {
     info.numArenasFree = ArenasPerChunk;
   }
+
+  void initAsDecommitted();
 };
 
 /*
