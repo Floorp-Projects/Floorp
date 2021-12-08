@@ -696,7 +696,6 @@ class GCRuntime {
   void incrementalSlice(SliceBudget& budget, const MaybeGCOptions& options,
                         JS::GCReason reason, bool budgetWasIncreased);
 
-  void waitForBackgroundTasksBeforeSlice();
   bool mightSweepInThisSlice(bool nonIncremental);
   void collectNurseryFromMajorGC(const MaybeGCOptions& options,
                                  JS::GCReason reason);
