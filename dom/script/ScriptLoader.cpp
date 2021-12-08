@@ -641,7 +641,7 @@ nsresult ScriptLoader::CreateModuleScript(ModuleLoadRequest* aRequest) {
 
     JS::CompileOptions options(cx);
     JS::RootedScript introductionScript(cx);
-    rv = FillCompileOptionsForRequest(aes, aRequest, global, &options,
+    rv = FillCompileOptionsForRequest(cx, aRequest, global, &options,
                                       &introductionScript);
 
     if (NS_SUCCEEDED(rv)) {
@@ -2543,7 +2543,7 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
   // Introduction script will actually be computed and set when the script is
   // collected from offthread
   JS::RootedScript dummyIntroductionScript(cx);
-  nsresult rv = FillCompileOptionsForRequest(jsapi, aRequest, global, &options,
+  nsresult rv = FillCompileOptionsForRequest(cx, aRequest, global, &options,
                                              &dummyIntroductionScript);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -2929,7 +2929,7 @@ already_AddRefed<nsIScriptGlobalObject> ScriptLoader::GetScriptGlobalObject(
 }
 
 nsresult ScriptLoader::FillCompileOptionsForRequest(
-    const mozilla::dom::AutoJSAPI& jsapi, ScriptLoadRequest* aRequest,
+    JSContext* aCx, ScriptLoadRequest* aRequest,
     JS::Handle<JSObject*> aScopeChain, JS::CompileOptions* aOptions,
     JS::MutableHandle<JSScript*> aIntroductionScript) {
   // It's very important to use aRequest->mURI, not the final URI of the channel
@@ -2954,7 +2954,7 @@ nsresult ScriptLoader::FillCompileOptionsForRequest(
   } else {
     introductionType = "injectedScript";
   }
-  aOptions->setIntroductionInfoToCaller(jsapi.cx(), introductionType,
+  aOptions->setIntroductionInfoToCaller(aCx, introductionType,
                                         aIntroductionScript);
   aOptions->setFileAndLine(aRequest->mURL.get(), aRequest->mLineNo);
   aOptions->setIsRunOnce(true);
@@ -3342,7 +3342,7 @@ nsresult ScriptLoader::EvaluateScript(nsIGlobalObject* aGlobalObject,
 
   JS::CompileOptions options(cx);
   JS::RootedScript introductionScript(cx);
-  nsresult rv = FillCompileOptionsForRequest(aes, aRequest, global, &options,
+  nsresult rv = FillCompileOptionsForRequest(cx, aRequest, global, &options,
                                              &introductionScript);
 
   if (NS_FAILED(rv)) {
