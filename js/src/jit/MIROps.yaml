@@ -1321,7 +1321,6 @@
   guard: true
   movable: true
   congruent_to: custom
-  folds_to: custom
   alias_set: custom
 
 - name: GuardProto
