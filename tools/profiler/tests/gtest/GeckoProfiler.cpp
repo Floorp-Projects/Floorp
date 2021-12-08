@@ -4071,8 +4071,7 @@ TEST(GeckoProfiler, FeatureCombinations)
 }
 
 static void CountCPUDeltas(const Json::Value& aThread, size_t& aOutSamplings,
-                           unsigned& aOutCPUDeltaZeroCount,
-                           unsigned& aOutCPUDeltaNonZeroCount) {
+                           uint64_t& aOutCPUDeltaSum) {
   GET_JSON(samples, aThread["samples"], Object);
   {
     Json::ArrayIndex threadCPUDeltaIndex = 0;
@@ -4083,8 +4082,7 @@ static void CountCPUDeltas(const Json::Value& aThread, size_t& aOutSamplings,
     }
 
     aOutSamplings = 0;
-    aOutCPUDeltaZeroCount = 0;
-    aOutCPUDeltaNonZeroCount = 0;
+    aOutCPUDeltaSum = 0;
     GET_JSON(data, samples["data"], Array);
     aOutSamplings = data.size();
     for (const Json::Value& sample : data) {
@@ -4092,11 +4090,7 @@ static void CountCPUDeltas(const Json::Value& aThread, size_t& aOutSamplings,
       if (sample.isValidIndex(threadCPUDeltaIndex)) {
         if (!sample[threadCPUDeltaIndex].isNull()) {
           GET_JSON(cpuDelta, sample[threadCPUDeltaIndex], UInt64);
-          if (cpuDelta == 0) {
-            ++aOutCPUDeltaZeroCount;
-          } else {
-            ++aOutCPUDeltaNonZeroCount;
-          }
+          aOutCPUDeltaSum += uint64_t(cpuDelta.asUInt64());
         }
       }
     }
@@ -4109,7 +4103,7 @@ TEST(GeckoProfiler, CPUUsage)
   ASSERT_TRUE(profiler_is_main_thread())
   << "This test assumes it runs on the main thread";
 
-  const char* filters[] = {"GeckoMain", "Idle test"};
+  const char* filters[] = {"GeckoMain", "Idle test", "Busy test"};
 
   enum class TestThreadsState {
     // Initial state, while constructing and starting the idle thread.
@@ -4237,12 +4231,19 @@ TEST(GeckoProfiler, CPUUsage)
         }
       }
 
+      bool foundMain = false;
+      bool foundIdle = false;
+      uint64_t idleThreadCPUDeltaSum = 0u;
+      bool foundBusy = false;
+      uint64_t busyThreadCPUDeltaSum = 0u;
+
       // Check that the sample schema contains "threadCPUDelta".
       GET_JSON(threads, aRoot["threads"], Array);
       for (const Json::Value& thread : threads) {
         ASSERT_TRUE(thread.isObject());
         GET_JSON(name, thread["name"], String);
         if (name.asString() == "GeckoMain") {
+          foundMain = true;
           GET_JSON(samples, thread["samples"], Object);
           {
             Json::ArrayIndex stackIndex = 0;
@@ -4303,11 +4304,9 @@ TEST(GeckoProfiler, CPUUsage)
 #  endif
           }
         } else if (name.asString() == "Idle test") {
+          foundIdle = true;
           size_t samplings;
-          unsigned threadCPUDeltaZeroCount;
-          unsigned threadCPUDeltaNonZeroCount;
-          CountCPUDeltas(thread, samplings, threadCPUDeltaZeroCount,
-                         threadCPUDeltaNonZeroCount);
+          CountCPUDeltas(thread, samplings, idleThreadCPUDeltaSum);
           if (testWithNoStackSampling) {
             // When not sampling stacks, the first sampling loop will have no
             // running times, so it won't output anything.
@@ -4315,43 +4314,17 @@ TEST(GeckoProfiler, CPUUsage)
           } else {
             EXPECT_GE(samplings, scMinSamplings);
           }
-#  if defined(GP_OS_windows) || defined(GP_OS_darwin) || \
-      defined(GP_OS_linux) || defined(GP_OS_android) || defined(GP_OS_freebsd)
-          EXPECT_GE(threadCPUDeltaZeroCount + threadCPUDeltaNonZeroCount,
-                    samplings - 1u)
-              << "There should be 'threadCPUDelta' values in all but 1 "
-                 "samples";
-#    if defined(GP_OS_windows)
-          // On Windows, sampling threads makes them work a little bit, even
-          // when removing the CPU values around the sampling itself, so we
-          // cannot expect any zeroes!
-          // TODO: Would it be possible to reliably test that the values are
-          // at least "small"? (Whatever that means for cycles.)
-          if (testWithNoStackSampling) {
-            // Note: This test is a bit hand-wavy, and may not be reliable. If
-            // intermittents happen, it may need tweaking (by increasing the
-            // loop count, or re-trying the whole test).
-            EXPECT_GT(threadCPUDeltaZeroCount, 0u)
-                << "There should be some zero-CPUs due to the idle loop body";
-          }
-#    else
-            // Note: This test is a bit hand-wavy, and may not be reliable. If
-            // intermittents happen, it may need tweaking (by increasing the
-            // loop count, or re-trying the whole test).
-            EXPECT_GT(threadCPUDeltaZeroCount, 0u)
-                << "There should be some zero-CPUs due to the idle loop body";
-#    endif
-#  else
+#  if !(defined(GP_OS_windows) || defined(GP_OS_darwin) || \
+        defined(GP_OS_linux) || defined(GP_OS_android) ||  \
+        defined(GP_OS_freebsd))
           // All "threadCPUDelta" data should be absent or null on unsupported
           // platforms.
-          EXPECT_EQ(threadCPUDeltaCount, 0u);
+          EXPECT_EQ(idleThreadCPUDeltaSum, 0u);
 #  endif
         } else if (name.asString() == "Busy test") {
+          foundBusy = true;
           size_t samplings;
-          unsigned threadCPUDeltaZeroCount;
-          unsigned threadCPUDeltaNonZeroCount;
-          CountCPUDeltas(thread, samplings, threadCPUDeltaZeroCount,
-                         threadCPUDeltaNonZeroCount);
+          CountCPUDeltas(thread, samplings, busyThreadCPUDeltaSum);
           if (testWithNoStackSampling) {
             // When not sampling stacks, the first sampling loop will have no
             // running times, so it won't output anything.
@@ -4359,21 +4332,20 @@ TEST(GeckoProfiler, CPUUsage)
           } else {
             EXPECT_GE(samplings, scMinSamplings);
           }
-#  if defined(GP_OS_windows) || defined(GP_OS_darwin) || \
-      defined(GP_OS_linux) || defined(GP_OS_android) || defined(GP_OS_freebsd)
-          EXPECT_GE(threadCPUDeltaZeroCount + threadCPUDeltaNonZeroCount,
-                    samplings - 1u)
-              << "There should be 'threadCPUDelta' values in all but 1 "
-                 "samples";
-          EXPECT_GT(threadCPUDeltaNonZeroCount, 0u)
-              << "There should be some non-zero CPU values";
-#  else
+#  if !(defined(GP_OS_windows) || defined(GP_OS_darwin) || \
+        defined(GP_OS_linux) || defined(GP_OS_android) ||  \
+        defined(GP_OS_freebsd))
           // All "threadCPUDelta" data should be absent or null on unsupported
           // platforms.
-          EXPECT_EQ(threadCPUDeltaCount, 0u);
+          EXPECT_EQ(busyThreadCPUDeltaSum, 0u);
 #  endif
         }
       }
+
+      EXPECT_TRUE(foundMain);
+      EXPECT_TRUE(foundIdle);
+      EXPECT_TRUE(foundBusy);
+      EXPECT_LE(idleThreadCPUDeltaSum, busyThreadCPUDeltaSum);
     });
 
     // Note: There is no non-racy way to test for SamplingState::JustStopped, as
