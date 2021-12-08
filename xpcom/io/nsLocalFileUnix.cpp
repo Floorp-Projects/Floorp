@@ -8,8 +8,11 @@
  * Implementation of nsIFile for "unixy" systems.
  */
 
+#include "nsLocalFile.h"
+
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/FilePreferences.h"
@@ -32,8 +35,7 @@
 #  include <sys/xattr.h>
 #endif
 
-#if defined(HAVE_SYS_QUOTA_H) && defined(HAVE_LINUX_QUOTA_H)
-#  define USE_LINUX_QUOTACTL
+#if defined(USE_LINUX_QUOTACTL)
 #  include <sys/mount.h>
 #  include <sys/quota.h>
 #  include <sys/sysmacros.h>
@@ -49,7 +51,6 @@
 #include "nsIFile.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
-#include "nsLocalFile.h"
 #include "prproces.h"
 #include "nsIDirectoryEnumerator.h"
 #include "nsSimpleEnumerator.h"
@@ -1439,9 +1440,18 @@ static bool GetDeviceName(unsigned int aDeviceMajor, unsigned int aDeviceMinor,
 }
 #endif
 
-NS_IMETHODIMP
-nsLocalFile::GetDiskSpaceAvailable(int64_t* aDiskSpaceAvailable) {
-  if (NS_WARN_IF(!aDiskSpaceAvailable)) {
+#if defined(USE_LINUX_QUOTACTL)
+template <typename StatInfoFunc, typename QuotaInfoFunc>
+nsresult nsLocalFile::GetDiskInfo(StatInfoFunc&& aStatInfoFunc,
+                                  QuotaInfoFunc&& aQuotaInfoFunc,
+                                  int64_t* aResult)
+#else
+template <typename StatInfoFunc>
+nsresult nsLocalFile::GetDiskInfo(StatInfoFunc&& aStatInfoFunc,
+                                  int64_t* aResult)
+#endif
+{
+  if (NS_WARN_IF(!aResult)) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -1459,26 +1469,34 @@ nsLocalFile::GetDiskSpaceAvailable(int64_t* aDiskSpaceAvailable) {
    * F_BSIZE = block size on disk.
    * f_bavail = number of free blocks available to a non-superuser.
    * f_bfree = number of total free blocks in file system.
+   * f_blocks = number of total used or free blocks in file system.
    */
 
   if (STATFS(mPath.get(), &fs_buf) < 0) {
     // The call to STATFS failed.
 #  ifdef DEBUG
-    printf("ERROR: GetDiskSpaceAvailable: STATFS call FAILED. \n");
+    printf("ERROR: GetDiskInfo: STATFS call FAILED. \n");
 #  endif
     return NS_ERROR_FAILURE;
   }
 
-  *aDiskSpaceAvailable = (int64_t)fs_buf.F_BSIZE * fs_buf.f_bavail;
+  CheckedInt64 checkedResult;
+
+  checkedResult = std::forward<StatInfoFunc>(aStatInfoFunc)(fs_buf);
+  if (!checkedResult.isValid()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *aResult = checkedResult.value();
 
 #  ifdef DEBUG_DISK_SPACE
-  printf("DiskSpaceAvailable: %lu bytes\n", *aDiskSpaceAvailable);
+  printf("DiskInfo: %lu bytes\n", *aResult);
 #  endif
 
 #  if defined(USE_LINUX_QUOTACTL)
 
   if (!FillStatCache()) {
-    // Return available size from statfs
+    // Return info from statfs
     return NS_OK;
   }
 
@@ -1495,13 +1513,13 @@ nsLocalFile::GetDiskSpaceAvailable(int64_t* aDiskSpaceAvailable) {
       && dq.dqb_valid & QIF_BLIMITS
 #    endif
       && dq.dqb_bhardlimit) {
-    int64_t QuotaSpaceAvailable = 0;
-    // dqb_bhardlimit is count of BLOCK_SIZE blocks, dqb_curspace is bytes
-    if ((BLOCK_SIZE * dq.dqb_bhardlimit) > dq.dqb_curspace)
-      QuotaSpaceAvailable =
-          int64_t(BLOCK_SIZE * dq.dqb_bhardlimit - dq.dqb_curspace);
-    if (QuotaSpaceAvailable < *aDiskSpaceAvailable) {
-      *aDiskSpaceAvailable = QuotaSpaceAvailable;
+    checkedResult = std::forward<QuotaInfoFunc>(aQuotaInfoFunc)(dq);
+    if (!checkedResult.isValid()) {
+      return NS_ERROR_FAILURE;
+    }
+
+    if (checkedResult.value() < *aResult) {
+      *aResult = checkedResult.value();
     }
   }
 #  endif
@@ -1511,20 +1529,52 @@ nsLocalFile::GetDiskSpaceAvailable(int64_t* aDiskSpaceAvailable) {
 #else
   /*
    * This platform doesn't have statfs or statvfs.  I'm sure that there's
-   * a way to check for free disk space on platforms that don't have statfs
-   * (I'm SURE they have df, for example).
+   * a way to check for free disk space and disk capacity on platforms that
+   * don't have statfs (I'm SURE they have df, for example).
    *
    * Until we figure out how to do that, lets be honest and say that this
    * command isn't implemented properly for these platforms yet.
    */
 #  ifdef DEBUG
-  printf(
-      "ERROR: GetDiskSpaceAvailable: Not implemented for plaforms without "
-      "statfs.\n");
+  printf("ERROR: GetDiskInfo: Not implemented for plaforms without statfs.\n");
 #  endif
   return NS_ERROR_NOT_IMPLEMENTED;
 
 #endif /* STATFS */
+}
+
+NS_IMETHODIMP
+nsLocalFile::GetDiskSpaceAvailable(int64_t* aDiskSpaceAvailable) {
+  return GetDiskInfo(
+      [](const struct STATFS& aStatInfo) {
+        return aStatInfo.f_bavail * static_cast<uint64_t>(aStatInfo.F_BSIZE);
+      },
+#if defined(USE_LINUX_QUOTACTL)
+      [](const struct dqblk& aQuotaInfo) -> uint64_t {
+        // dqb_bhardlimit is count of BLOCK_SIZE blocks, dqb_curspace is bytes
+        const uint64_t hardlimit = aQuotaInfo.dqb_bhardlimit * BLOCK_SIZE;
+        if (hardlimit > aQuotaInfo.dqb_curspace) {
+          return hardlimit - aQuotaInfo.dqb_curspace;
+        }
+        return 0;
+      },
+#endif
+      aDiskSpaceAvailable);
+}
+
+NS_IMETHODIMP
+nsLocalFile::GetDiskCapacity(int64_t* aDiskCapacity) {
+  return GetDiskInfo(
+      [](const struct STATFS& aStatInfo) {
+        return aStatInfo.f_blocks * static_cast<uint64_t>(aStatInfo.F_BSIZE);
+      },
+#if defined(USE_LINUX_QUOTACTL)
+      [](const struct dqblk& aQuotaInfo) {
+        // dqb_bhardlimit is count of BLOCK_SIZE blocks
+        return aQuotaInfo.dqb_bhardlimit * BLOCK_SIZE;
+      },
+#endif
+      aDiskCapacity);
 }
 
 NS_IMETHODIMP

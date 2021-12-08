@@ -40,6 +40,10 @@
 #  define LSTAT lstat
 #endif
 
+#if defined(HAVE_SYS_QUOTA_H) && defined(HAVE_LINUX_QUOTA_H)
+#  define USE_LINUX_QUOTACTL
+#endif
+
 class nsLocalFile final
 #ifdef MOZ_WIDGET_COCOA
     : public nsILocalFileMac
@@ -89,6 +93,15 @@ class nsLocalFile final
   nsresult SetLastModifiedTimeImpl(PRTime aLastModTime, bool aFollowLinks);
   nsresult GetLastModifiedTimeImpl(PRTime* aLastModTime, bool aFollowLinks);
   nsresult GetCreationTimeImpl(PRTime* aCreationTime, bool aFollowLinks);
+
+#if defined(USE_LINUX_QUOTACTL)
+  template <typename StatInfoFunc, typename QuotaInfoFunc>
+  nsresult GetDiskInfo(StatInfoFunc&& aStatInfoFunc,
+                       QuotaInfoFunc&& aQuotaInfoFunc, int64_t* aResult);
+#else
+  template <typename StatInfoFunc>
+  nsresult GetDiskInfo(StatInfoFunc&& aStatInfoFunc, int64_t* aResult);
+#endif
 };
 
 #endif /* _nsLocalFileUNIX_H_ */

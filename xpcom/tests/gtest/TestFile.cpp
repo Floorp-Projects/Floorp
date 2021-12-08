@@ -392,6 +392,34 @@ static bool TestNormalizeNativePath(nsIFile* aBase, nsIFile* aStart) {
   return true;
 }
 
+// Test nsIFile::GetDiskSpaceAvailable
+static bool TestDiskSpaceAvailable(nsIFile* aBase) {
+  nsCOMPtr<nsIFile> file = NewFile(aBase);
+  if (!file) return false;
+
+  int64_t diskSpaceAvailable = 0;
+  nsresult rv = file->GetDiskSpaceAvailable(&diskSpaceAvailable);
+  VerifyResult(rv, "GetDiskSpaceAvailable");
+
+  EXPECT_GE(diskSpaceAvailable, 0);
+
+  return true;
+}
+
+// Test nsIFile::GetDiskCapacity
+static bool TestDiskCapacity(nsIFile* aBase) {
+  nsCOMPtr<nsIFile> file = NewFile(aBase);
+  if (!file) return false;
+
+  int64_t diskCapacity = 0;
+  nsresult rv = file->GetDiskCapacity(&diskCapacity);
+  VerifyResult(rv, "GetDiskCapacity");
+
+  EXPECT_GE(diskCapacity, 0);
+
+  return true;
+}
+
 static void SetupAndTestFunctions(const nsAString& aDirName,
                                   bool aTestCreateUnique, bool aTestNormalize) {
   nsCOMPtr<nsIFile> base;
@@ -483,6 +511,9 @@ static void SetupAndTestFunctions(const nsAString& aDirName,
 
   ASSERT_TRUE(
       TestDeleteOnClose(base, "file7.txt", PR_RDWR | PR_CREATE_FILE, 0600));
+
+  ASSERT_TRUE(TestDiskSpaceAvailable(base));
+  ASSERT_TRUE(TestDiskCapacity(base));
 
   // Clean up temporary stuff
   rv = base->Remove(true);
