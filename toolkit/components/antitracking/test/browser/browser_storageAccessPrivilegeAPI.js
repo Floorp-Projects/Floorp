@@ -178,8 +178,14 @@ add_task(async function test_privilege_api_with_reject_tracker() {
     "https://tracking.example.org"
   );
 
+  // Verify if the prompt has been shown.
+  let shownPromise = BrowserTestUtils.waitForEvent(
+    PopupNotifications.panel,
+    "popupshown"
+  );
+
   // Call the privilege API.
-  await SpecialPowers.spawn(browser, [], async _ => {
+  let callAPIPromise = SpecialPowers.spawn(browser, [], async _ => {
     // The privilege API requires user activation. So, we set the user
     // activation flag before we call the API.
     content.document.notifyUserGestureActivation();
@@ -194,6 +200,13 @@ add_task(async function test_privilege_api_with_reject_tracker() {
 
     content.document.clearUserGestureActivation();
   });
+
+  await shownPromise;
+
+  // Accept the prompt
+  triggerMainCommand();
+
+  await callAPIPromise;
 
   // Verify if the storage access permission is set correctly.
   await storagePermissionPromise;
@@ -272,8 +285,14 @@ add_task(async function test_privilege_api_with_dFPI() {
     "http://not-tracking.example.com"
   );
 
+  // Verify if the prompt has been shown.
+  let shownPromise = BrowserTestUtils.waitForEvent(
+    PopupNotifications.panel,
+    "popupshown"
+  );
+
   // Call the privilege API.
-  await SpecialPowers.spawn(browser, [], async _ => {
+  let callAPIPromise = SpecialPowers.spawn(browser, [], async _ => {
     // The privilege API requires a user gesture. So, we set the user handling
     // flag before we call the API.
     content.document.notifyUserGestureActivation();
@@ -288,6 +307,13 @@ add_task(async function test_privilege_api_with_dFPI() {
 
     content.document.clearUserGestureActivation();
   });
+
+  await shownPromise;
+
+  // Accept the prompt
+  triggerMainCommand();
+
+  await callAPIPromise;
 
   // Verify if the storage access permission is set correctly.
   await storagePermissionPromise;
