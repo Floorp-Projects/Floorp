@@ -13,6 +13,13 @@ exclude: true
 
 ⚠️  breaking change and deprecation notices
 
+## v97
+- ⚠️ Deprecated GeckoSession.PermissionDelegate.MediaSource.rawId [97.1],
+  which now provides the same string as id [97.2].
+
+[97.1]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.MediaSource.html#rawId
+[97.2]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.MediaSource.html#id
+
 ## v96
 - Added [`onLoginFetch`][96.1] which allows apps to provide all saved logins to
   GeckoView.
@@ -1093,4 +1100,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 2e5d064d5675b5e38eeb25595a11906ed8d43e1a
+[api-version]: 88bad4c2e63abcc2cca4bf99df66991700aa2df1
