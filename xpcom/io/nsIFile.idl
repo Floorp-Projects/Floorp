@@ -453,6 +453,9 @@ interface nsIFile : nsISupports
     // number of bytes available on disk to non-superuser
     [must_use] readonly attribute int64_t diskSpaceAvailable;
 
+    // disk capacity in bytes
+    [must_use] readonly attribute int64_t diskCapacity;
+
     /**
      *  appendRelative[Native]Path
      *

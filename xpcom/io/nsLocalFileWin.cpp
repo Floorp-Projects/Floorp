@@ -2677,6 +2677,12 @@ nsLocalFile::GetDiskSpaceAvailable(int64_t* aDiskSpaceAvailable) {
 }
 
 NS_IMETHODIMP
+nsLocalFile::GetDiskCapacity(int64_t* aDiskCapacity) {
+  *aDiskCapacity = 0;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsLocalFile::GetParent(nsIFile** aParent) {
   // Check we are correctly initialized.
   CHECK_mWorkingPath();
