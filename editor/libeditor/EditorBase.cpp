@@ -1335,7 +1335,7 @@ MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHODIMP EditorBase::BeginningOfDocument() {
   }
 
   MOZ_ASSERT(
-      parent->ComputeIndexOf_Deprecated(firstEditableLeaf) == 0,
+      parent->ComputeIndexOf(firstEditableLeaf).valueOr(UINT32_MAX) == 0,
       "How come the first node isn't the left most child in its parent?");
   nsresult rv = SelectionRef().CollapseInLimiter(parent, 0);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),

@@ -15,6 +15,7 @@
 #include "mozilla/IMEContentObserver.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/MappedDeclarations.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
@@ -526,9 +527,8 @@ HTMLFormElement* nsGenericHTMLElement::FindAncestorForm(
         // anonymous.  Check for this the hard way.
         for (nsIContent* child = this; child != content;
              child = child->GetParent()) {
-          NS_ASSERTION(
-              child->GetParent()->ComputeIndexOf_Deprecated(child) != -1,
-              "Walked too far?");
+          NS_ASSERTION(child->GetParent()->ComputeIndexOf(child).isSome(),
+                       "Walked too far?");
         }
       }
 #endif

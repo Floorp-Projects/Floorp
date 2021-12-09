@@ -57,6 +57,8 @@ struct RawServoSelectorList;
 
 namespace mozilla {
 class EventListenerManager;
+template <typename T>
+class Maybe;
 class PresShell;
 class TextEditor;
 namespace dom {
@@ -615,6 +617,19 @@ class nsINode : public mozilla::dom::EventTarget {
    * @return the child, or null if index out of bounds
    */
   nsIContent* GetChildAt_Deprecated(uint32_t aIndex) const;
+
+  /**
+   * Get the index of a child within this content.
+   *
+   * @param aPossibleChild the child to get the index of.
+   * @return the index of the child, or Nothing if not a child. Be aware that
+   *         anonymous children (e.g. a <div> child of an <input> element) will
+   *         result in Nothing.
+   *
+   * If the return value is Some, then calling GetChildAt_Deprecated() with
+   * that value will return aPossibleChild.
+   */
+  mozilla::Maybe<uint32_t> ComputeIndexOf(const nsINode* aPossibleChild) const;
 
   /**
    * Get the index of a child within this content.
