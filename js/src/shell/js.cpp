@@ -6119,146 +6119,6 @@ static void OffThreadCompileScriptCallback(JS::OffThreadToken* token,
   job->markDone(token);
 }
 
-static bool OffThreadCompileScript(JSContext* cx, unsigned argc, Value* vp) {
-  if (!CanUseExtraThreads()) {
-    JS_ReportErrorASCII(cx,
-                        "Can't use offThreadCompileScript with --no-threads");
-    return false;
-  }
-
-  CallArgs args = CallArgsFromVp(argc, vp);
-
-  if (!args.requireAtLeast(cx, "offThreadCompileScript", 1)) {
-    return false;
-  }
-  if (!args[0].isString()) {
-    const char* typeName = InformalValueTypeName(args[0]);
-    JS_ReportErrorASCII(cx, "expected string to parse, got %s", typeName);
-    return false;
-  }
-
-  UniqueChars fileNameBytes;
-  CompileOptions options(cx);
-  options.setIntroductionType("js shell offThreadCompileScript")
-      .setFileAndLine("<string>", 1)
-      .setDeferDebugMetadata();
-
-  if (args.length() >= 2) {
-    if (!args[1].isObject()) {
-      JS_ReportErrorASCII(
-          cx, "offThreadCompileScript: The 2nd argument must be an object");
-      return false;
-    }
-
-    // Offthread compilation requires that the debug metadata be set when the
-    // script is collected from offthread, rather than when compiled.
-    RootedObject opts(cx, &args[1].toObject());
-    if (!js::ParseCompileOptions(cx, options, opts, &fileNameBytes)) {
-      return false;
-    }
-  }
-
-  // These option settings must override whatever the caller requested.
-  options.setIsRunOnce(true).setSourceIsLazy(false);
-
-  // We assume the caller wants caching if at all possible, ignoring
-  // heuristics that make sense for a real browser.
-  options.forceAsync = true;
-
-  JSString* scriptContents = args[0].toString();
-  AutoStableStringChars stableChars(cx);
-  if (!stableChars.initTwoByte(cx, scriptContents)) {
-    return false;
-  }
-
-  size_t length = scriptContents->length();
-  const char16_t* chars = stableChars.twoByteChars();
-
-  // Make sure we own the string's chars, so that they are not freed before
-  // the compilation is finished.
-  UniqueTwoByteChars ownedChars;
-  if (stableChars.maybeGiveOwnershipToCaller()) {
-    ownedChars.reset(const_cast<char16_t*>(chars));
-  } else {
-    ownedChars.reset(cx->pod_malloc<char16_t>(length));
-    if (!ownedChars) {
-      return false;
-    }
-
-    mozilla::PodCopy(ownedChars.get(), chars, length);
-  }
-
-  if (!JS::CanCompileOffThread(cx, options, length)) {
-    JS_ReportErrorASCII(cx, "cannot compile code on worker thread");
-    return false;
-  }
-
-  OffThreadJob* job =
-      NewOffThreadJob(cx, ScriptKind::Script, options,
-                      OffThreadJob::Source(std::move(ownedChars)));
-  if (!job) {
-    return false;
-  }
-
-  JS::SourceText<char16_t> srcBuf;
-  if (!srcBuf.init(cx, job->sourceChars(), length,
-                   JS::SourceOwnership::Borrowed) ||
-      !JS::CompileOffThread(cx, options, srcBuf, OffThreadCompileScriptCallback,
-                            job)) {
-    job->cancel();
-    DeleteOffThreadJob(cx, job);
-    return false;
-  }
-
-  args.rval().setInt32(job->id);
-  return true;
-}
-
-static bool runOffThreadScript(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
-
-  OffThreadJob* job =
-      LookupOffThreadJobForArgs(cx, ScriptKind::Script, args, 0);
-  if (!job) {
-    return false;
-  }
-
-  JS::OffThreadToken* token = job->waitUntilDone(cx);
-  MOZ_ASSERT(token);
-
-  RootedScript script(cx, JS::FinishOffThreadScript(cx, token));
-  DeleteOffThreadJob(cx, job);
-  if (!script) {
-    return false;
-  }
-
-  RootedValue privateValue(cx);
-  RootedString elementAttributeName(cx);
-
-  if (args.length() >= 2) {
-    if (args[1].isPrimitive()) {
-      JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr,
-                                JSSMSG_INVALID_ARGS, "compile");
-      return false;
-    }
-
-    RootedObject opts(cx, &args[1].toObject());
-    if (!ParseDebugMetadata(cx, opts, &privateValue, &elementAttributeName)) {
-      return false;
-    }
-  }
-
-  CompileOptions dummyOptions(cx);
-  JS::InstantiateOptions dummyInstantiateOptions(dummyOptions);
-  if (!JS::UpdateDebugMetadata(cx, script, dummyInstantiateOptions,
-                               privateValue, elementAttributeName, nullptr,
-                               nullptr)) {
-    return false;
-  }
-
-  return JS_ExecuteScript(cx, script, args.rval());
-}
-
 static bool OffThreadCompileToStencil(JSContext* cx, unsigned argc, Value* vp) {
   if (!CanUseExtraThreads()) {
     JS_ReportErrorASCII(
@@ -9543,31 +9403,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "syntaxParse(code)",
 "  Check the syntax of a string, returning success value"),
 
-    JS_FN_HELP("offThreadCompileScript", OffThreadCompileScript, 1, 0,
-"offThreadCompileScript(code[, options])",
-"  Compile |code| on a helper thread, returning a job ID.\n"
-"  To wait for the compilation to finish and run the code, call\n"
-"  |runOffThreadScript| passing the job ID. If present, |options| may\n"
-"  have properties saying how the code should be compiled:\n"
-"      noScriptRval: use the no-script-rval compiler option (default: false)\n"
-"      fileName: filename for error messages and debug info\n"
-"      lineNumber: starting line number for error messages and debug info\n"
-"      columnNumber: starting column number for error messages and debug info\n"
-"      element: if present with value |v|, convert |v| to an object |o| and\n"
-"         mark the source as being attached to the DOM element |o|. If the\n"
-"         property is omitted or |v| is null, don't attribute the source to\n"
-"         any DOM element.\n"
-"      elementAttributeName: if present and not undefined, the name of\n"
-"         property of 'element' that holds this code. This is what\n"
-"         Debugger.Source.prototype.elementAttributeName returns."),
-
-    JS_FN_HELP("runOffThreadScript", runOffThreadScript, 0, 0,
-"runOffThreadScript([jobID])",
-"  Wait for an off-thread compilation job to complete. The job ID can be\n"
-"  ommitted if there is only one job pending. If an error occurred,\n"
-"  throw the appropriate exception; otherwise, run the script and return\n"
-"  its value."),
-
     JS_FN_HELP("offThreadCompileModule", OffThreadCompileModule, 1, 0,
 "offThreadCompileModule(code)",
 "  Compile |code| on a helper thread, returning a job ID. To wait for the\n"
@@ -9585,7 +9420,7 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "  Decode |code| on a helper thread, returning a job ID. To wait for the\n"
 "  decoding to finish and run the code, call |runOffThreadDecodeScript| passing\n"
 "  the job ID. If present, |options| may have properties saying how the code\n"
-"  should be compiled (see also offThreadCompileScript)."),
+"  should be compiled (see also offThreadCompileToStencil)."),
 
     JS_FN_HELP("runOffThreadDecodedScript", runOffThreadDecodedScript, 0, 0,
 "runOffThreadDecodedScript([jobID])",
@@ -9597,7 +9432,19 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "offThreadCompileToStencil(code[, options])",
 "  Compile |code| on a helper thread, returning a job ID. To wait for the\n"
 "  compilation to finish and get the stencil object, call\n"
-"  |finishOffThreadCompileToStencil| passing the job ID."),
+"  |finishOffThreadCompileToStencil| passing the job ID.  If present, \n"
+"  |options| may have properties saying how the code should be compiled:\n"
+"      noScriptRval: use the no-script-rval compiler option (default: false)\n"
+"      fileName: filename for error messages and debug info\n"
+"      lineNumber: starting line number for error messages and debug info\n"
+"      columnNumber: starting column number for error messages and debug info\n"
+"      element: if present with value |v|, convert |v| to an object |o| and\n"
+"         mark the source as being attached to the DOM element |o|. If the\n"
+"         property is omitted or |v| is null, don't attribute the source to\n"
+"         any DOM element.\n"
+"      elementAttributeName: if present and not undefined, the name of\n"
+"         property of 'element' that holds this code. This is what\n"
+"         Debugger.Source.prototype.elementAttributeName returns."),
 
     JS_FN_HELP("finishOffThreadCompileToStencil", FinishOffThreadCompileToStencil, 0, 0,
 "finishOffThreadCompileToStencil([jobID])",
