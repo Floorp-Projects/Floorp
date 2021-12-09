@@ -445,13 +445,13 @@ class nsContentUtils {
    * This method fills |aAncestorNodes| with all ancestor nodes of |aNode|
    * including |aNode| (QI'd to nsIContent) at the zero index.
    * For each ancestor, there is a corresponding element in |aAncestorOffsets|
-   * which is the IndexOf the child in relation to its parent.
+   * which is the ComputeIndexOf the child in relation to its parent.
    *
    * This method just sucks.
    */
   static nsresult GetInclusiveAncestorsAndOffsets(
-      nsINode* aNode, int32_t aOffset, nsTArray<nsIContent*>* aAncestorNodes,
-      nsTArray<int32_t>* aAncestorOffsets);
+      nsINode* aNode, uint32_t aOffset, nsTArray<nsIContent*>* aAncestorNodes,
+      nsTArray<mozilla::Maybe<uint32_t>>* aAncestorOffsets);
 
   /**
    * Returns the closest common inclusive ancestor
