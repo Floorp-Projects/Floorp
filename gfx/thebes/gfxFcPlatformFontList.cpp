@@ -1249,7 +1249,7 @@ gfxFontconfigFont::gfxFontconfigFont(
 gfxFontconfigFont::~gfxFontconfigFont() = default;
 
 already_AddRefed<ScaledFont> gfxFontconfigFont::GetScaledFont(
-    mozilla::gfx::DrawTarget* aTarget) {
+    const TextRunDrawParams& aRunParams) {
   if (!mAzureScaledFont) {
     mAzureScaledFont = Factory::CreateScaledFontForFontconfigFont(
         GetUnscaledFont(), GetAdjustedSize(), mFTFace, GetPattern());

@@ -1533,6 +1533,13 @@ bool gfxFont::HasFeatureSet(uint32_t aFeature, bool& aFeatureOn) {
   return featureSet;
 }
 
+already_AddRefed<mozilla::gfx::ScaledFont> gfxFont::GetScaledFont(
+    mozilla::gfx::DrawTarget* aDrawTarget) {
+  TextRunDrawParams params;
+  params.dt = aDrawTarget;
+  return GetScaledFont(params);
+}
+
 void gfxFont::InitializeScaledFont() {
   if (!mAzureScaledFont) {
     return;
@@ -2086,11 +2093,7 @@ void gfxFont::Draw(const gfxTextRun* aTextRun, uint32_t aStart, uint32_t aEnd,
     fontParams.drawOptions = *aRunParams.drawOpts;
   }
 
-  if (aRunParams.allowGDI) {
-    fontParams.scaledFont = GetScaledFont(aRunParams.dt);
-  } else {
-    fontParams.scaledFont = GetScaledFontNoGDI(aRunParams.dt);
-  }
+  fontParams.scaledFont = GetScaledFont(aRunParams);
   if (!fontParams.scaledFont) {
     return;
   }
