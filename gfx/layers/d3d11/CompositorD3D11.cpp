@@ -16,7 +16,6 @@
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/gfx/Swizzle.h"
 #include "mozilla/layers/Diagnostics.h"
-#include "mozilla/layers/DiagnosticsD3D11.h"
 #include "mozilla/layers/Effects.h"
 #include "mozilla/layers/HelpersD3D11.h"
 #include "nsWindowsHelpers.h"
@@ -146,7 +145,6 @@ bool CompositorD3D11::Initialize(nsCString* const out_failureReason) {
     return false;
   }
 
-  mDiagnostics = MakeUnique<DiagnosticsD3D11>(mDevice, mContext);
   mFeatureLevel = mDevice->GetFeatureLevel();
 
   mHwnd = mWidget->AsWindows()->GetHwnd();
@@ -888,15 +886,6 @@ Maybe<IntRect> CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
     }
   }
 
-  if (StaticPrefs::layers_acceleration_draw_fps()) {
-    uint32_t pixelsPerFrame = 0;
-    for (auto iter = mBackBufferInvalid.RectIter(); !iter.Done(); iter.Next()) {
-      pixelsPerFrame += iter.Get().Width() * iter.Get().Height();
-    }
-
-    mDiagnostics->Start(pixelsPerFrame);
-  }
-
   return Some(rect);
 }
 
@@ -943,8 +932,6 @@ void CompositorD3D11::EndFrame() {
     if (StaticPrefs::gfx_compositor_clearstate()) {
       mContext->ClearState();
     }
-  } else {
-    mDiagnostics->Cancel();
   }
 
   // Block until the previous frame's work has been completed.
