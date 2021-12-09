@@ -8,17 +8,46 @@
 #define mozilla_dom_ipc_VsyncChild_h
 
 #include "mozilla/dom/PVsyncChild.h"
+#include "mozilla/RefPtr.h"
+#include "nsISupportsImpl.h"
+#include "nsTObserverArray.h"
 
-namespace mozilla::dom {
+namespace mozilla {
 
-class VsyncChild : public PVsyncChild {
+class VsyncObserver;
+
+namespace dom {
+
+// The PVsyncChild actor receives a vsync event from the main process and
+// delivers it to the child process. Currently this is restricted to the main
+// thread only. The actor will stay alive until the process dies or its
+// PVsyncParent actor dies.
+class VsyncChild final : public PVsyncChild {
+  NS_INLINE_DECL_REFCOUNTING(VsyncChild)
+
   friend class PVsyncChild;
 
- protected:
-  virtual mozilla::ipc::IPCResult RecvNotify(const VsyncEvent& aVsync,
-                                             const float& aVsyncRate) = 0;
+ public:
+  VsyncChild();
+
+  void AddChildRefreshTimer(VsyncObserver* aVsyncObserver);
+  void RemoveChildRefreshTimer(VsyncObserver* aVsyncObserver);
+
+  TimeDuration GetVsyncRate();
+
+ private:
+  virtual ~VsyncChild();
+
+  mozilla::ipc::IPCResult RecvNotify(const VsyncEvent& aVsync,
+                                     const float& aVsyncRate);
+  virtual void ActorDestroy(ActorDestroyReason aActorDestroyReason) override;
+
+  bool mIsShutdown;
+  TimeDuration mVsyncRate;
+  nsTObserverArray<VsyncObserver*> mObservers;
 };
 
-}  // namespace mozilla::dom
+}  // namespace dom
+}  // namespace mozilla
 
 #endif  // mozilla_dom_ipc_VsyncChild_h
