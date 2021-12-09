@@ -859,11 +859,7 @@ void logging::Address(const char* aDescr, LocalAccessible* aAcc) {
 }
 
 void logging::Node(const char* aDescr, nsINode* aNode) {
-  nsINode* parentNode = aNode ? aNode->GetParentNode() : nullptr;
-  Maybe<uint32_t> idxInParent;
-  if (parentNode) {
-    idxInParent = parentNode->ComputeIndexOf(aNode);
-  }
+  Maybe<uint32_t> idxInParent = aNode->ComputeIndexInParentNode();
   nsAutoString nodeDesc;
   DescribeNode(aNode, nodeDesc);
   printf("    %s: %s, idx in parent %s\n", aDescr,

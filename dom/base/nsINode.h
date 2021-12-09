@@ -632,6 +632,22 @@ class nsINode : public mozilla::dom::EventTarget {
   mozilla::Maybe<uint32_t> ComputeIndexOf(const nsINode* aPossibleChild) const;
 
   /**
+   * Get the index of this within parent node (ComputeIndexInParentNode) or
+   * parent content (nsIContent) node (ComputeIndexInParentContent).
+   *
+   * @return the index of this node in the parent, or Nothing there is no
+   *         parent (content) node or the parent does not have this node anymore
+   *         (e.g., being removed from the parent). Be aware that anonymous
+   *         children (e.g. a <div> child of an <input> element) will result in
+   *         Nothing.
+   *
+   * If the return value is Some, then calling GetChildAt_Deprecated() with
+   * that value will return this.
+   */
+  mozilla::Maybe<uint32_t> ComputeIndexInParentNode() const;
+  mozilla::Maybe<uint32_t> ComputeIndexInParentContent() const;
+
+  /**
    * Get the index of a child within this content.
    *
    * @param aPossibleChild the child to get the index of.
