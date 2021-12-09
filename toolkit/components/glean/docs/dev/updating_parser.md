@@ -5,13 +5,12 @@ It depends on [glean-parser] from pypi.org
 
 [glean-parser]: https://pypi.org/project/glean-parser/
 
-To update the in-tree glean-parser run
+To update the in-tree glean-parser change the version in `third_party/python/requirements.in`,
+then run
 
 ```
-./mach vendor python glean_parser==M.m.p
+./mach vendor python
 ```
-
-where `M.m.p` is the version number, e.g. 1.28.0.
 
 ```eval_rst
 .. note::

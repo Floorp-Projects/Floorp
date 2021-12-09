@@ -135,7 +135,7 @@ These collections are Glean. The opt-out can be found in the product's preferenc
 
 TODO: Fill this in.
 
-11. Where do you intend to share the results of your analys
+11. Where do you intend to share the results of your analysis?
 
 TODO: Fill this in.
 
