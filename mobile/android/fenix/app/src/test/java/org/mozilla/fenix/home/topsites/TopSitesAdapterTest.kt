@@ -12,19 +12,17 @@ class TopSitesAdapterTest {
 
     @Test
     fun testDiffCallback() {
-        val topSite = TopSite(
+        val topSite = TopSite.Default(
             id = 1L,
             title = "Title1",
             url = "https://mozilla.org",
-            null,
-            TopSite.Type.DEFAULT
+            null
         )
-        val topSite2 = TopSite(
+        val topSite2 = TopSite.Default(
             id = 1L,
             title = "Title2",
             url = "https://mozilla.org",
-            null,
-            TopSite.Type.DEFAULT
+            null
         )
 
         assertEquals(
@@ -32,12 +30,11 @@ class TopSitesAdapterTest {
             topSite.copy(title = "Title2")
         )
 
-        val topSite3 = TopSite(
+        val topSite3 = TopSite.Default(
             id = 2L,
             title = "Title2",
             url = "https://firefox.org",
-            null,
-            TopSite.Type.DEFAULT
+            null
         )
 
         assertEquals(

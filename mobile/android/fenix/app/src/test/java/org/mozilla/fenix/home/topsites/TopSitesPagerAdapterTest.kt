@@ -11,7 +11,6 @@ import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
 import mozilla.components.feature.top.sites.TopSite
-import mozilla.components.feature.top.sites.TopSite.Type.DEFAULT
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -21,35 +20,31 @@ class TopSitesPagerAdapterTest {
 
     private lateinit var topSitesPagerAdapter: TopSitesPagerAdapter
 
-    private val topSite = TopSite(
+    private val topSite = TopSite.Default(
         id = 1L,
         title = "Title1",
         url = "https://mozilla.org",
-        null,
-        DEFAULT
+        null
     )
 
-    private val topSite2 = TopSite(
+    private val topSite2 = TopSite.Default(
         id = 2L,
         title = "Title2",
         url = "https://mozilla.org",
-        null,
-        DEFAULT
+        null
     )
 
-    private val topSite3 = TopSite(
+    private val topSite3 = TopSite.Default(
         id = 3L,
         title = "Title3",
         url = "https://firefox.org",
-        null,
-        DEFAULT
+        null
     )
-    private val topSite4 = TopSite(
+    private val topSite4 = TopSite.Default(
         id = 4L,
         title = "Title4",
         url = "https://firefox.org",
-        null,
-        DEFAULT
+        null
     )
 
     @Before
@@ -101,16 +96,17 @@ class TopSitesPagerAdapterTest {
 
     @Test
     fun `WHEN update is called to delete the 1st of 4 topSites THEN submitList will update 3 topSites`() {
-        val currentList = mutableListOf(topSite, topSite2, topSite3, topSite4)
+        val currentList = listOf(topSite, topSite2, topSite3, topSite4)
         val topSitesAdapter: TopSitesAdapter = mockk()
+
         every { topSitesAdapter.currentList } returns currentList
         every { topSitesAdapter.submitList(any()) } just Runs
-        val removedTopSite = TopSite(
+
+        val removedTopSite = TopSite.Default(
             id = -1L,
             title = "REMOVED",
             url = "https://firefox.org",
-            null,
-            DEFAULT
+            null
         )
         val payload = TopSitePagerPayload(
             setOf(
@@ -123,22 +119,23 @@ class TopSitesPagerAdapterTest {
 
         topSitesPagerAdapter.update(payload, 0, topSitesAdapter)
 
-        val expected = mutableListOf(topSite2, topSite3, topSite4)
+        val expected = listOf(topSite2, topSite3, topSite4)
         verify { topSitesAdapter.submitList(expected) }
     }
 
     @Test
     fun `WHEN update is called to delete the 4th of 4 topSites THEN submitList will update 1 topSite`() {
-        val currentList = mutableListOf(topSite, topSite2, topSite3, topSite4)
+        val currentList = listOf(topSite, topSite2, topSite3, topSite4)
         val topSitesAdapter: TopSitesAdapter = mockk()
+
         every { topSitesAdapter.currentList } returns currentList
         every { topSitesAdapter.submitList(any()) } just Runs
-        val removedTopSite = TopSite(
+
+        val removedTopSite = TopSite.Default(
             id = -1L,
             title = "REMOVED",
             url = "https://firefox.org",
-            null,
-            DEFAULT
+            null
         )
         val payload = TopSitePagerPayload(
             setOf(
@@ -148,22 +145,23 @@ class TopSitesPagerAdapterTest {
 
         topSitesPagerAdapter.update(payload, 0, topSitesAdapter)
 
-        val expected = mutableListOf(topSite, topSite2, topSite3)
+        val expected = listOf(topSite, topSite2, topSite3)
         verify { topSitesAdapter.submitList(expected) }
     }
 
     @Test
     fun `WHEN update is called to update the 3rd of 4 topSites THEN submitList will contain 4 items`() {
-        val currentList = mutableListOf(topSite, topSite2, topSite3, topSite4)
+        val currentList = listOf(topSite, topSite2, topSite3, topSite4)
         val topSitesAdapter: TopSitesAdapter = mockk()
+
         every { topSitesAdapter.currentList } returns currentList
         every { topSitesAdapter.submitList(any()) } just Runs
-        val changedTopSite = TopSite(
+
+        val changedTopSite = TopSite.Default(
             id = 3L,
             title = "CHANGED",
             url = "https://firefox.org",
-            null,
-            DEFAULT
+            null
         )
         val payload = TopSitePagerPayload(
             setOf(
@@ -173,7 +171,7 @@ class TopSitesPagerAdapterTest {
 
         topSitesPagerAdapter.update(payload, 0, topSitesAdapter)
 
-        val expected = mutableListOf(topSite, topSite2, changedTopSite, topSite4)
+        val expected = listOf(topSite, topSite2, changedTopSite, topSite4)
         verify { topSitesAdapter.submitList(expected) }
     }
 }

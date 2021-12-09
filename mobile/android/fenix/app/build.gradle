@@ -478,6 +478,7 @@ dependencies {
     implementation Deps.mozilla_feature_webcompat_reporter
     implementation Deps.mozilla_service_pocket
 
+    implementation Deps.mozilla_service_contile
     implementation Deps.mozilla_service_digitalassetlinks
     implementation Deps.mozilla_service_sync_autofill
     implementation Deps.mozilla_service_sync_logins

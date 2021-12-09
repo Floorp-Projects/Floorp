@@ -250,8 +250,8 @@ class DefaultBrowserToolbarMenuController(
             is ToolbarMenu.Item.AddToTopSites -> {
                 scope.launch {
                     val context = swipeRefresh.context
-                    val numPinnedSites =
-                        topSitesStorage.cachedTopSites.filter { it.type != TopSite.Type.FRECENT }.size
+                    val numPinnedSites = topSitesStorage.cachedTopSites
+                        .filter { it !is TopSite.Frecent || it !is TopSite.Provided }.size
 
                     if (numPinnedSites >= settings.topSitesMaxLimit) {
                         AlertDialog.Builder(swipeRefresh.context).apply {

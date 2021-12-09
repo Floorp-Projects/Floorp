@@ -7,7 +7,6 @@ package org.mozilla.fenix.home.sessioncontrol
 import io.mockk.every
 import io.mockk.mockk
 import mozilla.components.feature.top.sites.TopSite
-import mozilla.components.feature.top.sites.TopSite.Type.FRECENT
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -52,9 +51,9 @@ class SessionControlAdapterTest {
 
     @Test
     fun `GIVEN two topSites WHEN getChangePayload called with one changed item THEN return TopSitePagerPayload with changes`() {
-        val topSite0 = TopSite(-1, "topSite0", "", 0, FRECENT)
-        val topSite1 = TopSite(-1, "topSite1", "", 0, FRECENT)
-        val topSiteChanged = TopSite(-1, "changed", "", 0, FRECENT)
+        val topSite0 = TopSite.Frecent(-1, "topSite0", "", 0)
+        val topSite1 = TopSite.Frecent(-1, "topSite1", "", 0)
+        val topSiteChanged = TopSite.Frecent(-1, "changed", "", 0)
         val topSitePager = TopSitePager(listOf(topSite0, topSite1))
         val newItem = TopSitePager(listOf(topSite0, topSiteChanged))
 
@@ -65,9 +64,9 @@ class SessionControlAdapterTest {
 
     @Test
     fun `GIVEN two topSites WHEN getChangePayload called with one removed THEN return TopSitePagerPayload with removed item`() {
-        val topSite0 = TopSite(-1, "topSite0", "", 0, FRECENT)
-        val topSite1 = TopSite(-1, "topSite1", "", 0, FRECENT)
-        val topSiteRemoved = TopSite(-1, "REMOVED", "", 0, FRECENT)
+        val topSite0 = TopSite.Frecent(-1, "topSite0", "", 0)
+        val topSite1 = TopSite.Frecent(-1, "topSite1", "", 0)
+        val topSiteRemoved = TopSite.Frecent(-1, "REMOVED", "", 0)
         val topSitePager = TopSitePager(listOf(topSite0, topSite1))
         val newItem = TopSitePager(listOf(topSite0))
 

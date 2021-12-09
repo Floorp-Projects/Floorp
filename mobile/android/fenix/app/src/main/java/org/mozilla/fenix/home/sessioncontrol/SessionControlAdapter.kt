@@ -15,7 +15,6 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
-import mozilla.components.feature.top.sites.TopSite.Type.FRECENT
 import mozilla.components.ui.widgets.WidgetSiteItemView
 import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.tips.Tip
@@ -98,7 +97,7 @@ sealed class AdapterItem(@LayoutRes val viewType: Int) {
 
             for ((index, item) in oldTopSites.topSites.withIndex()) {
                 val changedItem =
-                    newTopSites.topSites.getOrNull(index) ?: TopSite(-1, "REMOVED", "", 0, FRECENT)
+                    newTopSites.topSites.getOrNull(index) ?: TopSite.Frecent(-1, "REMOVED", "", 0)
                 if (changedItem != item) {
                     changed.add((Pair(index, changedItem)))
                 }

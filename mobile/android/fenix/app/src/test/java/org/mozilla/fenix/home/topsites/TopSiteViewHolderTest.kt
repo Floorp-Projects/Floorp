@@ -32,12 +32,11 @@ class TopSiteViewHolderTest {
     fun `binds list of top sites`() {
         TopSiteViewHolder(binding.root, interactor).bind(
             listOf(
-                TopSite(
+                TopSite.Default(
                     id = 1L,
                     title = "Pocket",
                     url = "https://getpocket.com",
-                    createdAt = 0,
-                    type = TopSite.Type.DEFAULT
+                    createdAt = 0
                 )
             )
         )

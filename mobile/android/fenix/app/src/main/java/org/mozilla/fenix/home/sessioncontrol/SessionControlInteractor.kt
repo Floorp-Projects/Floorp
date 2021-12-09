@@ -209,10 +209,9 @@ interface TopSiteInteractor {
     /**
      * Selects the given top site. Called when a user clicks on a top site.
      *
-     * @param url The URL of the top site.
-     * @param type The type of the top site.
+     * @param topSite The top site that was selected.
      */
-    fun onSelectTopSite(url: String, type: TopSite.Type)
+    fun onSelectTopSite(topSite: TopSite)
 
     /**
      * Called when top site menu is opened.
@@ -298,8 +297,8 @@ class SessionControlInteractor(
         controller.handleRenameCollectionTapped(collection)
     }
 
-    override fun onSelectTopSite(url: String, type: TopSite.Type) {
-        controller.handleSelectTopSite(url, type)
+    override fun onSelectTopSite(topSite: TopSite) {
+        controller.handleSelectTopSite(topSite)
     }
 
     override fun onStartBrowsingClicked() {

@@ -29,6 +29,7 @@ import org.mozilla.fenix.GleanMetrics.ToolbarSettings
 import org.mozilla.fenix.GleanMetrics.TopSites
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.name
 import java.util.Locale
 
 sealed class Event {
@@ -335,9 +336,9 @@ sealed class Event {
     object SecurePrefsWriteSuccess : Event()
     object SecurePrefsReset : Event()
 
-    data class TopSiteLongPress(val type: TopSite.Type) : Event() {
+    data class TopSiteLongPress(val topSite: TopSite) : Event() {
         override val extras: Map<TopSites.longPressKeys, String>?
-            get() = hashMapOf(TopSites.longPressKeys.type to type.name)
+            get() = hashMapOf(TopSites.longPressKeys.type to topSite.name())
     }
 
     data class ProgressiveWebAppForeground(val timeForegrounded: Long) : Event() {

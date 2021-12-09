@@ -53,6 +53,7 @@ import mozilla.components.feature.webcompat.WebCompatFeature
 import mozilla.components.feature.webcompat.reporter.WebCompatReporterFeature
 import mozilla.components.feature.webnotifications.WebNotificationFeature
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
+import mozilla.components.service.contile.ContileTopSitesProvider
 import mozilla.components.service.digitalassetlinks.RelationChecker
 import mozilla.components.service.digitalassetlinks.local.StatementApi
 import mozilla.components.service.digitalassetlinks.local.StatementRelationChecker
@@ -67,6 +68,7 @@ import mozilla.components.support.locale.LocaleManager
 import org.mozilla.fenix.AppRequestInterceptor
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.search.SearchMigration
@@ -334,6 +336,8 @@ class Core(
     }
     val pocketStoriesService by lazyMonitored { PocketStoriesService(context, pocketStoriesConfig) }
 
+    val contileTopSitesProvider by lazyMonitored { ContileTopSitesProvider(client) }
+
     val topSitesStorage by lazyMonitored {
         val defaultTopSites = mutableListOf<Pair<String, String>>()
 
@@ -404,9 +408,10 @@ class Core(
         }
 
         DefaultTopSitesStorage(
-            pinnedSiteStorage,
-            historyStorage,
-            defaultTopSites
+            pinnedSitesStorage = pinnedSiteStorage,
+            historyStorage = historyStorage,
+            topSitesProvider = if (FeatureFlags.contileFeature) contileTopSitesProvider else null,
+            defaultTopSites = defaultTopSites
         )
     }
 

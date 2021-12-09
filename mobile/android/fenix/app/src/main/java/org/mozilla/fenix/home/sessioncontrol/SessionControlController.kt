@@ -118,7 +118,7 @@ interface SessionControlController {
     /**
      * @see [TopSiteInteractor.onSelectTopSite]
      */
-    fun handleSelectTopSite(url: String, type: TopSite.Type)
+    fun handleSelectTopSite(topSite: TopSite)
 
     /**
      * @see [OnboardingInteractor.onStartBrowsingClicked]
@@ -373,38 +373,29 @@ class DefaultSessionControlController(
         metrics.track(Event.CollectionRenamePressed)
     }
 
-    override fun handleSelectTopSite(url: String, type: TopSite.Type) {
+    override fun handleSelectTopSite(topSite: TopSite) {
         dismissSearchDialogIfDisplayed()
 
         metrics.track(Event.TopSiteOpenInNewTab)
 
-        when (type) {
-            TopSite.Type.DEFAULT -> metrics.track(Event.TopSiteOpenDefault)
-            TopSite.Type.FRECENT -> metrics.track(Event.TopSiteOpenFrecent)
-            TopSite.Type.PINNED -> metrics.track(Event.TopSiteOpenPinned)
+        when (topSite) {
+            is TopSite.Default -> metrics.track(Event.TopSiteOpenDefault)
+            is TopSite.Frecent -> metrics.track(Event.TopSiteOpenFrecent)
+            is TopSite.Pinned -> metrics.track(Event.TopSiteOpenPinned)
         }
 
-        if (url == SupportUtils.GOOGLE_URL) {
-            metrics.track(Event.TopSiteOpenGoogle)
-        }
-
-        if (url == SupportUtils.BAIDU_URL) {
-            metrics.track(Event.TopSiteOpenBaidu)
-        }
-
-        if (url == SupportUtils.POCKET_TRENDING_URL) {
-            metrics.track(Event.PocketTopSiteClicked)
+        when (topSite.url) {
+            SupportUtils.GOOGLE_URL -> metrics.track(Event.TopSiteOpenGoogle)
+            SupportUtils.BAIDU_URL -> metrics.track(Event.TopSiteOpenBaidu)
+            SupportUtils.POCKET_TRENDING_URL -> metrics.track(Event.PocketTopSiteClicked)
         }
 
         val availableEngines = getAvailableSearchEngines()
-
         val searchAccessPoint = Event.PerformedSearch.SearchAccessPoint.TOPSITE
         val event =
-            availableEngines.firstOrNull {
-                engine ->
-                engine.resultUrls.firstOrNull { it.contains(url) } != null
-            }?.let {
-                searchEngine ->
+            availableEngines.firstOrNull { engine ->
+                engine.resultUrls.firstOrNull { it.contains(topSite.url) } != null
+            }?.let { searchEngine ->
                 searchAccessPoint.let { sap ->
                     MetricsUtils.createSearchEvent(searchEngine, store, sap)
                 }
@@ -412,7 +403,7 @@ class DefaultSessionControlController(
         event?.let { activity.metrics.track(it) }
 
         val tabId = addTabUseCase.invoke(
-            url = appendSearchAttributionToUrlIfNeeded(url),
+            url = appendSearchAttributionToUrlIfNeeded(topSite.url),
             selectTab = true,
             startLoading = true
         )

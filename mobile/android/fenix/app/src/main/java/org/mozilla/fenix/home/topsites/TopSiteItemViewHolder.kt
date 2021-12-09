@@ -13,9 +13,6 @@ import androidx.appcompat.content.res.AppCompatResources.getDrawable
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.feature.top.sites.TopSite
-import mozilla.components.feature.top.sites.TopSite.Type.DEFAULT
-import mozilla.components.feature.top.sites.TopSite.Type.FRECENT
-import mozilla.components.feature.top.sites.TopSite.Type.PINNED
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.databinding.TopSiteItemBinding
@@ -34,14 +31,17 @@ class TopSiteItemViewHolder(
 
     init {
         binding.topSiteItem.setOnClickListener {
-            interactor.onSelectTopSite(topSite.url, topSite.type)
+            interactor.onSelectTopSite(topSite)
         }
 
         binding.topSiteItem.setOnLongClickListener {
             interactor.onTopSiteMenuOpened()
-            it.context.components.analytics.metrics.track(Event.TopSiteLongPress(topSite.type))
+            it.context.components.analytics.metrics.track(Event.TopSiteLongPress(topSite))
 
-            val topSiteMenu = TopSiteItemMenu(view.context, topSite.type != FRECENT) { item ->
+            val topSiteMenu = TopSiteItemMenu(
+                context = view.context,
+                isPinnedSite = topSite is TopSite.Pinned || topSite is TopSite.Default
+            ) { item ->
                 when (item) {
                     is TopSiteItemMenu.Item.OpenInPrivateTab -> interactor.onOpenInPrivateTabClicked(
                         topSite
@@ -65,7 +65,7 @@ class TopSiteItemViewHolder(
     fun bind(topSite: TopSite) {
         binding.topSiteTitle.text = topSite.title
 
-        if (topSite.type == PINNED || topSite.type == DEFAULT) {
+        if (topSite is TopSite.Pinned || topSite is TopSite.Default) {
             val pinIndicator = getDrawable(itemView.context, R.drawable.ic_new_pin)
             binding.topSiteTitle.setCompoundDrawablesWithIntrinsicBounds(pinIndicator, null, null, null)
         } else {
