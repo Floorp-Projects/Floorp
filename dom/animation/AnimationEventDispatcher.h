@@ -156,19 +156,20 @@ struct AnimationEventInfo {
     return nullptr;
   }
 
-  void Dispatch(nsPresContext* aPresContext) {
+  MOZ_CAN_RUN_SCRIPT void Dispatch(nsPresContext* aPresContext) {
+    RefPtr<dom::EventTarget> target = mTarget;
     if (mEvent.is<RefPtr<dom::AnimationPlaybackEvent>>()) {
-      EventDispatcher::DispatchDOMEvent(
-          mTarget, nullptr /* WidgetEvent */,
-          mEvent.as<RefPtr<dom::AnimationPlaybackEvent>>(), aPresContext,
-          nullptr /* nsEventStatus */);
+      auto playbackEvent = mEvent.as<RefPtr<dom::AnimationPlaybackEvent>>();
+      EventDispatcher::DispatchDOMEvent(target, nullptr /* WidgetEvent */,
+                                        playbackEvent, aPresContext,
+                                        nullptr /* nsEventStatus */);
       return;
     }
 
     MOZ_ASSERT(mEvent.is<InternalTransitionEvent>() ||
                mEvent.is<InternalAnimationEvent>());
 
-    EventDispatcher::Dispatch(mTarget, aPresContext, AsWidgetEvent());
+    EventDispatcher::Dispatch(target, aPresContext, AsWidgetEvent());
   }
 };
 
