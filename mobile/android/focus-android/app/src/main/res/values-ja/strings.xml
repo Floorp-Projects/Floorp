@@ -192,7 +192,7 @@
     <string name="preference_subitem_autocomplete">URL 自動補完</string>
 
     <!-- Title of "switch" preference that enables/disables autocomplete for the default list -->
-    <string name="preference_switch_autocomplete_topsites">よく見るサイト</string>
+    <string name="preference_switch_autocomplete_topsites">人気サイト</string>
 
     <!-- Summary for the toggle to enable autocomplete for the topsites list
     %s is a placeholder for the app name (e.g. Firefox Focus)-->
@@ -838,6 +838,9 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">削除</string>
 
+    <!-- Text for the dialog title for renaming a top site -->
+    <string name="rename_top_site">タイトル変更</string>
+
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
     <string name="contextmenu_erased_images_note2">保存、共有された画像は %1$s の履歴を消去しても &lt;b&gt;削除されません&lt;/b&gt;。</string>
@@ -854,4 +857,8 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">端末のテーマに従う</string>
 
+
+    <!-- Sessions List -->
+    <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
+    <string name="close_tab">タブを閉じる</string>
 </resources>

@@ -839,6 +839,9 @@ Wählen Sie aus dem %1$s-Menü die Option „Zu Verknüpfungen hinzufügen“</s
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Entfernen</string>
 
+    <!-- Text for the dialog title for renaming a top site -->
+    <string name="rename_top_site">Umbenennen</string>
+
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
     <string name="contextmenu_erased_images_note2">Gespeicherte und geteilte Grafiken &lt;b&gt;werden nicht&lt;/b&gt; gelöscht, wenn Sie die Chronik von %1$s löschen.</string>
@@ -855,4 +858,8 @@ Wählen Sie aus dem %1$s-Menü die Option „Zu Verknüpfungen hinzufügen“</s
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Geräte-Theme beachten</string>
 
+
+    <!-- Sessions List -->
+    <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
+    <string name="close_tab">Tab schließen</string>
 </resources>
