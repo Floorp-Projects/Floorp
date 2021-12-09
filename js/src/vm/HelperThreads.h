@@ -21,10 +21,17 @@
 #include "threading/Mutex.h"
 #include "wasm/WasmConstants.h"
 
+namespace mozilla {
+union Utf8Unit;
+}
+
 namespace JS {
 class OffThreadToken {};
 class ReadOnlyCompileOptions;
 class Zone;
+
+template <typename UnitT>
+class SourceText;
 }  // namespace JS
 
 namespace js {
@@ -207,15 +214,6 @@ JS::OffThreadToken* StartOffThreadCompileModuleToStencil(
     JS::SourceText<char16_t>& srcBuf, JS::OffThreadCompileCallback callback,
     void* callbackData);
 JS::OffThreadToken* StartOffThreadCompileModuleToStencil(
-    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-    JS::SourceText<mozilla::Utf8Unit>& srcBuf,
-    JS::OffThreadCompileCallback callback, void* callbackData);
-
-JS::OffThreadToken* StartOffThreadParseModule(
-    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
-    JS::SourceText<char16_t>& srcBuf, JS::OffThreadCompileCallback callback,
-    void* callbackData);
-JS::OffThreadToken* StartOffThreadParseModule(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options,
     JS::SourceText<mozilla::Utf8Unit>& srcBuf,
     JS::OffThreadCompileCallback callback, void* callbackData);

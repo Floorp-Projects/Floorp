@@ -25,17 +25,6 @@ class JS_PUBLIC_API JSScript;
 
 namespace JS {
 
-template <typename UnitT>
-class SourceText;
-
-}  // namespace JS
-
-namespace mozilla {
-union Utf8Unit;
-}
-
-namespace JS {
-
 class OffThreadToken;
 
 using OffThreadCompileCallback = void (*)(OffThreadToken* token,
@@ -63,26 +52,6 @@ using OffThreadCompileCallback = void (*)(OffThreadToken* token,
 
 extern JS_PUBLIC_API bool CanCompileOffThread(
     JSContext* cx, const ReadOnlyCompileOptions& options, size_t length);
-
-extern JS_PUBLIC_API OffThreadToken* CompileOffThreadModule(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    SourceText<char16_t>& srcBuf, OffThreadCompileCallback callback,
-    void* callbackData);
-
-// NOTE: Unlike for the normal sync compilation functions, this function NEVER
-//       INFLATES TO UTF-16.  Therefore, it is ALWAYS invoking experimental
-//       UTF-8 support.  Inflate to UTF-16 yourself and use the other overload
-//       if you're unable to take a risk using unstable functionality.
-extern JS_PUBLIC_API OffThreadToken* CompileOffThreadModule(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    SourceText<mozilla::Utf8Unit>& srcBuf, OffThreadCompileCallback callback,
-    void* callbackData);
-
-extern JS_PUBLIC_API JSObject* FinishOffThreadModule(JSContext* cx,
-                                                     OffThreadToken* token);
-
-extern JS_PUBLIC_API void CancelOffThreadModule(JSContext* cx,
-                                                OffThreadToken* token);
 
 extern JS_PUBLIC_API bool CanDecodeOffThread(
     JSContext* cx, const ReadOnlyCompileOptions& options, size_t length);

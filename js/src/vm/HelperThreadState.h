@@ -57,9 +57,6 @@ enum class ParseTaskKind {
   // The output is CompilationStencil for module.
   ModuleStencil,
 
-  // The output is module JSObject.
-  Module,
-
   // The output is JSScript.
   ScriptDecode,
 
@@ -407,10 +404,6 @@ class GlobalHelperThreadState {
   bool finishMultiStencilsDecodeTask(
       JSContext* cx, JS::OffThreadToken* token,
       mozilla::Vector<RefPtr<JS::Stencil>>* stencils);
-  JSObject* finishModuleParseTask(JSContext* cx, JS::OffThreadToken* token);
-
-  already_AddRefed<frontend::CompilationStencil> finishStencilParseTask(
-      JSContext* cx, JS::OffThreadToken* token);
 
   bool hasActiveThreads(const AutoLockHelperThreadState&);
   bool canStartTasks(const AutoLockHelperThreadState& locked);
