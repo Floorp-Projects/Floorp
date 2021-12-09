@@ -156,7 +156,7 @@ void ModuleLoadRequest::ModuleLoaded() {
     return;
   }
 
-  mLoader->StartFetchingModuleDependencies(this);
+  mLoader->GetModuleLoader()->StartFetchingModuleDependencies(this);
 }
 
 void ModuleLoadRequest::ModuleErrored() {
@@ -223,7 +223,7 @@ void ModuleLoadRequest::LoadFailed() {
 }
 
 void ModuleLoadRequest::LoadFinished() {
-  mLoader->ProcessLoadedModuleTree(this);
+  mLoader->GetModuleLoader()->ProcessLoadedModuleTree(this);
 
   mLoader = nullptr;
 }
