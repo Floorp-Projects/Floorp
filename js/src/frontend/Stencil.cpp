@@ -2274,6 +2274,12 @@ bool CompilationStencil::deserializeStencils(JSContext* cx,
   return true;
 }
 
+ExtensibleCompilationStencil::ExtensibleCompilationStencil(JSContext* cx,
+                                                           ScriptSource* source)
+    : alloc(CompilationStencil::LifoAllocChunkSize),
+      source(source),
+      parserAtoms(cx->runtime(), alloc) {}
+
 ExtensibleCompilationStencil::ExtensibleCompilationStencil(
     JSContext* cx, CompilationInput& input)
     : canLazilyParse(CanLazilyParse(input.options)),
