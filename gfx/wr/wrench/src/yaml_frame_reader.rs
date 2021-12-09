@@ -338,7 +338,7 @@ pub struct YamlFrameReader {
 
     /// A HashMap of offsets which specify what scroll offsets particular
     /// scroll layers should be initialized with.
-    scroll_offsets: HashMap<ExternalScrollId, LayoutPoint>,
+    scroll_offsets: HashMap<ExternalScrollId, LayoutVector2D>,
     next_external_scroll_id: u64,
 
     image_map: HashMap<(PathBuf, Option<i64>), (ImageKey, LayoutSize)>,
@@ -1829,8 +1829,8 @@ impl YamlFrameReader {
         let external_id = ExternalScrollId(self.next_external_scroll_id, dl.pipeline_id);
         self.next_external_scroll_id += 1;
 
-        if let Some(size) = yaml["scroll-offset"].as_point() {
-            self.scroll_offsets.insert(external_id, LayoutPoint::new(size.x, size.y));
+        if let Some(vector) = yaml["scroll-offset"].as_vector() {
+            self.scroll_offsets.insert(external_id, vector);
         }
 
         let clip_to_frame = yaml["clip-to-frame"].as_bool().unwrap_or(false);
@@ -2161,9 +2161,9 @@ impl YamlFrameReader {
         let is_blend_container = yaml["blend-container"].as_bool().unwrap_or(false);
 
         if is_root {
-            if let Some(size) = yaml["scroll-offset"].as_point() {
+            if let Some(vector) = yaml["scroll-offset"].as_vector() {
                 let external_id = ExternalScrollId(0, dl.pipeline_id);
-                self.scroll_offsets.insert(external_id, LayoutPoint::new(size.x, size.y));
+                self.scroll_offsets.insert(external_id, vector);
             }
         }
 

@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{ExternalScrollId, PropertyBinding, ReferenceFrameKind, TransformStyle, PropertyBindingId};
-use api::{PipelineId, ScrollClamping, SpatialTreeItemKey};
+use api::{PipelineId, SpatialTreeItemKey};
 use api::units::*;
 use euclid::Transform3D;
 use crate::gpu_types::TransformPalette;
@@ -1066,21 +1066,20 @@ impl SpatialTree {
         self.root_reference_frame_index
     }
 
-    pub fn scroll_node(
+    pub fn set_scroll_offset(
         &mut self,
-        origin: LayoutPoint,
         id: ExternalScrollId,
-        clamp: ScrollClamping
+        offset: LayoutVector2D,
     ) -> bool {
-        let mut did_scroll_node = false;
+        let mut did_change = false;
 
         self.visit_nodes_mut(|_, node| {
             if node.matches_external_id(id) {
-                did_scroll_node |= node.set_scroll_origin(&origin, clamp);
+                did_change |= node.set_scroll_offset(&offset);
             }
         });
 
-        did_scroll_node
+        did_change
     }
 
     pub fn update_tree(

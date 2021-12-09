@@ -525,10 +525,9 @@ fn main() {
                 }
                 Invalidations::Scrolling => {
                     let d = 0.5 - 0.5 * (2.0 * f32::consts::PI * 5.0 * time).cos();
-                    txn.scroll_node_with_id(
-                        LayoutPoint::new(0.0, (d * 100.0).round()),
+                    txn.set_scroll_offset(
                         scroll_id,
-                        ScrollClamping::NoClamping,
+                        LayoutPoint::new(0.0, (d * 100.0).round()),
                     );
                 }
             }
