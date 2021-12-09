@@ -109,7 +109,7 @@ function collectProduct(pageData, element) {
 
   let prices = getProp(element, "price");
   if (prices.length) {
-    let price = parseInt(prices[0]);
+    let price = parseFloat(prices[0]);
     if (!isNaN(price)) {
       pageData.data[PageDataSchema.DATA_TYPE.PRODUCT].price = {
         value: price,
