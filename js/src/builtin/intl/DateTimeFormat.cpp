@@ -52,10 +52,8 @@ using JS::AutoStableStringChars;
 using JS::ClippedTime;
 using JS::TimeClip;
 
-using js::intl::CallICU;
 using js::intl::DateTimeFormatOptions;
 using js::intl::FormatBuffer;
-using js::intl::IcuLocale;
 using js::intl::INITIAL_CHAR_BUFFER_SIZE;
 using js::intl::SharedIntlData;
 
