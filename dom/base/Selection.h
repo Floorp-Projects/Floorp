@@ -210,7 +210,7 @@ class Selection final : public nsSupportsWeakReference,
     CollapseInternal(InLimiter::eYes, aPoint, aRv);
   }
 
-  MOZ_CAN_RUN_SCRIPT nsresult Extend(nsINode* aContainer, int32_t aOffset);
+  MOZ_CAN_RUN_SCRIPT nsresult Extend(nsINode* aContainer, uint32_t aOffset);
 
   /**
    * See mStyledRanges.mRanges.
@@ -235,7 +235,7 @@ class Selection final : public nsSupportsWeakReference,
                                         int32_t* aOffsetUsed = nullptr) const;
 
   UniquePtr<SelectionDetails> LookUpSelection(
-      nsIContent* aContent, int32_t aContentOffset, int32_t aContentLength,
+      nsIContent* aContent, uint32_t aContentOffset, uint32_t aContentLength,
       UniquePtr<SelectionDetails> aDetailsHead, SelectionType aSelectionType,
       bool aSlowCheck);
 
@@ -432,8 +432,8 @@ class Selection final : public nsSupportsWeakReference,
    *
    * @param aReturn references, not copies, of the internal ranges.
    */
-  void GetRangesForInterval(nsINode& aBeginNode, int32_t aBeginOffset,
-                            nsINode& aEndNode, int32_t aEndOffset,
+  void GetRangesForInterval(nsINode& aBeginNode, uint32_t aBeginOffset,
+                            nsINode& aEndNode, uint32_t aEndOffset,
                             bool aAllowAdjacent,
                             nsTArray<RefPtr<nsRange>>& aReturn,
                             mozilla::ErrorResult& aRv);
@@ -648,8 +648,8 @@ class Selection final : public nsSupportsWeakReference,
   //
   //    Now that overlapping ranges are disallowed, there can be a maximum of
   //    2 adjacent ranges
-  nsresult GetRangesForIntervalArray(nsINode* aBeginNode, int32_t aBeginOffset,
-                                     nsINode* aEndNode, int32_t aEndOffset,
+  nsresult GetRangesForIntervalArray(nsINode* aBeginNode, uint32_t aBeginOffset,
+                                     nsINode* aEndNode, uint32_t aEndOffset,
                                      bool aAllowAdjacent,
                                      nsTArray<nsRange*>* aRanges);
 
@@ -807,8 +807,8 @@ class Selection final : public nsSupportsWeakReference,
      */
     static int32_t FindInsertionPoint(
         const nsTArray<StyledRange>* aElementArray, const nsINode& aPointNode,
-        int32_t aPointOffset,
-        int32_t (*aComparator)(const nsINode&, int32_t, const nsRange&));
+        uint32_t aPointOffset,
+        int32_t (*aComparator)(const nsINode&, uint32_t, const nsRange&));
 
     /**
      * Works on the same principle as GetRangesForIntervalArray, however
@@ -819,8 +819,8 @@ class Selection final : public nsSupportsWeakReference,
      * @param aEndIndex can be in [-1, mRanges.Length()].
      */
     nsresult GetIndicesForInterval(const nsINode* aBeginNode,
-                                   int32_t aBeginOffset,
-                                   const nsINode* aEndNode, int32_t aEndOffset,
+                                   uint32_t aBeginOffset,
+                                   const nsINode* aEndNode, uint32_t aEndOffset,
                                    bool aAllowAdjacent, int32_t& aStartIndex,
                                    int32_t& aEndIndex) const;
 

@@ -1514,12 +1514,21 @@ UniquePtr<SelectionDetails> nsFrameSelection::LookUpSelection(
     return nullptr;
   }
 
+  // TODO: Layout should use `uint32_t` for handling offset in DOM nodes
+  //       (for example: bug 1735262)
+  MOZ_ASSERT(aContentOffset >= 0);
+  MOZ_ASSERT(aContentLength >= 0);
+  if (MOZ_UNLIKELY(aContentOffset < 0) || MOZ_UNLIKELY(aContentLength < 0)) {
+    return nullptr;
+  }
+
   UniquePtr<SelectionDetails> details;
 
   for (size_t j = 0; j < ArrayLength(mDomSelections); j++) {
     if (mDomSelections[j]) {
       details = mDomSelections[j]->LookUpSelection(
-          aContent, aContentOffset, aContentLength, std::move(details),
+          aContent, static_cast<uint32_t>(aContentOffset),
+          static_cast<uint32_t>(aContentLength), std::move(details),
           kPresentSelectionTypes[j], aSlowCheck);
     }
   }
