@@ -12,24 +12,13 @@
 #  include "mozilla/intl/LocaleService.h"
 #  include "mozilla/intl/FormatBuffer.h"
 #  include "mozilla/intl/NumberFormat.h"
+#  include "mozilla/intl/NumberParser.h"
 #  include "nsIContent.h"
 #  include "mozilla/dom/Document.h"
 #  include "nsString.h"
-#  include "unicode/unum.h"
 
 using namespace mozilla;
 using mozilla::intl::LocaleService;
-
-class NumberFormatDeleter {
- public:
-  void operator()(UNumberFormat* aPtr) {
-    MOZ_ASSERT(aPtr != nullptr,
-               "UniquePtr deleter shouldn't be called for nullptr");
-    unum_close(aPtr);
-  }
-};
-
-using UniqueUNumberFormat = UniquePtr<UNumberFormat, NumberFormatDeleter>;
 
 void ICUUtils::LanguageTagIterForContent::GetNext(nsACString& aBCP47LangTag) {
   if (mCurrentFallbackIndex < 0) {
@@ -123,20 +112,23 @@ double ICUUtils::ParseNumber(nsAString& aValue,
   nsAutoCString langTag;
   aLangTags.GetNext(langTag);
   while (!langTag.IsEmpty()) {
-    UErrorCode status = U_ZERO_ERROR;
-    UniqueUNumberFormat format(
-        unum_open(UNUM_DECIMAL, nullptr, 0, langTag.get(), nullptr, &status));
-    if (!StaticPrefs::dom_forms_number_grouping()) {
-      unum_setAttribute(format.get(), UNUM_GROUPING_USED, UBool(0));
+    auto createResult = intl::NumberParser::TryCreate(
+        langTag.get(), StaticPrefs::dom_forms_number_grouping());
+    if (createResult.isErr()) {
+      aLangTags.GetNext(langTag);
+      continue;
     }
-    int32_t parsePos = 0;
+    UniquePtr<intl::NumberParser> np = createResult.unwrap();
+
     static_assert(sizeof(UChar) == 2 && sizeof(nsAString::char_type) == 2,
                   "Unexpected character size - the following cast is unsafe");
-    double val = unum_parseDouble(format.get(),
-                                  (const UChar*)PromiseFlatString(aValue).get(),
-                                  length, &parsePos, &status);
-    if (U_SUCCESS(status) && parsePos == (int32_t)length) {
-      return val;
+    auto parseResult = np->ParseDouble(
+        mozilla::Span<const char16_t>(PromiseFlatString(aValue).get(), length));
+    if (parseResult.isOk()) {
+      std::pair<double, int32_t> parsed = parseResult.unwrap();
+      if (parsed.second == static_cast<int32_t>(length)) {
+        return parsed.first;
+      }
     }
     aLangTags.GetNext(langTag);
   }
