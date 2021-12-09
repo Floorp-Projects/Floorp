@@ -622,23 +622,9 @@ nsresult ScriptLoader::CreateModuleScript(ModuleLoadRequest* aRequest) {
 
   LOG(("ScriptLoadRequest (%p): Create module script", aRequest));
 
-  nsCOMPtr<nsIGlobalObject> globalObject;
-  nsCOMPtr<nsIScriptContext> context;
-  if (aRequest->GetWebExtGlobal()) {
-    globalObject = aRequest->GetWebExtGlobal();
-  } else {
-    nsCOMPtr<nsIScriptGlobalObject> scriptGlobal =
-        GetScriptGlobalObject(WebExtGlobal::Handled);
-    if (!scriptGlobal) {
-      return NS_ERROR_FAILURE;
-    }
-
-    context = scriptGlobal->GetScriptContext();
-    if (!context) {
-      return NS_ERROR_FAILURE;
-    }
-
-    globalObject = scriptGlobal;
+  nsCOMPtr<nsIGlobalObject> globalObject = GetGlobalForRequest(aRequest);
+  if (!globalObject) {
+    return NS_ERROR_FAILURE;
   }
 
   nsAutoMicroTask mt;
@@ -646,12 +632,6 @@ nsresult ScriptLoader::CreateModuleScript(ModuleLoadRequest* aRequest) {
   AutoAllowLegacyScriptExecution exemption;
 
   AutoEntryScript aes(globalObject, "CompileModule", true);
-
-  bool oldProcessingScriptTag = false;
-  if (context) {
-    oldProcessingScriptTag = context->GetProcessingScriptTag();
-    context->SetProcessingScriptTag(true);
-  }
 
   nsresult rv;
   {
@@ -726,10 +706,6 @@ nsresult ScriptLoader::CreateModuleScript(ModuleLoadRequest* aRequest) {
       aRequest->ModuleErrored();
       return NS_OK;
     }
-  }
-
-  if (context) {
-    context->SetProcessingScriptTag(oldProcessingScriptTag);
   }
 
   LOG(("ScriptLoadRequest (%p):   module script == %p", aRequest,
