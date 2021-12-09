@@ -15,8 +15,6 @@ extern "C" {
 // we're using unsigned long instead of size_t and char instead of uint8_t.
 
 // Since RLBox doesn't support C++ APIs, we expose C wrappers for the WOFF2.
-unsigned long RLBoxComputeWOFF2FinalSize(const char* aData,
-                                         unsigned long aLength);
 bool RLBoxConvertWOFF2ToTTF(const char* aData, unsigned long aLength,
                             unsigned long aDecompressedSize,
                             unsigned long* aResultSize, void** aResultOwningStr,

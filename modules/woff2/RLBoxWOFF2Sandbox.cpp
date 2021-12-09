@@ -32,12 +32,6 @@ void RLBoxDeleteWOFF2String(void** aStr) {
   delete buf;
 }
 
-unsigned long RLBoxComputeWOFF2FinalSize(const char* aData,
-                                         unsigned long aLength) {
-  return woff2::ComputeWOFF2FinalSize(reinterpret_cast<const uint8_t*>(aData),
-                                      aLength);
-}
-
 BrotliDecompressCallback* sRLBoxBrotliDecompressCallback = nullptr;
 
 void RegisterWOFF2Callback(BrotliDecompressCallback* aCallback) {
