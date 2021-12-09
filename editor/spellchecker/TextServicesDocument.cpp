@@ -1858,13 +1858,11 @@ nsresult TextServicesDocument::GetCollapsedSelection(
   uint32_t offset = range->StartOffset();
 
   const Maybe<int32_t> e1s1 = nsContentUtils::ComparePoints(
-      eStart->mTextNode, AssertedCast<int32_t>(eStartOffset), parent,
-      AssertedCast<int32_t>(offset));
+      eStart->mTextNode, eStartOffset, parent, offset);
   const Maybe<int32_t> e2s1 = nsContentUtils::ComparePoints(
-      eEnd->mTextNode, AssertedCast<int32_t>(eEndOffset), parent,
-      AssertedCast<int32_t>(offset));
+      eEnd->mTextNode, eEndOffset, parent, offset);
 
-  if (NS_WARN_IF(!e1s1) || NS_WARN_IF(!e2s1)) {
+  if (MOZ_UNLIKELY(NS_WARN_IF(!e1s1) || NS_WARN_IF(!e2s1))) {
     return NS_ERROR_FAILURE;
   }
 
@@ -2056,16 +2054,14 @@ nsresult TextServicesDocument::GetUncollapsedSelection(
 
     NS_ENSURE_SUCCESS(rv, rv);
 
-    e1s2 = nsContentUtils::ComparePoints(
-        eStart->mTextNode, AssertedCast<int32_t>(eStartOffset), endContainer,
-        AssertedCast<int32_t>(endOffset));
+    e1s2 = nsContentUtils::ComparePoints(eStart->mTextNode, eStartOffset,
+                                         endContainer, endOffset);
     if (NS_WARN_IF(!e1s2)) {
       return NS_ERROR_FAILURE;
     }
 
-    e2s1 = nsContentUtils::ComparePoints(
-        eEnd->mTextNode, AssertedCast<int32_t>(eEndOffset), startContainer,
-        AssertedCast<int32_t>(startOffset));
+    e2s1 = nsContentUtils::ComparePoints(eEnd->mTextNode, eEndOffset,
+                                         startContainer, startOffset);
     if (NS_WARN_IF(!e2s1)) {
       return NS_ERROR_FAILURE;
     }
@@ -2087,15 +2083,13 @@ nsresult TextServicesDocument::GetUncollapsedSelection(
 
   // Now that we have an intersecting range, find out more info:
   const Maybe<int32_t> e1s1 = nsContentUtils::ComparePoints(
-      eStart->mTextNode, AssertedCast<int32_t>(eStartOffset), startContainer,
-      AssertedCast<int32_t>(startOffset));
+      eStart->mTextNode, eStartOffset, startContainer, startOffset);
   if (NS_WARN_IF(!e1s1)) {
     return NS_ERROR_FAILURE;
   }
 
   const Maybe<int32_t> e2s2 = nsContentUtils::ComparePoints(
-      eEnd->mTextNode, AssertedCast<int32_t>(eEndOffset), endContainer,
-      AssertedCast<int32_t>(endOffset));
+      eEnd->mTextNode, eEndOffset, endContainer, endOffset);
   if (NS_WARN_IF(!e2s2)) {
     return NS_ERROR_FAILURE;
   }

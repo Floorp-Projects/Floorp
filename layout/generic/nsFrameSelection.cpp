@@ -1096,10 +1096,11 @@ void nsFrameSelection::MaintainedRange::AdjustNormalSelection(
 
   nsINode* rangeStartNode = mRange->GetStartContainer();
   nsINode* rangeEndNode = mRange->GetEndContainer();
-  int32_t rangeStartOffset = mRange->StartOffset();
-  int32_t rangeEndOffset = mRange->EndOffset();
+  const uint32_t rangeStartOffset = mRange->StartOffset();
+  const uint32_t rangeEndOffset = mRange->EndOffset();
 
-  const Maybe<int32_t> relToStart = nsContentUtils::ComparePoints(
+  NS_ASSERTION(aOffset >= 0, "aOffset should not be negative");
+  const Maybe<int32_t> relToStart = nsContentUtils::ComparePoints_FixOffset2(
       rangeStartNode, rangeStartOffset, aContent, aOffset);
   if (NS_WARN_IF(!relToStart)) {
     // Potentially handle this properly when Selection across Shadow DOM
@@ -1108,7 +1109,7 @@ void nsFrameSelection::MaintainedRange::AdjustNormalSelection(
     return;
   }
 
-  const Maybe<int32_t> relToEnd = nsContentUtils::ComparePoints(
+  const Maybe<int32_t> relToEnd = nsContentUtils::ComparePoints_FixOffset2(
       rangeEndNode, rangeEndOffset, aContent, aOffset);
   if (NS_WARN_IF(!relToEnd)) {
     // Potentially handle this properly when Selection across Shadow DOM
