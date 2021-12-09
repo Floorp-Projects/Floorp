@@ -1,6 +1,186 @@
 {
   "data": [
     {
+      "schema": 1639016177331,
+      "derHash": "728p9jb2K91HUxIvQfNBnufCh3WHvkqYB631iUZFjn8=",
+      "subject": "CN=Telia Root CA v2,O=Telia Finland Oyj,C=FI",
+      "subjectDN": "MEQxCzAJBgNVBAYTAkZJMRowGAYDVQQKDBFUZWxpYSBGaW5sYW5kIE95ajEZMBcGA1UEAwwQVGVsaWEgUm9vdCBDQSB2Mg==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "ef7efd4cbf4031585f1a5951e9b5d6bac8a753a47e1861138b45eaaf0f441821",
+        "size": 2284,
+        "filename": "wrPDGkophQqo889HKhFp_3G0FlefakSC7HdEuD35iKw=.pem",
+        "location": "security-state-staging/intermediates/9808e62b-cdbd-44b3-941f-6f29f249116a.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "wrPDGkophQqo889HKhFp/3G0FlefakSC7HdEuD35iKw=",
+      "crlite_enrolled": true,
+      "id": "8adb25e4-ae4d-4bdd-aa24-a1b07637fb72",
+      "last_modified": 1639018682471
+    },
+    {
+      "schema": 1639016175838,
+      "derHash": "JCtpdC/LHlsqv5iJi5RXIYdUTltNmRF4ZXNiH2p0uCw=",
+      "subject": "CN=Telia Root CA v2,O=Telia Finland Oyj,C=FI",
+      "subjectDN": "MEQxCzAJBgNVBAYTAkZJMRowGAYDVQQKDBFUZWxpYSBGaW5sYW5kIE95ajEZMBcGA1UEAwwQVGVsaWEgUm9vdCBDQSB2Mg==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "6f399d9adcd59cadec87760241621f46a9daf25db3c442d61999a94042f01988",
+        "size": 1951,
+        "filename": "wrPDGkophQqo889HKhFp_3G0FlefakSC7HdEuD35iKw=.pem",
+        "location": "security-state-staging/intermediates/4c25a27e-2c0e-442f-893f-37ea349bb645.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "wrPDGkophQqo889HKhFp/3G0FlefakSC7HdEuD35iKw=",
+      "crlite_enrolled": true,
+      "id": "f1dcb796-9a85-4f2d-a0fb-9b3f7b4c9089",
+      "last_modified": 1639018682461
+    },
+    {
+      "schema": 1639016177034,
+      "derHash": "ie/rJQlrpMzUCvT7h1bwpIQ5lZdIIgIJFMToWdkyt/M=",
+      "subject": "CN=SSL.com EV Root Certification Authority RSA R2,O=SSL Corporation,L=Houston,ST=Texas,C=US",
+      "subjectDN": "MIGCMQswCQYDVQQGEwJVUzEOMAwGA1UECAwFVGV4YXMxEDAOBgNVBAcMB0hvdXN0b24xGDAWBgNVBAoMD1NTTCBDb3Jwb3JhdGlvbjE3MDUGA1UEAwwuU1NMLmNvbSBFViBSb290IENlcnRpZmljYXRpb24gQXV0aG9yaXR5IFJTQSBSMg==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "c7680e4e47bb04f8515b20fc6fe36741515835bace47ef132f02922b0ea612ea",
+        "size": 2113,
+        "filename": "fNZ8JI9p2D_C-bsB3LH3rWejY9BGBDeW0JhMOiMfa7A=.pem",
+        "location": "security-state-staging/intermediates/a586bb32-1766-40e6-bdd8-ba5e8bf95066.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "fNZ8JI9p2D/C+bsB3LH3rWejY9BGBDeW0JhMOiMfa7A=",
+      "crlite_enrolled": true,
+      "id": "2dea51d4-7fea-4eb2-a507-7fa4ef9b5e26",
+      "last_modified": 1639018682452
+    },
+    {
+      "schema": 1639016176732,
+      "derHash": "uXF28htu1kYJJnstGiqfrwxN69RGRNyF62rphvyGfVY=",
+      "subject": "CN=SSL.com EV Root Certification Authority RSA R2,O=SSL Corporation,L=Houston,ST=Texas,C=US",
+      "subjectDN": "MIGCMQswCQYDVQQGEwJVUzEOMAwGA1UECAwFVGV4YXMxEDAOBgNVBAcMB0hvdXN0b24xGDAWBgNVBAoMD1NTTCBDb3Jwb3JhdGlvbjE3MDUGA1UEAwwuU1NMLmNvbSBFViBSb290IENlcnRpZmljYXRpb24gQXV0aG9yaXR5IFJTQSBSMg==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "26b0eb0f7d0c63890a8cb3bac26790139d109c65e18753a461b28633c51c86e3",
+        "size": 2093,
+        "filename": "fNZ8JI9p2D_C-bsB3LH3rWejY9BGBDeW0JhMOiMfa7A=.pem",
+        "location": "security-state-staging/intermediates/cbc009ee-d95a-4c1a-b665-8d351c2f25cd.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "fNZ8JI9p2D/C+bsB3LH3rWejY9BGBDeW0JhMOiMfa7A=",
+      "crlite_enrolled": true,
+      "id": "7b426af5-c32a-4108-a18c-9f524b01f83a",
+      "last_modified": 1639018682442
+    },
+    {
+      "schema": 1639016176418,
+      "derHash": "BrlyKmmcV9/xhp9DC0ebtutJquEYTqycUyXBM0o06kw=",
+      "subject": "CN=SSL.com Root Certification Authority ECC,O=SSL Corporation,L=Houston,ST=Texas,C=US",
+      "subjectDN": "MHwxCzAJBgNVBAYTAlVTMQ4wDAYDVQQIDAVUZXhhczEQMA4GA1UEBwwHSG91c3RvbjEYMBYGA1UECgwPU1NMIENvcnBvcmF0aW9uMTEwLwYDVQQDDChTU0wuY29tIFJvb3QgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkgRUND",
+      "whitelist": false,
+      "attachment": {
+        "hash": "3575f65e014fd8fa943566de2f3d7a42adc6b4e947cc86fb2028d533adc24ad9",
+        "size": 1804,
+        "filename": "oyD01TTXvpfBro3QSZc1vIlcMjrdLTiL_M9mLCPX-Zo=.pem",
+        "location": "security-state-staging/intermediates/34d6fd53-d5dd-4289-aa37-161e72f0a7e9.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "oyD01TTXvpfBro3QSZc1vIlcMjrdLTiL/M9mLCPX+Zo=",
+      "crlite_enrolled": true,
+      "id": "3ecf65b2-97c8-4b50-a416-2032e8bdbdf7",
+      "last_modified": 1639018682432
+    },
+    {
+      "schema": 1639016175515,
+      "derHash": "rPcY34OOZABRd30ZR/UWIOjYBLoYZVOuUvyYEbXTS4s=",
+      "subject": "CN=SSL.com Root Certification Authority RSA,O=SSL Corporation,L=Houston,ST=Texas,C=US",
+      "subjectDN": "MHwxCzAJBgNVBAYTAlVTMQ4wDAYDVQQIDAVUZXhhczEQMA4GA1UEBwwHSG91c3RvbjEYMBYGA1UECgwPU1NMIENvcnBvcmF0aW9uMTEwLwYDVQQDDChTU0wuY29tIFJvb3QgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkgUlNB",
+      "whitelist": false,
+      "attachment": {
+        "hash": "0be6061408140698708a3d3cb24d39ad6416effde544c39b9e52f40a1b6fe9cf",
+        "size": 2085,
+        "filename": "0cRTd-vc1hjNFlHcLgLCHXUeWqn80bNDH_bs9qMTSPo=.pem",
+        "location": "security-state-staging/intermediates/a9cbcbd0-800f-442e-8f52-903325a5ee23.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "0cRTd+vc1hjNFlHcLgLCHXUeWqn80bNDH/bs9qMTSPo=",
+      "crlite_enrolled": true,
+      "id": "60def2d8-d623-4952-91b9-30913d09f7b4",
+      "last_modified": 1639018682422
+    },
+    {
+      "schema": 1639016176125,
+      "derHash": "8oqXrCjP7RCpOn8Hj5eMj2IEydhFH3RdX+u9bgttTXw=",
+      "subject": "CN=Hellenic Academic and Research Institutions RootCA 2015,O=Hellenic Academic and Research Institutions Cert. Authority,L=Athens,C=GR",
+      "subjectDN": "MIGmMQswCQYDVQQGEwJHUjEPMA0GA1UEBxMGQXRoZW5zMUQwQgYDVQQKEztIZWxsZW5pYyBBY2FkZW1pYyBhbmQgUmVzZWFyY2ggSW5zdGl0dXRpb25zIENlcnQuIEF1dGhvcml0eTFAMD4GA1UEAxM3SGVsbGVuaWMgQWNhZGVtaWMgYW5kIFJlc2VhcmNoIEluc3RpdHV0aW9ucyBSb290Q0EgMjAxNQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "599c4d3414fd09b7ab7a1692a79ac80f5e452adbeed9d0aecc7a05228a1b427e",
+        "size": 2292,
+        "filename": "UMyGupbbMmPHmkPq0HVT2fVmWeaQfnLYwCZjehzchdw=.pem",
+        "location": "security-state-staging/intermediates/9269078b-f3eb-4f59-b548-f9978d1786cf.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "UMyGupbbMmPHmkPq0HVT2fVmWeaQfnLYwCZjehzchdw=",
+      "crlite_enrolled": true,
+      "id": "f360da31-27aa-400f-8a47-3d517bae9327",
+      "last_modified": 1639018682412
+    },
+    {
+      "schema": 1638889238894,
+      "derHash": "YO9BLqvnw/xjme7RtjO3d3R1FbKdchuWPdJYvEmKspI=",
+      "subject": "CN=SSL.com EV Root Certification Authority ECC,O=SSL Corporation,L=Houston,ST=Texas,C=US",
+      "subjectDN": "MH8xCzAJBgNVBAYTAlVTMQ4wDAYDVQQIDAVUZXhhczEQMA4GA1UEBwwHSG91c3RvbjEYMBYGA1UECgwPU1NMIENvcnBvcmF0aW9uMTQwMgYDVQQDDCtTU0wuY29tIEVWIFJvb3QgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkgRUND",
+      "whitelist": false,
+      "attachment": {
+        "hash": "ab3dfad3dda55fb2c174fabf92fc81f2757e57a915b1f78f5483d12dfaf50f76",
+        "size": 1821,
+        "filename": "NIdnza073SiyuN1TUa7DDGjOxc1p0nbfOCfbxPWAZGQ=.pem",
+        "location": "security-state-staging/intermediates/734df71e-5087-4844-aa75-47d2809181f8.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "NIdnza073SiyuN1TUa7DDGjOxc1p0nbfOCfbxPWAZGQ=",
+      "crlite_enrolled": true,
+      "id": "b512360d-9f2f-4206-97ac-09aa8d521233",
+      "last_modified": 1639018682403
+    },
+    {
+      "schema": 1639016175207,
+      "derHash": "OH1Ja5IgLUxEPNlP9C2hffLx5o4kTC+7p+KU290RNXs=",
+      "subject": "CN=WISeKey CertifyID Advanced GC CA 1,O=WISeKey,C=CH",
+      "subjectDN": "MEwxCzAJBgNVBAYTAkNIMRAwDgYDVQQKEwdXSVNlS2V5MSswKQYDVQQDEyJXSVNlS2V5IENlcnRpZnlJRCBBZHZhbmNlZCBHQyBDQSAx",
+      "whitelist": false,
+      "attachment": {
+        "hash": "3847cc74ceb46d2e07d37b69b668ff50587428a43ef992473d4a3e433bcb1972",
+        "size": 1293,
+        "filename": "Y3IJxxxojxFKeXVhVUyyPE4P-7QrAbKt0viCWXpb1G8=.pem",
+        "location": "security-state-staging/intermediates/233bd648-66bc-440b-8b31-293196be1b49.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "Y3IJxxxojxFKeXVhVUyyPE4P+7QrAbKt0viCWXpb1G8=",
+      "crlite_enrolled": true,
+      "id": "5905f153-1bda-44df-8205-013b8756834a",
+      "last_modified": 1639018682392
+    },
+    {
+      "schema": 1638824446434,
+      "derHash": "BjYnNVyUGhyT/FFcuu8vFz1KZG3esTnLjHXBAiIimU8=",
+      "subject": "CN=TunTrust Services CA,O=Agence Nationale de Certification Electronique,C=TN",
+      "subjectDN": "MGUxCzAJBgNVBAYTAlROMTcwNQYDVQQKDC5BZ2VuY2UgTmF0aW9uYWxlIGRlIENlcnRpZmljYXRpb24gRWxlY3Ryb25pcXVlMR0wGwYDVQQDDBRUdW5UcnVzdCBTZXJ2aWNlcyBDQQ==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "6d48f6225c948caddb62fb80efcf61b14a6a5634db59f3e7761aad71133055a5",
+        "size": 2475,
+        "filename": "FVFmpBEgpC-vZukErx3K3k8dxByWTA6BMWT_HfCOlGA=.pem",
+        "location": "security-state-staging/intermediates/e7286378-ad7a-4f09-a6e1-2e9dd4726345.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "FVFmpBEgpC+vZukErx3K3k8dxByWTA6BMWT/HfCOlGA=",
+      "crlite_enrolled": true,
+      "id": "49cc61d4-9f5b-4e11-a121-35d16785794f",
+      "last_modified": 1638889237738
+    },
+    {
       "schema": 1638670415893,
       "derHash": "HMNYpt+gp2u1RwZg1487JfI8zWOVZn5JzPyCAdo9GS0=",
       "subject": "CN=Certigna Entity CA,OU=0002 48146308100036,O=DHIMYOTIS,C=FR",
@@ -8353,24 +8533,6 @@
       "last_modified": 1632970665926
     },
     {
-      "schema": 1632967631515,
-      "derHash": "BjYnNVyUGhyT/FFcuu8vFz1KZG3esTnLjHXBAiIimU8=",
-      "subject": "CN=TunTrust Services CA,O=Agence Nationale de Certification Electronique,C=TN",
-      "subjectDN": "MGUxCzAJBgNVBAYTAlROMTcwNQYDVQQKDC5BZ2VuY2UgTmF0aW9uYWxlIGRlIENlcnRpZmljYXRpb24gRWxlY3Ryb25pcXVlMR0wGwYDVQQDDBRUdW5UcnVzdCBTZXJ2aWNlcyBDQQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "6d48f6225c948caddb62fb80efcf61b14a6a5634db59f3e7761aad71133055a5",
-        "size": 2475,
-        "filename": "FVFmpBEgpC-vZukErx3K3k8dxByWTA6BMWT_HfCOlGA=.pem",
-        "location": "security-state-staging/intermediates/e7286378-ad7a-4f09-a6e1-2e9dd4726345.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "FVFmpBEgpC+vZukErx3K3k8dxByWTA6BMWT/HfCOlGA=",
-      "crlite_enrolled": true,
-      "id": "49cc61d4-9f5b-4e11-a121-35d16785794f",
-      "last_modified": 1632970665913
-    },
-    {
       "schema": 1632967633283,
       "derHash": "Hfkp2Qs61O+U02QC9INGLoy2eElcaHAiQjVFsZ4vBhU=",
       "subject": "CN=HARICA IV TLS RSA,O=Hellenic Academic and Research Institutions CA,C=GR",
@@ -9773,24 +9935,6 @@
       "crlite_enrolled": false,
       "id": "7915f1a3-25a6-4fe0-8f20-a17e44488dcf",
       "last_modified": 1626443992087
-    },
-    {
-      "schema": 1626357906352,
-      "derHash": "OH1Ja5IgLUxEPNlP9C2hffLx5o4kTC+7p+KU290RNXs=",
-      "subject": "CN=WISeKey CertifyID Advanced GC CA 1,O=WISeKey,C=CH",
-      "subjectDN": "MEwxCzAJBgNVBAYTAkNIMRAwDgYDVQQKEwdXSVNlS2V5MSswKQYDVQQDEyJXSVNlS2V5IENlcnRpZnlJRCBBZHZhbmNlZCBHQyBDQSAx",
-      "whitelist": false,
-      "attachment": {
-        "hash": "3847cc74ceb46d2e07d37b69b668ff50587428a43ef992473d4a3e433bcb1972",
-        "size": 1293,
-        "filename": "Y3IJxxxojxFKeXVhVUyyPE4P-7QrAbKt0viCWXpb1G8=.pem",
-        "location": "security-state-staging/intermediates/233bd648-66bc-440b-8b31-293196be1b49.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "Y3IJxxxojxFKeXVhVUyyPE4P+7QrAbKt0viCWXpb1G8=",
-      "crlite_enrolled": false,
-      "id": "5905f153-1bda-44df-8205-013b8756834a",
-      "last_modified": 1626361244279
     },
     {
       "schema": 1626335942687,
@@ -23455,24 +23599,6 @@
       "last_modified": 1601517444008
     },
     {
-      "schema": 1601376742712,
-      "derHash": "YO9BLqvnw/xjme7RtjO3d3R1FbKdchuWPdJYvEmKspI=",
-      "subject": "CN=SSL.com EV Root Certification Authority ECC,O=SSL Corporation,L=Houston,ST=Texas,C=US",
-      "subjectDN": "MH8xCzAJBgNVBAYTAlVTMQ4wDAYDVQQIDAVUZXhhczEQMA4GA1UEBwwHSG91c3RvbjEYMBYGA1UECgwPU1NMIENvcnBvcmF0aW9uMTQwMgYDVQQDDCtTU0wuY29tIEVWIFJvb3QgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkgRUND",
-      "whitelist": false,
-      "attachment": {
-        "hash": "ab3dfad3dda55fb2c174fabf92fc81f2757e57a915b1f78f5483d12dfaf50f76",
-        "size": 1821,
-        "filename": "NIdnza073SiyuN1TUa7DDGjOxc1p0nbfOCfbxPWAZGQ=.pem",
-        "location": "security-state-staging/intermediates/734df71e-5087-4844-aa75-47d2809181f8.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "NIdnza073SiyuN1TUa7DDGjOxc1p0nbfOCfbxPWAZGQ=",
-      "crlite_enrolled": false,
-      "id": "b512360d-9f2f-4206-97ac-09aa8d521233",
-      "last_modified": 1601517443989
-    },
-    {
       "schema": 1601376752989,
       "derHash": "dp9v8Jp0Yqwnpugt53ABPTwCEzr92+WBrvzKGwoCkYA=",
       "subject": "CN=TrustSign BR Certification Authority (EV) 2,OU=Controlled by COMODO for TrustSign Certificadora Digital,O=TrustSign Certificadora Dig. & Soluções Segurança da Inf. Ltda.,L=São José dos Campos,ST=São Paulo,C=BR",
@@ -23489,24 +23615,6 @@
       "crlite_enrolled": false,
       "id": "e0f723e6-76d1-4bee-9c67-8136e524719e",
       "last_modified": 1601517443971
-    },
-    {
-      "schema": 1601376730664,
-      "derHash": "8oqXrCjP7RCpOn8Hj5eMj2IEydhFH3RdX+u9bgttTXw=",
-      "subject": "CN=Hellenic Academic and Research Institutions RootCA 2015,O=Hellenic Academic and Research Institutions Cert. Authority,L=Athens,C=GR",
-      "subjectDN": "MIGmMQswCQYDVQQGEwJHUjEPMA0GA1UEBxMGQXRoZW5zMUQwQgYDVQQKEztIZWxsZW5pYyBBY2FkZW1pYyBhbmQgUmVzZWFyY2ggSW5zdGl0dXRpb25zIENlcnQuIEF1dGhvcml0eTFAMD4GA1UEAxM3SGVsbGVuaWMgQWNhZGVtaWMgYW5kIFJlc2VhcmNoIEluc3RpdHV0aW9ucyBSb290Q0EgMjAxNQ==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "599c4d3414fd09b7ab7a1692a79ac80f5e452adbeed9d0aecc7a05228a1b427e",
-        "size": 2292,
-        "filename": "UMyGupbbMmPHmkPq0HVT2fVmWeaQfnLYwCZjehzchdw=.pem",
-        "location": "security-state-staging/intermediates/9269078b-f3eb-4f59-b548-f9978d1786cf.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "UMyGupbbMmPHmkPq0HVT2fVmWeaQfnLYwCZjehzchdw=",
-      "crlite_enrolled": false,
-      "id": "f360da31-27aa-400f-8a47-3d517bae9327",
-      "last_modified": 1601517443953
     },
     {
       "schema": 1601376744781,
@@ -23581,24 +23689,6 @@
       "last_modified": 1601517443861
     },
     {
-      "schema": 1601376719498,
-      "derHash": "rPcY34OOZABRd30ZR/UWIOjYBLoYZVOuUvyYEbXTS4s=",
-      "subject": "CN=SSL.com Root Certification Authority RSA,O=SSL Corporation,L=Houston,ST=Texas,C=US",
-      "subjectDN": "MHwxCzAJBgNVBAYTAlVTMQ4wDAYDVQQIDAVUZXhhczEQMA4GA1UEBwwHSG91c3RvbjEYMBYGA1UECgwPU1NMIENvcnBvcmF0aW9uMTEwLwYDVQQDDChTU0wuY29tIFJvb3QgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkgUlNB",
-      "whitelist": false,
-      "attachment": {
-        "hash": "0be6061408140698708a3d3cb24d39ad6416effde544c39b9e52f40a1b6fe9cf",
-        "size": 2085,
-        "filename": "0cRTd-vc1hjNFlHcLgLCHXUeWqn80bNDH_bs9qMTSPo=.pem",
-        "location": "security-state-staging/intermediates/a9cbcbd0-800f-442e-8f52-903325a5ee23.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "0cRTd+vc1hjNFlHcLgLCHXUeWqn80bNDH/bs9qMTSPo=",
-      "crlite_enrolled": false,
-      "id": "60def2d8-d623-4952-91b9-30913d09f7b4",
-      "last_modified": 1601517443836
-    },
-    {
       "schema": 1601376719951,
       "derHash": "RiJre4ngLKj12F1n7Yy0sZxIOCBYuxYkIZnVQMq+kmg=",
       "subject": "CN=TeliaSonera Gateway CA v2,O=TeliaSonera,C=FI",
@@ -23651,24 +23741,6 @@
       "crlite_enrolled": false,
       "id": "c9552f3d-50c5-424d-aa0b-ddb2a0a0f796",
       "last_modified": 1601517443675
-    },
-    {
-      "schema": 1601376776932,
-      "derHash": "BrlyKmmcV9/xhp9DC0ebtutJquEYTqycUyXBM0o06kw=",
-      "subject": "CN=SSL.com Root Certification Authority ECC,O=SSL Corporation,L=Houston,ST=Texas,C=US",
-      "subjectDN": "MHwxCzAJBgNVBAYTAlVTMQ4wDAYDVQQIDAVUZXhhczEQMA4GA1UEBwwHSG91c3RvbjEYMBYGA1UECgwPU1NMIENvcnBvcmF0aW9uMTEwLwYDVQQDDChTU0wuY29tIFJvb3QgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkgRUND",
-      "whitelist": false,
-      "attachment": {
-        "hash": "3575f65e014fd8fa943566de2f3d7a42adc6b4e947cc86fb2028d533adc24ad9",
-        "size": 1804,
-        "filename": "oyD01TTXvpfBro3QSZc1vIlcMjrdLTiL_M9mLCPX-Zo=.pem",
-        "location": "security-state-staging/intermediates/34d6fd53-d5dd-4289-aa37-161e72f0a7e9.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "oyD01TTXvpfBro3QSZc1vIlcMjrdLTiL/M9mLCPX+Zo=",
-      "crlite_enrolled": false,
-      "id": "3ecf65b2-97c8-4b50-a416-2032e8bdbdf7",
-      "last_modified": 1601517443636
     },
     {
       "schema": 1601376768352,
@@ -23849,24 +23921,6 @@
       "crlite_enrolled": false,
       "id": "d1739c52-6e71-43f0-a8c1-3fe9fa938594",
       "last_modified": 1601517443431
-    },
-    {
-      "schema": 1601376736833,
-      "derHash": "uXF28htu1kYJJnstGiqfrwxN69RGRNyF62rphvyGfVY=",
-      "subject": "CN=SSL.com EV Root Certification Authority RSA R2,O=SSL Corporation,L=Houston,ST=Texas,C=US",
-      "subjectDN": "MIGCMQswCQYDVQQGEwJVUzEOMAwGA1UECAwFVGV4YXMxEDAOBgNVBAcMB0hvdXN0b24xGDAWBgNVBAoMD1NTTCBDb3Jwb3JhdGlvbjE3MDUGA1UEAwwuU1NMLmNvbSBFViBSb290IENlcnRpZmljYXRpb24gQXV0aG9yaXR5IFJTQSBSMg==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "26b0eb0f7d0c63890a8cb3bac26790139d109c65e18753a461b28633c51c86e3",
-        "size": 2093,
-        "filename": "fNZ8JI9p2D_C-bsB3LH3rWejY9BGBDeW0JhMOiMfa7A=.pem",
-        "location": "security-state-staging/intermediates/cbc009ee-d95a-4c1a-b665-8d351c2f25cd.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "fNZ8JI9p2D/C+bsB3LH3rWejY9BGBDeW0JhMOiMfa7A=",
-      "crlite_enrolled": false,
-      "id": "7b426af5-c32a-4108-a18c-9f524b01f83a",
-      "last_modified": 1601517443414
     },
     {
       "schema": 1601376766712,
@@ -24245,24 +24299,6 @@
       "crlite_enrolled": false,
       "id": "c37666f8-318b-4ea3-9931-8bf0653657d1",
       "last_modified": 1601517442870
-    },
-    {
-      "schema": 1601376764522,
-      "derHash": "ie/rJQlrpMzUCvT7h1bwpIQ5lZdIIgIJFMToWdkyt/M=",
-      "subject": "CN=SSL.com EV Root Certification Authority RSA R2,O=SSL Corporation,L=Houston,ST=Texas,C=US",
-      "subjectDN": "MIGCMQswCQYDVQQGEwJVUzEOMAwGA1UECAwFVGV4YXMxEDAOBgNVBAcMB0hvdXN0b24xGDAWBgNVBAoMD1NTTCBDb3Jwb3JhdGlvbjE3MDUGA1UEAwwuU1NMLmNvbSBFViBSb290IENlcnRpZmljYXRpb24gQXV0aG9yaXR5IFJTQSBSMg==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "c7680e4e47bb04f8515b20fc6fe36741515835bace47ef132f02922b0ea612ea",
-        "size": 2113,
-        "filename": "fNZ8JI9p2D_C-bsB3LH3rWejY9BGBDeW0JhMOiMfa7A=.pem",
-        "location": "security-state-staging/intermediates/a586bb32-1766-40e6-bdd8-ba5e8bf95066.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "fNZ8JI9p2D/C+bsB3LH3rWejY9BGBDeW0JhMOiMfa7A=",
-      "crlite_enrolled": false,
-      "id": "2dea51d4-7fea-4eb2-a507-7fa4ef9b5e26",
-      "last_modified": 1601517442852
     },
     {
       "schema": 1601376724524,
@@ -31969,24 +32005,6 @@
       "last_modified": 1576536533732
     },
     {
-      "schema": 1576535878387,
-      "derHash": "JCtpdC/LHlsqv5iJi5RXIYdUTltNmRF4ZXNiH2p0uCw=",
-      "subject": "CN=Telia Root CA v2,O=Telia Finland Oyj,C=FI",
-      "subjectDN": "MEQxCzAJBgNVBAYTAkZJMRowGAYDVQQKDBFUZWxpYSBGaW5sYW5kIE95ajEZMBcGA1UEAwwQVGVsaWEgUm9vdCBDQSB2Mg==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "6f399d9adcd59cadec87760241621f46a9daf25db3c442d61999a94042f01988",
-        "size": 1951,
-        "filename": "wrPDGkophQqo889HKhFp_3G0FlefakSC7HdEuD35iKw=.pem",
-        "location": "security-state-staging/intermediates/4c25a27e-2c0e-442f-893f-37ea349bb645.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "wrPDGkophQqo889HKhFp/3G0FlefakSC7HdEuD35iKw=",
-      "crlite_enrolled": false,
-      "id": "f1dcb796-9a85-4f2d-a0fb-9b3f7b4c9089",
-      "last_modified": 1576536533728
-    },
-    {
       "schema": 1576535877021,
       "derHash": "3gqS5UNbYTII3ENezHFYvyj0IKk+CpHVlllyBT9SNUk=",
       "subject": "CN=Cleverbase ID PKIoverheid Burger CA - G3,O=Cleverbase ID B.V.,C=NL",
@@ -35567,24 +35585,6 @@
       "crlite_enrolled": false,
       "id": "e697d669-10e9-4820-af92-62a85ce2e0a3",
       "last_modified": 1576536532387
-    },
-    {
-      "schema": 1576536081355,
-      "derHash": "728p9jb2K91HUxIvQfNBnufCh3WHvkqYB631iUZFjn8=",
-      "subject": "CN=Telia Root CA v2,O=Telia Finland Oyj,C=FI",
-      "subjectDN": "MEQxCzAJBgNVBAYTAkZJMRowGAYDVQQKDBFUZWxpYSBGaW5sYW5kIE95ajEZMBcGA1UEAwwQVGVsaWEgUm9vdCBDQSB2Mg==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "ef7efd4cbf4031585f1a5951e9b5d6bac8a753a47e1861138b45eaaf0f441821",
-        "size": 2284,
-        "filename": "wrPDGkophQqo889HKhFp_3G0FlefakSC7HdEuD35iKw=.pem",
-        "location": "security-state-staging/intermediates/9808e62b-cdbd-44b3-941f-6f29f249116a.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "wrPDGkophQqo889HKhFp/3G0FlefakSC7HdEuD35iKw=",
-      "crlite_enrolled": false,
-      "id": "8adb25e4-ae4d-4bdd-aa24-a1b07637fb72",
-      "last_modified": 1576536532385
     },
     {
       "schema": 1576536095821,
