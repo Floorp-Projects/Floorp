@@ -171,7 +171,7 @@ class Selection final : public nsSupportsWeakReference,
    * See `AddRangesForSelectableNodes`.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult AddRangesForUserSelectableNodes(
-      nsRange* aRange, int32_t* aOutIndex,
+      nsRange* aRange, Maybe<size_t>* aOutIndex,
       const DispatchSelectstartEvent aDispatchSelectstartEvent);
 
   /**
@@ -182,11 +182,11 @@ class Selection final : public nsSupportsWeakReference,
    *
    * @param aOutIndex points to the range last added, if at least one was added.
    *                  If aRange is already contained, it points to the range
-   *                  containing it. -1 if mStyledRanges.mRanges was empty and
-   * no range was added.
+   *                  containing it. Nothing() if mStyledRanges.mRanges was
+   *                  empty and no range was added.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult AddRangesForSelectableNodes(
-      nsRange* aRange, int32_t* aOutIndex,
+      nsRange* aRange, Maybe<size_t>* aOutIndex,
       DispatchSelectstartEvent aDispatchSelectstartEvent);
 
  public:
@@ -308,7 +308,7 @@ class Selection final : public nsSupportsWeakReference,
    * IsCollapsed -- is the whole selection just one point, or unset?
    */
   bool IsCollapsed() const {
-    uint32_t cnt = mStyledRanges.Length();
+    size_t cnt = mStyledRanges.Length();
     if (cnt == 0) {
       return true;
     }
@@ -769,12 +769,12 @@ class Selection final : public nsSupportsWeakReference,
   void SelectFramesInAllRanges(nsPresContext* aPresContext);
 
   /**
-   * @param aOutIndex points to the index of the range in mStyledRanges.mRanges.
-   * If aDidAddRange is true, it is in [0, mStyledRanges.Length()).
+   * @param aOutIndex   If some, points to the index of the range in
+   * mStyledRanges.mRanges so that it's always in [0, mStyledRanges.Length()].
+   * Otherwise, if nothing, this didn't add the range to mStyledRanges.
    */
   MOZ_CAN_RUN_SCRIPT nsresult MaybeAddTableCellRange(nsRange& aRange,
-                                                     bool* aDidAddRange,
-                                                     int32_t* aOutIndex);
+                                                     Maybe<size_t>* aOutIndex);
 
   Document* GetDocument() const;
 
@@ -804,7 +804,7 @@ class Selection final : public nsSupportsWeakReference,
      * @return the index where the point should appear in the array. In
      *         [0, `aElementArray->Length()`].
      */
-    static int32_t FindInsertionPoint(
+    static size_t FindInsertionPoint(
         const nsTArray<StyledRange>* aElementArray, const nsINode& aPointNode,
         uint32_t aPointOffset,
         int32_t (*aComparator)(const nsINode&, uint32_t, const nsRange&));
@@ -814,27 +814,32 @@ class Selection final : public nsSupportsWeakReference,
      * instead this returns the indices into mRanges between which
      * the overlapping ranges lie.
      *
-     * @param aStartIndex will be less or equal than aEndIndex.
-     * @param aEndIndex can be in [-1, mRanges.Length()].
+     * @param aStartIndex If some, aEndIndex will also be some and the value of
+     *                    aStartIndex will be less or equal than aEndIndex.  If
+     *                    nothing, aEndIndex will also be nothing and it means
+     *                    that there is no range which in the range.
+     * @param aEndIndex   If some, the value is less than mRanges.Length().
      */
     nsresult GetIndicesForInterval(const nsINode* aBeginNode,
                                    uint32_t aBeginOffset,
                                    const nsINode* aEndNode, uint32_t aEndOffset,
-                                   bool aAllowAdjacent, int32_t& aStartIndex,
-                                   int32_t& aEndIndex) const;
+                                   bool aAllowAdjacent,
+                                   Maybe<size_t>& aStartIndex,
+                                   Maybe<size_t>& aEndIndex) const;
 
     bool HasEqualRangeBoundariesAt(const nsRange& aRange,
-                                   int32_t aRangeIndex) const;
+                                   size_t aRangeIndex) const;
 
     /**
      * Preserves the sorting and disjunctiveness of mRanges.
      *
-     * @param aOutIndex will point to the index of the added range, or if aRange
-     *                  is already contained, to the one containing it. Hence
-     *                  it'll always be in [0, mRanges.Length()).
+     * @param aOutIndex If some, will point to the index of the added range, or
+     *                  if aRange is already contained, to the one containing
+     *                  it. Hence it'll always be in [0, mRanges.Length()).
+     *                  This is nothing only when the method returns an error.
      */
     MOZ_CAN_RUN_SCRIPT nsresult MaybeAddRangeAndTruncateOverlaps(
-        nsRange* aRange, int32_t* aOutIndex, Selection& aSelection);
+        nsRange* aRange, Maybe<size_t>* aOutIndex, Selection& aSelection);
 
     /**
      * GetCommonEditingHost() returns common editing host of all
