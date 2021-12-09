@@ -665,7 +665,7 @@ class ScriptLoader final : public nsISupports {
   // Fill in CompileOptions, as well as produce the introducer script for
   // subsequent calls to UpdateDebuggerMetadata
   nsresult FillCompileOptionsForRequest(
-      const mozilla::dom::AutoJSAPI& jsapi, ScriptLoadRequest* aRequest,
+      JSContext* aCx, ScriptLoadRequest* aRequest,
       JS::Handle<JSObject*> aScopeChain, JS::CompileOptions* aOptions,
       JS::MutableHandle<JSScript*> aIntroductionScript);
 
