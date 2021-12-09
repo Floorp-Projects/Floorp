@@ -4,26 +4,42 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * For more information on this interface, please see
- * https://wiki.whatwg.org/wiki/OffscreenCanvas
+ * https://html.spec.whatwg.org/#the-offscreencanvas-interface
  */
+
+typedef (ImageBitmapRenderingContext or WebGLRenderingContext or WebGL2RenderingContext or GPUCanvasContext) OffscreenRenderingContext;
+
+dictionary ImageEncodeOptions {
+  DOMString type = "image/png";
+  unrestricted double quality;
+};
+
+enum OffscreenRenderingContextId { /* "2d", */ "bitmaprenderer", "webgl", "webgl2", "webgpu" };
 
 [Exposed=(Window,Worker),
  Pref="gfx.offscreencanvas.enabled"]
 interface OffscreenCanvas : EventTarget {
-  constructor(unsigned long width, unsigned long height);
+  constructor([EnforceRange] unsigned long width, [EnforceRange] unsigned long height);
 
   [Pure, SetterThrows]
-  attribute unsigned long width;
+  attribute [EnforceRange] unsigned long width;
   [Pure, SetterThrows]
-  attribute unsigned long height;
+  attribute [EnforceRange] unsigned long height;
 
   [Throws]
-  nsISupports? getContext(DOMString contextId,
-                          optional any contextOptions = null);
+  OffscreenRenderingContext? getContext(OffscreenRenderingContextId contextId,
+                                        optional any contextOptions = null);
 
   [Throws]
   ImageBitmap transferToImageBitmap();
   [Throws]
+  Promise<Blob> convertToBlob(optional ImageEncodeOptions options = {});
+
+  attribute EventHandler oncontextlost;
+  attribute EventHandler oncontextrestored;
+
+  // Deprecated by convertToBlob
+  [Deprecated="OffscreenCanvasToBlob", Throws]
   Promise<Blob> toBlob(optional DOMString type = "",
                        optional any encoderOptions);
 };

@@ -32,8 +32,13 @@ class ImageContainer;
 }  // namespace layers
 
 namespace dom {
+enum class OffscreenRenderingContextId : uint8_t;
 class Blob;
 class ImageBitmap;
+struct ImageEncodeOptions;
+
+using OwningOffscreenRenderingContext = class
+    OwningImageBitmapRenderingContextOrWebGLRenderingContextOrWebGL2RenderingContextOrGPUCanvasContext;
 
 // This is helper class for transferring OffscreenCanvas to worker thread.
 // Because OffscreenCanvas is not thread-safe. So we cannot pass Offscreen-
@@ -61,11 +66,14 @@ class OffscreenCanvas final : public DOMEventTargetHelper,
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(OffscreenCanvas,
                                            DOMEventTargetHelper)
 
+  IMPL_EVENT_HANDLER(contextlost);
+  IMPL_EVENT_HANDLER(contextrestored);
+
   OffscreenCanvas(nsIGlobalObject* aGlobal, uint32_t aWidth, uint32_t aHeight,
                   layers::LayersBackend aCompositorBackend,
                   layers::CanvasRenderer* aRenderer);
 
-  nsCOMPtr<nsIGlobalObject> GetParentObject() const { return GetOwnerGlobal(); }
+  nsIGlobalObject* GetParentObject() const { return GetOwnerGlobal(); }
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
@@ -103,11 +111,15 @@ class OffscreenCanvas final : public DOMEventTargetHelper,
     }
   }
 
-  already_AddRefed<nsISupports> GetContext(
-      JSContext* aCx, const nsAString& aContextId,
-      JS::Handle<JS::Value> aContextOptions, ErrorResult& aRv);
+  void GetContext(JSContext* aCx, const OffscreenRenderingContextId& aContextId,
+                  JS::Handle<JS::Value> aContextOptions,
+                  Nullable<OwningOffscreenRenderingContext>& aResult,
+                  ErrorResult& aRv);
 
   already_AddRefed<ImageBitmap> TransferToImageBitmap(ErrorResult& aRv);
+
+  already_AddRefed<Promise> ConvertToBlob(const ImageEncodeOptions& aOptions,
+                                          ErrorResult& aRv);
 
   already_AddRefed<Promise> ToBlob(JSContext* aCx, const nsAString& aType,
                                    JS::Handle<JS::Value> aParams,
