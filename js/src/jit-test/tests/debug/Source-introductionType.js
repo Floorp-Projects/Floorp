@@ -61,14 +61,16 @@ log = '';
 g.run(scriptdir + 'Source-introductionType-data');
 assertEq(log, 'd');
 
-// Shell 'offThreadCompileScript' function.
+// Shell 'offThreadCompileToStencil' function.
 dbg.onDebuggerStatement = function (frame) {
   log += 'd';
-  assertEq(frame.script.source.introductionType, "js shell offThreadCompileScript");
+  assertEq(frame.script.source.introductionType,
+           "js shell offThreadCompileToStencil");
 };
 log = '';
-g.offThreadCompileScript('debugger;');
-g.runOffThreadScript();
+g.offThreadCompileToStencil('debugger;');
+var stencil = g.finishOffThreadCompileToStencil();
+g.evalStencil(stencil);
 assertEq(log, 'd');
 
 // Debugger.Frame.prototype.eval

@@ -1,34 +1,38 @@
 // |jit-test| skip-if: helperThreadCount() === 0
 
-// Test offThreadCompileScript for different function types.
+// Test offThreadCompileToStencil for different function types.
 
 load(libdir + 'asserts.js');
 
-var id;
+var id, stencil;
 
-id = offThreadCompileScript(`
+id = offThreadCompileToStencil(`
   function f() { return "pass"; }
   f();
 `);
-assertEq(runOffThreadScript(id), "pass");
+stencil = finishOffThreadCompileToStencil(id);
+assertEq(evalStencil(stencil), "pass");
 
-id = offThreadCompileScript(`
+id = offThreadCompileToStencil(`
   function* f() { return "pass"; }
   f().next();
 `);
-assertDeepEq(runOffThreadScript(id), {value: "pass", done: true});
+stencil = finishOffThreadCompileToStencil(id);
+assertDeepEq(evalStencil(stencil), {value: "pass", done: true});
 
-id = offThreadCompileScript(`
+id = offThreadCompileToStencil(`
   async function f() { return "pass"; }
   f();
 `);
-assertEventuallyEq(runOffThreadScript(id), "pass");
+stencil = finishOffThreadCompileToStencil(id);
+assertEventuallyEq(evalStencil(stencil), "pass");
 
-id = offThreadCompileScript(`
+id = offThreadCompileToStencil(`
   async function* f() { return "pass"; }
   f().next();
 `);
-assertEventuallyDeepEq(runOffThreadScript(id), {value: "pass", done: true});
+stencil = finishOffThreadCompileToStencil(id);
+assertEventuallyDeepEq(evalStencil(stencil), {value: "pass", done: true});
 
 // Copied from js/src/tests/shell.js
 function getPromiseResult(promise) {

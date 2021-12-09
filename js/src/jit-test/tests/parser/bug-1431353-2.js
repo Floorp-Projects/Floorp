@@ -5,8 +5,9 @@
 
 function execOffThread(source)
 {
-    offThreadCompileScript(source);
-    return runOffThreadScript();
+    offThreadCompileToStencil(source);
+    var stencil = finishOffThreadCompileToStencil();
+    return evalStencil(stencil);
 }
 
 function parseModuleOffThread(source)
