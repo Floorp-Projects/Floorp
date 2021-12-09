@@ -1281,7 +1281,8 @@ nsDocumentViewer::PermitUnload(PermitUnloadAction aAction,
   return NS_OK;
 }
 
-PermitUnloadResult nsDocumentViewer::DispatchBeforeUnload() {
+MOZ_CAN_RUN_SCRIPT_BOUNDARY PermitUnloadResult
+nsDocumentViewer::DispatchBeforeUnload() {
   AutoDontWarnAboutSyncXHR disableSyncXHRWarning;
 
   if (!mDocument || mInPermitUnload || mInPermitUnloadPrompt) {
@@ -1289,7 +1290,8 @@ PermitUnloadResult nsDocumentViewer::DispatchBeforeUnload() {
   }
 
   // First, get the script global object from the document...
-  auto* window = nsGlobalWindowOuter::Cast(mDocument->GetWindow());
+  RefPtr<nsGlobalWindowOuter> window =
+      nsGlobalWindowOuter::Cast(mDocument->GetWindow());
   if (!window) {
     // This is odd, but not fatal
     NS_WARNING("window not set for document!");
@@ -1334,8 +1336,10 @@ PermitUnloadResult nsDocumentViewer::DispatchBeforeUnload() {
     Document::PageUnloadingEventTimeStamp timestamp(mDocument);
 
     mInPermitUnload = true;
-    EventDispatcher::DispatchDOMEvent(ToSupports(window), nullptr, event,
-                                      mPresContext, nullptr);
+    RefPtr<nsPresContext> presContext = mPresContext;
+    // TODO: Bug 1506441
+    EventDispatcher::DispatchDOMEvent(MOZ_KnownLive(ToSupports(window)),
+                                      nullptr, event, presContext, nullptr);
     mInPermitUnload = false;
   }
 
