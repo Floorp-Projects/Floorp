@@ -41,10 +41,12 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/AutoEntryScript.h"
+#include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/BlobURLProtocolHandler.h"
 #include "mozilla/dom/CSPEvalChecker.h"
+#include "mozilla/dom/CallbackDebuggerNotification.h"
 #include "mozilla/dom/ClientSource.h"
 #include "mozilla/dom/Clients.h"
 #include "mozilla/dom/Console.h"
@@ -59,6 +61,7 @@
 #include "mozilla/dom/ImageBitmap.h"
 #include "mozilla/dom/ImageBitmapSource.h"
 #include "mozilla/dom/MessagePortBinding.h"
+#include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
@@ -80,6 +83,8 @@
 #include "mozilla/dom/WorkerNavigator.h"
 #include "mozilla/dom/WorkerPrivate.h"
 #include "mozilla/dom/WorkerRunnable.h"
+#include "mozilla/dom/WorkerDocumentListener.h"
+#include "mozilla/dom/VsyncWorkerChild.h"
 #include "mozilla/dom/cache/CacheStorage.h"
 #include "mozilla/dom/cache/Types.h"
 #include "mozilla/extensions/ExtensionBrowser.h"
@@ -99,6 +104,7 @@
 #include "nsLiteralString.h"
 #include "nsQueryObject.h"
 #include "nsReadableUtils.h"
+#include "nsRFPService.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsTLiteralString.h"
@@ -116,12 +122,14 @@
 #  undef PostMessage
 #endif
 
-namespace mozilla {
-namespace dom {
-
 using mozilla::dom::cache::CacheStorage;
 using mozilla::dom::workerinternals::NamedWorkerGlobalScopeMixin;
+using mozilla::ipc::BackgroundChild;
+using mozilla::ipc::PBackgroundChild;
 using mozilla::ipc::PrincipalInfo;
+
+namespace mozilla {
+namespace dom {
 
 class WorkerScriptTimeoutHandler final : public ScriptTimeoutHandler {
  public:
@@ -761,6 +769,16 @@ void WorkerGlobalScope::ConsumeWindowInteraction() {
   mWindowInteractionsAllowed--;
 }
 
+NS_IMPL_CYCLE_COLLECTION_INHERITED(DedicatedWorkerGlobalScope,
+                                   WorkerGlobalScope, mFrameRequestManager)
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(DedicatedWorkerGlobalScope,
+                                               WorkerGlobalScope)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
+NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(DedicatedWorkerGlobalScope,
+                                               WorkerGlobalScope)
+
 DedicatedWorkerGlobalScope::DedicatedWorkerGlobalScope(
     NotNull<WorkerPrivate*> aWorkerPrivate,
     UniquePtr<ClientSource> aClientSource, const nsString& aName)
@@ -811,6 +829,128 @@ void DedicatedWorkerGlobalScope::PostMessage(
 void DedicatedWorkerGlobalScope::Close() {
   mWorkerPrivate->AssertIsOnWorkerThread();
   mWorkerPrivate->CloseInternal();
+}
+
+int32_t DedicatedWorkerGlobalScope::RequestAnimationFrame(
+    FrameRequestCallback& aCallback, ErrorResult& aError) {
+  mWorkerPrivate->AssertIsOnWorkerThread();
+
+  DebuggerNotificationDispatch(this,
+                               DebuggerNotificationType::RequestAnimationFrame);
+
+  // Ensure the worker is associated with a window.
+  if (mWorkerPrivate->WindowID() == UINT64_MAX) {
+    aError.ThrowNotSupportedError("Worker has no associated owner Window");
+    return 0;
+  }
+
+  if (!mVsyncChild) {
+    PBackgroundChild* bgChild = BackgroundChild::GetOrCreateForCurrentThread();
+    mVsyncChild = MakeRefPtr<VsyncWorkerChild>();
+
+    if (!bgChild || !mVsyncChild->Initialize(mWorkerPrivate) ||
+        !bgChild->SendPVsyncConstructor(mVsyncChild)) {
+      mVsyncChild->Destroy();
+      mVsyncChild = nullptr;
+      aError.ThrowNotSupportedError(
+          "Worker failed to register for vsync to drive event loop");
+      return 0;
+    }
+  }
+
+  if (!mDocListener) {
+    mDocListener = WorkerDocumentListener::Create(mWorkerPrivate);
+    if (!mDocListener) {
+      aError.ThrowNotSupportedError(
+          "Worker failed to register for document visibility events");
+      return 0;
+    }
+  }
+
+  int32_t handle = 0;
+  aError = mFrameRequestManager.Schedule(aCallback, &handle);
+  if (!aError.Failed() && mDocumentVisible) {
+    mVsyncChild->TryObserve();
+  }
+  return handle;
+}
+
+void DedicatedWorkerGlobalScope::CancelAnimationFrame(int32_t aHandle,
+                                                      ErrorResult& aError) {
+  mWorkerPrivate->AssertIsOnWorkerThread();
+
+  DebuggerNotificationDispatch(this,
+                               DebuggerNotificationType::CancelAnimationFrame);
+
+  // Ensure the worker is associated with a window.
+  if (mWorkerPrivate->WindowID() == UINT64_MAX) {
+    aError.ThrowNotSupportedError("Worker has no associated owner Window");
+    return;
+  }
+
+  mFrameRequestManager.Cancel(aHandle);
+  if (mVsyncChild && mFrameRequestManager.IsEmpty()) {
+    mVsyncChild->TryUnobserve();
+  }
+}
+
+void DedicatedWorkerGlobalScope::OnDocumentVisible(bool aVisible) {
+  mWorkerPrivate->AssertIsOnWorkerThread();
+
+  mDocumentVisible = aVisible;
+
+  // We only change state immediately when we become visible. If we become
+  // hidden, then we wait for the next vsync tick to apply that.
+  if (aVisible && !mFrameRequestManager.IsEmpty()) {
+    mVsyncChild->TryObserve();
+  }
+}
+
+void DedicatedWorkerGlobalScope::OnVsync(const VsyncEvent& aVsync) {
+  mWorkerPrivate->AssertIsOnWorkerThread();
+
+  if (mFrameRequestManager.IsEmpty() || !mDocumentVisible) {
+    // If we ever receive a vsync event, and there are still no callbacks to
+    // process, or we remain hidden, we should disable observing them. By
+    // waiting an extra tick, we ensure we minimize extra IPC for content that
+    // does not call requestFrameAnimation directly during the callback, or
+    // that is rapidly toggling between hidden and visible.
+    mVsyncChild->TryUnobserve();
+    return;
+  }
+
+  nsTArray<FrameRequest> callbacks;
+  mFrameRequestManager.Take(callbacks);
+
+  RefPtr<DedicatedWorkerGlobalScope> scope(this);
+  CallbackDebuggerNotificationGuard guard(
+      scope, DebuggerNotificationType::RequestAnimationFrameCallback);
+
+  // This is similar to what we do in nsRefreshDriver::RunFrameRequestCallbacks
+  // and Performance::TimeStampToDOMHighResForRendering in order to have the
+  // same behaviour for requestAnimationFrame on both the main and worker
+  // threads.
+  DOMHighResTimeStamp timeStamp = 0;
+  if (!aVsync.mTime.IsNull()) {
+    timeStamp = mWorkerPrivate->TimeStampToDOMHighRes(aVsync.mTime);
+    // 0 is an inappropriate mixin for this this area; however CSS Animations
+    // needs to have it's Time Reduction Logic refactored, so it's currently
+    // only clamping for RFP mode. RFP mode gives a much lower time precision,
+    // so we accept the security leak here for now.
+    timeStamp = nsRFPService::ReduceTimePrecisionAsMSecsRFPOnly(timeStamp, 0);
+  }
+
+  for (auto& callback : callbacks) {
+    if (mFrameRequestManager.IsCanceled(callback.mHandle)) {
+      continue;
+    }
+
+    // MOZ_KnownLive is OK, because the stack array `callbacks` keeps the
+    // callback alive and the mCallback strong reference can't be mutated by
+    // the call.
+    LogFrameRequestCallback::Run run(callback.mCallback);
+    MOZ_KnownLive(callback.mCallback)->Call(timeStamp);
+  }
 }
 
 SharedWorkerGlobalScope::SharedWorkerGlobalScope(
