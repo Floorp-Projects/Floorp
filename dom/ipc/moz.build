@@ -79,9 +79,7 @@ EXPORTS.mozilla.dom += [
     "URLClassifierParent.h",
     "UserActivationIPCUtils.h",
     "VsyncChild.h",
-    "VsyncMainChild.h",
     "VsyncParent.h",
-    "VsyncWorkerChild.h",
     "WindowGlobalActor.h",
     "WindowGlobalChild.h",
     "WindowGlobalParent.h",
@@ -144,9 +142,8 @@ UNIFIED_SOURCES += [
 SOURCES += [
     "ContentChild.cpp",
     "ProcessHangMonitor.cpp",
-    "VsyncMainChild.cpp",
+    "VsyncChild.cpp",
     "VsyncParent.cpp",
-    "VsyncWorkerChild.cpp",
 ]
 
 PREPROCESSED_IPDL_SOURCES += [

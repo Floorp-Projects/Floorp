@@ -9,8 +9,9 @@
 #include "mozilla/PresShell.h"
 #include "nsRefreshDriver.h"
 
-nsICanvasRenderingContextInternal::nsICanvasRenderingContextInternal() =
-    default;
+nsICanvasRenderingContextInternal::nsICanvasRenderingContextInternal()
+    : mSharedPtrPtr(
+          std::make_shared<nsICanvasRenderingContextInternal*>(this)) {}
 
 nsICanvasRenderingContextInternal::~nsICanvasRenderingContextInternal() =
     default;

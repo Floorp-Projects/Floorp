@@ -30,7 +30,7 @@
 #include "mozilla/dom/CoalescedTouchData.h"
 #include "mozilla/dom/CoalescedWheelData.h"
 #include "mozilla/dom/MessageManagerCallback.h"
-#include "mozilla/dom/VsyncMainChild.h"
+#include "mozilla/dom/VsyncChild.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventForwards.h"
@@ -45,7 +45,6 @@
 #include "PuppetWidget.h"
 #include "nsDeque.h"
 #include "nsIRemoteTab.h"
-#include "nsTHashSet.h"
 
 class nsBrowserStatusFilter;
 class nsIDOMWindow;
@@ -461,7 +460,11 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   PFilePickerChild* AllocPFilePickerChild(const nsString& aTitle,
                                           const int16_t& aMode);
 
-  RefPtr<VsyncMainChild> GetVsyncChild();
+  virtual PVsyncChild* AllocPVsyncChild();
+
+  virtual bool DeallocPVsyncChild(PVsyncChild* aActor);
+
+  RefPtr<VsyncChild> GetVsyncChild();
 
   bool DeallocPFilePickerChild(PFilePickerChild* aActor);
 
@@ -813,7 +816,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   EffectsInfo mEffectsInfo;
   hal::ScreenOrientation mOrientation;
 
-  RefPtr<VsyncMainChild> mVsyncChild;
+  RefPtr<VsyncChild> mVsyncChild;
 
   RefPtr<APZEventState> mAPZEventState;
   SetAllowedTouchBehaviorCallback mSetAllowedTouchBehaviorCallback;
