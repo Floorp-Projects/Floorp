@@ -1041,8 +1041,9 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
       strong->Flush(flushGl);
     };
 
-    already_AddRefed<mozilla::Runnable> runnable = NS_NewRunnableFunction(
-        "enqueue Event_webglcontextrestored", DeferredFlush);
+    already_AddRefed<mozilla::CancelableRunnable> runnable =
+        NS_NewCancelableRunnableFunction("enqueue Event_webglcontextrestored",
+                                         DeferredFlush);
     NS_DispatchToCurrentThread(std::move(runnable));
   }
 

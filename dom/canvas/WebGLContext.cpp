@@ -221,15 +221,18 @@ void WebGLContext::DestroyResourcesAndContext() {
 }
 
 void ClientWebGLContext::MarkCanvasDirty() {
-  if (!mCanvasElement) return;
+  if (mIsCanvasDirty) {
+    return;
+  }
 
+  mIsCanvasDirty = true;
   mCapturedFrameInvalidated = true;
 
-  if (mIsCanvasDirty) return;
-  mIsCanvasDirty = true;
+  if (!mCanvasElement) {
+    return;
+  }
 
   SVGObserverUtils::InvalidateDirectRenderingObservers(mCanvasElement);
-
   mCanvasElement->InvalidateCanvasContent(nullptr);
 }
 
@@ -1500,7 +1503,7 @@ webgl::AvailabilityRunnable& ClientWebGLContext::EnsureAvailabilityRunnable()
 
 webgl::AvailabilityRunnable::AvailabilityRunnable(
     const ClientWebGLContext* const webgl)
-    : Runnable("webgl::AvailabilityRunnable"), mWebGL(webgl) {}
+    : DiscardableRunnable("webgl::AvailabilityRunnable"), mWebGL(webgl) {}
 
 webgl::AvailabilityRunnable::~AvailabilityRunnable() {
   MOZ_ASSERT(mQueries.empty());
