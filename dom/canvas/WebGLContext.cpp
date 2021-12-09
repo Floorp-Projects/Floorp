@@ -228,12 +228,12 @@ void ClientWebGLContext::MarkCanvasDirty() {
   mIsCanvasDirty = true;
   mCapturedFrameInvalidated = true;
 
-  if (!mCanvasElement) {
-    return;
+  if (mCanvasElement) {
+    SVGObserverUtils::InvalidateDirectRenderingObservers(mCanvasElement);
+    mCanvasElement->InvalidateCanvasContent(nullptr);
+  } else if (mOffscreenCanvas) {
+    mOffscreenCanvas->QueueCommitToCompositor();
   }
-
-  SVGObserverUtils::InvalidateDirectRenderingObservers(mCanvasElement);
-  mCanvasElement->InvalidateCanvasContent(nullptr);
 }
 
 void WebGLContext::OnMemoryPressure() {
