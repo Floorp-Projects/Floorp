@@ -112,6 +112,8 @@ socketprocess_networking:
 
 wayland:
     description: "{description} with Wayland backend enabled"
+    when:
+        $eval: '"linux" in task["test-platform"]'
     suffix: "wayland"
     replace:
         run-on-projects: []
