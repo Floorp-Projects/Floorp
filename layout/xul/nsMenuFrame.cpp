@@ -71,8 +71,7 @@ class nsMenuActivateEvent : public Runnable {
         mPresContext(aPresContext),
         mIsActivate(aIsActivate) {}
 
-  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230, bug 1535398)
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override {
+  NS_IMETHOD Run() override {
     nsAutoString domEventToFire;
 
     if (mIsActivate) {
@@ -100,8 +99,8 @@ class nsMenuActivateEvent : public Runnable {
   }
 
  private:
-  const RefPtr<Element> mMenu;
-  const RefPtr<nsPresContext> mPresContext;
+  RefPtr<Element> mMenu;
+  RefPtr<nsPresContext> mPresContext;
   bool mIsActivate;
 };
 
