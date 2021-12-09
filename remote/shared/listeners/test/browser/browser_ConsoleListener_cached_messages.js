@@ -82,23 +82,3 @@ add_task(async function test_cached_javascript_errors() {
 
   gBrowser.removeTab(gBrowser.selectedTab);
 });
-
-/**
- * Execute the provided script content by generating a dynamic script tag and
- * inserting it in the page for the current selected browser.
- *
- * @param {string} script
- *     The script to execute.
- * @return {Promise}
- *     A promise that resolves when the script node was added and removed from
- *     the content page.
- */
-function createScriptNode(script) {
-  return SpecialPowers.spawn(gBrowser.selectedBrowser, [script], function(
-    _script
-  ) {
-    var script = content.document.createElement("script");
-    script.append(content.document.createTextNode(_script));
-    content.document.body.append(script);
-  });
-}
