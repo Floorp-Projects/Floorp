@@ -13,6 +13,7 @@
 // libwebrtc includes
 #include "api/rtp_headers.h"
 #include "api/video_codecs/video_codec.h"
+#include "api/video_codecs/video_encoder_software_fallback_wrapper.h"
 #include "media/engine/encoder_simulcast_proxy.h"
 #include "modules/video_coding/codecs/vp8/include/vp8.h"
 #include "modules/video_coding/codecs/vp9/include/vp9.h"
@@ -92,13 +93,15 @@ std::unique_ptr<webrtc::VideoEncoder>
 WebrtcVideoEncoderFactory::InternalFactory::CreateVideoEncoder(
     const webrtc::SdpVideoFormat& aFormat) {
   MOZ_ASSERT(Supports(aFormat));
-  std::unique_ptr<webrtc::VideoEncoder> encoder;
 
-  encoder.reset(MediaDataCodec::CreateEncoder(aFormat));
-  if (encoder) {
-    return encoder;
+  std::unique_ptr<webrtc::VideoEncoder> platformEncoder;
+  platformEncoder.reset(MediaDataCodec::CreateEncoder(aFormat));
+  const bool fallback = StaticPrefs::media_webrtc_software_encoder_fallback();
+  if (!fallback && platformEncoder) {
+    return platformEncoder;
   }
 
+  std::unique_ptr<webrtc::VideoEncoder> encoder;
   switch (webrtc::PayloadStringToCodecType(aFormat.name)) {
     case webrtc::VideoCodecType::kVideoCodecH264: {
       // get an external encoder
@@ -120,6 +123,13 @@ WebrtcVideoEncoderFactory::InternalFactory::CreateVideoEncoder(
 
     default:
       break;
+  }
+  if (fallback && encoder && platformEncoder) {
+    return webrtc::CreateVideoEncoderSoftwareFallbackWrapper(
+        std::move(encoder), std::move(platformEncoder), false);
+  }
+  if (platformEncoder) {
+    return platformEncoder;
   }
   return encoder;
 }
