@@ -2264,7 +2264,7 @@ nsRange* Selection::GetRangeAt(uint32_t aIndex, ErrorResult& aRv) {
   return range;
 }
 
-nsRange* Selection::GetRangeAt(int32_t aIndex) const {
+nsRange* Selection::GetRangeAt(uint32_t aIndex) const {
   StyledRange empty(nullptr);
   return mStyledRanges.mRanges.SafeElementAt(aIndex, empty).mRange;
 }
@@ -2748,8 +2748,11 @@ bool Selection::ContainsPoint(const nsPoint& aPoint) {
     return false;
   }
   PointInRectChecker checker(aPoint);
-  for (uint32_t i = 0; i < RangeCount(); i++) {
+  const uint32_t rangeCount = RangeCount();
+  for (const uint32_t i : IntegerRange(rangeCount)) {
+    MOZ_ASSERT(RangeCount() == rangeCount);
     nsRange* range = GetRangeAt(i);
+    MOZ_ASSERT(range);
     nsRange::CollectClientRectsAndText(
         &checker, nullptr, range, range->GetStartContainer(),
         range->StartOffset(), range->GetEndContainer(), range->EndOffset(),

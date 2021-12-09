@@ -23,6 +23,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/IntegerRange.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/StaticPrefs_print.h"
@@ -1635,9 +1636,9 @@ nsresult nsPrintJob::UpdateSelectionAndShrinkPrintObject(
     selectionPS->RemoveAllRanges(IgnoreErrors());
   }
   if (selection && selectionPS) {
-    int32_t cnt = selection->RangeCount();
-    int32_t inx;
-    for (inx = 0; inx < cnt; ++inx) {
+    const uint32_t rangeCount = selection->RangeCount();
+    for (const uint32_t inx : IntegerRange(rangeCount)) {
+      MOZ_ASSERT(selection->RangeCount() == rangeCount);
       const RefPtr<nsRange> range{selection->GetRangeAt(inx)};
       selectionPS->AddRangeAndSelectFramesAndNotifyListeners(*range,
                                                              IgnoreErrors());

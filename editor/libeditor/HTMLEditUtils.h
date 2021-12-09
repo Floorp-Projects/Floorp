@@ -17,6 +17,7 @@
 #include "mozilla/EditorDOMPoint.h"
 #include "mozilla/EditorUtils.h"
 #include "mozilla/EnumSet.h"
+#include "mozilla/IntegerRange.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/dom/AbstractRange.h"
 #include "mozilla/dom/AncestorIterator.h"
@@ -2038,9 +2039,12 @@ class MOZ_STACK_CLASS SelectedTableCellScanner final {
     }
     mSelectedCellElements.SetCapacity(aSelection.RangeCount());
     mSelectedCellElements.AppendElement(*firstSelectedCellElement);
-    for (uint32_t i = 1; i < aSelection.RangeCount(); i++) {
+    const uint32_t rangeCount = aSelection.RangeCount();
+    for (const uint32_t i : IntegerRange(1u, rangeCount)) {
+      MOZ_ASSERT(aSelection.RangeCount() == rangeCount);
       nsRange* range = aSelection.GetRangeAt(i);
-      if (NS_WARN_IF(!range) || NS_WARN_IF(!range->IsPositioned())) {
+      if (MOZ_UNLIKELY(NS_WARN_IF(!range)) ||
+          MOZ_UNLIKELY(NS_WARN_IF(!range->IsPositioned()))) {
         continue;  // Shouldn't occur in normal conditions.
       }
       // Just ignore selection ranges which do not select only one table

@@ -20,6 +20,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/GeckoMVMContext.h"
 #include "mozilla/IMEStateManager.h"
+#include "mozilla/IntegerRange.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/Likely.h"
@@ -5195,10 +5196,10 @@ already_AddRefed<SourceSurface> PresShell::RenderSelection(
   // iterate over each range and collect them into the rangeItems array.
   // This is done so that the size of selection can be determined so as
   // to allocate a surface area
-  uint32_t numRanges = aSelection->RangeCount();
-  NS_ASSERTION(numRanges > 0, "RenderSelection called with no selection");
-
-  for (uint32_t r = 0; r < numRanges; r++) {
+  const uint32_t rangeCount = aSelection->RangeCount();
+  NS_ASSERTION(rangeCount > 0, "RenderSelection called with no selection");
+  for (const uint32_t r : IntegerRange(rangeCount)) {
+    MOZ_ASSERT(aSelection->RangeCount() == rangeCount);
     RefPtr<nsRange> range = aSelection->GetRangeAt(r);
 
     UniquePtr<RangePaintInfo> info = CreateRangePaintInfo(range, area, true);

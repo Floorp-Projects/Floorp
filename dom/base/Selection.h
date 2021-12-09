@@ -215,7 +215,7 @@ class Selection final : public nsSupportsWeakReference,
   /**
    * See mStyledRanges.mRanges.
    */
-  nsRange* GetRangeAt(int32_t aIndex) const;
+  nsRange* GetRangeAt(uint32_t aIndex) const;
 
   // Get the anchor-to-focus range if we don't care which end is
   // anchor and which end is focus.

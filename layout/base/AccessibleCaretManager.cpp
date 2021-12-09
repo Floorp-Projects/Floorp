@@ -1080,6 +1080,7 @@ nsIFrame* AccessibleCaretManager::GetFrameForFirstRangeStartOrLastRangeEnd(
     nodeOffset = range->StartOffset();
     hint = CARET_ASSOCIATE_AFTER;
   } else {
+    MOZ_ASSERT(selection->RangeCount() > 0);
     range = selection->GetRangeAt(selection->RangeCount() - 1);
     startNode = range->GetEndContainer();
     endNode = range->GetStartContainer();
