@@ -3112,8 +3112,6 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
     globalObject = scriptGlobal;
   }
 
-  nsCOMPtr<nsPIDOMWindowOuter> window = mDocument->GetWindow();
-  nsIDocShell* docShell = window ? window->GetDocShell() : nullptr;
   nsAutoCString profilerLabelString;
   GetProfilerLabelForRequest(aRequest, profilerLabelString);
 
@@ -3144,7 +3142,7 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
       MOZ_ASSERT(aRequest->IsTextSource() || aRequest->IsUnknownDataType());
       LOG(("ScriptLoadRequest (%p): Evaluate Module", aRequest));
       AUTO_PROFILER_MARKER_TEXT("ModuleEvaluation", JS,
-                                MarkerInnerWindowIdFromDocShell(docShell),
+                                MarkerInnerWindowIdFromJSContext(cx),
                                 profilerLabelString);
 
       // currentScript is set to null for modules.
@@ -3244,7 +3242,7 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
             LOG(("ScriptLoadRequest (%p): Decode Bytecode and Execute",
                  aRequest));
             AUTO_PROFILER_MARKER_TEXT("BytecodeDecodeMainThread", JS,
-                                      MarkerInnerWindowIdFromDocShell(docShell),
+                                      MarkerInnerWindowIdFromJSContext(cx),
                                       profilerLabelString);
 
             rv = exec.Decode(aRequest->mScriptBytecode,
@@ -3253,7 +3251,7 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
 
           if (rv == NS_OK) {
             AUTO_PROFILER_MARKER_TEXT("ScriptExecution", JS,
-                                      MarkerInnerWindowIdFromDocShell(docShell),
+                                      MarkerInnerWindowIdFromJSContext(cx),
                                       profilerLabelString);
             rv = ExecuteCompiledScript(cx, aRequest, exec, classicScript);
           }
@@ -3287,10 +3285,9 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
               MaybeSourceText maybeSource;
               rv = GetScriptSource(cx, aRequest, &maybeSource);
               if (NS_SUCCEEDED(rv)) {
-                AUTO_PROFILER_MARKER_TEXT(
-                    "ScriptCompileMainThread", JS,
-                    MarkerInnerWindowIdFromDocShell(docShell),
-                    profilerLabelString);
+                AUTO_PROFILER_MARKER_TEXT("ScriptCompileMainThread", JS,
+                                          MarkerInnerWindowIdFromJSContext(cx),
+                                          profilerLabelString);
 
                 TimeStamp startTime = TimeStamp::Now();
                 rv =
@@ -3303,10 +3300,9 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
 
             if (rv == NS_OK) {
               script = exec.GetScript();
-              AUTO_PROFILER_MARKER_TEXT(
-                  "ScriptExecution", JS,
-                  MarkerInnerWindowIdFromDocShell(docShell),
-                  profilerLabelString);
+              AUTO_PROFILER_MARKER_TEXT("ScriptExecution", JS,
+                                        MarkerInnerWindowIdFromJSContext(cx),
+                                        profilerLabelString);
               rv = ExecuteCompiledScript(cx, aRequest, exec, classicScript);
             }
           }
