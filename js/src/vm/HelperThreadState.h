@@ -20,7 +20,7 @@
 #include "mozilla/Vector.h"  // mozilla::Vector
 
 #include "ds/Fifo.h"
-#include "frontend/CompilationStencil.h"  // CompilationStencil, ExtensibleCompilationStencil, CompilationGCOutput
+#include "frontend/CompilationStencil.h"  // CompilationStencil, CompilationGCOutput
 #include "js/CompileOptions.h"
 #include "js/experimental/JSStencil.h"
 #include "js/HelperThreadAPI.h"
@@ -508,11 +508,8 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
   // The input of the compilation.
   UniquePtr<frontend::CompilationInput> stencilInput_;
 
-  // The output of the decode task.
+  // The output of the compilation/decode task.
   RefPtr<frontend::CompilationStencil> stencil_;
-
-  // The output of the script/module compilation task.
-  UniquePtr<frontend::ExtensibleCompilationStencil> extensibleStencil_;
 
   UniquePtr<frontend::CompilationGCOutput> gcOutput_;
 
