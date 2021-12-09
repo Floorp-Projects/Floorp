@@ -361,10 +361,9 @@ class EventDispatcher {
    * Otherwise this works like EventDispatcher::Dispatch.
    * @note Use this method when dispatching a dom::Event.
    */
-  static nsresult DispatchDOMEvent(nsISupports* aTarget, WidgetEvent* aEvent,
-                                   dom::Event* aDOMEvent,
-                                   nsPresContext* aPresContext,
-                                   nsEventStatus* aEventStatus);
+  MOZ_CAN_RUN_SCRIPT static nsresult DispatchDOMEvent(
+      nsISupports* aTarget, WidgetEvent* aEvent, dom::Event* aDOMEvent,
+      nsPresContext* aPresContext, nsEventStatus* aEventStatus);
 
   /**
    * Creates a DOM Event.  Returns null if the event type is unsupported.
