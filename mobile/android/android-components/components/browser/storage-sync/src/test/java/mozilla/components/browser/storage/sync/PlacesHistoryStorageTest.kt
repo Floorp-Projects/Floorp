@@ -419,10 +419,26 @@ class PlacesHistoryStorageTest {
         assertEquals("placesHistory", res.source)
         assertEquals(1, res.totalItems)
 
-        history.recordVisit("https://www.github.com/mozilla-mobile/fenix", PageVisit(VisitType.LINK))
-        res = history.getAutocompleteSuggestion("github.com/moz")!!
-        assertEquals("github.com/mozilla-mobile/", res.text)
-        assertEquals("https://www.github.com/mozilla-mobile/", res.url)
+        // Path segment matching along a long path
+        history.recordVisit("https://www.reddit.com/r/vancouver/comments/quu9lt/hwy_1_just_north_of_lytton_is_gone", PageVisit(VisitType.LINK))
+        res = history.getAutocompleteSuggestion("reddit.com/r")!!
+        assertEquals("reddit.com/r/", res.text)
+        assertEquals("https://www.reddit.com/r/", res.url)
+        assertEquals("placesHistory", res.source)
+        assertEquals(1, res.totalItems)
+        res = history.getAutocompleteSuggestion("reddit.com/r/van")!!
+        assertEquals("reddit.com/r/vancouver/", res.text)
+        assertEquals("https://www.reddit.com/r/vancouver/", res.url)
+        assertEquals("placesHistory", res.source)
+        assertEquals(1, res.totalItems)
+        res = history.getAutocompleteSuggestion("reddit.com/r/vancouver/comments/q")!!
+        assertEquals("reddit.com/r/vancouver/comments/quu9lt/", res.text)
+        assertEquals("https://www.reddit.com/r/vancouver/comments/quu9lt/", res.url)
+        assertEquals("placesHistory", res.source)
+        assertEquals(1, res.totalItems)
+        res = history.getAutocompleteSuggestion("reddit.com/r/vancouver/comments/quu9lt/h")!!
+        assertEquals("reddit.com/r/vancouver/comments/quu9lt/hwy_1_just_north_of_lytton_is_gone", res.text)
+        assertEquals("https://www.reddit.com/r/vancouver/comments/quu9lt/hwy_1_just_north_of_lytton_is_gone", res.url)
         assertEquals("placesHistory", res.source)
         assertEquals(1, res.totalItems)
 
