@@ -250,6 +250,8 @@ DIRS += [
     "/third_party/libwebrtc/modules/video_capture/video_capture_module_gn",
     "/third_party/libwebrtc/modules/video_coding/chain_diff_calculator_gn",
     "/third_party/libwebrtc/modules/video_coding/codec_globals_headers_gn",
+    "/third_party/libwebrtc/modules/video_coding/codecs/av1/libaom_av1_decoder_gn",
+    "/third_party/libwebrtc/modules/video_coding/codecs/av1/libaom_av1_encoder_gn",
     "/third_party/libwebrtc/modules/video_coding/deprecated/nack_module_gn",
     "/third_party/libwebrtc/modules/video_coding/encoded_frame_gn",
     "/third_party/libwebrtc/modules/video_coding/frame_dependencies_calculator_gn",
