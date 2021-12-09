@@ -60,6 +60,9 @@ enum class ParseTaskKind {
   // The output is JSScript.
   ScriptDecode,
 
+  // The output is CompilationStencil for script/stencil.
+  StencilDecode,
+
   // The output is an array of CompilationStencil.
   MultiStencilsDecode,
 };
@@ -400,6 +403,9 @@ class GlobalHelperThreadState {
   already_AddRefed<frontend::CompilationStencil>
   finishCompileModuleToStencilTask(JSContext* cx, JS::OffThreadToken* token,
                                    JS::InstantiationStorage* storage);
+  already_AddRefed<frontend::CompilationStencil> finishDecodeStencilTask(
+      JSContext* cx, JS::OffThreadToken* token,
+      JS::InstantiationStorage* storage);
   JSScript* finishScriptDecodeTask(JSContext* cx, JS::OffThreadToken* token);
   bool finishMultiStencilsDecodeTask(
       JSContext* cx, JS::OffThreadToken* token,

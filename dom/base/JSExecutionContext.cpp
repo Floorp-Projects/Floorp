@@ -248,8 +248,19 @@ nsresult JSExecutionContext::JoinDecode(JS::OffThreadToken** aOffThreadToken) {
   }
 
   MOZ_ASSERT(!mWantsReturnValue);
-  mScript.set(JS::FinishOffThreadScriptDecoder(mCx, *aOffThreadToken));
+  JS::Rooted<JS::InstantiationStorage> storage(mCx);
+  RefPtr<JS::Stencil> stencil = JS::FinishDecodeStencilOffThread(
+      mCx, *aOffThreadToken, storage.address());
   *aOffThreadToken = nullptr;  // Mark the token as having been finished.
+  if (!stencil) {
+    mSkip = true;
+    mRv = EvaluationExceptionToNSResult(mCx);
+    return mRv;
+  }
+
+  JS::InstantiateOptions instantiateOptions(mCompileOptions);
+  mScript.set(JS::InstantiateGlobalStencil(mCx, instantiateOptions, stencil,
+                                           storage.address()));
   if (!mScript) {
     mSkip = true;
     mRv = EvaluationExceptionToNSResult(mCx);
