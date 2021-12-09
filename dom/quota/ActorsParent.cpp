@@ -1663,12 +1663,11 @@ class PersistOp final : public PersistRequestBase {
 };
 
 class EstimateOp final : public QuotaRequestBase {
-  nsCString mGroup;
-  uint64_t mUsage;
-  uint64_t mLimit;
+  const OriginMetadata mOriginMetadata;
+  std::pair<uint64_t, uint64_t> mUsageAndLimit;
 
  public:
-  explicit EstimateOp(const RequestParams& aParams);
+  explicit EstimateOp(const EstimateParams& aParams);
 
  private:
   ~EstimateOp() = default;
@@ -6522,27 +6521,37 @@ uint64_t QuotaManager::GetGroupLimit() const {
                             std::max<uint64_t>(x, 10 MB));
 }
 
-uint64_t QuotaManager::GetGroupUsage(const nsACString& aGroup) {
+std::pair<uint64_t, uint64_t> QuotaManager::GetUsageAndLimitForEstimate(
+    const OriginMetadata& aOriginMetadata) {
   AssertIsOnIOThread();
 
-  uint64_t usage = 0;
+  uint64_t totalGroupUsage = 0;
 
   {
     MutexAutoLock lock(mQuotaMutex);
 
     GroupInfoPair* pair;
-    if (mGroupInfoPairs.Get(aGroup, &pair)) {
+    if (mGroupInfoPairs.Get(aOriginMetadata.mGroup, &pair)) {
       for (const PersistenceType type : kBestEffortPersistenceTypes) {
         RefPtr<GroupInfo> groupInfo = pair->LockedGetGroupInfo(type);
         if (groupInfo) {
-          AssertNoOverflow(usage, groupInfo->mUsage);
-          usage += groupInfo->mUsage;
+          if (type == PERSISTENCE_TYPE_DEFAULT) {
+            RefPtr<OriginInfo> originInfo =
+                groupInfo->LockedGetOriginInfo(aOriginMetadata.mOrigin);
+
+            if (originInfo && originInfo->LockedPersisted()) {
+              return std::pair(mTemporaryStorageUsage, mTemporaryStorageLimit);
+            }
+          }
+
+          AssertNoOverflow(totalGroupUsage, groupInfo->mUsage);
+          totalGroupUsage += groupInfo->mUsage;
         }
       }
     }
   }
 
-  return usage;
+  return std::pair(totalGroupUsage, GetGroupLimit());
 }
 
 uint64_t QuotaManager::GetOriginUsage(
@@ -8357,7 +8366,7 @@ PQuotaRequestParent* Quota::AllocPQuotaRequestParent(
         return MakeRefPtr<PersistOp>(aParams);
 
       case RequestParams::TEstimateParams:
-        return MakeRefPtr<EstimateOp>(aParams);
+        return MakeRefPtr<EstimateOp>(aParams.get_EstimateParams());
 
       case RequestParams::TListOriginsParams:
         return MakeRefPtr<ListOriginsOp>();
@@ -9720,15 +9729,12 @@ void PersistOp::GetResponse(RequestResponse& aResponse) {
   aResponse = PersistResponse();
 }
 
-EstimateOp::EstimateOp(const RequestParams& aParams)
-    : QuotaRequestBase(/* aExclusive */ false), mUsage(0), mLimit(0) {
+EstimateOp::EstimateOp(const EstimateParams& aParams)
+    : QuotaRequestBase(/* aExclusive */ false),
+      mOriginMetadata(QuotaManager::GetInfoFromValidatedPrincipalInfo(
+                          aParams.principalInfo()),
+                      PERSISTENCE_TYPE_DEFAULT) {
   AssertIsOnOwningThread();
-  MOZ_ASSERT(aParams.type() == RequestParams::TEstimateParams);
-
-  // XXX We don't use the quota info components other than the group here.
-  mGroup = std::move(QuotaManager::GetInfoFromValidatedPrincipalInfo(
-                         aParams.get_EstimateParams().principalInfo())
-                         .mGroup);
 
   // Overwrite OriginOperationBase default values.
   mNeedsQuotaManagerInit = true;
@@ -9750,9 +9756,7 @@ nsresult EstimateOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
   QM_TRY(MOZ_TO_RESULT(aQuotaManager.EnsureTemporaryStorageIsInitialized()));
 
   // Get cached usage (the method doesn't have to stat any files).
-  mUsage = aQuotaManager.GetGroupUsage(mGroup);
-
-  mLimit = aQuotaManager.GetGroupLimit();
+  mUsageAndLimit = aQuotaManager.GetUsageAndLimitForEstimate(mOriginMetadata);
 
   return NS_OK;
 }
@@ -9762,8 +9766,8 @@ void EstimateOp::GetResponse(RequestResponse& aResponse) {
 
   EstimateResponse estimateResponse;
 
-  estimateResponse.usage() = mUsage;
-  estimateResponse.limit() = mLimit;
+  estimateResponse.usage() = mUsageAndLimit.first;
+  estimateResponse.limit() = mUsageAndLimit.second;
 
   aResponse = estimateResponse;
 }
