@@ -5452,8 +5452,10 @@ class nsIFrame : public nsQueryFrame {
   virtual nsresult GetFrameName(nsAString& aResult) const;
   nsresult MakeFrameName(const nsAString& aType, nsAString& aResult) const;
   // Helper function to return the index in parent of the frame's content
-  // object. Returns -1 on error or if the frame doesn't have a content object
-  static int32_t ContentIndexInContainer(const nsIFrame* aFrame);
+  // object. Returns Nothing on error or if the frame doesn't have a content
+  // object
+  static mozilla::Maybe<uint32_t> ContentIndexInContainer(
+      const nsIFrame* aFrame);
 #endif
 
 #ifdef DEBUG
