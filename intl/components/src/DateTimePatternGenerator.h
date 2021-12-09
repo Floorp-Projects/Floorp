@@ -14,6 +14,14 @@
 
 namespace mozilla::intl {
 
+class DisplayNames;
+
+/**
+ * The DateTimePatternGenerator is the machinery used to work with DateTime
+ * pattern manipulation. It is expensive to create one, and so generally it is
+ * created once and then cached. It may be needed to be passed in as an argument
+ * for different mozilla::intl APIs.
+ */
 class DateTimePatternGenerator final {
  public:
   explicit DateTimePatternGenerator(UDateTimePatternGenerator* aGenerator)
@@ -114,16 +122,15 @@ class DateTimePatternGenerator final {
     return Span{combined, static_cast<size_t>(length)};
   }
 
-  /**
-   * TODO(Bug 1686965) - Temporarily get the underlying ICU object while
-   * migrating to the unified API. This should be removed when completing the
-   * migration.
-   */
-  UDateTimePatternGenerator* UnsafeGetUDateTimePatternGenerator() {
+ private:
+  // Allow other mozilla::intl components to access the underlying
+  // UDateTimePatternGenerator.
+  friend class DisplayNames;
+
+  UDateTimePatternGenerator* GetUDateTimePatternGenerator() {
     return mGenerator.GetMut();
   }
 
- private:
   ICUPointer<UDateTimePatternGenerator> mGenerator =
       ICUPointer<UDateTimePatternGenerator>(nullptr);
 
