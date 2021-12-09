@@ -97,7 +97,7 @@ extern JS_PUBLIC_API JSScript* FinishOffThreadScriptAndStartIncrementalEncoding(
 extern JS_PUBLIC_API void CancelOffThreadScript(JSContext* cx,
                                                 OffThreadToken* token);
 
-extern JS_PUBLIC_API void CancelOffThreadCompileToStencil(
+extern JS_PUBLIC_API void CancelCompileToStencilOffThread(
     JSContext* cx, OffThreadToken* token);
 
 extern JS_PUBLIC_API OffThreadToken* CompileOffThreadModule(
