@@ -1434,6 +1434,7 @@ nsresult mozInlineSpellChecker::SpellCheckerSlice::Execute() {
     // get the range for the current word.
     nsINode* const beginNode = word.mNodeOffsetRange.Begin().Node();
     nsINode* const endNode = word.mNodeOffsetRange.End().Node();
+    // TODO: Make them `uint32_t`
     const int32_t beginOffset = word.mNodeOffsetRange.Begin().Offset();
     const int32_t endOffset = word.mNodeOffsetRange.End().Offset();
 
@@ -1450,7 +1451,8 @@ nsresult mozInlineSpellChecker::SpellCheckerSlice::Execute() {
                                                std::move(checkRanges));
 
       // move the range to encompass the stuff that needs checking.
-      nsresult rv = mStatus->mRange->SetStart(beginNode, beginOffset);
+      nsresult rv = mStatus->mRange->SetStart(
+          beginNode, AssertedCast<uint32_t>(beginOffset));
       if (NS_FAILED(rv)) {
         // The range might be unhappy because the beginning is after the
         // end. This is possible when the requested end was in the middle
@@ -1473,14 +1475,15 @@ nsresult mozInlineSpellChecker::SpellCheckerSlice::Execute() {
       ErrorResult erv;
       // likewise, if this word is inside new text, we won't bother testing
       if (!mStatus->GetCreatedRange() ||
-          !mStatus->GetCreatedRange()->IsPointInRange(*beginNode, beginOffset,
-                                                      erv)) {
+          !mStatus->GetCreatedRange()->IsPointInRange(
+              *beginNode, AssertedCast<uint32_t>(beginOffset), erv)) {
         MOZ_LOG(sInlineSpellCheckerLog, LogLevel::Debug,
                 ("%s: removing ranges for some interval.", __FUNCTION__));
 
         nsTArray<RefPtr<nsRange>> ranges;
         mSpellCheckSelection.GetRangesForInterval(
-            *beginNode, beginOffset, *endNode, endOffset, true, ranges, erv);
+            *beginNode, AssertedCast<uint32_t>(beginOffset), *endNode,
+            AssertedCast<uint32_t>(endOffset), true, ranges, erv);
         ENSURE_SUCCESS(erv, erv.StealNSResult());
         oldRangesToRemove.AppendElements(std::move(ranges));
       }
@@ -1715,8 +1718,9 @@ nsresult mozInlineSpellChecker::IsPointInSelection(Selection& aSelection,
   *aRange = nullptr;
 
   nsTArray<nsRange*> ranges;
-  nsresult rv = aSelection.GetRangesForIntervalArray(aNode, aOffset, aNode,
-                                                     aOffset, true, &ranges);
+  nsresult rv = aSelection.GetRangesForIntervalArray(
+      aNode, AssertedCast<uint32_t>(aOffset), aNode,
+      static_cast<uint32_t>(aOffset), true, &ranges);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (ranges.Length() == 0) return NS_OK;  // no matches
