@@ -1152,7 +1152,7 @@ Maybe<wr::WrSpatialId> DisplayListBuilder::GetScrollIdForDefinedScrollLayer(
 wr::WrSpatialId DisplayListBuilder::DefineScrollLayer(
     const layers::ScrollableLayerGuid::ViewID& aViewId,
     const Maybe<wr::WrSpatialId>& aParent, const wr::LayoutRect& aContentRect,
-    const wr::LayoutRect& aClipRect, const wr::LayoutPoint& aScrollOffset,
+    const wr::LayoutRect& aClipRect, const wr::LayoutVector2D& aScrollOffset,
     wr::SpatialTreeItemKey aKey) {
   auto it = mScrollIds.find(aViewId);
   if (it != mScrollIds.end()) {
