@@ -234,6 +234,12 @@ namespace ChromeUtils {
                          optional UTF8String text);
 
   /**
+   * Return the symbolic name of any given XPCOM error code (nsresult):
+   * "NS_OK", "NS_ERROR_FAILURE",...
+   */
+  UTF8String getXPCOMErrorName(unsigned long aErrorCode);
+
+  /**
    * IF YOU ADD NEW METHODS HERE, MAKE SURE THEY ARE THREAD-SAFE.
    */
 };
