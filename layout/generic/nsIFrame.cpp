@@ -26,6 +26,7 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/intl/BidiEmbeddingLevel.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
 #include "mozilla/ResultExtensions.h"
@@ -7824,18 +7825,11 @@ nsIFrame* nsIFrame::GetContainingBlock(
 
 #ifdef DEBUG_FRAME_DUMP
 
-int32_t nsIFrame::ContentIndexInContainer(const nsIFrame* aFrame) {
-  int32_t result = -1;
-
-  nsIContent* content = aFrame->GetContent();
-  if (content) {
-    nsIContent* parentContent = content->GetParent();
-    if (parentContent) {
-      result = parentContent->ComputeIndexOf_Deprecated(content);
-    }
+Maybe<uint32_t> nsIFrame::ContentIndexInContainer(const nsIFrame* aFrame) {
+  if (nsIContent* content = aFrame->GetContent()) {
+    return content->ComputeIndexInParentContent();
   }
-
-  return result;
+  return Nothing();
 }
 
 nsAutoCString nsIFrame::ListTag() const {
@@ -8049,7 +8043,12 @@ nsresult nsIFrame::MakeFrameName(const nsAString& aType,
     aResult.Append(')');
   }
   aResult.Append('(');
-  aResult.AppendInt(ContentIndexInContainer(this));
+  Maybe<uint32_t> index = ContentIndexInContainer(this);
+  if (index.isSome()) {
+    aResult.AppendInt(*index);
+  } else {
+    aResult.AppendInt(-1);
+  }
   aResult.Append(')');
   return NS_OK;
 }
