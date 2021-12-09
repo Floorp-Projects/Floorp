@@ -218,6 +218,11 @@ JS::OffThreadToken* StartOffThreadCompileModuleToStencil(
     JS::SourceText<mozilla::Utf8Unit>& srcBuf,
     JS::OffThreadCompileCallback callback, void* callbackData);
 
+JS::OffThreadToken* StartOffThreadDecodeStencil(
+    JSContext* cx, const JS::DecodeOptions& options,
+    const JS::TranscodeRange& range, JS::OffThreadCompileCallback callback,
+    void* callbackData);
+
 JS::OffThreadToken* StartOffThreadDecodeScript(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options,
     const JS::TranscodeRange& range, JS::OffThreadCompileCallback callback,
