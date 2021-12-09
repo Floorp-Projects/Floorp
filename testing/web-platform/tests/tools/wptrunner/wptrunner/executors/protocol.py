@@ -4,6 +4,18 @@ from abc import ABCMeta, abstractmethod
 from typing import ClassVar, List, Type
 
 
+def merge_dicts(target, source):
+    if not (isinstance(target, dict) and isinstance(source, dict)):
+        raise TypeError
+    for (key, source_value) in source.items():
+        if key not in target:
+            target[key] = source_value
+        else:
+            if isinstance(source_value, dict) and isinstance(target[key], dict):
+                merge_dicts(target[key], source_value)
+            else:
+                target[key] = source_value
+
 class Protocol(object):
     """Backend for a specific browser-control protocol.
 
