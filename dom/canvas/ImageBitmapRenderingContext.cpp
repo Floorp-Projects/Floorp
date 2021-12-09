@@ -269,8 +269,8 @@ bool ImageBitmapRenderingContext::IsContextCleanForFrameCapture() {
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ImageBitmapRenderingContext)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ImageBitmapRenderingContext)
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ImageBitmapRenderingContext,
-                                      mCanvasElement, mOffscreenCanvas)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WEAK_PTR(ImageBitmapRenderingContext,
+                                               mCanvasElement, mOffscreenCanvas)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ImageBitmapRenderingContext)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY

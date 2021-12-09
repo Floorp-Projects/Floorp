@@ -117,8 +117,6 @@ void ShareableCanvasRenderer::UpdateCompositableClient() {
   const auto context = mData.GetContext();
   if (!context) return;
   const auto& provider = context->GetBufferProvider();
-  const auto webgl = context->AsWebgl();
-
   const auto& forwarder = GetForwarder();
 
   // -
@@ -134,9 +132,8 @@ void ShareableCanvasRenderer::UpdateCompositableClient() {
   // -
 
   const auto fnGetExistingTc = [&]() -> RefPtr<TextureClient> {
-    if (webgl) {
-      const auto desc = webgl->GetFrontBuffer(nullptr);
-      if (!desc) return nullptr;
+    const auto desc = context->GetFrontBuffer(nullptr);
+    if (desc) {
       return GetFrontBufferFromDesc(*desc, flags);
     }
     if (provider) {

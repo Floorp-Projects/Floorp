@@ -621,8 +621,6 @@ class CanvasRenderingContext2D final : public nsICanvasRenderingContextInternal,
   bool TryBasicTarget(RefPtr<gfx::DrawTarget>& aOutDT,
                       RefPtr<layers::PersistentBufferProvider>& aOutProvider);
 
-  ClientWebGLContext* AsWebgl() override;
-
   void RegisterAllocation();
 
   void SetInitialState();

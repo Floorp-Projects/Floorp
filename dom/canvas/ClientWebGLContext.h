@@ -691,8 +691,7 @@ struct TexImageSourceAdapter final : public TexImageSource {
  * Base class for all IDL implementations of WebGLContext
  */
 class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
-                                 public nsWrapperCache,
-                                 public SupportsWeakPtr {
+                                 public nsWrapperCache {
   friend class webgl::AvailabilityRunnable;
   friend class webgl::ObjectJS;
   friend class webgl::ProgramKeepAlive;
@@ -778,7 +777,6 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   void MarkContextClean() override {}
 
   void OnBeforePaintTransaction() override;
-  ClientWebGLContext* AsWebgl() override { return this; }
 
   mozilla::dom::WebGLChild* GetChild() const {
     if (!mNotLost) return nullptr;
@@ -1008,8 +1006,11 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
 
   void Present(WebGLFramebufferJS*, layers::TextureType,
                const bool webvr = false);
-  Maybe<layers::SurfaceDescriptor> GetFrontBuffer(WebGLFramebufferJS*,
-                                                  const bool webvr = false);
+  Maybe<layers::SurfaceDescriptor> GetFrontBuffer(
+      WebGLFramebufferJS*, const bool webvr = false) override;
+  Maybe<layers::SurfaceDescriptor> PresentFrontBuffer(
+      WebGLFramebufferJS*, layers::TextureType,
+      const bool webvr = false) override;
   RefPtr<gfx::SourceSurface> GetFrontBufferSnapshot(
       bool requireAlphaPremult = true) override;
 
