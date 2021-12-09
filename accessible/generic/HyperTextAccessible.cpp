@@ -439,7 +439,8 @@ DOMPoint HyperTextAccessible::OffsetToDOMPoint(int32_t aOffset) const {
   nsINode* node = child->GetNode();
   nsINode* parentNode = node->GetParentNode();
   return parentNode ? DOMPoint(parentNode,
-                               parentNode->ComputeIndexOf(node) + innerOffset)
+                               parentNode->ComputeIndexOf_Deprecated(node) +
+                                   innerOffset)
                     : DOMPoint();
 }
 
@@ -2286,7 +2287,7 @@ nsresult HyperTextAccessible::GetDOMPointByFrameOffset(
 
     nsIContent* parent = content->GetParent();
 
-    aPoint->idx = parent->ComputeIndexOf(content) + 1;
+    aPoint->idx = parent->ComputeIndexOf_Deprecated(content) + 1;
     aPoint->node = parent;
 
   } else if (aFrame->IsTextFrame()) {
@@ -2307,7 +2308,7 @@ nsresult HyperTextAccessible::GetDOMPointByFrameOffset(
     nsIContent* parent = content->GetParent();
     NS_ENSURE_STATE(parent);
 
-    aPoint->idx = parent->ComputeIndexOf(content);
+    aPoint->idx = parent->ComputeIndexOf_Deprecated(content);
     aPoint->node = parent;
   }
 

@@ -203,7 +203,7 @@ class RangeBoundaryBase {
     MOZ_ASSERT(mRef);
     MOZ_ASSERT(mRef->GetParentNode() == mParent);
 
-    const int32_t index = mParent->ComputeIndexOf(mRef);
+    const int32_t index = mParent->ComputeIndexOf_Deprecated(mRef);
     MOZ_ASSERT(index >= 0);
     mOffset.emplace(static_cast<uint32_t>(index + 1));
   }

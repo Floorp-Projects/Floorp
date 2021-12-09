@@ -805,7 +805,7 @@ bool nsRange::IntersectsNode(nsINode& aNode, ErrorResult& aRv) {
     return GetRoot() == &aNode;
   }
 
-  const int32_t nodeIndex = parent->ComputeIndexOf(&aNode);
+  const int32_t nodeIndex = parent->ComputeIndexOf_Deprecated(&aNode);
   if (nodeIndex < 0) {
     return false;
   }
@@ -962,7 +962,7 @@ void nsRange::DoSetRange(const RangeBoundaryBase<SPT, SRT>& aStartBoundary,
 static int32_t IndexOf(nsINode* aChild) {
   nsINode* parent = aChild->GetParentNode();
 
-  return parent ? parent->ComputeIndexOf(aChild) : -1;
+  return parent ? parent->ComputeIndexOf_Deprecated(aChild) : -1;
 }
 
 void nsRange::RegisterSelection(Selection& aSelection) {
@@ -1167,10 +1167,12 @@ void nsRange::SelectNodesInContainer(nsINode* aContainer,
                                      nsIContent* aStartContent,
                                      nsIContent* aEndContent) {
   MOZ_ASSERT(aContainer);
-  MOZ_ASSERT(aContainer->ComputeIndexOf(aStartContent) <=
-             aContainer->ComputeIndexOf(aEndContent));
-  MOZ_ASSERT(aStartContent && aContainer->ComputeIndexOf(aStartContent) != -1);
-  MOZ_ASSERT(aEndContent && aContainer->ComputeIndexOf(aEndContent) != -1);
+  MOZ_ASSERT(aContainer->ComputeIndexOf_Deprecated(aStartContent) <=
+             aContainer->ComputeIndexOf_Deprecated(aEndContent));
+  MOZ_ASSERT(aStartContent &&
+             aContainer->ComputeIndexOf_Deprecated(aStartContent) != -1);
+  MOZ_ASSERT(aEndContent &&
+             aContainer->ComputeIndexOf_Deprecated(aEndContent) != -1);
 
   nsINode* newRoot = RangeUtils::ComputeRootNode(aContainer);
   MOZ_ASSERT(newRoot);
@@ -1257,7 +1259,7 @@ void nsRange::SelectNode(nsINode& aNode, ErrorResult& aRv) {
     return;
   }
 
-  int32_t index = container->ComputeIndexOf(&aNode);
+  const int32_t index = container->ComputeIndexOf_Deprecated(&aNode);
   // MOZ_ASSERT(index != -1);
   // We need to compute the index here unfortunately, because, while we have
   // support for XBL, |container| may be the node's binding parent without
@@ -3058,7 +3060,7 @@ void nsRange::ExcludeNonSelectableNodes(nsTArray<RefPtr<nsRange>>* aOutRanges) {
           if (content && content->HasIndependentSelection()) {
             nsINode* parent = startContainer->GetParent();
             if (parent) {
-              startOffset = parent->ComputeIndexOf(startContainer);
+              startOffset = parent->ComputeIndexOf_Deprecated(startContainer);
               startContainer = parent;
             }
           }

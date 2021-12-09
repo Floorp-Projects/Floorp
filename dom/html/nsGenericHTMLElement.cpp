@@ -526,8 +526,9 @@ HTMLFormElement* nsGenericHTMLElement::FindAncestorForm(
         // anonymous.  Check for this the hard way.
         for (nsIContent* child = this; child != content;
              child = child->GetParent()) {
-          NS_ASSERTION(child->GetParent()->ComputeIndexOf(child) != -1,
-                       "Walked too far?");
+          NS_ASSERTION(
+              child->GetParent()->ComputeIndexOf_Deprecated(child) != -1,
+              "Walked too far?");
         }
       }
 #endif

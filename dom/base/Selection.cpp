@@ -1346,7 +1346,7 @@ nsIFrame* Selection::GetPrimaryFrameForFocusNode(bool aVisual,
   if (NS_WARN_IF(!parent)) {
     return nullptr;
   }
-  int32_t offset = parent->ComputeIndexOf(content);
+  const int32_t offset = parent->ComputeIndexOf_Deprecated(content);
 
   return GetPrimaryOrCaretFrameForNodeOffset(parent, offset, aOffsetUsed,
                                              aVisual);

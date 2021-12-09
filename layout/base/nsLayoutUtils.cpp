@@ -1180,8 +1180,8 @@ int32_t nsLayoutUtils::DoCompareTreePosition(
     return 0;
   }
 
-  int32_t index1 = parent->ComputeIndexOf(content1Ancestor);
-  int32_t index2 = parent->ComputeIndexOf(content2Ancestor);
+  const int32_t index1 = parent->ComputeIndexOf_Deprecated(content1Ancestor);
+  const int32_t index2 = parent->ComputeIndexOf_Deprecated(content2Ancestor);
 
   // None of the nodes are anonymous, just do a regular comparison.
   if (index1 >= 0 && index2 >= 0) {

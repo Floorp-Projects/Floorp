@@ -1079,26 +1079,28 @@ uint16_t nsINode::CompareDocumentPosition(nsINode& aOtherNode,
     const nsINode* child2 = parents2.ElementAt(--pos2);
     if (child1 != child2) {
       // child1 or child2 can be an attribute here. This will work fine since
-      // ComputeIndexOf will return -1 for the attribute making the
+      // ComputeIndexOf_Deprecated will return -1 for the attribute making the
       // attribute be considered before any child.
       int32_t child1Index;
       bool cachedChild1Index = false;
       if (&aOtherNode == child1 && aOtherIndex) {
         cachedChild1Index = true;
-        child1Index =
-            *aOtherIndex != -1 ? *aOtherIndex : parent->ComputeIndexOf(child1);
+        child1Index = *aOtherIndex != -1
+                          ? *aOtherIndex
+                          : parent->ComputeIndexOf_Deprecated(child1);
       } else {
-        child1Index = parent->ComputeIndexOf(child1);
+        child1Index = parent->ComputeIndexOf_Deprecated(child1);
       }
 
       int32_t child2Index;
       bool cachedChild2Index = false;
       if (this == child2 && aThisIndex) {
         cachedChild2Index = true;
-        child2Index =
-            *aThisIndex != -1 ? *aThisIndex : parent->ComputeIndexOf(child2);
+        child2Index = *aThisIndex != -1
+                          ? *aThisIndex
+                          : parent->ComputeIndexOf_Deprecated(child2);
       } else {
-        child2Index = parent->ComputeIndexOf(child2);
+        child2Index = parent->ComputeIndexOf_Deprecated(child2);
       }
 
       uint16_t retVal = child1Index < child2Index
@@ -1414,7 +1416,7 @@ bool nsINode::Traverse(nsINode* tmp, nsCycleCollectionTraversalCallback& cb) {
         nsIContent* parent = tmp->GetParent();
         if (parent && !parent->UnoptimizableCCNode() &&
             parent->HasKnownLiveWrapper()) {
-          MOZ_ASSERT(parent->ComputeIndexOf(tmp) >= 0,
+          MOZ_ASSERT(parent->ComputeIndexOf_Deprecated(tmp) >= 0,
                      "Parent doesn't own us?");
           return false;
         }
@@ -1737,16 +1739,17 @@ nsIContent* nsINode::GetChildAt_Deprecated(uint32_t aIndex) const {
   return child;
 }
 
-int32_t nsINode::ComputeIndexOf(const nsINode* aChild) const {
-  if (!aChild) {
+int32_t nsINode::ComputeIndexOf_Deprecated(
+    const nsINode* aPossibleChild) const {
+  if (!aPossibleChild) {
     return -1;
   }
 
-  if (aChild->GetParentNode() != this) {
+  if (aPossibleChild->GetParentNode() != this) {
     return -1;
   }
 
-  if (aChild == GetLastChild()) {
+  if (aPossibleChild == GetLastChild()) {
     return GetChildCount() - 1;
   }
 
@@ -1755,7 +1758,7 @@ int32_t nsINode::ComputeIndexOf(const nsINode* aChild) const {
     int32_t childIndex;
     GetChildAndIndexFromCache(this, &child, &childIndex);
     if (child) {
-      if (child == aChild) {
+      if (child == aPossibleChild) {
         return childIndex;
       }
 
@@ -1766,16 +1769,16 @@ int32_t nsINode::ComputeIndexOf(const nsINode* aChild) const {
       do {
         if (next) {
           ++nextIndex;
-          if (next == aChild) {
-            AddChildAndIndexToCache(this, aChild, nextIndex);
+          if (next == aPossibleChild) {
+            AddChildAndIndexToCache(this, aPossibleChild, nextIndex);
             return nextIndex;
           }
           next = next->GetNextSibling();
         }
         if (prev) {
           --prevIndex;
-          if (prev == aChild) {
-            AddChildAndIndexToCache(this, aChild, prevIndex);
+          if (prev == aPossibleChild) {
+            AddChildAndIndexToCache(this, aPossibleChild, prevIndex);
             return prevIndex;
           }
           prev = prev->GetPreviousSibling();
@@ -1788,7 +1791,7 @@ int32_t nsINode::ComputeIndexOf(const nsINode* aChild) const {
   nsINode* current = mFirstChild;
   while (current) {
     MOZ_ASSERT(current->GetParentNode() == this);
-    if (current == aChild) {
+    if (current == aPossibleChild) {
       if (mChildCount >= CACHE_CHILD_LIMIT) {
         AddChildAndIndexToCache(this, current, index);
       }
@@ -2239,8 +2242,9 @@ static void EnsureAllowedAsChild(nsINode* aNewChild, nsINode* aParent,
         return;
       }
 
-      int32_t doctypeIndex = aParent->ComputeIndexOf(docTypeContent);
-      int32_t insertIndex = aParent->ComputeIndexOf(aRefChild);
+      const int32_t doctypeIndex =
+          aParent->ComputeIndexOf_Deprecated(docTypeContent);
+      const int32_t insertIndex = aParent->ComputeIndexOf_Deprecated(aRefChild);
 
       // Now we're OK in the following two cases only:
       // 1) We're replacing something that's not before the doctype
@@ -2288,8 +2292,8 @@ static void EnsureAllowedAsChild(nsINode* aNewChild, nsINode* aParent,
         return;
       }
 
-      int32_t rootIndex = aParent->ComputeIndexOf(rootElement);
-      int32_t insertIndex = aParent->ComputeIndexOf(aRefChild);
+      const int32_t rootIndex = aParent->ComputeIndexOf_Deprecated(rootElement);
+      const int32_t insertIndex = aParent->ComputeIndexOf_Deprecated(aRefChild);
 
       // Now we're OK if and only if insertIndex <= rootIndex.  Indeed, either
       // we end up replacing aRefChild or we end up before it.  Either one is

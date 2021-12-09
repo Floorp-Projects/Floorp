@@ -1332,7 +1332,7 @@ namespace {
 struct ParentAndOffset {
   explicit ParentAndOffset(const nsINode& aNode)
       : mParent{aNode.GetParent()},
-        mOffset{mParent ? mParent->ComputeIndexOf(&aNode) : 0} {}
+        mOffset{mParent ? mParent->ComputeIndexOf_Deprecated(&aNode) : 0} {}
 
   nsINode* mParent;
 
@@ -2724,7 +2724,7 @@ nsresult SelectCellElement(nsIContent* aCellElement,
   nsIContent* parent = aCellElement->GetParent();
 
   // Get child offset
-  int32_t offset = parent->ComputeIndexOf(aCellElement);
+  const int32_t offset = parent->ComputeIndexOf_Deprecated(aCellElement);
 
   return CreateAndAddRange(parent, offset, aNormalSelection);
 }

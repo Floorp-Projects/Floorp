@@ -2089,7 +2089,8 @@ bool nsContentUtils::InProlog(nsINode* aNode) {
   Document* doc = parent->AsDocument();
   nsIContent* root = doc->GetRootElement();
 
-  return !root || doc->ComputeIndexOf(aNode) < doc->ComputeIndexOf(root);
+  return !root || doc->ComputeIndexOf_Deprecated(aNode) <
+                      doc->ComputeIndexOf_Deprecated(root);
 }
 
 bool nsContentUtils::IsCallerChrome() {
@@ -2563,7 +2564,7 @@ nsresult nsContentUtils::GetInclusiveAncestorsAndOffsets(
   nsIContent* parent = child->GetParent();
   while (parent) {
     aAncestorNodes->AppendElement(parent);
-    aAncestorOffsets->AppendElement(parent->ComputeIndexOf(child));
+    aAncestorOffsets->AppendElement(parent->ComputeIndexOf_Deprecated(child));
     child = parent;
     parent = parent->GetParent();
   }
@@ -2692,10 +2693,10 @@ int32_t nsContentUtils::ComparePoints_Deprecated(
     const nsINode* child1 = parents1.ElementAt(--pos1);
     const nsINode* child2 = parents2.ElementAt(--pos2);
     if (child1 != child2) {
-      int32_t child1index = aParent1Cache
-                                ? aParent1Cache->ComputeIndexOf(parent, child1)
-                                : parent->ComputeIndexOf(child1);
-      return child1index < parent->ComputeIndexOf(child2) ? -1 : 1;
+      const int32_t child1index =
+          aParent1Cache ? aParent1Cache->ComputeIndexOf(parent, child1)
+                        : parent->ComputeIndexOf_Deprecated(child1);
+      return child1index < parent->ComputeIndexOf_Deprecated(child2) ? -1 : 1;
     }
     parent = child1;
   }
@@ -2708,7 +2709,7 @@ int32_t nsContentUtils::ComparePoints_Deprecated(
 
   if (!pos1) {
     const nsINode* child2 = parents2.ElementAt(--pos2);
-    const int32_t child2Index = parent->ComputeIndexOf(child2);
+    const int32_t child2Index = parent->ComputeIndexOf_Deprecated(child2);
     if (MOZ_UNLIKELY(NS_WARN_IF(child2Index < 0))) {
       return 1;
     }
@@ -2718,7 +2719,7 @@ int32_t nsContentUtils::ComparePoints_Deprecated(
   const nsINode* child1 = parents1.ElementAt(--pos1);
   const int32_t child1Index =
       aParent1Cache ? aParent1Cache->ComputeIndexOf(parent, child1)
-                    : parent->ComputeIndexOf(child1);
+                    : parent->ComputeIndexOf_Deprecated(child1);
   if (MOZ_UNLIKELY(NS_WARN_IF(child1Index < 0))) {
     return -1;
   }
@@ -3125,7 +3126,7 @@ void nsContentUtils::GenerateStateKey(nsIContent* aContent, Document* aDocument,
     nsINode* parent = aContent->GetParentNode();
     nsINode* content = aContent;
     while (parent) {
-      KeyAppendInt(parent->ComputeIndexOf(content), aKey);
+      KeyAppendInt(parent->ComputeIndexOf_Deprecated(content), aKey);
       content = parent;
       parent = content->GetParentNode();
     }

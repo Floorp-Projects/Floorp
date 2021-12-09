@@ -180,7 +180,8 @@ void HTMLSelectElement::GetAutocompleteInfo(AutocompleteInfo& aInfo) {
 void HTMLSelectElement::InsertChildBefore(nsIContent* aKid,
                                           nsIContent* aBeforeThis, bool aNotify,
                                           ErrorResult& aRv) {
-  int32_t index = aBeforeThis ? ComputeIndexOf(aBeforeThis) : GetChildCount();
+  const int32_t index = aBeforeThis ? ComputeIndexOf_Deprecated(aBeforeThis)
+                                    : static_cast<int32_t>(GetChildCount());
   SafeOptionListMutation safeMutation(this, this, aKid, index, aNotify);
   nsGenericHTMLFormControlElementWithState::InsertChildBefore(aKid, aBeforeThis,
                                                               aNotify, aRv);
@@ -190,8 +191,8 @@ void HTMLSelectElement::InsertChildBefore(nsIContent* aKid,
 }
 
 void HTMLSelectElement::RemoveChildNode(nsIContent* aKid, bool aNotify) {
-  SafeOptionListMutation safeMutation(this, this, nullptr, ComputeIndexOf(aKid),
-                                      aNotify);
+  SafeOptionListMutation safeMutation(this, this, nullptr,
+                                      ComputeIndexOf_Deprecated(aKid), aNotify);
   nsGenericHTMLFormControlElementWithState::RemoveChildNode(aKid, aNotify);
 }
 
@@ -447,8 +448,8 @@ int32_t HTMLSelectElement::GetOptionIndexAfter(nsIContent* aOptions) {
   nsCOMPtr<nsIContent> parent = aOptions->GetParent();
 
   if (parent) {
-    int32_t index = parent->ComputeIndexOf(aOptions);
-    int32_t count = parent->GetChildCount();
+    const int32_t index = parent->ComputeIndexOf_Deprecated(aOptions);
+    const int32_t count = static_cast<int32_t>(parent->GetChildCount());
 
     retval = GetFirstChildOptionIndex(parent, index + 1, count);
 

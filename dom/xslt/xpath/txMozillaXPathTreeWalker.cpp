@@ -520,7 +520,8 @@ int txXPathNodeUtils::comparePosition(const txXPathNode& aNode,
         return node < otherNode ? -1 : 1;
       }
 
-      return parent->ComputeIndexOf(node) < parent->ComputeIndexOf(otherNode)
+      return parent->ComputeIndexOf_Deprecated(node) <
+                     parent->ComputeIndexOf_Deprecated(otherNode)
                  ? -1
                  : 1;
     }
@@ -558,8 +559,8 @@ int txXPathNodeUtils::comparePosition(const txXPathNode& aNode,
         return node < otherNode ? -1 : 1;
       }
 
-      int32_t index = parent->ComputeIndexOf(node);
-      int32_t otherIndex = parent->ComputeIndexOf(otherNode);
+      const int32_t index = parent->ComputeIndexOf_Deprecated(node);
+      const int32_t otherIndex = parent->ComputeIndexOf_Deprecated(otherNode);
       NS_ASSERTION(index != otherIndex && index >= 0 && otherIndex >= 0,
                    "invalid index in compareTreePosition");
 

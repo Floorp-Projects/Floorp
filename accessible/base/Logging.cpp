@@ -858,7 +858,8 @@ void logging::Address(const char* aDescr, LocalAccessible* aAcc) {
 
 void logging::Node(const char* aDescr, nsINode* aNode) {
   nsINode* parentNode = aNode ? aNode->GetParentNode() : nullptr;
-  int32_t idxInParent = parentNode ? parentNode->ComputeIndexOf(aNode) : -1;
+  const int32_t idxInParent =
+      parentNode ? parentNode->ComputeIndexOf_Deprecated(aNode) : -1;
 
   nsAutoString nodeDesc;
   DescribeNode(aNode, nodeDesc);
