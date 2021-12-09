@@ -26,7 +26,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
  * listener.startListening();
  *
  * const onConsoleAPIMessage = (eventName, data = {}) => {
- *   const { arguments: msgArguments, level, rawMessage, timeStamp } = data;
+ *   const { arguments: msgArguments, level, stacktrace, timeStamp } = data;
  *   ...
  * };
  * ```
@@ -34,8 +34,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
  * @emits message
  *    The ConsoleAPIListener emits "message" events, with the following object as
  *    payload:
- *      - `message` property pointing to the wrappedJSObject of the raw message
- *      - `rawMessage` property pointing to the raw message
+ *      - {Array<Object>} arguments - Arguments as passed-in when the method was called.
+ *      - {String} level - Importance, one of `info`, `warning`, `error`, `debug`, `trace`.
+ *      - {Array<Object>} stacktrace - List of stack frames, starting from most recent.
+ *      - {Number} timeStamp - Timestamp when the method was called.
  */
 class ConsoleAPIListener {
   #emittedMessages;
@@ -121,7 +123,7 @@ class ConsoleAPIListener {
     this.emit("message", {
       arguments: messageObject.arguments,
       level: messageObject.level,
-      rawMessage: message,
+      stacktrace: messageObject.stacktrace,
       timeStamp: messageObject.timeStamp,
     });
   };
