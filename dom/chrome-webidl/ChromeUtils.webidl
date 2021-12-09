@@ -507,6 +507,12 @@ partial namespace ChromeUtils {
   [Throws]
   Promise<ParentProcInfoDictionary> requestProcInfo();
 
+  /**
+   * For testing purpose.
+   */
+  [ChromeOnly]
+  boolean vsyncEnabled();
+
   [ChromeOnly, Throws]
   boolean hasReportingHeaderForOrigin(DOMString aOrigin);
 
