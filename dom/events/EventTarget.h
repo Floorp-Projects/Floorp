@@ -166,20 +166,25 @@ class EventTarget : public nsISupports, public nsWrapperCache {
   /**
    * The most general DispatchEvent method.  This is the one the bindings call.
    */
-  virtual bool DispatchEvent(Event& aEvent, CallerType aCallerType,
-                             ErrorResult& aRv) = 0;
+  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual bool DispatchEvent(Event& aEvent,
+                                                         CallerType aCallerType,
+                                                         ErrorResult& aRv) = 0;
 
   /**
    * A version of DispatchEvent you can use if you really don't care whether it
    * succeeds or not and whether default is prevented or not.
    */
-  void DispatchEvent(Event& aEvent);
+  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void DispatchEvent(Event& aEvent);
 
   /**
    * A version of DispatchEvent you can use if you really don't care whether
    * default is prevented or not.
    */
-  void DispatchEvent(Event& aEvent, ErrorResult& aRv);
+  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void DispatchEvent(Event& aEvent,
+                                                 ErrorResult& aRv);
 
   nsIGlobalObject* GetParentObject() const { return GetOwnerGlobal(); }
 
