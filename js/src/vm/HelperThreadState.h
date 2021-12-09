@@ -546,15 +546,6 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
   ThreadType threadType() override { return ThreadType::THREAD_TYPE_PARSE; }
 };
 
-struct MultiStencilsDecodeTask : public ParseTask {
-  JS::TranscodeSources* sources;
-
-  MultiStencilsDecodeTask(JSContext* cx, JS::TranscodeSources& sources,
-                          JS::OffThreadCompileCallback callback,
-                          void* callbackData);
-  void parse(JSContext* cx) override;
-};
-
 // It is not desirable to eagerly compress: if lazy functions that are tied to
 // the ScriptSource were to be executed relatively soon after parsing, they
 // would need to block on decompression, which hurts responsiveness.

@@ -110,7 +110,7 @@ extern JS_PUBLIC_API bool FinishIncrementalEncoding(JSContext* cx,
 //
 // JS::DecodeScript* and JS::DecodeOffThreadScript internally check this.
 //
-// JS::DecodeMultiOffThreadStencils checks some options shared across multiple
+// JS::DecodeMultiStencilsOffThread checks some options shared across multiple
 // scripts. Caller is responsible for checking each script with this API when
 // using the decoded script instead of compiling a new script wiht the given
 // options.
