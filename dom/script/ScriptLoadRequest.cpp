@@ -171,7 +171,7 @@ void ScriptLoadRequest::MaybeCancelOffThreadScript() {
   JSContext* cx = danger::GetJSContext();
   // Follow the same conditions as ScriptLoader::AttemptAsyncScriptCompile
   if (IsModuleRequest()) {
-    JS::CancelOffThreadModule(cx, mOffThreadToken);
+    JS::CancelCompileModuleToStencilOffThread(cx, mOffThreadToken);
   } else if (IsSource()) {
     JS::CancelCompileToStencilOffThread(cx, mOffThreadToken);
   } else {
