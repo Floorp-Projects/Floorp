@@ -28,6 +28,8 @@
   vertical-align: top; /* See bug 1606130 */
   display: -moz-box;
   -moz-box-orient: vertical;
+
+  --main-pane-width: 664px;
 }
 
 * {
@@ -51,7 +53,7 @@
 .pane-container {
   /* A workaround to keep the container always float on the `top: 0` (Bug 1377009) */
   display: block;
-  width: 664px;
+  width: var(--main-pane-width);
 }
 
 #mainPrefPane {
@@ -963,6 +965,11 @@ image.update-throbber {
   width: calc(100% + 8px);
   margin-inline: -4px;
   padding-inline: 4px;
+}
+
+.sticky-inner-container {
+  -moz-box-flex: 1;
+  max-width: var(--main-pane-width);
 }
 
 .search-tooltip {

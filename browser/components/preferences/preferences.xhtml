@@ -189,24 +189,26 @@
 
     <vbox class="main-content" flex="1" align="start">
       <vbox class="pane-container">
-        <hbox class="sticky-container" pack="end" align="start">
-          <hbox id="policies-container" class="info-box-container smaller-font-size" flex="1" hidden="true">
-            <hbox class="info-icon-container">
-              <image class="info-icon"></image>
+        <hbox class="sticky-container">
+          <hbox class="sticky-inner-container" pack="end" align="start">
+            <hbox id="policies-container" class="info-box-container smaller-font-size" flex="1" hidden="true">
+              <hbox class="info-icon-container">
+                <image class="info-icon"></image>
+              </hbox>
+              <hbox align="center" flex="1">
+                <label flex="1"
+                       href="about:policies"
+                       useoriginprincipal="true"
+                       is="text-link"
+                       data-l10n-id="managed-notice"/>
+              </hbox>
             </hbox>
-            <hbox align="center" flex="1">
-              <label flex="1"
-                     href="about:policies"
-                     useoriginprincipal="true"
-                     is="text-link"
-                     data-l10n-id="managed-notice"/>
-            </hbox>
+            <search-textbox
+              id="searchInput"
+              data-l10n-id="search-input-box2"
+              data-l10n-attrs="placeholder, style"
+              hidden="true"/>
           </hbox>
-          <search-textbox
-            id="searchInput"
-            data-l10n-id="search-input-box2"
-            data-l10n-attrs="placeholder, style"
-            hidden="true"/>
         </hbox>
         <vbox id="mainPrefPane">
 #include searchResults.inc.xhtml
