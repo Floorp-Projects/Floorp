@@ -6,7 +6,6 @@
 
 package org.mozilla.geckoview;
 
-import android.annotation.SuppressLint;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.text.TextUtils;
@@ -519,7 +518,7 @@ public class ContentBlocking {
      *
      * @return The categories of resources to be blocked.
      */
-    public @CBSafeBrowsing int getSafeBrowsingCategories() {
+    public @CBAntiTracking int getSafeBrowsingCategories() {
       return ContentBlocking.sbMalwareToSbCat(mSbMalware.get())
           | ContentBlocking.sbPhishingToSbCat(mSbPhishing.get());
     }
@@ -529,7 +528,6 @@ public class ContentBlocking {
      *
      * @return The assigned behavior, as one of {@link CookieBehavior} flags.
      */
-    @SuppressLint("WrongConstant")
     public @CBCookieBehavior int getCookieBehavior() {
       return mCookieBehavior.get();
     }
@@ -551,7 +549,6 @@ public class ContentBlocking {
      *
      * @return The assigned behavior, as one of {@link CookieBehavior} flags.
      */
-    @SuppressLint("WrongConstant")
     public @CBCookieBehavior int getCookieBehaviorPrivateMode() {
       return mCookieBehaviorPrivateMode.get();
     }
@@ -573,7 +570,6 @@ public class ContentBlocking {
      *
      * @return The assigned lifetime, as one of {@link CookieLifetime} flags.
      */
-    @SuppressLint("WrongConstant")
     public @CBCookieLifetime int getCookieLifetime() {
       return mCookieLifetime.get();
     }
