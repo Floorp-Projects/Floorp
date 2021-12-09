@@ -369,6 +369,8 @@ class PresShell final : public nsStubDocumentObserver,
   void MaybeNotifyShowDynamicToolbar();
 #endif  // defined(MOZ_WIDGET_ANDROID)
 
+  void RefreshZoomConstraintsForScreenSizeChange();
+
  private:
   /**
    * This is what ResizeReflowIgnoreOverride does when not shrink-wrapping (that
