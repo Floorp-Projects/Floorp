@@ -627,7 +627,7 @@ class nsINode : public mozilla::dom::EventTarget {
    * If the return value is not -1, then calling GetChildAt_Deprecated() with
    * that value will return aPossibleChild.
    */
-  virtual int32_t ComputeIndexOf(const nsINode* aPossibleChild) const;
+  int32_t ComputeIndexOf_Deprecated(const nsINode* aPossibleChild) const;
 
   /**
    * Returns the "node document" of this node.

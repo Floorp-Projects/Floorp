@@ -149,7 +149,7 @@ nsresult RangeUtils::CompareNodeToRange(nsINode* aNode,
     nodeStart = 0;
     nodeEnd = aNode->GetChildCount();
   } else {
-    nodeStart = parent->ComputeIndexOf(aNode);
+    nodeStart = parent->ComputeIndexOf_Deprecated(aNode);
     NS_WARNING_ASSERTION(
         nodeStart >= 0,
         "aNode has the parent node but it does not have aNode!");

@@ -498,7 +498,7 @@ class EditorDOMPointBase final {
       const_cast<SelfType*>(this)->mOffset = mozilla::Some(0);
     } else {
       const_cast<SelfType*>(this)->mOffset =
-          mozilla::Some(mParent->ComputeIndexOf(mChild));
+          mozilla::Some(mParent->ComputeIndexOf_Deprecated(mChild));
     }
     return mOffset.value();
   }

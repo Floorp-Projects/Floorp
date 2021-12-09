@@ -1073,7 +1073,7 @@ nsresult ContentEventHandler::SetRawRangeFromFlatTextOffset(
         if (NS_WARN_IF(!startNode)) {
           return NS_ERROR_FAILURE;
         }
-        startNodeOffset = startNode->ComputeIndexOf(content);
+        startNodeOffset = startNode->ComputeIndexOf_Deprecated(content);
         if (NS_WARN_IF(startNodeOffset == -1)) {
           // The content is being removed from the parent!
           return NS_ERROR_FAILURE;
@@ -1084,7 +1084,7 @@ nsresult ContentEventHandler::SetRawRangeFromFlatTextOffset(
         if (NS_WARN_IF(!startNode)) {
           return NS_ERROR_FAILURE;
         }
-        startNodeOffset = startNode->ComputeIndexOf(content) + 1;
+        startNodeOffset = startNode->ComputeIndexOf_Deprecated(content) + 1;
         if (NS_WARN_IF(startNodeOffset == 0)) {
           // The content is being removed from the parent!
           return NS_ERROR_FAILURE;
@@ -1179,7 +1179,7 @@ nsresult ContentEventHandler::SetRawRangeFromFlatTextOffset(
       if (NS_WARN_IF(!endNode)) {
         return NS_ERROR_FAILURE;
       }
-      int32_t indexInParent = endNode->ComputeIndexOf(content);
+      const int32_t indexInParent = endNode->ComputeIndexOf_Deprecated(content);
       if (NS_WARN_IF(indexInParent == -1)) {
         // The content is being removed from the parent!
         return NS_ERROR_FAILURE;
@@ -2738,7 +2738,8 @@ nsresult ContentEventHandler::GetFlatTextLengthInRange(
   if (aIsRemovingNode) {
     DebugOnly<nsIContent*> parent = aStartPosition.Container()->GetParent();
     MOZ_ASSERT(
-        parent && parent->ComputeIndexOf(aStartPosition.Container()) == -1,
+        parent &&
+            parent->ComputeIndexOf_Deprecated(aStartPosition.Container()) == -1,
         "At removing the node, the node shouldn't be in the array of children "
         "of its parent");
     MOZ_ASSERT(aStartPosition.Container() == endPosition.Container(),
@@ -2780,8 +2781,8 @@ nsresult ContentEventHandler::GetFlatTextLengthInRange(
         if (NS_WARN_IF(!parentContent)) {
           return NS_ERROR_FAILURE;
         }
-        int32_t indexInParent =
-            parentContent->ComputeIndexOf(endPosition.Container());
+        const int32_t indexInParent =
+            parentContent->ComputeIndexOf_Deprecated(endPosition.Container());
         if (NS_WARN_IF(indexInParent < 0)) {
           return NS_ERROR_FAILURE;
         }
@@ -2999,8 +3000,8 @@ static void AdjustRangeForSelection(nsIContent* aRoot, nsINode** aNode,
   }
 
   *aNode = node->GetParent();
-  MOZ_ASSERT((*aNode)->ComputeIndexOf(node) != -1);
-  *aNodeOffset = (*aNode)->ComputeIndexOf(node) + 1;
+  MOZ_ASSERT((*aNode)->ComputeIndexOf_Deprecated(node) != -1);
+  *aNodeOffset = (*aNode)->ComputeIndexOf_Deprecated(node) + 1;
 }
 
 nsresult ContentEventHandler::OnSelectionEvent(WidgetSelectionEvent* aEvent) {

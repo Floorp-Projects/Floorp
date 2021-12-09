@@ -58,7 +58,8 @@ Element* HTMLOptGroupElement::GetSelect() {
 void HTMLOptGroupElement::InsertChildBefore(nsIContent* aKid,
                                             nsIContent* aBeforeThis,
                                             bool aNotify, ErrorResult& aRv) {
-  int32_t index = aBeforeThis ? ComputeIndexOf(aBeforeThis) : GetChildCount();
+  const int32_t index = aBeforeThis ? ComputeIndexOf_Deprecated(aBeforeThis)
+                                    : static_cast<int32_t>(GetChildCount());
   SafeOptionListMutation safeMutation(GetSelect(), this, aKid, index, aNotify);
   nsGenericHTMLElement::InsertChildBefore(aKid, aBeforeThis, aNotify, aRv);
   if (aRv.Failed()) {
@@ -68,7 +69,7 @@ void HTMLOptGroupElement::InsertChildBefore(nsIContent* aKid,
 
 void HTMLOptGroupElement::RemoveChildNode(nsIContent* aKid, bool aNotify) {
   SafeOptionListMutation safeMutation(GetSelect(), this, nullptr,
-                                      ComputeIndexOf(aKid), aNotify);
+                                      ComputeIndexOf_Deprecated(aKid), aNotify);
   nsGenericHTMLElement::RemoveChildNode(aKid, aNotify);
 }
 

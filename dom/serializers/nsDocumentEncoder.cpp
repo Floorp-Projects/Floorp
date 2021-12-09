@@ -2025,7 +2025,7 @@ nsresult nsHTMLCopyEncoder::GetNodeLocation(nsINode* inChild,
     }
 
     *outParent = parent;
-    *outOffset = parent->ComputeIndexOf(child);
+    *outOffset = parent->ComputeIndexOf_Deprecated(child);
     return NS_OK;
   }
   return NS_ERROR_NULL_POINTER;

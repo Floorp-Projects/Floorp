@@ -128,9 +128,9 @@ void HTMLFieldSetElement::InsertChildBefore(nsIContent* aChild,
     } else {
       // If mFirstLegend is before aIndex, we do not change it.
       // Otherwise, mFirstLegend is now aChild.
-      int32_t index =
-          aBeforeThis ? ComputeIndexOf(aBeforeThis) : GetChildCount();
-      if (index <= ComputeIndexOf(mFirstLegend)) {
+      const int32_t index = aBeforeThis ? ComputeIndexOf_Deprecated(aBeforeThis)
+                                        : static_cast<int32_t>(GetChildCount());
+      if (index <= ComputeIndexOf_Deprecated(mFirstLegend)) {
         mFirstLegend = aChild;
         firstLegendHasChanged = true;
       }

@@ -60,7 +60,8 @@ static bool IsPreviousSibling(nsINode* aSubject, nsINode* aNode) {
 
   nsINode* parent = aSubject->GetParentNode();
   if (parent && parent == aNode->GetParentNode()) {
-    return parent->ComputeIndexOf(aSubject) < parent->ComputeIndexOf(aNode);
+    return parent->ComputeIndexOf_Deprecated(aSubject) <
+           parent->ComputeIndexOf_Deprecated(aNode);
   }
 
   return false;

@@ -412,7 +412,7 @@ nsIContent* nsAttrChildContentList::Item(uint32_t aIndex) {
 
 int32_t nsAttrChildContentList::IndexOf(nsIContent* aContent) {
   if (mNode) {
-    return mNode->ComputeIndexOf(aContent);
+    return mNode->ComputeIndexOf_Deprecated(aContent);
   }
 
   return -1;

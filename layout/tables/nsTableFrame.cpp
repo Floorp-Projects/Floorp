@@ -2289,7 +2289,7 @@ void nsTableFrame::HomogenousInsertFrames(ChildListID aListID,
       }
       nsCOMPtr<nsIContent> container = content->GetParent();
       if (MOZ_LIKELY(container)) {  // XXX need this null-check, see bug 411823.
-        int32_t newIndex = container->ComputeIndexOf(content);
+        const int32_t newIndex = container->ComputeIndexOf_Deprecated(content);
         nsIFrame* kidFrame;
         nsTableColGroupFrame* lastColGroup = nullptr;
         if (isColGroup) {
@@ -2313,7 +2313,7 @@ void nsTableFrame::HomogenousInsertFrames(ChildListID aListID,
                  (parentContent == (content = pseudoFrame->GetContent()))) {
             pseudoFrame = pseudoFrame->PrincipalChildList().FirstChild();
           }
-          int32_t index = container->ComputeIndexOf(content);
+          const int32_t index = container->ComputeIndexOf_Deprecated(content);
           if (index > lastIndex && index < newIndex) {
             lastIndex = index;
             aPrevFrame = kidFrame;
