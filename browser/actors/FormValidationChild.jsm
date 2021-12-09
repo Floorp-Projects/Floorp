@@ -30,7 +30,7 @@ class FormValidationChild extends JSWindowActorChild {
     switch (aEvent.type) {
       case "MozInvalidForm":
         aEvent.preventDefault();
-        this.notifyInvalidSubmit(aEvent.target, aEvent.detail);
+        this.notifyInvalidSubmit(aEvent.detail);
         break;
       case "pageshow":
         if (this._isRootDocumentEvent(aEvent)) {
@@ -51,7 +51,7 @@ class FormValidationChild extends JSWindowActorChild {
     }
   }
 
-  notifyInvalidSubmit(aFormElement, aInvalidElements) {
+  notifyInvalidSubmit(aInvalidElements) {
     // Show a validation message on the first focusable element.
     for (let element of aInvalidElements) {
       // Insure that this is the FormSubmitObserver associated with the
@@ -65,18 +65,29 @@ class FormValidationChild extends JSWindowActorChild {
           ChromeUtils.getClassName(element) === "HTMLInputElement" ||
           ChromeUtils.getClassName(element) === "HTMLTextAreaElement" ||
           ChromeUtils.getClassName(element) === "HTMLSelectElement" ||
-          ChromeUtils.getClassName(element) === "HTMLButtonElement"
+          ChromeUtils.getClassName(element) === "HTMLButtonElement" ||
+          element.isFormAssociatedCustomElements
         )
       ) {
         continue;
       }
 
-      if (!Services.focus.elementIsFocusable(element, 0)) {
+      let validationMessage = element.isFormAssociatedCustomElements
+        ? element.internals.validationMessage
+        : element.validationMessage;
+
+      if (element.isFormAssociatedCustomElements) {
+        // For element that are form-associated custom elements, user agents
+        // should use their validation anchor instead.
+        element = element.internals.validationAnchor;
+      }
+
+      if (!element || !Services.focus.elementIsFocusable(element, 0)) {
         continue;
       }
 
       // Update validation message before showing notification
-      this._validationMessage = element.validationMessage;
+      this._validationMessage = validationMessage;
 
       // Don't connect up to the same element more than once.
       if (this._element == element) {
