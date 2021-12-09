@@ -109,6 +109,9 @@ class ElementInternals final : public nsIFormControl,
 
   // https://html.spec.whatwg.org/#face-validation-message
   nsString mValidationMessage;
+
+  // https://html.spec.whatwg.org/#face-validation-anchor
+  RefPtr<nsGenericHTMLElement> mValidationAnchor;
 };
 
 }  // namespace dom
