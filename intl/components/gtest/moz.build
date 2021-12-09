@@ -18,6 +18,7 @@ UNIFIED_SOURCES += [
     "TestMeasureUnit.cpp",
     "TestNumberFormat.cpp",
     "TestNumberingSystem.cpp",
+    "TestNumberParser.cpp",
     "TestPluralRules.cpp",
     "TestRelativeTimeFormat.cpp",
     "TestScript.cpp",
