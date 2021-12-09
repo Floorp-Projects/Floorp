@@ -331,6 +331,10 @@ KeymapWrapper* KeymapWrapper::GetInstance() {
   return sInstance;
 }
 
+#ifdef MOZ_WAYLAND
+void KeymapWrapper::EnsureInstance() { (void)GetInstance(); }
+#endif
+
 /* static */
 void KeymapWrapper::Shutdown() {
   if (sInstance) {
@@ -720,10 +724,15 @@ static void keyboard_handle_keymap(void* data, struct wl_keyboard* wl_keyboard,
 
 static void keyboard_handle_enter(void* data, struct wl_keyboard* keyboard,
                                   uint32_t serial, struct wl_surface* surface,
-                                  struct wl_array* keys) {}
+                                  struct wl_array* keys) {
+  KeymapWrapper::SetFocusIn(surface, serial);
+}
+
 static void keyboard_handle_leave(void* data, struct wl_keyboard* keyboard,
                                   uint32_t serial, struct wl_surface* surface) {
+  KeymapWrapper::SetFocusOut(surface);
 }
+
 static void keyboard_handle_key(void* data, struct wl_keyboard* keyboard,
                                 uint32_t serial, uint32_t time, uint32_t key,
                                 uint32_t state) {}
@@ -760,6 +769,7 @@ static void gdk_registry_handle_global(void* data, struct wl_registry* registry,
   if (strcmp(interface, "wl_seat") == 0) {
     auto* seat =
         WaylandRegistryBind<wl_seat>(registry, id, &wl_seat_interface, 1);
+    KeymapWrapper::SetSeat(seat);
     wl_seat_add_listener(seat, &seat_listener, data);
   }
 }
@@ -2410,6 +2420,41 @@ void KeymapWrapper::WillDispatchKeyboardEventInternal(
            altLatinCharCodes.mUnshiftedCharCode,
            altLatinCharCodes.mShiftedCharCode));
 }
+
+#ifdef MOZ_WAYLAND
+void KeymapWrapper::SetFocusIn(wl_surface* aFocusSurface,
+                               uint32_t aFocusSerial) {
+  KeymapWrapper* keymapWrapper = KeymapWrapper::GetInstance();
+  keymapWrapper->mFocusSurface = aFocusSurface;
+  keymapWrapper->mFocusSerial = aFocusSerial;
+}
+
+void KeymapWrapper::SetFocusOut(wl_surface* aFocusSurface) {
+  KeymapWrapper* keymapWrapper = KeymapWrapper::GetInstance();
+  if (aFocusSurface == keymapWrapper->mFocusSurface) {
+    keymapWrapper->mFocusSurface = nullptr;
+    keymapWrapper->mFocusSerial = 0;
+  }
+}
+
+void KeymapWrapper::GetFocusInfo(wl_surface** aFocusSurface,
+                                 uint32_t* aFocusSerial) {
+  KeymapWrapper* keymapWrapper = KeymapWrapper::GetInstance();
+  *aFocusSurface = keymapWrapper->mFocusSurface;
+  *aFocusSerial = keymapWrapper->mFocusSerial;
+}
+
+void KeymapWrapper::SetSeat(wl_seat* aSeat) {
+  KeymapWrapper* keymapWrapper = KeymapWrapper::GetInstance();
+  keymapWrapper->mSeat = aSeat;
+}
+
+wl_seat* KeymapWrapper::GetSeat() {
+  KeymapWrapper* keymapWrapper = KeymapWrapper::GetInstance();
+  return keymapWrapper->mSeat;
+}
+
+#endif
 
 }  // namespace widget
 }  // namespace mozilla
