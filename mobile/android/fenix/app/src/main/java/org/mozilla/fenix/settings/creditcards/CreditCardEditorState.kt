@@ -31,9 +31,9 @@ data class CreditCardEditorState(
 /**
  * Returns a [CreditCardEditorState] from the given [CreditCard].
  */
-fun CreditCard.toCreditCardEditorState(storage: AutofillCreditCardsAddressesStorage): CreditCardEditorState {
+suspend fun CreditCard.toCreditCardEditorState(storage: AutofillCreditCardsAddressesStorage): CreditCardEditorState {
     val crypto = storage.getCreditCardCrypto()
-    val key = crypto.key()
+    val key = crypto.getOrGenerateKey()
     val cardNumber = crypto.decrypt(key, encryptedCardNumber)?.number ?: ""
     val startYear = expiryYear.toInt()
     val endYear = startYear + NUMBER_OF_YEARS_TO_SHOW

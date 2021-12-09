@@ -12,6 +12,9 @@ import android.view.View
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.mozilla.fenix.R
 import org.mozilla.fenix.SecureFragment
 import org.mozilla.fenix.databinding.FragmentCreditCardEditorBinding
@@ -65,10 +68,14 @@ class CreditCardEditorFragment : SecureFragment(R.layout.fragment_credit_card_ed
 
         val binding = FragmentCreditCardEditorBinding.bind(view)
 
-        creditCardEditorState =
-            args.creditCard?.toCreditCardEditorState(storage) ?: getInitialCreditCardEditorState()
-        creditCardEditorView = CreditCardEditorView(binding, interactor)
-        creditCardEditorView.bind(creditCardEditorState)
+        lifecycleScope.launch(Dispatchers.Main) {
+            creditCardEditorState = withContext(Dispatchers.IO) {
+                args.creditCard?.toCreditCardEditorState(storage)
+                    ?: getInitialCreditCardEditorState()
+            }
+            creditCardEditorView = CreditCardEditorView(binding, interactor)
+            creditCardEditorView.bind(creditCardEditorState)
+        }
     }
 
     /**
