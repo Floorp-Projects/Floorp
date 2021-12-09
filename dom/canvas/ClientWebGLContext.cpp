@@ -5005,12 +5005,10 @@ GLenum ClientWebGLContext::ClientWaitSync(WebGLSyncJS& sync,
   const bool canBeAvailable =
       (sync.mCanBeAvailable || StaticPrefs::webgl_allow_immediate_queries());
   if (!canBeAvailable) {
-    if (timeout) {
-      EnqueueWarning(
-          "Sync object not yet queryable. Please wait for the event"
-          " loop.");
-    }
-    return LOCAL_GL_WAIT_FAILED;
+    EnqueueWarning(
+        "ClientWaitSync must return TIMEOUT_EXPIRED until control has"
+        " returned to the user agent's main loop.");
+    return LOCAL_GL_TIMEOUT_EXPIRED;
   }
 
   return ret;
