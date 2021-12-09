@@ -3490,9 +3490,11 @@ nsresult HTMLEditor::ReplaceTextWithTransaction(
   // Therefore, we might need to save/restore selection here.
   Maybe<AutoSelectionRestorer> restoreSelection;
   if (!AllowsTransactionsToChangeSelection() && !ArePreservingSelection()) {
-    for (uint32_t i = 0; i < SelectionRef().RangeCount(); i++) {
+    const uint32_t rangeCount = SelectionRef().RangeCount();
+    for (const uint32_t i : IntegerRange(rangeCount)) {
+      MOZ_ASSERT(SelectionRef().RangeCount() == rangeCount);
       const nsRange* range = SelectionRef().GetRangeAt(i);
-      if (!range) {
+      if (MOZ_UNLIKELY(!range)) {
         continue;
       }
       if ((range->GetStartContainer() == &aTextNode &&
@@ -4492,6 +4494,7 @@ SplitNodeResult HTMLEditor::DoSplitNode(const EditorDOMPoint& aStartOfRightNode,
 
     for (uint32_t j : IntegerRange(range.mSelection->RangeCount())) {
       const nsRange* r = range.mSelection->GetRangeAt(j);
+      MOZ_ASSERT(r);
       MOZ_ASSERT(r->IsPositioned());
       // XXX Looks like that SavedRange should have mStart and mEnd which
       //     are RangeBoundary.  Then, we can avoid to compute offset here.
@@ -4815,8 +4818,11 @@ nsresult HTMLEditor::DoJoinNodes(nsIContent& aContentToKeep,
       continue;
     }
 
-    for (uint32_t j = 0; j < range.mSelection->RangeCount(); ++j) {
+    const uint32_t rangeCount = range.mSelection->RangeCount();
+    for (const uint32_t j : IntegerRange(rangeCount)) {
+      MOZ_ASSERT(range.mSelection->RangeCount() == rangeCount);
       const RefPtr<nsRange> r = range.mSelection->GetRangeAt(j);
+      MOZ_ASSERT(r);
       MOZ_ASSERT(r->IsPositioned());
       range.mStartContainer = r->GetStartContainer();
       range.mStartOffset = r->StartOffset();
@@ -5381,6 +5387,7 @@ nsresult HTMLEditor::SetCSSBackgroundColorWithTransaction(
     // XXX This is different from `SetInlinePropertyInternal()`.  It uses
     //     AutoSelectionRangeArray to store all ranges first.  The result may be
     //     different if mutation event listener changes the `Selection`.
+    // TODO: Store all selection ranges first since this updates the style.
     for (uint32_t i = 0; i < SelectionRef().RangeCount(); i++) {
       RefPtr<nsRange> range = SelectionRef().GetRangeAt(i);
       if (NS_WARN_IF(!range)) {
@@ -5801,7 +5808,7 @@ Element* HTMLEditor::GetSelectionContainerElement() const {
       return nullptr;
     }
   } else {
-    uint32_t rangeCount = SelectionRef().RangeCount();
+    const uint32_t rangeCount = SelectionRef().RangeCount();
     MOZ_ASSERT(rangeCount, "If 0, Selection::IsCollapsed() should return true");
 
     if (rangeCount == 1) {
@@ -5831,8 +5838,10 @@ Element* HTMLEditor::GetSelectionContainerElement() const {
         }
       }
     } else {
-      for (uint32_t i = 0; i < rangeCount; i++) {
+      for (const uint32_t i : IntegerRange(rangeCount)) {
+        MOZ_ASSERT(SelectionRef().RangeCount() == rangeCount);
         const nsRange* range = SelectionRef().GetRangeAt(i);
+        MOZ_ASSERT(range);
         nsINode* startContainer = range->GetStartContainer();
         if (!focusNode) {
           focusNode = startContainer;

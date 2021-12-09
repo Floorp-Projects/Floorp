@@ -44,6 +44,7 @@
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/Text.h"
 #include "mozilla/Encoding.h"
+#include "mozilla/IntegerRange.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/UniquePtr.h"
@@ -580,12 +581,12 @@ nsresult nsDocumentEncoder::SerializeSelection() {
 
   nsresult rv = NS_OK;
   const Selection* selection = mEncodingScope.mSelection;
-  uint32_t count = selection->RangeCount();
-
   nsCOMPtr<nsINode> node;
   nsCOMPtr<nsINode> prevNode;
   uint32_t firstRangeStartDepth = 0;
-  for (uint32_t i = 0; i < count; ++i) {
+  const uint32_t rangeCount = selection->RangeCount();
+  for (const uint32_t i : IntegerRange(rangeCount)) {
+    MOZ_ASSERT(selection->RangeCount() == rangeCount);
     RefPtr<const nsRange> range = selection->GetRangeAt(i);
 
     // Bug 236546: newlines not added when copying table cells into clipboard
@@ -1575,7 +1576,7 @@ nsHTMLCopyEncoder::SetSelection(Selection* aSelection) {
 
   if (!aSelection) return NS_ERROR_NULL_POINTER;
 
-  uint32_t rangeCount = aSelection->RangeCount();
+  const uint32_t rangeCount = aSelection->RangeCount();
 
   // if selection is uninitialized return
   if (!rangeCount) {
@@ -1630,7 +1631,8 @@ nsHTMLCopyEncoder::SetSelection(Selection* aSelection) {
   mEncodingScope.mSelection = new Selection(SelectionType::eNormal, nullptr);
 
   // loop thru the ranges in the selection
-  for (uint32_t rangeIdx = 0; rangeIdx < rangeCount; ++rangeIdx) {
+  for (const uint32_t rangeIdx : IntegerRange(rangeCount)) {
+    MOZ_ASSERT(aSelection->RangeCount() == rangeCount);
     range = aSelection->GetRangeAt(rangeIdx);
     NS_ENSURE_TRUE(range, NS_ERROR_FAILURE);
     RefPtr<nsRange> myRange = range->CloneRange();

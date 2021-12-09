@@ -40,6 +40,7 @@
 #include "mozilla/EditorBase.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/HTMLEditor.h"
+#include "mozilla/IntegerRange.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_accessibility.h"
@@ -1610,8 +1611,12 @@ nsresult HyperTextAccessible::SetSelectionRange(int32_t aStartPos,
   NS_ENSURE_STATE(domSel);
 
   // Set up the selection.
-  for (int32_t idx = domSel->RangeCount() - 1; idx > 0; idx--) {
+  for (const uint32_t idx : Reversed(IntegerRange(1u, domSel->RangeCount()))) {
+    MOZ_ASSERT(domSel->RangeCount() == idx + 1);
     RefPtr<nsRange> range{domSel->GetRangeAt(idx)};
+    if (!range) {
+      break;  // The range count has been changed by somebody else.
+    }
     domSel->RemoveRangeAndUnselectFramesAndNotifyListeners(*range,
                                                            IgnoreErrors());
   }
@@ -1921,7 +1926,8 @@ bool HyperTextAccessible::RemoveFromSelection(int32_t aSelectionNum) {
     return false;
   }
 
-  const RefPtr<nsRange> range{domSel->GetRangeAt(aSelectionNum)};
+  const RefPtr<nsRange> range{
+      domSel->GetRangeAt(static_cast<uint32_t>(aSelectionNum))};
   domSel->RemoveRangeAndUnselectFramesAndNotifyListeners(*range,
                                                          IgnoreErrors());
   return true;
@@ -2315,12 +2321,16 @@ void HyperTextAccessible::GetSpellTextAttr(nsINode* aNode, int32_t aNodeOffset,
   dom::Selection* domSel = fs->GetSelection(SelectionType::eSpellCheck);
   if (!domSel) return;
 
-  int32_t rangeCount = domSel->RangeCount();
-  if (rangeCount <= 0) return;
+  const uint32_t rangeCount = domSel->RangeCount();
+  if (!rangeCount) {
+    return;
+  }
 
   uint32_t startOffset = 0, endOffset = 0;
-  for (int32_t idx = 0; idx < rangeCount; idx++) {
+  for (const uint32_t idx : IntegerRange(rangeCount)) {
+    MOZ_ASSERT(domSel->RangeCount() == rangeCount);
     const nsRange* range = domSel->GetRangeAt(idx);
+    MOZ_ASSERT(range);
     if (range->Collapsed()) continue;
 
     // See if the point comes after the range in which case we must continue in

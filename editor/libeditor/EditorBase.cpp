@@ -43,6 +43,7 @@
 #include "mozilla/IMEContentObserver.h"  // for IMEContentObserver
 #include "mozilla/IMEStateManager.h"     // for IMEStateManager
 #include "mozilla/InputEventOptions.h"   // for InputEventOptions
+#include "mozilla/IntegerRange.h"        // for IntegerRange
 #include "mozilla/InternalMutationEvent.h"  // for NS_EVENT_BITS_MUTATION_CHARACTERDATAMODIFIED
 #include "mozilla/mozalloc.h"               // for operator new, etc.
 #include "mozilla/mozInlineSpellChecker.h"  // for mozInlineSpellChecker
@@ -5870,12 +5871,15 @@ NS_IMETHODIMP EditorBase::SetNewlineHandling(int32_t aNewlineHandling) {
 bool EditorBase::IsSelectionRangeContainerNotContent() const {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
-  for (uint32_t i = 0; i < SelectionRef().RangeCount(); i++) {
+  const uint32_t rangeCount = SelectionRef().RangeCount();
+  for (const uint32_t i : IntegerRange(rangeCount)) {
+    MOZ_ASSERT(SelectionRef().RangeCount() == rangeCount);
     const nsRange* range = SelectionRef().GetRangeAt(i);
     MOZ_ASSERT(range);
-    if (!range || !range->GetStartContainer() ||
-        !range->GetStartContainer()->IsContent() || !range->GetEndContainer() ||
-        !range->GetEndContainer()->IsContent()) {
+    if (MOZ_UNLIKELY(!range) || MOZ_UNLIKELY(!range->GetStartContainer()) ||
+        MOZ_UNLIKELY(!range->GetStartContainer()->IsContent()) ||
+        MOZ_UNLIKELY(!range->GetEndContainer()) ||
+        MOZ_UNLIKELY(!range->GetEndContainer()->IsContent())) {
       return true;
     }
   }
@@ -6259,9 +6263,13 @@ nsresult EditorBase::AutoEditActionDataSetter::MaybeDispatchBeforeInputEvent(
     else if (MayHaveTargetRangesOnHTMLEditor(inputType)) {
       if (uint32_t rangeCount = editorBase->SelectionRef().RangeCount()) {
         mTargetRanges.SetCapacity(rangeCount);
-        for (uint32_t i = 0; i < rangeCount; i++) {
+        for (const uint32_t i : IntegerRange(rangeCount)) {
+          MOZ_ASSERT(editorBase->SelectionRef().RangeCount() == rangeCount);
           const nsRange* range = editorBase->SelectionRef().GetRangeAt(i);
-          if (NS_WARN_IF(!range) || NS_WARN_IF(!range->IsPositioned())) {
+          MOZ_ASSERT(range);
+          MOZ_ASSERT(range->IsPositioned());
+          if (MOZ_UNLIKELY(NS_WARN_IF(!range)) ||
+              MOZ_UNLIKELY(NS_WARN_IF(!range->IsPositioned()))) {
             continue;
           }
           // Now, we need to fix the offset of target range because it may
