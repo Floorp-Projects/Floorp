@@ -1183,7 +1183,7 @@ var snapshotFormatters = {
       addonStudies,
       prefRollouts,
       nimbusExperiments,
-      remoteConfigs,
+      nimbusRollouts,
     } = data;
     $.append(
       $("remote-features-tbody"),
@@ -1197,14 +1197,13 @@ var snapshotFormatters = {
 
     $.append(
       $("remote-features-tbody"),
-      remoteConfigs.map(({ featureId, slug }) =>
+      nimbusRollouts.map(({ userFacingName, branch }) =>
         $.new("tr", [
-          $.new("td", [document.createTextNode(featureId)]),
-          $.new("td", [document.createTextNode(`(${slug})`)]),
+          $.new("td", [document.createTextNode(userFacingName)]),
+          $.new("td", [document.createTextNode(`(${branch.slug})`)]),
         ])
       )
     );
-
     $.append(
       $("remote-experiments-tbody"),
       [addonStudies, prefStudies, nimbusExperiments]

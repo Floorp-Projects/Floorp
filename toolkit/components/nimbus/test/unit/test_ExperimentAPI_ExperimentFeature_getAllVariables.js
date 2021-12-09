@@ -7,9 +7,6 @@ const {
 const { ExperimentFakes } = ChromeUtils.import(
   "resource://testing-common/NimbusTestUtils.jsm"
 );
-const { TestUtils } = ChromeUtils.import(
-  "resource://testing-common/TestUtils.jsm"
-);
 
 const { cleanupStorePrefCache } = ExperimentFakes;
 
@@ -86,7 +83,7 @@ add_task(
       },
     });
 
-    await manager.store.addExperiment(recipe);
+    await manager.store.addEnrollment(recipe);
 
     const featureInstance = new ExperimentFeature(
       FEATURE_ID,
@@ -127,6 +124,12 @@ add_task(
       FEATURE_ID,
       FAKE_FEATURE_MANIFEST
     );
+    const rollout = ExperimentFakes.rollout("foo-aw", {
+      branch: {
+        slug: "getAllVariables",
+        features: [{ featureId: FEATURE_ID, value: { screens: [] } }],
+      },
+    });
     // We're using the store in this test we need to wait for it to load
     await manager.store.ready();
 
@@ -138,13 +141,14 @@ add_task(
       "Pref is not set"
     );
 
+    const updatePromise = new Promise(resolve =>
+      featureInstance.onUpdate(resolve)
+    );
     // Load remote defaults
-    manager.store.updateRemoteConfigs(FEATURE_ID, {
-      variables: { screens: [] },
-    });
+    manager.store.addEnrollment(rollout);
 
-    // Wait for feature to load remote defaults
-    await featureInstance.ready();
+    // Wait for feature to load the rollout
+    await updatePromise;
 
     Assert.deepEqual(
       featureInstance.getAllVariables().screens?.length,

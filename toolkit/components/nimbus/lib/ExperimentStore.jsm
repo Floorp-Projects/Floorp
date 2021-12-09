@@ -20,7 +20,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 const IS_MAIN_PROCESS =
   Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT;
-const REMOTE_DEFAULTS_KEY = "__REMOTE_DEFAULTS";
 
 // This branch is used to store experiment data
 const SYNC_DATA_PREF_BRANCH = "nimbus.syncdatastore.";
@@ -125,7 +124,10 @@ XPCOMUtils.defineLazyGetter(this, "syncDataStore", () => {
         return null;
       }
       let prefBranch = `${SYNC_DEFAULTS_PREF_BRANCH}${featureId}.`;
-      metadata.variables = this._getBranchChildValues(prefBranch, featureId);
+      metadata.branch.feature.value = this._getBranchChildValues(
+        prefBranch,
+        featureId
+      );
 
       return metadata;
     },
@@ -157,19 +159,26 @@ XPCOMUtils.defineLazyGetter(this, "syncDataStore", () => {
         this._trySetPrefValue(experimentsPrefBranch, featureId, value);
       }
     },
-    setDefault(featureId, value) {
+    setDefault(featureId, enrollment) {
       /* We store configuration variables separately in pref branches of
        * appropriate type:
        * (feature: "foo") { variables: { enabled: true } }
        * gets stored as `${SYNC_DEFAULTS_PREF_BRANCH}foo.enabled=true`
        */
-      for (let variable of Object.keys(value.variables || {})) {
+      let { feature } = enrollment.branch;
+      for (let variable of Object.keys(feature.value)) {
         let prefName = `${SYNC_DEFAULTS_PREF_BRANCH}${featureId}.${variable}`;
-        this._trySetTypedPrefValue(prefName, value.variables[variable]);
+        this._trySetTypedPrefValue(prefName, feature.value[variable]);
       }
       this._trySetPrefValue(defaultsPrefBranch, featureId, {
-        ...value,
-        variables: null,
+        ...enrollment,
+        branch: {
+          ...enrollment.branch,
+          feature: {
+            ...enrollment.branch.feature,
+            value: null,
+          },
+        },
       });
     },
     getAllDefaultBranches() {
@@ -238,6 +247,11 @@ class ExperimentStore extends SharedDataMap {
         this._emitFeatureUpdate(featureId, "feature-experiment-loaded")
       );
     });
+    this.getAllRollouts().forEach(({ featureIds }) => {
+      featureIds.forEach(featureId =>
+        this._emitFeatureUpdate(featureId, "feature-rollout-loaded")
+      );
+    });
 
     Services.tm.idleDispatchToMainThread(() => this._cleanupOldRecipes());
   }
@@ -296,7 +310,31 @@ class ExperimentStore extends SharedDataMap {
    * @returns {Enrollment[]}
    */
   getAllActive() {
-    return this.getAll().filter(experiment => experiment.active);
+    return this.getAll().filter(
+      enrollment => enrollment.active && !enrollment.isRollout
+    );
+  }
+
+  /**
+   * Returns all active rollouts
+   * @returns {array}
+   */
+  getAllRollouts() {
+    return this.getAll().filter(
+      enrollment => enrollment.active && enrollment.isRollout
+    );
+  }
+
+  /**
+   * Query the store for the remote configuration of a feature
+   * @param {string} featureId The feature we want to query for
+   * @returns {{Rollout}|undefined} Remote defaults if available
+   */
+  getRolloutForFeature(featureId) {
+    return (
+      this.getAllRollouts().find(r => r.featureIds.includes(featureId)) ||
+      syncDataStore.getDefault(featureId)
+    );
   }
 
   /**
@@ -317,13 +355,16 @@ class ExperimentStore extends SharedDataMap {
     this._removeEntriesByKeys(recipesToRemove.map(r => r.slug));
   }
 
-  _emitExperimentUpdates(experiment) {
-    this.emit(`update:${experiment.slug}`, experiment);
+  _emitUpdates(enrollment) {
+    this.emit(`update:${enrollment.slug}`, enrollment);
     (
-      experiment.featureIds || getAllBranchFeatureIds(experiment.branch)
+      enrollment.featureIds || getAllBranchFeatureIds(enrollment.branch)
     ).forEach(featureId => {
-      this.emit(`update:${featureId}`, experiment);
-      this._emitFeatureUpdate(featureId, "experiment-updated");
+      this.emit(`update:${featureId}`, enrollment);
+      this._emitFeatureUpdate(
+        featureId,
+        enrollment.isRollout ? "rollout-updated" : "experiment-updated"
+      );
     });
   }
 
@@ -340,23 +381,31 @@ class ExperimentStore extends SharedDataMap {
   }
 
   /**
-   * @param {Enrollment} experiment
+   * Persists early startup experiments or rollouts
+   * @param {Enrollment} enrollment Experiment or rollout
    */
-  _updateSyncStore(experiment) {
-    let features = featuresCompat(experiment.branch);
+  _updateSyncStore(enrollment) {
+    let features = featuresCompat(enrollment.branch);
     for (let feature of features) {
       if (
         FeatureManifest[feature.featureId]?.isEarlyStartup ||
         feature.isEarlyStartup
       ) {
-        if (!experiment.active) {
+        if (!enrollment.active) {
           // Remove experiments on un-enroll, no need to check if it exists
-          syncDataStore.delete(feature.featureId);
+          if (enrollment.isRollout) {
+            syncDataStore.deleteDefault(feature.featureId);
+          } else {
+            syncDataStore.delete(feature.featureId);
+          }
         } else {
-          syncDataStore.set(feature.featureId, {
-            ...experiment,
+          let updateEnrollmentSyncStore = enrollment.isRollout
+            ? syncDataStore.setDefault.bind(syncDataStore)
+            : syncDataStore.set.bind(syncDataStore);
+          updateEnrollmentSyncStore(feature.featureId, {
+            ...enrollment,
             branch: {
-              ...experiment.branch,
+              ...enrollment.branch,
               feature,
               // Only store the early startup feature
               features: null,
@@ -368,18 +417,18 @@ class ExperimentStore extends SharedDataMap {
   }
 
   /**
-   * Add an experiment. Short form for .set(slug, experiment)
-   * @param {Enrollment} experiment
+   * Add an enrollment and notify listeners
+   * @param {Enrollment} enrollment
    */
-  addExperiment(experiment) {
-    if (!experiment || !experiment.slug) {
+  addEnrollment(enrollment) {
+    if (!enrollment || !enrollment.slug) {
       throw new Error(
         `Tried to add an experiment but it didn't have a .slug property.`
       );
     }
-    this.set(experiment.slug, experiment);
-    this._updateSyncStore(experiment);
-    this._emitExperimentUpdates(experiment);
+    this.set(enrollment.slug, enrollment);
+    this._updateSyncStore(enrollment);
+    this._emitUpdates(enrollment);
   }
 
   /**
@@ -391,116 +440,24 @@ class ExperimentStore extends SharedDataMap {
     const oldProperties = this.get(slug);
     if (!oldProperties) {
       throw new Error(
-        `Tried to update experiment ${slug} bug it doesn't exist`
+        `Tried to update experiment ${slug} but it doesn't exist`
       );
     }
     const updatedExperiment = { ...oldProperties, ...newProperties };
     this.set(slug, updatedExperiment);
     this._updateSyncStore(updatedExperiment);
-    this._emitExperimentUpdates(updatedExperiment);
+    this._emitUpdates(updatedExperiment);
   }
 
   /**
-   * Remove any unused remote configurations and send the end event
+   * Test only helper for cleanup
    *
-   * @param {Array} activeFeatureIds The set of all feature ids with matching configs during an update
-   * @memberof ExperimentStore
+   * @param slugOrFeatureId Can be called with slug (which removes the SharedDataMap entry) or
+   * with featureId which removes the SyncDataStore entry for the feature
    */
-  finalizeRemoteConfigs(activeFeatureConfigIds) {
-    if (!activeFeatureConfigIds) {
-      throw new Error("You must pass in an array of active feature ids.");
-    }
-    // If we haven't seen this feature in any of the configurations
-    // processed then we should clean up the matching pref cache and in-memory store
-    for (let featureId of this.getAllExistingRemoteConfigIds()) {
-      if (!activeFeatureConfigIds.includes(featureId)) {
-        this.deleteRemoteConfig(featureId);
-      }
-    }
-
-    // In case no features exist we want to at least initialize with an empty
-    // object to signal that we completed the initial fetch step
-    if (!activeFeatureConfigIds.length) {
-      // Wait for ready, in the case users have opted out we finalize early
-      // and things might not be ready yet
-      this.ready().then(() => this.setNonPersistent(REMOTE_DEFAULTS_KEY, {}));
-    }
-
-    // Notify all ExperimentFeature instances that the Remote Defaults cycle finished
-    // this will resolve the `onRemoteReady` promise for features that do not
-    // have any remote data available.
-    this.emit("remote-defaults-finalized");
-  }
-
-  /**
-   * Store the remote configuration once loaded from Remote Settings.
-   * @param {string} featureId The feature we want to update with remote defaults
-   * @param {object} configuration The remote value
-   */
-  updateRemoteConfigs(featureId, configuration) {
-    const remoteConfigState = this.get(REMOTE_DEFAULTS_KEY);
-    this.setNonPersistent(REMOTE_DEFAULTS_KEY, {
-      ...remoteConfigState,
-      [featureId]: { ...configuration },
-    });
-    if (
-      FeatureManifest[featureId]?.isEarlyStartup ||
-      configuration.isEarlyStartup
-    ) {
-      syncDataStore.setDefault(featureId, configuration);
-    }
-    this._emitFeatureUpdate(featureId, "remote-defaults-update");
-  }
-
-  deleteRemoteConfig(featureId) {
-    const remoteConfigState = this.get(REMOTE_DEFAULTS_KEY);
-    delete remoteConfigState?.[featureId];
-    this.setNonPersistent(REMOTE_DEFAULTS_KEY, { ...remoteConfigState });
-    syncDataStore.deleteDefault(featureId);
-    this._emitFeatureUpdate(featureId, "remote-defaults-update");
-  }
-
-  /**
-   * Query the store for the remote configuration of a feature
-   * @param {string} featureId The feature we want to query for
-   * @returns {{RemoteDefaults}|undefined} Remote defaults if available
-   */
-  getRemoteConfig(featureId) {
-    return (
-      this.get(REMOTE_DEFAULTS_KEY)?.[featureId] ||
-      syncDataStore.getDefault(featureId)
-    );
-  }
-
-  /**
-   * Get all existing active remote config ids
-   * @returns {Array<string>}
-   */
-  getAllExistingRemoteConfigIds() {
-    return [
-      ...new Set([
-        ...syncDataStore.getAllDefaultBranches(),
-        ...Object.keys(this.get(REMOTE_DEFAULTS_KEY) || {}),
-      ]),
-    ];
-  }
-
-  getAllRemoteConfigs() {
-    const remoteDefaults = this.get(REMOTE_DEFAULTS_KEY);
-    if (!remoteDefaults) {
-      return [];
-    }
-
-    let featureIds = Object.keys(remoteDefaults);
-    return Object.values(remoteDefaults).map((rc, idx) => ({
-      ...rc,
-      featureId: featureIds[idx],
-    }));
-  }
-
-  _deleteForTests(featureId) {
-    super._deleteForTests(featureId);
-    syncDataStore.deleteDefault(featureId);
-    syncDataStore.delete(featureId);
+  _deleteForTests(slugOrFeatureId) {
+    super._deleteForTests(slugOrFeatureId);
+    syncDataStore.deleteDefault(slugOrFeatureId);
+    syncDataStore.delete(slugOrFeatureId);
   }
 }

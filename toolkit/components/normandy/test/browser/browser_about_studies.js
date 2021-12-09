@@ -644,7 +644,7 @@ decorate_task(
   }
 );
 
-add_task(async function test_nimbus_about_studies() {
+add_task(async function test_nimbus_about_studies_experiment() {
   const recipe = ExperimentFakes.recipe("about-studies-foo");
   await ExperimentManager.enroll(recipe);
   await BrowserTestUtils.withNewTab(
@@ -689,52 +689,61 @@ add_task(async function test_nimbus_about_studies() {
   Assert.equal(ExperimentManager.store.getAll().length, 0, "Cleanup done");
 });
 
-add_task(async function test_nimbus_backwards_compatibility() {
-  const recipe = ExperimentFakes.recipe("about-studies-foo");
-  await ExperimentManager.enroll({
-    experimentType: "messaging_experiment",
+add_task(async function test_nimbus_about_studies_rollout() {
+  let recipe = ExperimentFakes.recipe("test_nimbus_about_studies_rollout");
+  let rollout = {
     ...recipe,
-  });
+    branches: [recipe.branches[0]],
+    isRollout: true,
+  };
+  await ExperimentManager.enroll(rollout);
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:studies" },
     async browser => {
-      const name = await SpecialPowers.spawn(browser, [], async () => {
+      const studyCount = await SpecialPowers.spawn(browser, [], async () => {
+        await ContentTaskUtils.waitForCondition(
+          () => content.document.querySelector("#shield-studies-learn-more"),
+          "waiting for page/experiment to load"
+        );
+        return content.document.querySelectorAll(".study-name").length;
+      });
+      // Make sure strings are properly shown
+      Assert.equal(studyCount, 0, "Rollout not loaded in non-debug mode");
+    }
+  );
+  Services.prefs.setBoolPref("nimbus.debug", true);
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: "about:studies" },
+    async browser => {
+      const studyName = await SpecialPowers.spawn(browser, [], async () => {
         await ContentTaskUtils.waitForCondition(
           () => content.document.querySelector(".nimbus .remove-button"),
           "waiting for page/experiment to load"
         );
-        return content.document.querySelector(".study-name").innerText;
+        return content.document.querySelector(".study-header").innerText;
       });
       // Make sure strings are properly shown
-      Assert.equal(
-        name,
-        recipe.userFacingName,
-        "Correct active experiment name"
-      );
+      Assert.ok(studyName.includes("Active"), "Rollout loaded in debug mode");
     }
   );
-  ExperimentManager.unenroll(recipe.slug);
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: "about:studies" },
     async browser => {
       const name = await SpecialPowers.spawn(browser, [], async () => {
+        content.document.querySelector(".remove-button").click();
         await ContentTaskUtils.waitForCondition(
           () => content.document.querySelector(".nimbus.disabled"),
           "waiting for experiment to become disabled"
         );
-        return content.document.querySelector(".study-name").innerText;
+        return content.document.querySelector(".study-header").innerText;
       });
       // Make sure strings are properly shown
-      Assert.equal(
-        name,
-        recipe.userFacingName,
-        "Correct disabled experiment name"
-      );
+      Assert.ok(name.includes("Complete"), "Rollout was removed");
     }
   );
   // Cleanup for multiple test runs
-  ExperimentManager.store._deleteForTests(recipe.slug);
-  Assert.equal(ExperimentManager.store.getAll().length, 0, "Cleanup done");
+  ExperimentManager.store._deleteForTests(rollout.slug);
+  Services.prefs.clearUserPref("nimbus.debug");
 });
 
 add_task(async function test_getStudiesEnabled() {
