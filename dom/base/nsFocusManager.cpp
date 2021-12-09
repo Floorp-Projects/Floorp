@@ -62,6 +62,7 @@
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/PointerLockManager.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
@@ -4514,25 +4515,28 @@ nsIContent* nsFocusManager::GetNextTabbableMapArea(bool aForward,
     if (!mapContent) {
       return nullptr;
     }
-    uint32_t count = mapContent->GetChildCount();
     // First see if the the start content is in this map
-
-    int32_t index = mapContent->ComputeIndexOf_Deprecated(aStartContent);
+    Maybe<uint32_t> indexOfStartContent =
+        mapContent->ComputeIndexOf(aStartContent);
     int32_t tabIndex;
-    if (index < 0 || (aStartContent->IsFocusable(&tabIndex) &&
-                      tabIndex != aCurrentTabIndex)) {
+    nsIContent* scanStartContent;
+    if (indexOfStartContent.isNothing() ||
+        (aStartContent->IsFocusable(&tabIndex) &&
+         tabIndex != aCurrentTabIndex)) {
       // If aStartContent is in this map we must start iterating past it.
       // We skip the case where aStartContent has tabindex == aStartContent
       // since the next tab ordered element might be before it
       // (or after for backwards) in the child list.
-      index = aForward ? -1 : (int32_t)count;
+      scanStartContent =
+          aForward ? mapContent->GetFirstChild() : mapContent->GetLastChild();
+    } else {
+      scanStartContent = aForward ? aStartContent->GetNextSibling()
+                                  : aStartContent->GetPreviousSibling();
     }
 
-    // GetChildAt_Deprecated will return nullptr if our index < 0 or index >=
-    // count
-    nsCOMPtr<nsIContent> areaContent;
-    while ((areaContent = mapContent->GetChildAt_Deprecated(
-                aForward ? ++index : --index)) != nullptr) {
+    for (nsCOMPtr<nsIContent> areaContent = scanStartContent; areaContent;
+         areaContent = aForward ? areaContent->GetNextSibling()
+                                : areaContent->GetPreviousSibling()) {
       if (areaContent->IsFocusable(&tabIndex) && tabIndex == aCurrentTabIndex) {
         return areaContent;
       }

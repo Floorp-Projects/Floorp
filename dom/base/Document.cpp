@@ -78,6 +78,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MacroForEach.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/MediaFeatureChange.h"
 #include "mozilla/MediaManager.h"
 #include "mozilla/MemoryReporting.h"
@@ -12980,12 +12981,12 @@ static nsINode* GetCorrespondingNodeInDocument(const nsINode* aOrigNode,
     return nullptr;
   }
 
-  nsTArray<int32_t> indexArray;
+  AutoTArray<Maybe<uint32_t>, 32> indexArray;
   const nsINode* current = aOrigNode;
   while (const nsINode* parent = current->GetParentNode()) {
-    const int32_t index = parent->ComputeIndexOf_Deprecated(current);
-    MOZ_ASSERT(index >= 0);
-    indexArray.AppendElement(index);
+    Maybe<uint32_t> index = parent->ComputeIndexOf(current);
+    NS_ENSURE_TRUE(index.isSome(), nullptr);
+    indexArray.AppendElement(std::move(index));
     current = parent;
   }
   MOZ_ASSERT(current->IsDocument() || current->IsShadowRoot());
@@ -13008,8 +13009,8 @@ static nsINode* GetCorrespondingNodeInDocument(const nsINode* aOrigNode,
   if (NS_WARN_IF(!correspondingNode)) {
     return nullptr;
   }
-  for (int32_t i : Reversed(indexArray)) {
-    correspondingNode = correspondingNode->GetChildAt_Deprecated(i);
+  for (const Maybe<uint32_t>& index : Reversed(indexArray)) {
+    correspondingNode = correspondingNode->GetChildAt_Deprecated(*index);
     NS_ENSURE_TRUE(correspondingNode, nullptr);
   }
   return correspondingNode;

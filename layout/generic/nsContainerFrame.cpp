@@ -499,7 +499,7 @@ void nsContainerFrame::DisplaySelectionOverlay(nsDisplayListBuilder* aBuilder,
 
   // check to see if we are anonymous content
   // XXXbz there has GOT to be a better way of determining this!
-  uint32_t offset =
+  int32_t offset =
       newContent ? newContent->ComputeIndexOf_Deprecated(mContent) : 0;
 
   // look up to see what selection(s) are on this frame

@@ -519,12 +519,13 @@ class nsContentUtils {
                                int32_t* aNode2Index = nullptr);
 
   struct ComparePointsCache {
-    int32_t ComputeIndexOf(const nsINode* aParent, const nsINode* aChild) {
+    mozilla::Maybe<uint32_t> ComputeIndexOf(const nsINode* aParent,
+                                            const nsINode* aChild) {
       if (aParent == mParent && aChild == mChild) {
         return mIndex;
       }
 
-      mIndex = aParent->ComputeIndexOf_Deprecated(aChild);
+      mIndex = aParent->ComputeIndexOf(aChild);
       mParent = aParent;
       mChild = aChild;
       return mIndex;
@@ -533,7 +534,7 @@ class nsContentUtils {
    private:
     const nsINode* mParent = nullptr;
     const nsINode* mChild = nullptr;
-    int32_t mIndex = 0;
+    mozilla::Maybe<uint32_t> mIndex;
   };
 
   /**
