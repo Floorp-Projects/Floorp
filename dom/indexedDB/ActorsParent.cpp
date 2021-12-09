@@ -19726,18 +19726,18 @@ nsresult ObjectStoreAddOrPutRequestOp::DoDatabaseWork(
 
       QM_TRY(MOZ_TO_RESULT(stmt->BindInt64ByName(kStmtParamNameData, data)));
     } else {
-      nsCString flatCloneData;
-      if (!flatCloneData.SetLength(cloneDataSize, fallible)) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
+      AutoTArray<char, 4096> flatCloneData;  // 4096 from JSStructuredCloneData
+      QM_TRY(OkIf(flatCloneData.SetLength(cloneDataSize, fallible)),
+             Err(NS_ERROR_OUT_OF_MEMORY));
+
       {
         auto iter = cloneData.Start();
-        MOZ_ALWAYS_TRUE(cloneData.ReadBytes(iter, flatCloneData.BeginWriting(),
-                                            cloneDataSize));
+        MOZ_ALWAYS_TRUE(
+            cloneData.ReadBytes(iter, flatCloneData.Elements(), cloneDataSize));
       }
 
       // Compress the bytes before adding into the database.
-      const char* const uncompressed = flatCloneData.BeginReading();
+      const char* const uncompressed = flatCloneData.Elements();
       const size_t uncompressedLength = cloneDataSize;
 
       size_t compressedLength = snappy::MaxCompressedLength(uncompressedLength);
