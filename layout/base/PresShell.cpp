@@ -1955,6 +1955,12 @@ void PresShell::TryUnsuppressPaintingSoon() {
   }
 }
 
+void PresShell::RefreshZoomConstraintsForScreenSizeChange() {
+  if (mZoomConstraintsClient) {
+    mZoomConstraintsClient->ScreenSizeChanged();
+  }
+}
+
 nsresult PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight,
                                  ResizeReflowOptions aOptions) {
   if (mZoomConstraintsClient) {
