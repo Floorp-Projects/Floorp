@@ -1167,12 +1167,11 @@ void nsRange::SelectNodesInContainer(nsINode* aContainer,
                                      nsIContent* aStartContent,
                                      nsIContent* aEndContent) {
   MOZ_ASSERT(aContainer);
-  MOZ_ASSERT(aContainer->ComputeIndexOf_Deprecated(aStartContent) <=
-             aContainer->ComputeIndexOf_Deprecated(aEndContent));
+  MOZ_ASSERT(aContainer->ComputeIndexOf(aStartContent).valueOr(0) <=
+             aContainer->ComputeIndexOf(aEndContent).valueOr(0));
   MOZ_ASSERT(aStartContent &&
-             aContainer->ComputeIndexOf_Deprecated(aStartContent) != -1);
-  MOZ_ASSERT(aEndContent &&
-             aContainer->ComputeIndexOf_Deprecated(aEndContent) != -1);
+             aContainer->ComputeIndexOf(aStartContent).isSome());
+  MOZ_ASSERT(aEndContent && aContainer->ComputeIndexOf(aEndContent).isSome());
 
   nsINode* newRoot = RangeUtils::ComputeRootNode(aContainer);
   MOZ_ASSERT(newRoot);
