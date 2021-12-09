@@ -65,6 +65,17 @@ var gSearchResultsPane = {
   },
 
   /**
+   * This stops the search input from moving, when typing in it
+   * changes which items in the prefs are visible.
+   */
+  fixInputPosition() {
+    let innerContainer = document.querySelector(".sticky-inner-container");
+    let width = window.windowUtils.getBoundsWithoutFlushing(innerContainer)
+      .width;
+    innerContainer.style.maxWidth = width + "px";
+  },
+
+  /**
    * Check that the text content contains the query string.
    *
    * @param String content
@@ -235,6 +246,8 @@ var gSearchResultsPane = {
       return;
     }
 
+    let firstQuery = !this.query && query;
+    let endQuery = !query && this.query;
     let subQuery = this.query && query.includes(this.query);
     this.query = query;
 
@@ -251,6 +264,10 @@ var gSearchResultsPane = {
     let srHeader = document.getElementById("header-searchResults");
     let noResultsEl = document.getElementById("no-results-message");
     if (this.query) {
+      // If this is the first query, fix the search input in place.
+      if (firstQuery) {
+        this.fixInputPosition();
+      }
       // Showing the Search Results Tag
       await gotoPref("paneSearchResults");
       srHeader.hidden = false;
@@ -353,6 +370,11 @@ var gSearchResultsPane = {
         }
       }
     } else {
+      if (endQuery) {
+        document
+          .querySelector(".sticky-inner-container")
+          .style.removeProperty("max-width");
+      }
       noResultsEl.hidden = true;
       document.getElementById("sorry-message-query").textContent = "";
       // Going back to General when cleared
