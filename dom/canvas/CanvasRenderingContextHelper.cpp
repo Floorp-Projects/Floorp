@@ -64,13 +64,12 @@ void CanvasRenderingContextHelper::ToBlob(
   RefPtr<EncodeCompleteCallback> callback =
       new EncodeCallback(aGlobal, &aCallback);
 
-  ToBlob(aCx, aGlobal, callback, aType, aParams, aUsePlaceholder, aRv);
+  ToBlob(aCx, callback, aType, aParams, aUsePlaceholder, aRv);
 }
 
 void CanvasRenderingContextHelper::ToBlob(
-    JSContext* aCx, nsIGlobalObject* aGlobal, EncodeCompleteCallback* aCallback,
-    const nsAString& aType, JS::Handle<JS::Value> aParams, bool aUsePlaceholder,
-    ErrorResult& aRv) {
+    JSContext* aCx, EncodeCompleteCallback* aCallback, const nsAString& aType,
+    JS::Handle<JS::Value> aParams, bool aUsePlaceholder, ErrorResult& aRv) {
   nsAutoString type;
   nsContentUtils::ASCIIToLower(aType, type);
 
@@ -81,6 +80,16 @@ void CanvasRenderingContextHelper::ToBlob(
     return;
   }
 
+  ToBlob(aCallback, type, params, usingCustomParseOptions, aUsePlaceholder,
+         aRv);
+}
+
+void CanvasRenderingContextHelper::ToBlob(EncodeCompleteCallback* aCallback,
+                                          nsAString& aType,
+                                          const nsAString& aEncodeOptions,
+                                          bool aUsingCustomOptions,
+                                          bool aUsePlaceholder,
+                                          ErrorResult& aRv) {
   if (mCurrentContext) {
     // We disallow canvases of width or height zero, and set them to 1, so
     // we will have a discrepancy with the sizes of the canvas and the context.
@@ -104,8 +113,8 @@ void CanvasRenderingContextHelper::ToBlob(
   RefPtr<EncodeCompleteCallback> callback = aCallback;
 
   aRv = ImageEncoder::ExtractDataAsync(
-      type, params, usingCustomParseOptions, std::move(imageBuffer), format,
-      GetWidthHeight(), aUsePlaceholder, callback);
+      aType, aEncodeOptions, aUsingCustomOptions, std::move(imageBuffer),
+      format, GetWidthHeight(), aUsePlaceholder, callback);
 }
 
 already_AddRefed<nsICanvasRenderingContextInternal>
