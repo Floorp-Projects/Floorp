@@ -44,7 +44,17 @@ void ScreenManager::SetHelper(UniquePtr<Helper> aHelper) {
   mHelper = std::move(aHelper);
 }
 
+// static
 void ScreenManager::Refresh(nsTArray<RefPtr<Screen>>&& aScreens) {
+  if (PastShutdownPhase(ShutdownPhase::XPCOMShutdown)) {
+    // We don't refresh screen data if starting XPCOM shutdown path.
+    // GetSingleton returns invalid data since it is freed.
+    return;
+  }
+  GetSingleton().RefreshInternal(std::move(aScreens));
+}
+
+void ScreenManager::RefreshInternal(nsTArray<RefPtr<Screen>>&& aScreens) {
   MOZ_LOG(sScreenLog, LogLevel::Debug, ("Refresh screens"));
 
   mScreenList = std::move(aScreens);
