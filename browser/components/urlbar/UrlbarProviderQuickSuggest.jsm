@@ -115,7 +115,8 @@ class ProviderQuickSuggest extends UrlbarProvider {
       !queryContext.isPrivate &&
       UrlbarPrefs.get("quickSuggestEnabled") &&
       (UrlbarPrefs.get("suggest.quicksuggest.nonsponsored") ||
-        UrlbarPrefs.get("suggest.quicksuggest.sponsored"))
+        UrlbarPrefs.get("suggest.quicksuggest.sponsored") ||
+        UrlbarPrefs.get("quicksuggest.dataCollection.enabled"))
     );
   }
 
@@ -534,6 +535,13 @@ class ProviderQuickSuggest extends UrlbarProvider {
     let providers = UrlbarPrefs.get("merino.providers");
     if (providers) {
       url.searchParams.set(MERINO_ENDPOINT_PARAM_PROVIDERS, providers);
+    } else if (
+      !UrlbarPrefs.get("suggest.quicksuggest.nonsponsored") &&
+      !UrlbarPrefs.get("suggest.quicksuggest.sponsored")
+    ) {
+      // Data collection is enabled but suggestions are not. Set the `providers`
+      // param to an empty string to tell Merino not to fetch any suggestions.
+      url.searchParams.set(MERINO_ENDPOINT_PARAM_PROVIDERS, "");
     }
 
     let responseHistogram = Services.telemetry.getHistogramById(
