@@ -2931,6 +2931,7 @@ NS_IMETHODIMP HTMLEditor::JoinTableCells(bool aMergeNonContiguousContents) {
     // Cleanup selection: remove ranges where cells were deleted
     uint32_t rangeCount = SelectionRef().RangeCount();
 
+    // TODO: Rewriting this with reversed ranged-loop may make it simpler.
     RefPtr<nsRange> range;
     for (uint32_t i = 0; i < rangeCount; i++) {
       range = SelectionRef().GetRangeAt(i);

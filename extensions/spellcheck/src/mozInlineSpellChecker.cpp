@@ -41,6 +41,7 @@
 #include "mozilla/EditorUtils.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/HTMLEditor.h"
+#include "mozilla/IntegerRange.h"
 #include "mozilla/Logging.h"
 #include "mozilla/RangeUtils.h"
 #include "mozilla/Services.h"
@@ -1228,11 +1229,12 @@ nsresult mozInlineSpellChecker::DoSpellCheckSelection(
   // elements inside the selection
   nsTArray<RefPtr<nsRange>> ranges;
 
-  int32_t count = aSpellCheckSelection->RangeCount();
-
-  for (int32_t idx = 0; idx < count; idx++) {
+  const uint32_t rangeCount = aSpellCheckSelection->RangeCount();
+  for (const uint32_t idx : IntegerRange(rangeCount)) {
+    MOZ_ASSERT(aSpellCheckSelection->RangeCount() == rangeCount);
     nsRange* range = aSpellCheckSelection->GetRangeAt(idx);
-    if (range) {
+    MOZ_ASSERT(range);
+    if (MOZ_LIKELY(range)) {
       ranges.AppendElement(range);
     }
   }
@@ -1251,7 +1253,7 @@ nsresult mozInlineSpellChecker::DoSpellCheckSelection(
       mozInlineSpellStatus::CreateForRange(*this, nullptr);
 
   bool doneChecking;
-  for (int32_t idx = 0; idx < count; idx++) {
+  for (uint32_t idx : IntegerRange(rangeCount)) {
     // We can consider this word as "added" since we know it has no spell
     // check range over it that needs to be deleted. All the old ranges
     // were cleared above. We also need to clear the word count so that we
@@ -1674,10 +1676,10 @@ nsresult mozInlineSpellChecker::ResumeCheck(
             ("%s: no active dictionary.", __FUNCTION__));
 
     // no active dictionary
-    int32_t count = spellCheckSelection->RangeCount();
-    for (int32_t index = count - 1; index >= 0; index--) {
+    for (const uint32_t index :
+         Reversed(IntegerRange(spellCheckSelection->RangeCount()))) {
       RefPtr<nsRange> checkRange = spellCheckSelection->GetRangeAt(index);
-      if (checkRange) {
+      if (MOZ_LIKELY(checkRange)) {
         RemoveRange(spellCheckSelection, checkRange);
       }
     }
@@ -1737,11 +1739,11 @@ nsresult mozInlineSpellChecker::CleanupRangesInSelection(
   // can happen if the node containing a highlighted word was removed.
   if (!aSelection) return NS_ERROR_FAILURE;
 
-  int32_t count = aSelection->RangeCount();
-
-  for (int32_t index = 0; index < count; index++) {
-    nsRange* checkRange = aSelection->GetRangeAt(index);
-    if (checkRange) {
+  // TODO: Rewrite this with reversed ranged-loop, it might make this simpler.
+  int64_t count = aSelection->RangeCount();
+  for (int64_t index = 0; index < count; index++) {
+    nsRange* checkRange = aSelection->GetRangeAt(static_cast<uint32_t>(index));
+    if (MOZ_LIKELY(checkRange)) {
       if (checkRange->Collapsed()) {
         RemoveRange(aSelection, checkRange);
         index--;

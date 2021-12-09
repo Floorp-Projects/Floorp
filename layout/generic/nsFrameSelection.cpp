@@ -16,6 +16,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/HTMLEditor.h"
+#include "mozilla/IntegerRange.h"
 #include "mozilla/Logging.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ScrollTypes.h"
@@ -2488,7 +2489,7 @@ nsresult nsFrameSelection::TableSelection::HandleMouseUpOrDown(
         mDragSelectingCells, mStartSelectedCell.get());
 #endif
     // First check if we are extending a block selection
-    uint32_t rangeCount = aNormalSelection.RangeCount();
+    const uint32_t rangeCount = aNormalSelection.RangeCount();
 
     if (rangeCount > 0 && aMouseEvent->IsShift() && mAppendStartSelectedCell &&
         mAppendStartSelectedCell != aChildContent) {
@@ -2539,11 +2540,12 @@ nsresult nsFrameSelection::TableSelection::HandleMouseUpOrDown(
           "rangeCount=%d\n",
           rangeCount);
 #endif
-      for (uint32_t i = 0; i < rangeCount; i++) {
+      for (const uint32_t i : IntegerRange(rangeCount)) {
+        MOZ_ASSERT(aNormalSelection.RangeCount() == rangeCount);
         // Strong reference, because sometimes we want to remove
         // this range, and then we might be the only owner.
         RefPtr<nsRange> range = aNormalSelection.GetRangeAt(i);
-        if (!range) {
+        if (MOZ_UNLIKELY(!range)) {
           return NS_ERROR_NULL_POINTER;
         }
 
@@ -2984,7 +2986,8 @@ nsRange* nsFrameSelection::TableSelection::GetNextCellRange(
     const mozilla::dom::Selection& aNormalSelection) {
   MOZ_ASSERT(aNormalSelection.Type() == SelectionType::eNormal);
 
-  nsRange* range = aNormalSelection.GetRangeAt(mSelectedCellIndex);
+  nsRange* range =
+      aNormalSelection.GetRangeAt(AssertedCast<uint32_t>(mSelectedCellIndex));
 
   // Get first node in next range of selection - test if it's a cell
   if (!GetFirstCellNodeInRange(range)) {

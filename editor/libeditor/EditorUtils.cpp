@@ -13,6 +13,7 @@
 
 #include "gfxFontUtils.h"
 #include "mozilla/ComputedStyle.h"
+#include "mozilla/IntegerRange.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/HTMLBRElement.h"
@@ -602,10 +603,11 @@ bool EditorUtils::IsPointInSelection(const Selection& aSelection,
     return false;
   }
 
-  uint32_t rangeCount = aSelection.RangeCount();
-  for (uint32_t i = 0; i < rangeCount; i++) {
+  const uint32_t rangeCount = aSelection.RangeCount();
+  for (const uint32_t i : IntegerRange(rangeCount)) {
+    MOZ_ASSERT(aSelection.RangeCount() == rangeCount);
     RefPtr<const nsRange> range = aSelection.GetRangeAt(i);
-    if (!range) {
+    if (MOZ_UNLIKELY(NS_WARN_IF(!range))) {
       // Don't bail yet, iterate through them all
       continue;
     }

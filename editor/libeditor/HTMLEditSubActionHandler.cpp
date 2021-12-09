@@ -21,6 +21,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/ContentIterator.h"
+#include "mozilla/IntegerRange.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/OwningNonNull.h"
@@ -6121,8 +6122,10 @@ void HTMLEditor::GetSelectionRangesExtendedToIncludeAdjuscentWhiteSpaces(
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(aOutArrayOfRanges.IsEmpty());
 
-  aOutArrayOfRanges.SetCapacity(SelectionRef().RangeCount());
-  for (uint32_t i = 0; i < SelectionRef().RangeCount(); i++) {
+  const uint32_t rangeCount = SelectionRef().RangeCount();
+  aOutArrayOfRanges.SetCapacity(rangeCount);
+  for (const uint32_t i : IntegerRange(rangeCount)) {
+    MOZ_ASSERT(SelectionRef().RangeCount() == rangeCount);
     const nsRange* selectionRange = SelectionRef().GetRangeAt(i);
     MOZ_ASSERT(selectionRange);
 
@@ -6141,8 +6144,10 @@ void HTMLEditor::GetSelectionRangesExtendedToHardLineStartAndEnd(
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(aOutArrayOfRanges.IsEmpty());
 
-  aOutArrayOfRanges.SetCapacity(SelectionRef().RangeCount());
-  for (uint32_t i = 0; i < SelectionRef().RangeCount(); i++) {
+  const uint32_t rangeCount = SelectionRef().RangeCount();
+  aOutArrayOfRanges.SetCapacity(rangeCount);
+  for (const uint32_t i : IntegerRange(rangeCount)) {
+    MOZ_ASSERT(SelectionRef().RangeCount() == rangeCount);
     // Make a new adjusted range to represent the appropriate block content.
     // The basic idea is to push out the range endpoints to truly enclose the
     // blocks that we will affect.  This call alters opRange.
@@ -6626,8 +6631,11 @@ Element* HTMLEditor::GetParentListElementAtSelection() const {
   MOZ_ASSERT(IsEditActionDataAvailable());
   MOZ_ASSERT(!IsSelectionRangeContainerNotContent());
 
-  for (uint32_t i = 0; i < SelectionRef().RangeCount(); ++i) {
+  const uint32_t rangeCount = SelectionRef().RangeCount();
+  for (const uint32_t i : IntegerRange(rangeCount)) {
+    MOZ_ASSERT(SelectionRef().RangeCount() == rangeCount);
     nsRange* range = SelectionRef().GetRangeAt(i);
+    MOZ_ASSERT(range);
     for (nsINode* parent = range->GetClosestCommonInclusiveAncestor(); parent;
          parent = parent->GetParentNode()) {
       if (HTMLEditUtils::IsAnyListElement(parent)) {

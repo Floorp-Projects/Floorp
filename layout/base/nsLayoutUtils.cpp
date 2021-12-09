@@ -61,6 +61,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/PathHelpers.h"
+#include "mozilla/IntegerRange.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/APZPublicUtils.h"  // for apz::CalculatePendingDisplayPort
 #include "mozilla/layers/CompositorBridgeChild.h"
@@ -9062,9 +9063,10 @@ nsRect nsLayoutUtils::GetSelectionBoundingRect(const Selection* aSel) {
       res = TransformFrameRectToAncestor(frame, res, relativeTo);
     }
   } else {
-    int32_t rangeCount = aSel->RangeCount();
     RectAccumulator accumulator;
-    for (int32_t idx = 0; idx < rangeCount; ++idx) {
+    const uint32_t rangeCount = aSel->RangeCount();
+    for (const uint32_t idx : IntegerRange(rangeCount)) {
+      MOZ_ASSERT(aSel->RangeCount() == rangeCount);
       nsRange* range = aSel->GetRangeAt(idx);
       nsRange::CollectClientRectsAndText(
           &accumulator, nullptr, range, range->GetStartContainer(),
