@@ -10,6 +10,7 @@
 #include <algorithm>  // For <std::stable_sort>
 #include "mozilla/AnimationComparator.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/Variant.h"
@@ -156,19 +157,21 @@ struct AnimationEventInfo {
     return nullptr;
   }
 
-  void Dispatch(nsPresContext* aPresContext) {
+  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void Dispatch(nsPresContext* aPresContext) {
+    RefPtr<dom::EventTarget> target = mTarget;
     if (mEvent.is<RefPtr<dom::AnimationPlaybackEvent>>()) {
-      EventDispatcher::DispatchDOMEvent(
-          mTarget, nullptr /* WidgetEvent */,
-          mEvent.as<RefPtr<dom::AnimationPlaybackEvent>>(), aPresContext,
-          nullptr /* nsEventStatus */);
+      auto playbackEvent = mEvent.as<RefPtr<dom::AnimationPlaybackEvent>>();
+      EventDispatcher::DispatchDOMEvent(target, nullptr /* WidgetEvent */,
+                                        playbackEvent, aPresContext,
+                                        nullptr /* nsEventStatus */);
       return;
     }
 
     MOZ_ASSERT(mEvent.is<InternalTransitionEvent>() ||
                mEvent.is<InternalAnimationEvent>());
 
-    EventDispatcher::Dispatch(mTarget, aPresContext, AsWidgetEvent());
+    EventDispatcher::Dispatch(target, aPresContext, AsWidgetEvent());
   }
 };
 
