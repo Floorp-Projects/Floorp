@@ -746,11 +746,10 @@ class Selection final : public nsSupportsWeakReference,
 
   /**
    * Set mAnchorFocusRange to mStyledRanges.mRanges[aIndex] if aIndex is a valid
-   * index. Set mAnchorFocusRange to nullptr if aIndex is negative. Otherwise,
-   * i.e., if aIndex is positive but out of bounds of mStyledRanges.mRanges, do
-   * nothing.
+   * index.
    */
-  void SetAnchorFocusRange(int32_t aIndex);
+  void SetAnchorFocusRange(size_t aIndex);
+  void RemoveAnchorFocusRange() { mAnchorFocusRange = nullptr; }
   void SelectFramesOf(nsIContent* aContent, bool aSelected) const;
 
   /**
