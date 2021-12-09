@@ -299,7 +299,7 @@ fn new_ct_font_with_variations_from_ct_font_desc(ct_font_desc: &CTFontDescriptor
     let vals_dict = CFDictionary::from_CFType_pairs(&vals);
     let variation_attribute = unsafe { CFString::wrap_under_get_rule(kCTFontVariationAttribute) };
     let attrs_dict = CFDictionary::from_CFType_pairs(&[(variation_attribute, vals_dict)]);
-    let ct_var_font_desc = ct_font_desc.create_copy_with_attributes(attrs_dict.to_untyped()).unwrap();
+    let ct_var_font_desc = ct_font.copy_descriptor().create_copy_with_attributes(attrs_dict.to_untyped()).unwrap();
     core_text::font::new_from_descriptor(&ct_var_font_desc, size)
 
 }
@@ -434,7 +434,7 @@ impl FontContext {
         // supposed to use CTFontCreateUIFontForLanguage, but for now
         // we just use the CGFont.
         let desc_or_font = if name.to_string().starts_with('.') {
-            DescOrFont::Font(native_font_handle.0)
+            DescOrFont::Desc(core_text::font::new_from_CGFont(&native_font_handle.0, 0.).copy_descriptor())
         } else {
             DescOrFont::Desc(core_text::font_descriptor::new_from_postscript_name(&name))
         };
