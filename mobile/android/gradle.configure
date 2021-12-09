@@ -600,17 +600,6 @@ option(
     help="Comma-separated URLs of Maven repositories containing Gradle dependencies.",
 )
 
-option(
-    "--allow-insecure-gradle-repositories",
-    help="Gradle is allowed to connect to insecure Maven repositories.",
-)
-
-set_config(
-    "ALLOW_INSECURE_GRADLE_REPOSITORIES",
-    True,
-    when="--allow-insecure-gradle-repositories",
-)
-
 
 @depends("GRADLE_MAVEN_REPOSITORIES")
 @imports(_from="os.path", _import="isdir")

@@ -4,7 +4,6 @@
 
 package org.mozilla.geckoview;
 
-import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.util.Log;
 import androidx.annotation.AnyThread;
@@ -1399,9 +1398,6 @@ public class WebExtension {
               return;
             }
 
-            // The .accept method will be called from the UIThread in this case because
-            // the GeckoResult instance was created on the UIThread
-            @SuppressLint("WrongThread")
             final GeckoResult<GeckoSession> popup = delegate.onTogglePopup(mExtension, this);
             openPopup(popup, uri);
           });
@@ -2519,6 +2515,7 @@ public class WebExtension {
     }
 
     @NonNull
+    @UiThread
     /* package */ static GeckoBundle downloadInfoToBundle(final @NonNull Info data) {
       final GeckoBundle dataBundle = new GeckoBundle();
 
