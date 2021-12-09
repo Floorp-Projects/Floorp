@@ -460,7 +460,7 @@ nsresult IndexedDatabaseManager::CommonPostHandleEvent(
 
     errorEvent->SetTrusted(true);
 
-    auto* target = static_cast<EventTarget*>(globalScope.get());
+    RefPtr<EventTarget> target = static_cast<EventTarget*>(globalScope.get());
 
     if (NS_WARN_IF(NS_FAILED(EventDispatcher::DispatchDOMEvent(
             target,
