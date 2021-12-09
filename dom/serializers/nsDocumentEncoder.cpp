@@ -187,7 +187,7 @@ struct RangeBoundariesInclusiveAncestorsAndOffsets {
   /**
    * https://dom.spec.whatwg.org/#concept-tree-inclusive-ancestor.
    */
-  using InclusiveAncestorsOffsets = AutoTArray<int32_t, 8>;
+  using InclusiveAncestorsOffsets = AutoTArray<Maybe<uint32_t>, 8>;
 
   // The first node is the range's boundary node, the following ones the
   // ancestors.
@@ -441,8 +441,8 @@ class nsDocumentEncoder : public nsIDocumentEncoder {
      *               aRange's closest common inclusive ancestor.
      */
     [[nodiscard]] nsresult SerializeChildrenOfContent(nsIContent& aContent,
-                                                      int32_t aStartOffset,
-                                                      int32_t aEndOffset,
+                                                      uint32_t aStartOffset,
+                                                      uint32_t aEndOffset,
                                                       const nsRange* aRange,
                                                       int32_t aDepth);
 
@@ -1124,20 +1124,21 @@ nsDocumentEncoder::RangeSerializer::SerializeNodePartiallyContainedInRange(
             .mInclusiveAncestorsOffsetsOfEnd;
     // do some calculations that will tell us which children of this
     // node are in the range.
-    int32_t startOffset = 0, endOffset = -1;
+    Maybe<uint32_t> startOffset = Some(0);
+    Maybe<uint32_t> endOffset;
     if (aStartAndEndContent.mStart == &aContent && mStartRootIndex >= aDepth) {
       startOffset = inclusiveAncestorsOffsetsOfStart[mStartRootIndex - aDepth];
     }
     if (aStartAndEndContent.mEnd == &aContent && mEndRootIndex >= aDepth) {
       endOffset = inclusiveAncestorsOffsetsOfEnd[mEndRootIndex - aDepth];
     }
-    // generated aContent will cause offset values of -1 to be returned.
-    uint32_t childCount = aContent.GetChildCount();
-
-    if (startOffset == -1) startOffset = 0;
-    if (endOffset == -1)
-      endOffset = childCount;
-    else {
+    // generated aContent will cause offset values of Nothing to be returned.
+    if (startOffset.isNothing()) {
+      startOffset = Some(0);
+    }
+    if (endOffset.isNothing()) {
+      endOffset = Some(aContent.GetChildCount());
+    } else {
       // if we are at the "tip" of the selection, endOffset is fine.
       // otherwise, we need to add one.  This is because of the semantics
       // of the offset list created by GetInclusiveAncestorsAndOffsets().  The
@@ -1145,13 +1146,14 @@ nsDocumentEncoder::RangeSerializer::SerializeNodePartiallyContainedInRange(
       // location of the ancestor, rather than just past it.  So we need
       // to add one here in order to include it in the children we serialize.
       if (&aNode != aRange.GetEndContainer()) {
-        endOffset++;
+        MOZ_ASSERT(*endOffset != UINT32_MAX);
+        endOffset.ref()++;
       }
     }
 
-    if (endOffset) {
-      nsresult rv = SerializeChildrenOfContent(aContent, startOffset, endOffset,
-                                               &aRange, aDepth);
+    if (*endOffset) {
+      nsresult rv = SerializeChildrenOfContent(aContent, *startOffset,
+                                               *endOffset, &aRange, aDepth);
       NS_ENSURE_SUCCESS(rv, rv);
     }
     // serialize the end of this node
@@ -1165,11 +1167,11 @@ nsDocumentEncoder::RangeSerializer::SerializeNodePartiallyContainedInRange(
 }
 
 nsresult nsDocumentEncoder::RangeSerializer::SerializeChildrenOfContent(
-    nsIContent& aContent, int32_t aStartOffset, int32_t aEndOffset,
+    nsIContent& aContent, uint32_t aStartOffset, uint32_t aEndOffset,
     const nsRange* aRange, int32_t aDepth) {
   // serialize the children of this node that are in the range
   nsIContent* childAsNode = aContent.GetFirstChild();
-  int32_t j = 0;
+  uint32_t j = 0;
 
   for (; j < aStartOffset && childAsNode; ++j) {
     childAsNode = childAsNode->GetNextSibling();
