@@ -1701,19 +1701,23 @@ void js::gc::BackgroundDecommitTask::run(AutoLockHelperThreadState& lock) {
     ChunkPool emptyChunksToFree;
     {
       AutoLockGC gcLock(gc);
+      emptyChunksToFree = gc->expireEmptyChunkPool(gcLock);
+    }
+
+    FreeChunkPool(emptyChunksToFree);
+
+    {
+      AutoLockGC gcLock(gc);
 
       // To help minimize the total number of chunks needed over time, sort the
       // available chunks list so that we allocate into more-used chunks first.
       gc->availableChunks(gcLock).sort();
 
       if (DecommitEnabled()) {
+        gc->decommitEmptyChunks(cancel_, gcLock);
         gc->decommitFreeArenas(cancel_, gcLock);
       }
-
-      emptyChunksToFree = gc->expireEmptyChunkPool(gcLock);
     }
-
-    FreeChunkPool(emptyChunksToFree);
   }
 
   gc->maybeRequestGCAfterBackgroundTask(lock);
