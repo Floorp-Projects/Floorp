@@ -202,6 +202,15 @@ JS::OffThreadToken* StartOffThreadCompileToStencil(
     JS::SourceText<mozilla::Utf8Unit>& srcBuf,
     JS::OffThreadCompileCallback callback, void* callbackData);
 
+JS::OffThreadToken* StartOffThreadCompileModuleToStencil(
+    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+    JS::SourceText<char16_t>& srcBuf, JS::OffThreadCompileCallback callback,
+    void* callbackData);
+JS::OffThreadToken* StartOffThreadCompileModuleToStencil(
+    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+    JS::SourceText<mozilla::Utf8Unit>& srcBuf,
+    JS::OffThreadCompileCallback callback, void* callbackData);
+
 JS::OffThreadToken* StartOffThreadParseModule(
     JSContext* cx, const JS::ReadOnlyCompileOptions& options,
     JS::SourceText<char16_t>& srcBuf, JS::OffThreadCompileCallback callback,
