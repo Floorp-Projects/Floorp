@@ -433,7 +433,7 @@ browsertime-tp6-live:
             - [google-slides, gslides]
             - imdb
             - imgur
-            - instagram
+            # - instagram (see bug 1736999)
             - linkedin
             - microsoft
             - netflix
