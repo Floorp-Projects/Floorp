@@ -298,7 +298,8 @@ class MozillaSocorroServiceTest {
                     serverUrl = serverUrl.toString(),
                     versionName = "1.0.1",
                     versionCode = "1000",
-                    releaseChannel = "test channel"
+                    releaseChannel = "test channel",
+                    distributionId = "test distribution id"
                 )
             )
 
@@ -332,6 +333,7 @@ class MozillaSocorroServiceTest {
             assert(request.contains("name=Version\r\n\r\n1.0.1"))
             assert(request.contains("name=ApplicationBuildID\r\n\r\n1000"))
             assert(request.contains("name=useragent_locale\r\n\r\nen_US"))
+            assert(request.contains("name=DistributionID\r\n\r\ntest distribution id"))
 
             verify(service).report(crash)
             verify(service).sendReport(123456, null, "dump.path", "extras.path", true, true, crash.breadcrumbs)
@@ -646,7 +648,8 @@ class MozillaSocorroServiceTest {
                 mockWebServer.url("/").toString(),
                 "0.0.1",
                 "123",
-                "test channel"
+                "test channel",
+                "test distribution id"
             )
 
             val crash = Crash.NativeCodeCrash(

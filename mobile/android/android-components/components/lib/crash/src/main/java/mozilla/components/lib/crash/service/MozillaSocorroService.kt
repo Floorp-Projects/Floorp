@@ -51,6 +51,7 @@ internal const val DEFAULT_VERSION = "N/A"
 internal const val DEFAULT_BUILD_ID = "N/A"
 internal const val DEFAULT_VENDOR = "N/A"
 internal const val DEFAULT_RELEASE_CHANNEL = "N/A"
+internal const val DEFAULT_DISTRIBUTION_ID = "N/A"
 
 private const val KEY_CRASH_ID = "CrashID"
 
@@ -74,6 +75,7 @@ private const val FILE_REGEX = "([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}
  * @param versionName The version of the application.
  * @param versionCode The version code of the application.
  * @param releaseChannel The release channel of the application.
+ * @param distributionId The distribution id of the application.
  */
 @Suppress("LargeClass", "LongParameterList")
 class MozillaSocorroService(
@@ -87,7 +89,8 @@ class MozillaSocorroService(
     internal var serverUrl: String? = null,
     private var versionName: String = DEFAULT_VERSION_NAME,
     private var versionCode: String = DEFAULT_VERSION_CODE,
-    private val releaseChannel: String = DEFAULT_RELEASE_CHANNEL
+    private val releaseChannel: String = DEFAULT_RELEASE_CHANNEL,
+    private val distributionId: String = DEFAULT_DISTRIBUTION_ID
 ) : CrashReporterService {
     private val logger = Logger("mozac/MozillaSocorroCrashHelperService")
     private val startTime = System.currentTimeMillis()
@@ -265,6 +268,7 @@ class MozillaSocorroService(
         sendPart(gzipOs, boundary, "Vendor", vendor, nameSet)
         sendPart(gzipOs, boundary, "Breadcrumbs", breadcrumbs, nameSet)
         sendPart(gzipOs, boundary, "useragent_locale", Locale.getDefault().toString(), nameSet)
+        sendPart(gzipOs, boundary, "DistributionID", distributionId, nameSet)
 
         extrasFilePath?.let {
             val regex = "$FILE_REGEX$EXTRAS_FILE_EXT".toRegex()
