@@ -2640,8 +2640,8 @@ bool nsContentUtils::PositionIsBefore(nsINode* aNode1, nsINode* aNode2,
 
 /* static */
 Maybe<int32_t> nsContentUtils::ComparePoints(
-    const nsINode* aParent1, int32_t aOffset1, const nsINode* aParent2,
-    int32_t aOffset2, ComparePointsCache* aParent1Cache) {
+    const nsINode* aParent1, uint32_t aOffset1, const nsINode* aParent2,
+    uint32_t aOffset2, ComparePointsCache* aParent1Cache) {
   bool disconnected{false};
 
   const int32_t order = ComparePoints_Deprecated(
@@ -2655,12 +2655,9 @@ Maybe<int32_t> nsContentUtils::ComparePoints(
 
 /* static */
 int32_t nsContentUtils::ComparePoints_Deprecated(
-    const nsINode* aParent1, int32_t aOffset1, const nsINode* aParent2,
-    int32_t aOffset2, bool* aDisconnected, ComparePointsCache* aParent1Cache) {
+    const nsINode* aParent1, uint32_t aOffset1, const nsINode* aParent2,
+    uint32_t aOffset2, bool* aDisconnected, ComparePointsCache* aParent1Cache) {
   if (aParent1 == aParent2) {
-    // XXX This is odd.  aOffset1 and/or aOffset2 may be -1, e.g., it's result
-    //     of nsINode::ComputeIndexOf(), but this compares such invalid
-    //     offset with valid offset.
     return aOffset1 < aOffset2 ? -1 : aOffset1 > aOffset2 ? 1 : 0;
   }
 
@@ -2711,18 +2708,21 @@ int32_t nsContentUtils::ComparePoints_Deprecated(
 
   if (!pos1) {
     const nsINode* child2 = parents2.ElementAt(--pos2);
-    // XXX aOffset1 may be -1 as mentioned above.  So, why does this return
-    //     it's *before* of the valid DOM point?
-    return aOffset1 <= parent->ComputeIndexOf(child2) ? -1 : 1;
+    const int32_t child2Index = parent->ComputeIndexOf(child2);
+    if (MOZ_UNLIKELY(NS_WARN_IF(child2Index < 0))) {
+      return 1;
+    }
+    return aOffset1 <= static_cast<uint32_t>(child2Index) ? -1 : 1;
   }
 
   const nsINode* child1 = parents1.ElementAt(--pos1);
-  // XXX aOffset2 may be -1 as mentioned above.  So, why does this return it's
-  //     *after* of the valid DOM point?
-  int32_t child1index = aParent1Cache
-                            ? aParent1Cache->ComputeIndexOf(parent, child1)
-                            : parent->ComputeIndexOf(child1);
-  return child1index < aOffset2 ? -1 : 1;
+  const int32_t child1Index =
+      aParent1Cache ? aParent1Cache->ComputeIndexOf(parent, child1)
+                    : parent->ComputeIndexOf(child1);
+  if (MOZ_UNLIKELY(NS_WARN_IF(child1Index < 0))) {
+    return -1;
+  }
+  return static_cast<uint32_t>(child1Index) < aOffset2 ? -1 : 1;
 }
 
 // static

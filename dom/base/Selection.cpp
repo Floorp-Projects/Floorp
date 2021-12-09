@@ -650,9 +650,8 @@ static int32_t CompareToRangeStart(const nsINode& aCompareNode,
   }
 
   // The points are in the same subtree, hence there has to be an order.
-  return *nsContentUtils::ComparePoints(
-      &aCompareNode, AssertedCast<int32_t>(aCompareOffset), start,
-      AssertedCast<int32_t>(aRange.StartOffset()));
+  return *nsContentUtils::ComparePoints(&aCompareNode, aCompareOffset, start,
+                                        aRange.StartOffset());
 }
 
 static int32_t CompareToRangeEnd(const nsINode& aCompareNode,
@@ -671,9 +670,8 @@ static int32_t CompareToRangeEnd(const nsINode& aCompareNode,
   }
 
   // The points are in the same subtree, hence there has to be an order.
-  return *nsContentUtils::ComparePoints(
-      &aCompareNode, AssertedCast<int32_t>(aCompareOffset), end,
-      AssertedCast<int32_t>(aRange.EndOffset()));
+  return *nsContentUtils::ComparePoints(&aCompareNode, aCompareOffset, end,
+                                        aRange.EndOffset());
 }
 
 // static
@@ -2409,15 +2407,15 @@ void Selection::Extend(nsINode& aContainer, uint32_t aOffset,
 #endif
   nsINode* anchorNode = GetAnchorNode();
   nsINode* focusNode = GetFocusNode();
-  uint32_t anchorOffset = AnchorOffset();
-  uint32_t focusOffset = FocusOffset();
+  const uint32_t anchorOffset = AnchorOffset();
+  const uint32_t focusOffset = FocusOffset();
 
   RefPtr<nsRange> range = mAnchorFocusRange->CloneRange();
 
   nsINode* startNode = range->GetStartContainer();
   nsINode* endNode = range->GetEndContainer();
-  int32_t startOffset = range->StartOffset();
-  int32_t endOffset = range->EndOffset();
+  const uint32_t startOffset = range->StartOffset();
+  const uint32_t endOffset = range->EndOffset();
 
   bool shouldClearRange = false;
   const Maybe<int32_t> anchorOldFocusOrder = nsContentUtils::ComparePoints(
