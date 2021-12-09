@@ -783,6 +783,8 @@ STATIC_ATOMS = [
     Atom("onconnect", "onconnect"),
     Atom("onconnectionavailable", "onconnectionavailable"),
     Atom("oncontextmenu", "oncontextmenu"),
+    Atom("oncontextlost", "oncontextlost"),
+    Atom("oncontextrestored", "oncontextrestored"),
     Atom("oncopy", "oncopy"),
     Atom("oncut", "oncut"),
     Atom("ondblclick", "ondblclick"),
