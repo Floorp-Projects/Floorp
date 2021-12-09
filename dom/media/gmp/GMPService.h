@@ -70,9 +70,8 @@ class GeckoMediaPluginService : public mozIGeckoMediaPluginService,
       const nsACString& aNodeId,
       UniquePtr<GetGMPVideoEncoderCallback>&& aCallback) override;
 
-  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD RunPluginCrashCallbacks(
-      uint32_t aPluginId, const nsACString& aPluginName) override;
+  NS_IMETHOD RunPluginCrashCallbacks(uint32_t aPluginId,
+                                     const nsACString& aPluginName) override;
 
   already_AddRefed<nsISerialEventTarget> GetGMPThread();
 
