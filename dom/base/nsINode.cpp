@@ -22,6 +22,7 @@
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/InternalMutationEvent.h"
 #include "mozilla/Likely.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ServoBindings.h"
@@ -1416,7 +1417,7 @@ bool nsINode::Traverse(nsINode* tmp, nsCycleCollectionTraversalCallback& cb) {
         nsIContent* parent = tmp->GetParent();
         if (parent && !parent->UnoptimizableCCNode() &&
             parent->HasKnownLiveWrapper()) {
-          MOZ_ASSERT(parent->ComputeIndexOf_Deprecated(tmp) >= 0,
+          MOZ_ASSERT(parent->ComputeIndexOf(tmp).isSome(),
                      "Parent doesn't own us?");
           return false;
         }
@@ -1624,14 +1625,14 @@ nsIContent* nsINode::GetPreviousSibling() const {
 struct IndexCacheSlot {
   const nsINode* mParent;
   const nsINode* mChild;
-  int32_t mChildIndex;
+  uint32_t mChildIndex;
 };
 
 static IndexCacheSlot sIndexCache[CACHE_NUM_SLOTS];
 
 static inline void AddChildAndIndexToCache(const nsINode* aParent,
                                            const nsINode* aChild,
-                                           int32_t aChildIndex) {
+                                           uint32_t aChildIndex) {
   uint32_t index = CACHE_GET_INDEX(aParent);
   sIndexCache[index].mParent = aParent;
   sIndexCache[index].mChild = aChild;
@@ -1640,21 +1641,21 @@ static inline void AddChildAndIndexToCache(const nsINode* aParent,
 
 static inline void GetChildAndIndexFromCache(const nsINode* aParent,
                                              const nsINode** aChild,
-                                             int32_t* aChildIndex) {
+                                             Maybe<uint32_t>* aChildIndex) {
   uint32_t index = CACHE_GET_INDEX(aParent);
   if (sIndexCache[index].mParent == aParent) {
     *aChild = sIndexCache[index].mChild;
-    *aChildIndex = sIndexCache[index].mChildIndex;
+    *aChildIndex = Some(sIndexCache[index].mChildIndex);
   } else {
     *aChild = nullptr;
-    *aChildIndex = -1;
+    *aChildIndex = Nothing();
   }
 }
 
 static inline void RemoveFromCache(const nsINode* aParent) {
   uint32_t index = CACHE_GET_INDEX(aParent);
   if (sIndexCache[index].mParent == aParent) {
-    sIndexCache[index] = {nullptr, nullptr, -1};
+    sIndexCache[index] = {nullptr, nullptr, UINT32_MAX};
   }
 }
 
@@ -1741,45 +1742,59 @@ nsIContent* nsINode::GetChildAt_Deprecated(uint32_t aIndex) const {
 
 int32_t nsINode::ComputeIndexOf_Deprecated(
     const nsINode* aPossibleChild) const {
-  if (!aPossibleChild) {
+  Maybe<uint32_t> maybeIndex = ComputeIndexOf(aPossibleChild);
+  if (!maybeIndex) {
     return -1;
+  }
+  MOZ_ASSERT(*maybeIndex <= INT32_MAX,
+             "ComputeIndexOf_Deprecated() returns unsupported index value, use "
+             "ComputeIndex() instead");
+  return static_cast<int32_t>(*maybeIndex);
+}
+
+Maybe<uint32_t> nsINode::ComputeIndexOf(const nsINode* aPossibleChild) const {
+  if (!aPossibleChild) {
+    return Nothing();
   }
 
   if (aPossibleChild->GetParentNode() != this) {
-    return -1;
+    return Nothing();
   }
 
   if (aPossibleChild == GetLastChild()) {
-    return GetChildCount() - 1;
+    MOZ_ASSERT(GetChildCount());
+    return Some(GetChildCount() - 1);
   }
 
   if (mChildCount >= CACHE_CHILD_LIMIT) {
     const nsINode* child;
-    int32_t childIndex;
-    GetChildAndIndexFromCache(this, &child, &childIndex);
+    Maybe<uint32_t> maybeChildIndex;
+    GetChildAndIndexFromCache(this, &child, &maybeChildIndex);
     if (child) {
       if (child == aPossibleChild) {
-        return childIndex;
+        return maybeChildIndex;
       }
 
-      int32_t nextIndex = childIndex;
-      int32_t prevIndex = childIndex;
+      uint32_t nextIndex = *maybeChildIndex;
+      uint32_t prevIndex = *maybeChildIndex;
       nsINode* prev = child->GetPreviousSibling();
       nsINode* next = child->GetNextSibling();
       do {
         if (next) {
+          MOZ_ASSERT(nextIndex < UINT32_MAX);
           ++nextIndex;
           if (next == aPossibleChild) {
             AddChildAndIndexToCache(this, aPossibleChild, nextIndex);
-            return nextIndex;
+            return Some(nextIndex);
           }
           next = next->GetNextSibling();
         }
         if (prev) {
+          MOZ_ASSERT(prevIndex > 0);
           --prevIndex;
           if (prev == aPossibleChild) {
             AddChildAndIndexToCache(this, aPossibleChild, prevIndex);
-            return prevIndex;
+            return Some(prevIndex);
           }
           prev = prev->GetPreviousSibling();
         }
@@ -1787,7 +1802,7 @@ int32_t nsINode::ComputeIndexOf_Deprecated(
     }
   }
 
-  int32_t index = 0;
+  uint32_t index = 0u;
   nsINode* current = mFirstChild;
   while (current) {
     MOZ_ASSERT(current->GetParentNode() == this);
@@ -1795,13 +1810,14 @@ int32_t nsINode::ComputeIndexOf_Deprecated(
       if (mChildCount >= CACHE_CHILD_LIMIT) {
         AddChildAndIndexToCache(this, current, index);
       }
-      return index;
+      return Some(index);
     }
     current = current->GetNextSibling();
+    MOZ_ASSERT(index < UINT32_MAX);
     ++index;
   }
 
-  return -1;
+  return Nothing();
 }
 
 static already_AddRefed<nsINode> GetNodeFromNodeOrString(

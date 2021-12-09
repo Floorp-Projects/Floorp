@@ -3000,7 +3000,7 @@ static void AdjustRangeForSelection(nsIContent* aRoot, nsINode** aNode,
   }
 
   *aNode = node->GetParent();
-  MOZ_ASSERT((*aNode)->ComputeIndexOf_Deprecated(node) != -1);
+  MOZ_ASSERT((*aNode)->ComputeIndexOf(node).isSome());
   *aNodeOffset = (*aNode)->ComputeIndexOf_Deprecated(node) + 1;
 }
 
