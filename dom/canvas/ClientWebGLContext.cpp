@@ -128,11 +128,18 @@ ClientWebGLContext::ClientWebGLContext(const bool webgl2)
 ClientWebGLContext::~ClientWebGLContext() { RemovePostRefreshObserver(); }
 
 void ClientWebGLContext::JsWarning(const std::string& utf8) const {
-  if (!mCanvasElement) {
-    return;
+  nsIGlobalObject* global = nullptr;
+  if (mCanvasElement) {
+    mozilla::dom::Document* doc = mCanvasElement->OwnerDoc();
+    if (doc) {
+      global = doc->GetScopeObject();
+    }
+  } else if (mOffscreenCanvas) {
+    global = mOffscreenCanvas->GetOwnerGlobal();
   }
+
   dom::AutoJSAPI api;
-  if (!api.Init(mCanvasElement->OwnerDoc()->GetScopeObject())) {
+  if (!api.Init(global)) {
     return;
   }
   const auto& cx = api.cx();
@@ -140,7 +147,17 @@ void ClientWebGLContext::JsWarning(const std::string& utf8) const {
 }
 
 void AutoJsWarning(const std::string& utf8) {
-  const AutoJSContext cx;
+  if (NS_IsMainThread()) {
+    const AutoJSContext cx;
+    JS::WarnUTF8(cx, "%s", utf8.c_str());
+    return;
+  }
+
+  JSContext* cx = dom::GetCurrentWorkerThreadJSContext();
+  if (NS_WARN_IF(!cx)) {
+    return;
+  }
+
   JS::WarnUTF8(cx, "%s", utf8.c_str());
 }
 
@@ -183,7 +200,6 @@ void ClientWebGLContext::EmulateLoseContext() const {
 
 void ClientWebGLContext::OnContextLoss(
     const webgl::ContextLossReason reason) const {
-  MOZ_ASSERT(NS_IsMainThread());
   JsWarning("WebGL context was lost.");
 
   if (mNotLost) {
@@ -215,8 +231,8 @@ void ClientWebGLContext::OnContextLoss(
     if (!strong) return;
     strong->Event_webglcontextlost();
   };
-  already_AddRefed<mozilla::Runnable> runnable =
-      NS_NewRunnableFunction("enqueue Event_webglcontextlost", fnRun);
+  already_AddRefed<mozilla::CancelableRunnable> runnable =
+      NS_NewCancelableRunnableFunction("enqueue Event_webglcontextlost", fnRun);
   NS_DispatchToCurrentThread(std::move(runnable));
 }
 
@@ -253,8 +269,9 @@ void ClientWebGLContext::RestoreContext(
     if (!strong) return;
     strong->Event_webglcontextrestored();
   };
-  already_AddRefed<mozilla::Runnable> runnable =
-      NS_NewRunnableFunction("enqueue Event_webglcontextrestored", fnRun);
+  already_AddRefed<mozilla::CancelableRunnable> runnable =
+      NS_NewCancelableRunnableFunction("enqueue Event_webglcontextrestored",
+                                       fnRun);
   NS_DispatchToCurrentThread(std::move(runnable));
 }
 
@@ -263,7 +280,16 @@ void ClientWebGLContext::Event_webglcontextrestored() const {
   mLossStatus = webgl::LossStatus::Ready;
   mNextError = 0;
 
-  const uvec2 requestSize = {mCanvasElement->Width(), mCanvasElement->Height()};
+  uvec2 requestSize;
+  if (mCanvasElement) {
+    requestSize = {mCanvasElement->Width(), mCanvasElement->Height()};
+  } else if (mOffscreenCanvas) {
+    requestSize = {mOffscreenCanvas->Width(), mOffscreenCanvas->Height()};
+  } else {
+    MOZ_ASSERT_UNREACHABLE("no HTMLCanvasElement or OffscreenCanvas!");
+    return;
+  }
+
   const auto mutThis = const_cast<ClientWebGLContext*>(
       this);  // TODO: Make context loss non-mutable.
   if (!mutThis->CreateHostContext(requestSize)) {
