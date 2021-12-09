@@ -989,18 +989,10 @@ nsNativeThemeCocoa::TextFieldParams nsNativeThemeCocoa::ComputeTextFieldParams(
     nsIFrame* aFrame, EventStates aEventState) {
   TextFieldParams params;
   params.insideToolbar = IsInsideToolbar(aFrame);
-  params.disabled = IsDisabled(aFrame, aEventState);
+  params.disabled = aEventState.HasState(NS_EVENT_STATE_DISABLED);
 
   // See ShouldUnconditionallyDrawFocusRingIfFocused.
   params.focused = aEventState.HasState(NS_EVENT_STATE_FOCUS);
-  // XUL textboxes set the native appearance on the containing box, while
-  // concrete focus is set on the html:input element within it. We can
-  // though, check the focused attribute of xul textboxes in this case.
-  // On Mac, focus rings are always shown for textboxes, so we do not need
-  // to check the window's focus ring state here
-  if (aFrame->GetContent()->IsXULElement() && IsFocused(aFrame)) {
-    params.focused = true;
-  }
 
   params.rtl = IsFrameRTL(aFrame);
   params.verticalAlignFactor = VerticalAlignFactor(aFrame);
@@ -1079,7 +1071,7 @@ NSSize nsNativeThemeCocoa::GetMenuIconSize(MenuIcon aIcon) {
 
 nsNativeThemeCocoa::MenuIconParams nsNativeThemeCocoa::ComputeMenuIconParams(
     nsIFrame* aFrame, EventStates aEventState, MenuIcon aIcon) {
-  bool isDisabled = IsDisabled(aFrame, aEventState);
+  bool isDisabled = aEventState.HasState(NS_EVENT_STATE_DISABLED);
 
   MenuIconParams params;
   params.icon = aIcon;
@@ -1128,7 +1120,7 @@ void nsNativeThemeCocoa::DrawMenuIcon(CGContextRef cgContext, const CGRect& aRec
 
 nsNativeThemeCocoa::MenuItemParams nsNativeThemeCocoa::ComputeMenuItemParams(
     nsIFrame* aFrame, EventStates aEventState, bool aIsChecked) {
-  bool isDisabled = IsDisabled(aFrame, aEventState);
+  bool isDisabled = aEventState.HasState(NS_EVENT_STATE_DISABLED);
 
   MenuItemParams params;
   params.checked = aIsChecked;
@@ -1195,7 +1187,7 @@ static bool ShouldUnconditionallyDrawFocusRingIfFocused(nsIFrame* aFrame) {
 nsNativeThemeCocoa::ControlParams nsNativeThemeCocoa::ComputeControlParams(
     nsIFrame* aFrame, EventStates aEventState) {
   ControlParams params;
-  params.disabled = IsDisabled(aFrame, aEventState);
+  params.disabled = aEventState.HasState(NS_EVENT_STATE_DISABLED);
   params.insideActiveWindow = FrameIsInActiveWindow(aFrame);
   params.pressed = aEventState.HasAllStates(NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_HOVER);
   params.focused = aEventState.HasState(NS_EVENT_STATE_FOCUS) &&
@@ -1786,7 +1778,7 @@ nsNativeThemeCocoa::ProgressParams nsNativeThemeCocoa::ComputeProgressParams(
   params.max = GetProgressMaxValue(aFrame);
   params.verticalAlignFactor = VerticalAlignFactor(aFrame);
   params.insideActiveWindow = FrameIsInActiveWindow(aFrame);
-  params.indeterminate = IsIndeterminateProgress(aFrame, aEventState);
+  params.indeterminate = aEventState.HasState(NS_EVENT_STATE_INDETERMINATE);
   params.horizontal = aIsHorizontal;
   params.rtl = IsFrameRTL(aFrame);
   return params;
@@ -1963,7 +1955,7 @@ Maybe<nsNativeThemeCocoa::ScaleParams> nsNativeThemeCocoa::ComputeHTMLScaleParam
   params.reverse = !isHorizontal || rangeFrame->IsRightToLeft();
   params.insideActiveWindow = FrameIsInActiveWindow(aFrame);
   params.focused = aEventState.HasState(NS_EVENT_STATE_FOCUSRING);
-  params.disabled = IsDisabled(aFrame, aEventState);
+  params.disabled = aEventState.HasState(NS_EVENT_STATE_DISABLED);
   params.horizontal = isHorizontal;
   return Some(params);
 }
@@ -2285,9 +2277,9 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
 
       CheckboxOrRadioParams params;
       params.state = CheckboxOrRadioState::eOff;
-      if (isCheckbox && GetIndeterminate(aFrame)) {
+      if (eventState.HasState(NS_EVENT_STATE_INDETERMINATE)) {
         params.state = CheckboxOrRadioState::eIndeterminate;
-      } else if (GetCheckedOrSelected(aFrame, !isCheckbox)) {
+      } else if (eventState.HasState(NS_EVENT_STATE_CHECKED)) {
         params.state = CheckboxOrRadioState::eOn;
       }
       params.controlParams = ComputeControlParams(aFrame, eventState);
@@ -2316,7 +2308,6 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
       }
       if (IsButtonTypeMenu(aFrame)) {
         ControlParams controlParams = ComputeControlParams(aFrame, eventState);
-        controlParams.focused = controlParams.focused || IsFocused(aFrame);
         controlParams.pressed = IsOpenButton(aFrame);
         DropdownParams params;
         params.controlParams = controlParams;
@@ -2372,7 +2363,7 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
           params.pressedButton = Some(SpinButton::eDown);
         }
       }
-      params.disabled = IsDisabled(aFrame, eventState);
+      params.disabled = eventState.HasState(NS_EVENT_STATE_DISABLED);
       params.insideActiveWindow = FrameIsInActiveWindow(aFrame);
 
       return Some(WidgetInfo::SpinButtons(params));
@@ -2389,7 +2380,7 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
         } else if (numberControlFrame->SpinnerDownButtonIsDepressed()) {
           params.pressedButton = Some(SpinButton::eDown);
         }
-        params.disabled = IsDisabled(aFrame, eventState);
+        params.disabled = eventState.HasState(NS_EVENT_STATE_DISABLED);
         params.insideActiveWindow = FrameIsInActiveWindow(aFrame);
         if (aAppearance == StyleAppearance::SpinnerUpbutton) {
           return Some(WidgetInfo::SpinButtonUp(params));
@@ -2429,7 +2420,6 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
     case StyleAppearance::MenulistButton:
     case StyleAppearance::Menulist: {
       ControlParams controlParams = ComputeControlParams(aFrame, eventState);
-      controlParams.focused = controlParams.focused || IsFocused(aFrame);
       controlParams.pressed = IsOpenButton(aFrame);
       DropdownParams params;
       params.controlParams = controlParams;
@@ -2453,7 +2443,7 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
       return Some(WidgetInfo::SearchField(ComputeTextFieldParams(aFrame, eventState)));
 
     case StyleAppearance::ProgressBar: {
-      if (IsIndeterminateProgress(aFrame, eventState)) {
+      if (eventState.HasState(NS_EVENT_STATE_INDETERMINATE)) {
         if (!QueueAnimatedContentForRefresh(aFrame->GetContent(), 30)) {
           NS_WARNING("Unable to animate progressbar!");
         }
@@ -3603,7 +3593,7 @@ nsITheme::ThemeGeometryType nsNativeThemeCocoa::ThemeGeometryTypeForWidget(
     case StyleAppearance::Menuitem:
     case StyleAppearance::Checkmenuitem: {
       EventStates eventState = GetContentState(aFrame, aAppearance);
-      bool isDisabled = IsDisabled(aFrame, eventState);
+      bool isDisabled = eventState.HasState(NS_EVENT_STATE_DISABLED);
       bool isSelected = !isDisabled && CheckBooleanAttr(aFrame, nsGkAtoms::menuactive);
       return isSelected ? eThemeGeometryTypeHighlightedMenuItem : eThemeGeometryTypeMenu;
     }
