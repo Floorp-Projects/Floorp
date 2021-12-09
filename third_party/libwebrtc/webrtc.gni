@@ -285,6 +285,9 @@ declare_args() {
   rtc_exclude_transient_suppressor = false
 }
 
+# Enable liboam only on non-mozilla builds.
+enable_libaom = !build_with_mozilla
+
 # Make it possible to provide custom locations for some libraries (move these
 # up into declare_args should we need to actually use them for the GN build).
 rtc_libvpx_dir = "//third_party/libvpx"
