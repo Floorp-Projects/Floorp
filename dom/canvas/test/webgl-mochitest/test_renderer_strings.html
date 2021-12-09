@@ -28,9 +28,9 @@ function getStrings() {
   return ret;
 }
 
-const RTX3070_R = 'ANGLE (NVIDIA GeForce RTX 3070 Direct3D11 vs_5_0 ps_5_0)';
+const RTX3070_R = 'ANGLE (NVIDIA, NVIDIA GeForce RTX 3070 Direct3D11 vs_5_0 ps_5_0, D3D11-27.21.14.5751)';
 const RTX3070_V = 'Google Inc.';
-const RTX3070_R_SANITIZED = 'ANGLE (NVIDIA GeForce GTX 980 Direct3D11 vs_5_0 ps_5_0)';
+const RTX3070_R_SANITIZED = 'ANGLE (NVIDIA, NVIDIA GeForce GTX 980 Direct3D11 vs_5_0 ps_5_0)';
 
 function expectJsonEqual(was, expected, when) {
   if (when) {
@@ -59,6 +59,33 @@ SimpleTest.waitForExplicitFinish();
     SimpleTest.finish();
     return;
   }
+
+  // -
+  // Assuming that we're on CI, test against known-good strings.
+  // If we add machine configs, we'll need to add to these lists.
+  // This is to avoid situations like bug 1743734, where ANGLE added
+  // detailed driver version/date to its RENDERER strings, which
+  // we want to prevent.
+
+  const KNOWN_CI_VENDORS = [
+    'Mozilla',
+  ];
+  const KNOWN_CI_RENDERERS = [
+    'Adreno (TM) 540', // Android
+    'Intel(R) HD Graphics 400', // Mac
+    'Apple M1', // Mac
+    'llvmpipe', // Linux
+    'ANGLE (NVIDIA, NVIDIA GeForce 8800 GTX Direct3D11 vs_5_0 ps_5_0)', // Windows
+  ];
+  function assertKnownValid(key, knownList) {
+    const val = gl.getParameter(gl[key]);
+    ok(knownList.includes(val),
+       `[ignore if not on CI] getParameter(${key}) -> ${val} not known-valid!`);
+  }
+  assertKnownValid('VENDOR', KNOWN_CI_VENDORS);
+  assertKnownValid('RENDERER', KNOWN_CI_RENDERERS);
+
+  // -
 
   await SpecialPowers.pushPrefEnv({'set': [
     ['webgl.override-unmasked-renderer', RTX3070_R],
