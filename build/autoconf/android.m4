@@ -12,7 +12,7 @@ case "$target" in
 
     # clang will do any number of interesting things with host tools unless we tell
     # it to use the NDK tools.
-    extra_opts="-gcc-toolchain $(dirname $(dirname $TOOLCHAIN_PREFIX))"
+    extra_opts="--gcc-toolchain=$(dirname $(dirname $TOOLCHAIN_PREFIX))"
     CPPFLAGS="$extra_opts -D__ANDROID_API__=$android_version $CPPFLAGS"
     ASFLAGS="$extra_opts $ASFLAGS"
     LDFLAGS="$extra_opts $LDFLAGS"
