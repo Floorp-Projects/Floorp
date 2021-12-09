@@ -934,8 +934,10 @@ class nsPresContext : public nsISupports, public mozilla::SupportsWeakPtr {
       TransactionId aTransactionId = TransactionId{0},
       const mozilla::TimeStamp& aTimeStamp = mozilla::TimeStamp());
   void NotifyRevokingDidPaint(TransactionId aTransactionId);
-  void FireDOMPaintEvent(nsTArray<nsRect>* aList, TransactionId aTransactionId,
-                         mozilla::TimeStamp aTimeStamp = mozilla::TimeStamp());
+  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void FireDOMPaintEvent(
+      nsTArray<nsRect>* aList, TransactionId aTransactionId,
+      mozilla::TimeStamp aTimeStamp = mozilla::TimeStamp());
 
   bool IsDOMPaintEventPending();
 
