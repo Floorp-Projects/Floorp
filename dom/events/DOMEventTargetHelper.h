@@ -64,8 +64,10 @@ class DOMEventTargetHelper : public dom::EventTarget,
   bool ComputeDefaultWantsUntrusted(ErrorResult& aRv) override;
 
   using EventTarget::DispatchEvent;
-  bool DispatchEvent(dom::Event& aEvent, dom::CallerType aCallerType,
-                     ErrorResult& aRv) override;
+  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY bool DispatchEvent(dom::Event& aEvent,
+                                                 dom::CallerType aCallerType,
+                                                 ErrorResult& aRv) override;
 
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
 
