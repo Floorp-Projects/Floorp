@@ -23,29 +23,38 @@ add_task(async function test_cached_messages() {
 
     // We will keep the onMessage callback attached to the ConsoleAPIListener
     // during the whole test to catch all the emitted events.
-    const onMessage = (evtName, message) => messages.push(message);
+    const onMessage = (evtName, message) => messages.push(message.arguments[0]);
 
     listener.on("message", onMessage);
     listener.startListening();
 
     info("Wait until the 2 cached messages have been emitted");
     await ContentTaskUtils.waitForCondition(() => messages.length == 2);
-    is(messages[0].arguments[0], "message_1");
-    is(messages[1].arguments[0], "message_2");
+    is(messages[0], "message_1");
+    is(messages[1], "message_2");
 
     info("Stop listening and log another message");
     listener.stopListening();
+    content.backup = { listener, messages, onMessage };
+  });
+
+  // Force a GC to check that old cached messages which have been garbage
+  // collected are not re-displayed.
+  await doGC();
+
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async () => {
+    const { listener, messages, onMessage } = content.backup;
     content.console.log("message_3");
 
     info("Start listening again and check the previous message is emitted");
     listener.startListening();
     await ContentTaskUtils.waitForCondition(() => messages.length == 3);
-    is(messages[2].arguments[0], "message_3");
+    is(messages[2], "message_3");
 
     info("Log another message and wait until it is emitted");
     content.console.log("message_4");
     await ContentTaskUtils.waitForCondition(() => messages.length == 4);
-    is(messages[3].arguments[0], "message_4");
+    is(messages[3], "message_4");
 
     listener.off("message", onMessage);
     listener.destroy();
@@ -69,18 +78,19 @@ add_task(async function test_cached_messages() {
 
     const listener = new ConsoleAPIListener(innerWindowId);
     const newMessages = [];
-    const onMessage = (evtName, message) => newMessages.push(message);
+    const onMessage = (evtName, message) =>
+      newMessages.push(message.arguments[0]);
     listener.on("message", onMessage);
 
     info("Start listening and wait for the cached message");
     listener.startListening();
     await ContentTaskUtils.waitForCondition(() => newMessages.length == 1);
-    is(newMessages[0].arguments[0], "new_message_1");
+    is(newMessages[0], "new_message_1");
 
     info("Log another message and wait until it is emitted");
     content.console.log("new_message_2");
     await ContentTaskUtils.waitForCondition(() => newMessages.length == 2);
-    is(newMessages[1].arguments[0], "new_message_2");
+    is(newMessages[1], "new_message_2");
 
     listener.off("message", onMessage);
     listener.destroy();
