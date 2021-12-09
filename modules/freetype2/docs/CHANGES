@@ -1,3 +1,35 @@
+CHANGES BETWEEN 2.11.0 and 2.11.1
+
+  I. IMPORTANT CHANGES
+
+    - Some  fields  in  the  `CID_FaceDictRec`, `CID_FaceInfoRec`, and
+      `FT_Data` structures  have been changed  from signed to unsigned
+      type,  which  better reflects  the actual usage.  It is also  an
+      additional means to protect against malformed input.
+
+
+  II. MISCELLANEOUS
+
+    - Cmake support  has been  further improved.   To do  that various
+      backward-incompatible  changes were  necessary; please  see file
+      `CMakeLists.txt` for more details.
+
+    - Since version  2.11.0, a  C99 compiler  is necessary  to compile
+      FreeType.
+
+    - The experimental  'COLR' v1 API  has been updated to  the latest
+      OpenType standard 1.9.
+
+    - The `apinames` tool got a new  option `-wV` to output an OpenVMS
+      Linker Option File.
+
+    - VMS support was updated.
+
+    - MS Visual Studio support was added to build the demo programs.
+
+
+======================================================================
+
 CHANGES BETWEEN 2.10.4 and 2.11.0
 
   I. IMPORTANT CHANGES

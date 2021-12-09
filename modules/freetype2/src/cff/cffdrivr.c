@@ -474,11 +474,11 @@
     if ( cff && !cff->font_info )
     {
       CFF_FontRecDict  dict      = &cff->top_font.font_dict;
-      PS_FontInfoRec  *font_info = NULL;
       FT_Memory        memory    = face->root.memory;
+      PS_FontInfoRec*  font_info = NULL;
 
 
-      if ( FT_QALLOC( font_info, sizeof ( *font_info ) ) )
+      if ( FT_QNEW( font_info ) )
         goto Fail;
 
       font_info->version     = cff_index_get_sid_string( cff,
@@ -515,15 +515,15 @@
     FT_Error  error = FT_Err_Ok;
 
 
-    if ( cff && cff->font_extra == NULL )
+    if ( cff && !cff->font_extra )
     {
       CFF_FontRecDict   dict       = &cff->top_font.font_dict;
-      PS_FontExtraRec*  font_extra = NULL;
       FT_Memory         memory     = face->root.memory;
+      PS_FontExtraRec*  font_extra = NULL;
       FT_String*        embedded_postscript;
 
 
-      if ( FT_ALLOC( font_extra, sizeof ( *font_extra ) ) )
+      if ( FT_QNEW( font_extra ) )
         goto Fail;
 
       font_extra->fs_type = 0U;

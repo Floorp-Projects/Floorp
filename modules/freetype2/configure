@@ -93,7 +93,7 @@ fi
 inode_src=`ls -id $abs_ft2_dir | awk '{print $1}'`
 inode_dst=`ls -id $abs_curr_dir | awk '{print $1}'`
 
-if test $inode_src -ne $inode_dst; then
+if test $inode_src != $inode_dst; then
   if test ! -d docs; then
     mkdir docs
     echo "Copying documentation assets"
