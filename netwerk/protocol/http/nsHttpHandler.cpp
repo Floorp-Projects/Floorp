@@ -2048,6 +2048,11 @@ NS_IMETHODIMP
 nsHttpHandler::NewProxiedChannel(nsIURI* uri, nsIProxyInfo* givenProxyInfo,
                                  uint32_t proxyResolveFlags, nsIURI* proxyURI,
                                  nsILoadInfo* aLoadInfo, nsIChannel** result) {
+  // Avoid a late initialization
+  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownNetTeardown)) {
+    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
+  }
+
   HttpBaseChannel* httpChannel;
 
   LOG(("nsHttpHandler::NewProxiedChannel [proxyInfo=%p]\n", givenProxyInfo));
@@ -2058,11 +2063,6 @@ nsHttpHandler::NewProxiedChannel(nsIURI* uri, nsIProxyInfo* givenProxyInfo,
     // HACK: make sure PSM gets initialized on the main thread.
     net_EnsurePSMInit();
     httpChannel = new nsHttpChannel();
-  }
-
-  // Avoid a late initialization
-  if (AppShutdown::IsInOrBeyond(ShutdownPhase::AppShutdownNetTeardown)) {
-    return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
   }
 
   return SetupChannelInternal(httpChannel, uri, givenProxyInfo,
