@@ -35,7 +35,7 @@ const TABUI_PRESENTED_KEY = "dom.contentprocess.crash_tab_ui_presented";
  */
 async function setupBackgroundTabs(testFn) {
   const REMOTE_PAGE = "http://www.example.com";
-  const NON_REMOTE_PAGE = "about:robots";
+  const NON_REMOTE_PAGE = "about:mozilla";
 
   // Browse the initial tab to a non-remote page, which we'll have in the
   // foreground.
@@ -43,6 +43,11 @@ async function setupBackgroundTabs(testFn) {
   let initialBrowser = initialTab.linkedBrowser;
   BrowserTestUtils.loadURI(initialBrowser, NON_REMOTE_PAGE);
   await BrowserTestUtils.browserLoaded(initialBrowser);
+  // Quick sanity check - the browser should be non remote.
+  Assert.ok(
+    !initialBrowser.isRemoteBrowser,
+    "Initial browser should not be remote."
+  );
 
   // Open some tabs that should be running in the content process.
   let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, REMOTE_PAGE);
