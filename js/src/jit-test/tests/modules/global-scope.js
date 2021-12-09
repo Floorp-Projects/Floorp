@@ -19,8 +19,9 @@ if (helperThreadCount() == 0)
     quit();
 
 function offThreadEvalModuleAndCheck(source, expected) {
-    offThreadCompileModule(source);
-    let m = finishOffThreadModule();
+    offThreadCompileModuleToStencil(source);
+    let stencil = finishOffThreadCompileModuleToStencil();
+    let m = instantiateModuleStencil(stencil);
     print("compiled");
     m.declarationInstantiation();
     m.evaluation();

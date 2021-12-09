@@ -6242,18 +6242,20 @@ static bool FinishOffThreadCompileToStencil(JSContext* cx, unsigned argc,
   return true;
 }
 
-static bool OffThreadCompileModule(JSContext* cx, unsigned argc, Value* vp) {
+static bool OffThreadCompileModuleToStencil(JSContext* cx, unsigned argc,
+                                            Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   if (args.length() != 1 || !args[0].isString()) {
     JS_ReportErrorNumberASCII(cx, my_GetErrorMessage, nullptr,
-                              JSSMSG_INVALID_ARGS, "offThreadCompileModule");
+                              JSSMSG_INVALID_ARGS,
+                              "offThreadCompileModuleToStencil");
     return false;
   }
 
   UniqueChars fileNameBytes;
   CompileOptions options(cx);
-  options.setIntroductionType("js shell offThreadCompileModule")
+  options.setIntroductionType("js shell offThreadCompileModuleToStencil")
       .setFileAndLine("<string>", 1);
   options.setIsRunOnce(true).setSourceIsLazy(false);
   options.forceAsync = true;
@@ -6287,7 +6289,7 @@ static bool OffThreadCompileModule(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   OffThreadJob* job =
-      NewOffThreadJob(cx, ScriptKind::Module, options,
+      NewOffThreadJob(cx, ScriptKind::ModuleStencil, options,
                       OffThreadJob::Source(std::move(ownedChars)));
   if (!job) {
     return false;
@@ -6296,8 +6298,8 @@ static bool OffThreadCompileModule(JSContext* cx, unsigned argc, Value* vp) {
   JS::SourceText<char16_t> srcBuf;
   if (!srcBuf.init(cx, job->sourceChars(), length,
                    JS::SourceOwnership::Borrowed) ||
-      !JS::CompileOffThreadModule(cx, options, srcBuf,
-                                  OffThreadCompileScriptCallback, job)) {
+      !JS::CompileModuleToStencilOffThread(
+          cx, options, srcBuf, OffThreadCompileScriptCallback, job)) {
     job->cancel();
     DeleteOffThreadJob(cx, job);
     return false;
@@ -6307,11 +6309,12 @@ static bool OffThreadCompileModule(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool FinishOffThreadModule(JSContext* cx, unsigned argc, Value* vp) {
+static bool FinishOffThreadCompileModuleToStencil(JSContext* cx, unsigned argc,
+                                                  Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   OffThreadJob* job =
-      LookupOffThreadJobForArgs(cx, ScriptKind::Module, args, 0);
+      LookupOffThreadJobForArgs(cx, ScriptKind::ModuleStencil, args, 0);
   if (!job) {
     return false;
   }
@@ -6319,18 +6322,20 @@ static bool FinishOffThreadModule(JSContext* cx, unsigned argc, Value* vp) {
   JS::OffThreadToken* token = job->waitUntilDone(cx);
   MOZ_ASSERT(token);
 
-  RootedObject module(cx, JS::FinishOffThreadModule(cx, token));
+  RefPtr<JS::Stencil> stencil =
+      JS::FinishCompileModuleToStencilOffThread(cx, token);
   DeleteOffThreadJob(cx, job);
-  if (!module) {
+  if (!stencil) {
     return false;
   }
 
-  Rooted<ShellModuleObjectWrapper*> wrapper(
-      cx, ShellModuleObjectWrapper::create(cx, module.as<ModuleObject>()));
-  if (!wrapper) {
+  RootedObject stencilObj(cx,
+                          js::StencilObject::create(cx, std::move(stencil)));
+  if (!stencilObj) {
     return false;
   }
-  args.rval().setObject(*wrapper);
+
+  args.rval().setObject(*stencilObj);
   return true;
 }
 
@@ -9403,17 +9408,18 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "syntaxParse(code)",
 "  Check the syntax of a string, returning success value"),
 
-    JS_FN_HELP("offThreadCompileModule", OffThreadCompileModule, 1, 0,
-"offThreadCompileModule(code)",
+    JS_FN_HELP("offThreadCompileModuleToStencil", OffThreadCompileModuleToStencil, 1, 0,
+"offThreadCompileModuleToStencil(code)",
 "  Compile |code| on a helper thread, returning a job ID. To wait for the\n"
-"  compilation to finish and and get the module record object call\n"
-"  |finishOffThreadModule| passing the job ID."),
+"  compilation to finish and and get the module stencil object call\n"
+"  |finishOffThreadCompileModuleToStencil| passing the job ID."),
 
-    JS_FN_HELP("finishOffThreadModule", FinishOffThreadModule, 0, 0,
-"finishOffThreadModule([jobID])",
+    JS_FN_HELP("finishOffThreadCompileModuleToStencil", FinishOffThreadCompileModuleToStencil, 0, 0,
+"finishOffThreadCompileModuleToStencil([jobID])",
 "  Wait for an off-thread compilation job to complete. The job ID can be\n"
 "  ommitted if there is only one job pending. If an error occurred,\n"
-"  throw the appropriate exception; otherwise, return the module record object."),
+"  throw the appropriate exception; otherwise, return the module stencil\n"
+"  object."),
 
     JS_FN_HELP("offThreadDecodeScript", OffThreadDecodeScript, 1, 0,
 "offThreadDecodeScript(cacheEntry[, options])",
