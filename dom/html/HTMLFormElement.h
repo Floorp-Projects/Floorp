@@ -257,7 +257,8 @@ class HTMLFormElement final : public nsGenericHTMLElement,
    *
    * @param aFormData the form data object
    */
-  nsresult ConstructEntryList(FormData* aFormData);
+  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult ConstructEntryList(FormData* aFormData);
 
   /**
    * Whether the submission of this form has been ever prevented because of
