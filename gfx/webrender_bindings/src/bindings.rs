@@ -1993,10 +1993,10 @@ pub extern "C" fn wr_transaction_scroll_layer(
     txn: &mut Transaction,
     pipeline_id: WrPipelineId,
     scroll_id: u64,
-    new_scroll_origin: LayoutPoint,
+    new_scroll_offset: LayoutVector2D,
 ) {
     let scroll_id = ExternalScrollId(scroll_id, pipeline_id);
-    txn.scroll_node_with_id(new_scroll_origin, scroll_id, ScrollClamping::NoClamping);
+    txn.set_scroll_offset(scroll_id, new_scroll_offset);
 }
 
 #[no_mangle]

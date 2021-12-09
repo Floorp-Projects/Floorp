@@ -10,7 +10,7 @@
 
 use api::{DebugFlags, BlobImageHandler, Parameter, BoolParameter};
 use api::{DocumentId, ExternalScrollId, HitTestResult};
-use api::{IdNamespace, PipelineId, RenderNotifier, ScrollClamping};
+use api::{IdNamespace, PipelineId, RenderNotifier};
 use api::{NotificationRequest, Checkpoint, QualitySettings};
 use api::{PrimitiveKeyKind, RenderReasons};
 use api::units::*;
@@ -394,10 +394,10 @@ impl Document {
             FrameMsg::RequestHitTester(tx) => {
                 tx.send(self.shared_hit_tester.clone()).unwrap();
             }
-            FrameMsg::ScrollNodeWithId(origin, id, clamp) => {
-                profile_scope!("ScrollNodeWithScrollId");
+            FrameMsg::SetScrollOffset(id, offset) => {
+                profile_scope!("SetScrollOffset");
 
-                if self.scroll_node(origin, id, clamp) {
+                if self.set_scroll_offset(id, offset) {
                     self.hit_tester_is_valid = false;
                     self.frame_is_valid = false;
                 }
@@ -512,13 +512,12 @@ impl Document {
     }
 
     /// Returns true if the node actually changed position or false otherwise.
-    pub fn scroll_node(
+    pub fn set_scroll_offset(
         &mut self,
-        origin: LayoutPoint,
         id: ExternalScrollId,
-        clamp: ScrollClamping
+        offset: LayoutVector2D,
     ) -> bool {
-        self.spatial_tree.scroll_node(origin, id, clamp)
+        self.spatial_tree.set_scroll_offset(id, offset)
     }
 
     /// Update the state of tile caches when a new scene is being swapped in to

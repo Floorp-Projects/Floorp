@@ -804,7 +804,7 @@ void APZCTreeManager::SampleForWebRender(const Maybe<VsyncId>& aVsyncId,
     LayoutDevicePoint asyncScrollDelta = -layerTranslation / resolution;
     aTxn.UpdateScrollPosition(wr::AsPipelineId(apzc->GetGuid().mLayersId),
                               apzc->GetGuid().mScrollId,
-                              wr::ToLayoutPoint(asyncScrollDelta));
+                              wr::ToLayoutVector2D(asyncScrollDelta));
 
 #if defined(MOZ_WIDGET_ANDROID)
     // Send the root frame metrics to java through the UIController
