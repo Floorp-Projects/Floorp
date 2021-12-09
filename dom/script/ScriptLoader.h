@@ -14,6 +14,7 @@
 #include "nsCOMArray.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsTArray.h"
+#include "nsILoadInfo.h"  // nsSecurityFlags
 #include "nsINode.h"
 #include "nsIObserver.h"
 #include "nsIScriptLoaderObserver.h"
@@ -519,7 +520,29 @@ class ScriptLoader final : public nsISupports {
   /**
    * Start a load for aRequest's URI.
    */
-  nsresult StartLoad(ScriptLoadRequest* aRequest);
+  nsresult StartLoad(ScriptLoadRequest* aRequest) {
+    return aRequest->IsModuleRequest() ? StartModuleLoad(aRequest)
+                                       : StartClassicLoad(aRequest);
+  }
+
+  /**
+   * Start a load for a classic script URI.
+   * Sets up the necessary security flags before calling StartLoadInternal.
+   */
+  nsresult StartClassicLoad(ScriptLoadRequest* aRequest);
+
+  /**
+   * Start a load for a module script URI.
+   * Sets up the necessary security flags before calling StartLoadInternal.
+   * Short-circuits if the module is already being loaded.
+   */
+  nsresult StartModuleLoad(ScriptLoadRequest* aRequest);
+
+  /**
+   * Start a load for a module script URI.
+   */
+  nsresult StartLoadInternal(ScriptLoadRequest* aRequest,
+                             nsSecurityFlags securityFlags);
 
   /**
    * Abort the current stream, and re-start with a new load request from scratch
