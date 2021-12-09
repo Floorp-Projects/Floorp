@@ -221,6 +221,9 @@ const TEST_GLOBAL = {
     readJSON() {
       return Promise.resolve({});
     },
+    read() {
+      return Promise.resolve(new Uint8Array());
+    },
     makeDirectory() {
       return Promise.resolve(0);
     },

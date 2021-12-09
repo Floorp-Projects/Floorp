@@ -167,6 +167,9 @@ describe("Personality Provider Worker Class", () => {
         attachment: {
           filename: "file",
           size: "1",
+          // This hash matches the hash generated from the empty Uint8Array returned by the IOUtils.read stub.
+          hash:
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         },
       };
 
@@ -178,11 +181,30 @@ describe("Personality Provider Worker Class", () => {
 
       existsStub.resetHistory();
       statStub.resetHistory();
+      instance._downloadAttachment.resetHistory();
 
       attachmentStub = {
         attachment: {
           filename: "file",
           size: "2",
+        },
+      };
+
+      await instance.maybeDownloadAttachment(attachmentStub);
+      assert.calledThrice(existsStub);
+      assert.calledThrice(statStub);
+      assert.calledThrice(instance._downloadAttachment);
+
+      existsStub.resetHistory();
+      statStub.resetHistory();
+      instance._downloadAttachment.resetHistory();
+
+      attachmentStub = {
+        attachment: {
+          filename: "file",
+          size: "1",
+          // Bogus hash to trigger an update.
+          hash: "1234",
         },
       };
 
