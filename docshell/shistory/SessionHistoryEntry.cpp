@@ -243,6 +243,11 @@ void SessionHistoryInfo::FillLoadInfo(nsDocShellLoadState& aLoadState) const {
   aLoadState.SetInternalLoadFlags(flags);
 
   aLoadState.SetFirstParty(true);
+
+  // When we create a load state from the history info we already know if
+  // https-first was able to upgrade the request from http to https. There is no
+  // point in re-retrying to upgrade.
+  aLoadState.SetIsExemptFromHTTPSOnlyMode(true);
 }
 /* static */
 SessionHistoryInfo::SharedState SessionHistoryInfo::SharedState::Create(
