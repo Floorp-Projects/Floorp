@@ -415,7 +415,7 @@ class Animation : public DOMEventTargetHelper,
    */
   virtual void MaybeQueueCancelEvent(const StickyTimeDuration& aActiveTime){};
 
-  int32_t& CachedChildIndexRef() { return mCachedChildIndex; }
+  Maybe<uint32_t>& CachedChildIndexRef() { return mCachedChildIndex; }
 
   void SetPartialPrerendered(uint64_t aIdOnCompositor) {
     mIdOnCompositor = aIdOnCompositor;
@@ -595,7 +595,7 @@ class Animation : public DOMEventTargetHelper,
 
   // While ordering Animation objects for event dispatch, the index of the
   // target node in its parent may be cached in mCachedChildIndex.
-  int32_t mCachedChildIndex = -1;
+  Maybe<uint32_t> mCachedChildIndex;
 
   // Indicates if the animation is in the pending state (and what state it is
   // waiting to enter when it finished pending). We use this rather than
