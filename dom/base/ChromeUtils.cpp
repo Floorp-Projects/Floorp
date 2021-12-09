@@ -16,7 +16,6 @@
 
 #include "mozilla/Base64.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
-#include "mozilla/ErrorNames.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/IntentionalCrash.h"
 #include "mozilla/PerformanceMetricsCollector.h"
@@ -289,12 +288,6 @@ void ChromeUtils::AddProfilerMarker(
       profiler_add_marker(aName, category, std::move(options));
     }
   }
-}
-
-/* static */
-void ChromeUtils::GetXPCOMErrorName(GlobalObject& aGlobal, uint32_t aErrorCode,
-                                    nsACString& aRetval) {
-  GetErrorName((nsresult)aErrorCode, aRetval);
 }
 
 /* static */
