@@ -25,7 +25,7 @@ add_task(async function test_single_product_data() {
             <span itemprop="name">Bon Echo Microwave</span>
           </a>
 
-          <span itemprop="price" content="3.00">£3.00</span>
+          <span itemprop="price" content="3.50">£3.50</span>
           <span itemprop="priceCurrency" content="GBP"></span>
 
           <span itemprop="gtin" content="13572468"></span>
@@ -43,7 +43,7 @@ add_task(async function test_single_product_data() {
         [PageDataSchema.DATA_TYPE.PRODUCT]: {
           name: "Bon Echo Microwave",
           price: {
-            value: 3,
+            value: 3.5,
             currency: "GBP",
           },
         },
@@ -67,7 +67,7 @@ add_task(async function test_single_multiple_data() {
             <span itemprop="name">Bon Echo Microwave</span>
           </a>
 
-          <span itemprop="price" content="3.00">£3.00</span>
+          <span itemprop="price" content="3.28">£3.28</span>
           <span itemprop="priceCurrency" content="GBP"></span>
 
           <span itemprop="gtin" content="13572468"></span>
@@ -89,7 +89,7 @@ add_task(async function test_single_multiple_data() {
         [PageDataSchema.DATA_TYPE.PRODUCT]: {
           name: "Bon Echo Microwave",
           price: {
-            value: 3,
+            value: 3.28,
             currency: "GBP",
           },
         },
