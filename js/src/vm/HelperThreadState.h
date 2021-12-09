@@ -57,9 +57,6 @@ enum class ParseTaskKind {
   // The output is CompilationStencil for module.
   ModuleStencil,
 
-  // The output is JSScript.
-  ScriptDecode,
-
   // The output is CompilationStencil for script/stencil.
   StencilDecode,
 
@@ -406,7 +403,6 @@ class GlobalHelperThreadState {
   already_AddRefed<frontend::CompilationStencil> finishDecodeStencilTask(
       JSContext* cx, JS::OffThreadToken* token,
       JS::InstantiationStorage* storage);
-  JSScript* finishScriptDecodeTask(JSContext* cx, JS::OffThreadToken* token);
   bool finishMultiStencilsDecodeTask(
       JSContext* cx, JS::OffThreadToken* token,
       mozilla::Vector<RefPtr<JS::Stencil>>* stencils);
@@ -551,14 +547,6 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
   void runHelperThreadTask(AutoLockHelperThreadState& locked) override;
   void runTask(AutoLockHelperThreadState& lock);
   ThreadType threadType() override { return ThreadType::THREAD_TYPE_PARSE; }
-};
-
-struct ScriptDecodeTask : public ParseTask {
-  const JS::TranscodeRange range;
-
-  ScriptDecodeTask(JSContext* cx, const JS::TranscodeRange& range,
-                   JS::OffThreadCompileCallback callback, void* callbackData);
-  void parse(JSContext* cx) override;
 };
 
 struct MultiStencilsDecodeTask : public ParseTask {

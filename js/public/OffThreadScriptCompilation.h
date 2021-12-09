@@ -11,17 +11,13 @@
 #ifndef js_OffThreadScriptCompilation_h
 #define js_OffThreadScriptCompilation_h
 
-#include "mozilla/Range.h"   // mozilla::Range
-#include "mozilla/Vector.h"  // mozilla::Vector
-
 #include <stddef.h>  // size_t
 
 #include "jstypes.h"  // JS_PUBLIC_API
 
-#include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions
+#include "js/CompileOptions.h"  // JS::DecodeOptions, JS::ReadOnlyCompileOptions
 
 struct JS_PUBLIC_API JSContext;
-class JS_PUBLIC_API JSScript;
 
 namespace JS {
 
@@ -56,34 +52,6 @@ extern JS_PUBLIC_API bool CanCompileOffThread(
 extern JS_PUBLIC_API bool CanDecodeOffThread(JSContext* cx,
                                              const DecodeOptions& options,
                                              size_t length);
-
-// Decode stencil from the buffer and instantiate JSScript from it.
-//
-// The start of `buffer` and `cursor` should meet
-// IsTranscodingBytecodeAligned and IsTranscodingBytecodeOffsetAligned.
-// (This should be handled while encoding).
-//
-// `buffer` should be alive until the end of `FinishOffThreadScriptDecoder`.
-extern JS_PUBLIC_API OffThreadToken* DecodeOffThreadScript(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    mozilla::Vector<uint8_t>& buffer /* TranscodeBuffer& */, size_t cursor,
-    OffThreadCompileCallback callback, void* callbackData);
-
-// The start of `range` should be meet IsTranscodingBytecodeAligned and
-// AlignTranscodingBytecodeOffset.
-// (This should be handled while encoding).
-//
-// `range` should be alive until the end of `FinishOffThreadScriptDecoder`.
-extern JS_PUBLIC_API OffThreadToken* DecodeOffThreadScript(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    const mozilla::Range<uint8_t>& range /* TranscodeRange& */,
-    OffThreadCompileCallback callback, void* callbackData);
-
-extern JS_PUBLIC_API JSScript* FinishOffThreadScriptDecoder(
-    JSContext* cx, OffThreadToken* token);
-
-extern JS_PUBLIC_API void CancelOffThreadScriptDecoder(JSContext* cx,
-                                                       OffThreadToken* token);
 
 extern JS_PUBLIC_API void CancelMultiOffThreadScriptsDecoder(
     JSContext* cx, OffThreadToken* token);
