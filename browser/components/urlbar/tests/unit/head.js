@@ -936,11 +936,14 @@ async function check_results({
         `result.providerName at result index ${i}`
       );
     }
-    Assert.deepEqual(
-      getPayload(actual),
-      getPayload(expected),
-      `result.payload at result index ${i}`
-    );
+
+    if (expected.payload) {
+      Assert.deepEqual(
+        getPayload(actual),
+        getPayload(expected),
+        `result.payload at result index ${i}`
+      );
+    }
   }
 }
 
