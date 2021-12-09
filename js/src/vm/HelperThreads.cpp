@@ -655,6 +655,15 @@ struct DecodeStencilTask : public ParseTask {
   void parse(JSContext* cx) override;
 };
 
+struct MultiStencilsDecodeTask : public ParseTask {
+  JS::TranscodeSources* sources;
+
+  MultiStencilsDecodeTask(JSContext* cx, JS::TranscodeSources& sources,
+                          JS::OffThreadCompileCallback callback,
+                          void* callbackData);
+  void parse(JSContext* cx) override;
+};
+
 template <typename Unit>
 CompileToStencilTask<Unit>::CompileToStencilTask(
     JSContext* cx, JS::SourceText<Unit>& srcBuf,
@@ -995,7 +1004,7 @@ JS::OffThreadToken* js::StartOffThreadDecodeStencil(
 }
 
 JS::OffThreadToken* js::StartOffThreadDecodeMultiStencils(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
+    JSContext* cx, const JS::DecodeOptions& options,
     JS::TranscodeSources& sources, JS::OffThreadCompileCallback callback,
     void* callbackData) {
   auto task = cx->make_unique<MultiStencilsDecodeTask>(cx, sources, callback,
@@ -1004,7 +1013,10 @@ JS::OffThreadToken* js::StartOffThreadDecodeMultiStencils(
     return nullptr;
   }
 
-  return StartOffThreadParseTask(cx, std::move(task), options);
+  JS::CompileOptions compileOptions(cx);
+  options.copyTo(compileOptions);
+
+  return StartOffThreadParseTask(cx, std::move(task), compileOptions);
 }
 
 #ifdef DEBUG
