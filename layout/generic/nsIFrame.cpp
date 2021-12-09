@@ -4526,9 +4526,12 @@ nsresult nsIFrame::GetDataForTableSelection(
   nsCOMPtr<nsIContent> parentContent = tableOrCellContent->GetParent();
   if (!parentContent) return NS_ERROR_FAILURE;
 
-  int32_t offset = parentContent->ComputeIndexOf(tableOrCellContent);
+  const int32_t offset =
+      parentContent->ComputeIndexOf_Deprecated(tableOrCellContent);
   // Not likely?
-  if (offset < 0) return NS_ERROR_FAILURE;
+  if (offset < 0) {
+    return NS_ERROR_FAILURE;
+  }
 
   // Everything is OK -- set the return values
   parentContent.forget(aParentContent);
@@ -5292,7 +5295,7 @@ static FrameContentRange GetRangeForFrame(const nsIFrame* aFrame) {
 
   if (type == LayoutFrameType::Br) {
     nsIContent* parent = content->GetParent();
-    int32_t beginOffset = parent->ComputeIndexOf(content);
+    const int32_t beginOffset = parent->ComputeIndexOf_Deprecated(content);
     return FrameContentRange(parent, beginOffset, beginOffset);
   }
 
@@ -5308,7 +5311,7 @@ static FrameContentRange GetRangeForFrame(const nsIFrame* aFrame) {
   // TODO(emilio): Revise this in presence of Shadow DOM / display: contents,
   // it's likely that we don't want to just walk the light tree, and we need to
   // change the representation of FrameContentRange.
-  int32_t index = parent->ComputeIndexOf(content);
+  const int32_t index = parent->ComputeIndexOf_Deprecated(content);
   MOZ_ASSERT(index >= 0);
   return FrameContentRange(parent, index, index + 1);
 }
@@ -7828,7 +7831,7 @@ int32_t nsIFrame::ContentIndexInContainer(const nsIFrame* aFrame) {
   if (content) {
     nsIContent* parentContent = content->GetParent();
     if (parentContent) {
-      result = parentContent->ComputeIndexOf(content);
+      result = parentContent->ComputeIndexOf_Deprecated(content);
     }
   }
 
@@ -8133,7 +8136,7 @@ nsresult nsIFrame::GetPointFromOffset(int32_t inOffset, nsPoint* outPoint) {
   if (mContent) {
     nsIContent* newContent = mContent->GetParent();
     if (newContent) {
-      int32_t newOffset = newContent->ComputeIndexOf(mContent);
+      const int32_t newOffset = newContent->ComputeIndexOf_Deprecated(mContent);
 
       // Find the direction of the frame from the EmbeddingLevelProperty,
       // which is the resolved bidi level set in
@@ -8348,7 +8351,8 @@ nsresult nsIFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
                 nsIContent* parent = content->GetParent();
                 if (parent) {
                   aPos->mResultContent = parent;
-                  aPos->mContentOffset = parent->ComputeIndexOf(content);
+                  aPos->mContentOffset =
+                      parent->ComputeIndexOf_Deprecated(content);
                   aPos->mAttach = CARET_ASSOCIATE_BEFORE;
                   if ((point.x - offset.x + tempRect.x) > tempRect.width) {
                     aPos->mContentOffset++;  // go to end of this frame
@@ -8499,9 +8503,10 @@ static nsContentAndOffset FindLineBreakingFrame(nsIFrame* aFrame,
     // content. This probably shouldn't ever happen, but since it sometimes
     // does, we want to avoid crashing here.
     NS_ASSERTION(result.mContent, "Unexpected orphan content");
-    if (result.mContent)
-      result.mOffset = result.mContent->ComputeIndexOf(content) +
+    if (result.mContent) {
+      result.mOffset = result.mContent->ComputeIndexOf_Deprecated(content) +
                        (aDirection == eDirPrevious ? 1 : 0);
+    }
     return result;
   }
 

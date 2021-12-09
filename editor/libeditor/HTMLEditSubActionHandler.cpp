@@ -7384,7 +7384,8 @@ nsresult HTMLEditor::HandleInsertParagraphInListItemElement(
       if (HTMLEditUtils::IsEmptyNode(aListItem)) {
         if (aListItem.IsAnyOfHTMLElements(nsGkAtoms::dd, nsGkAtoms::dt)) {
           nsCOMPtr<nsINode> list = aListItem.GetParentNode();
-          int32_t itemOffset = list ? list->ComputeIndexOf(&aListItem) : -1;
+          const int32_t itemOffset =
+              list ? list->ComputeIndexOf_Deprecated(&aListItem) : -1;
 
           nsStaticAtom* nextDefinitionListItemTagName =
               aListItem.IsHTMLElement(nsGkAtoms::dt) ? nsGkAtoms::dd

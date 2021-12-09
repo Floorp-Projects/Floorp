@@ -50,7 +50,7 @@ int32_t CompareTextTracks::TrackChildPosition(TextTrack* aTextTrack) const {
   if (!trackElement) {
     return -1;
   }
-  return mMediaElement->ComputeIndexOf(trackElement);
+  return mMediaElement->ComputeIndexOf_Deprecated(trackElement);
 }
 
 bool CompareTextTracks::Equals(TextTrack* aOne, TextTrack* aTwo) const {
@@ -473,7 +473,7 @@ class CompareSimpleTextTrackEvents {
     if (aEvent->mTrack) {
       HTMLTrackElement* trackElement = aEvent->mTrack->GetTrackElement();
       if (trackElement) {
-        return mMediaElement->ComputeIndexOf(trackElement);
+        return mMediaElement->ComputeIndexOf_Deprecated(trackElement);
       }
     }
     return -1;

@@ -201,7 +201,7 @@ static bool ContentIsInTraversalRange(nsIContent* aContent, bool aIsPreMode,
   if (MOZ_UNLIKELY(NS_WARN_IF(!parentContent))) {
     return false;
   }
-  int32_t offsetInParent = parentContent->ComputeIndexOf(aContent);
+  int32_t offsetInParent = parentContent->ComputeIndexOf_Deprecated(aContent);
   NS_WARNING_ASSERTION(
       offsetInParent >= 0,
       "Content is not in the parent, is this called during a DOM mutation?");

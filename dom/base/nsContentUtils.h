@@ -524,7 +524,7 @@ class nsContentUtils {
         return mIndex;
       }
 
-      mIndex = aParent->ComputeIndexOf(aChild);
+      mIndex = aParent->ComputeIndexOf_Deprecated(aChild);
       mParent = aParent;
       mChild = aChild;
       return mIndex;

@@ -12983,7 +12983,7 @@ static nsINode* GetCorrespondingNodeInDocument(const nsINode* aOrigNode,
   nsTArray<int32_t> indexArray;
   const nsINode* current = aOrigNode;
   while (const nsINode* parent = current->GetParentNode()) {
-    int32_t index = parent->ComputeIndexOf(current);
+    const int32_t index = parent->ComputeIndexOf_Deprecated(current);
     MOZ_ASSERT(index >= 0);
     indexArray.AppendElement(index);
     current = parent;
