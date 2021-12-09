@@ -575,7 +575,8 @@ void gfxMacFont::InitMetricsFromPlatform() {
   mIsValid = true;
 }
 
-already_AddRefed<ScaledFont> gfxMacFont::GetScaledFont(DrawTarget* aTarget) {
+already_AddRefed<ScaledFont> gfxMacFont::GetScaledFont(
+    const TextRunDrawParams& aRunParams) {
   if (!mAzureScaledFont) {
     gfxFontEntry* fe = GetFontEntry();
     bool hasColorGlyphs = fe->HasColorBitmapTable() || fe->TryGetColorGlyphs();

@@ -73,7 +73,8 @@ bool gfxGDIFont::ShapeText(DrawTarget* aDrawTarget, const char16_t* aText,
 
 const gfxFont::Metrics& gfxGDIFont::GetHorizontalMetrics() { return *mMetrics; }
 
-already_AddRefed<ScaledFont> gfxGDIFont::GetScaledFont(DrawTarget* aTarget) {
+already_AddRefed<ScaledFont> gfxGDIFont::GetScaledFont(
+    const TextRunDrawParams& aRunParams) {
   if (!mAzureScaledFont) {
     LOGFONT lf;
     GetObject(GetHFONT(), sizeof(LOGFONT), &lf);

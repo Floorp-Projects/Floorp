@@ -164,7 +164,8 @@ gfxFT2Font::gfxFT2Font(const RefPtr<UnscaledFontFreeType>& aUnscaledFont,
 
 gfxFT2Font::~gfxFT2Font() {}
 
-already_AddRefed<ScaledFont> gfxFT2Font::GetScaledFont(DrawTarget* aTarget) {
+already_AddRefed<ScaledFont> gfxFT2Font::GetScaledFont(
+    const TextRunDrawParams& aRunParams) {
   if (!mAzureScaledFont) {
     mAzureScaledFont = Factory::CreateScaledFontForFreeTypeFont(
         GetUnscaledFont(), GetAdjustedSize(), mFTFace,
