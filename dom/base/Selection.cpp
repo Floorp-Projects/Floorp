@@ -521,7 +521,7 @@ Selection::Selection(SelectionType aSelectionType,
 Selection::~Selection() { Disconnect(); }
 
 void Selection::Disconnect() {
-  SetAnchorFocusRange(-1);
+  RemoveAnchorFocusRange();
 
   mStyledRanges.UnregisterSelection();
 
@@ -622,17 +622,11 @@ const RangeBoundary& Selection::FocusRef() const {
   return mAnchorFocusRange->StartRef();
 }
 
-void Selection::SetAnchorFocusRange(int32_t indx) {
-  if (indx >= (int32_t)mStyledRanges.Length()) {
+void Selection::SetAnchorFocusRange(size_t aIndex) {
+  if (aIndex >= mStyledRanges.Length()) {
     return;
   }
-
-  if (indx < 0)  // release all
-  {
-    mAnchorFocusRange = nullptr;
-  } else {
-    mAnchorFocusRange = mStyledRanges.mRanges[indx].mRange;
-  }
+  mAnchorFocusRange = mStyledRanges.mRanges[aIndex].mRange;
 }
 
 static int32_t CompareToRangeStart(const nsINode& aCompareNode,
@@ -1106,7 +1100,7 @@ nsresult Selection::StyledRanges::RemoveCollapsedRanges() {
 }
 
 void Selection::Clear(nsPresContext* aPresContext) {
-  SetAnchorFocusRange(-1);
+  RemoveAnchorFocusRange();
 
   mStyledRanges.UnregisterSelection();
   for (uint32_t i = 0; i < mStyledRanges.Length(); ++i) {
@@ -1944,7 +1938,7 @@ void Selection::AddRangeAndSelectFramesAndNotifyListeners(nsRange& aRange,
 
   MOZ_ASSERT(rangeIndex < static_cast<int32_t>(mStyledRanges.Length()));
 
-  SetAnchorFocusRange(rangeIndex);
+  SetAnchorFocusRange(static_cast<size_t>(rangeIndex));
 
   // Make sure the caret appears on the next line, if at a newline
   if (mSelectionType == SelectionType::eNormal) {
@@ -2020,16 +2014,19 @@ void Selection::RemoveRangeAndUnselectFramesAndNotifyListeners(
     SelectFrames(presContext, affectedRanges[i], true);
   }
 
-  int32_t cnt = mStyledRanges.Length();
   if (&aRange == mAnchorFocusRange) {
-    // Reset anchor to LAST range or clear it if there are no ranges.
-    SetAnchorFocusRange(cnt - 1);
+    const size_t rangeCount = mStyledRanges.Length();
+    if (rangeCount) {
+      SetAnchorFocusRange(rangeCount - 1);
+    } else {
+      RemoveAnchorFocusRange();
+    }
 
     // When the selection is user-created it makes sense to scroll the range
     // into view. The spell-check selection, however, is created and destroyed
     // in the background. We don't want to scroll in this case or the view
     // might appear to be moving randomly (bug 337871).
-    if (mSelectionType != SelectionType::eSpellCheck && cnt > 0) {
+    if (mSelectionType != SelectionType::eSpellCheck && rangeCount) {
       ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION);
     }
   }
@@ -2270,15 +2267,22 @@ nsresult Selection::SetAnchorFocusToRange(nsRange* aRange) {
       IsCollapsed() ? DispatchSelectstartEvent::Maybe
                     : DispatchSelectstartEvent::No;
 
-  nsresult res =
+  nsresult rv =
       mStyledRanges.RemoveRangeAndUnregisterSelection(*mAnchorFocusRange);
-  if (NS_FAILED(res)) return res;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
-  int32_t aOutIndex = -1;
-  res =
-      AddRangesForSelectableNodes(aRange, &aOutIndex, dispatchSelectstartEvent);
-  if (NS_FAILED(res)) return res;
-  SetAnchorFocusRange(aOutIndex);
+  int32_t outIndex = -1;
+  rv = AddRangesForSelectableNodes(aRange, &outIndex, dispatchSelectstartEvent);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (outIndex >= 0) {
+    SetAnchorFocusRange(static_cast<size_t>(outIndex));
+  } else {
+    RemoveAnchorFocusRange();
+  }
 
   return NS_OK;
 }
