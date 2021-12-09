@@ -23,10 +23,14 @@
 #include "mozilla/ToString.h"
 #include "WritingModes.h"
 
+// For collecting other people's log, tell `MOZ_LOG=IMEHandler:4,sync`
+// rather than `MOZ_LOG=IMEHandler:5,sync` since using `5` may create too
+// big file.
+// Therefore you shouldn't use `LogLevel::Verbose` for logging usual behavior.
+mozilla::LazyLogModule gIMELog("IMEHandler");
+
 namespace mozilla {
 namespace widget {
-
-LazyLogModule gGtkIMLog("nsGtkIMModuleWidgets");
 
 static inline const char* ToChar(bool aBool) {
   return aBool ? "true" : "false";
@@ -537,7 +541,7 @@ void IMContextWrapper::Init() {
   mDummyContext = gtk_im_multicontext_new();
   gtk_im_context_set_client_window(mDummyContext, gdkWindow);
 
-  MOZ_LOG(gGtkIMLog, LogLevel::Info,
+  MOZ_LOG(gIMELog, LogLevel::Info,
           ("0x%p Init(), mOwnerWindow=%p, mContext=%p (im=\"%s\"), "
            "mIsIMInAsyncKeyHandlingMode=%s, mIsKeySnooped=%s, "
            "mSimpleContext=%p, mDummyContext=%p, "
@@ -557,7 +561,7 @@ IMContextWrapper::~IMContextWrapper() {
   if (this == sLastFocusedContext) {
     sLastFocusedContext = nullptr;
   }
-  MOZ_LOG(gGtkIMLog, LogLevel::Info, ("0x%p ~IMContextWrapper()", this));
+  MOZ_LOG(gIMELog, LogLevel::Info, ("0x%p ~IMContextWrapper()", this));
 }
 
 NS_IMETHODIMP
@@ -631,7 +635,7 @@ IMContextWrapper::GetIMENotificationRequests() {
 
 void IMContextWrapper::OnDestroyWindow(nsWindow* aWindow) {
   MOZ_LOG(
-      gGtkIMLog, LogLevel::Info,
+      gIMELog, LogLevel::Info,
       ("0x%p OnDestroyWindow(aWindow=0x%p), mLastFocusedWindow=0x%p, "
        "mOwnerWindow=0x%p, mLastFocusedModule=0x%p",
        this, aWindow, mLastFocusedWindow, mOwnerWindow, sLastFocusedContext));
@@ -693,7 +697,7 @@ void IMContextWrapper::OnDestroyWindow(nsWindow* aWindow) {
   mInputContext.mIMEState.mEnabled = IMEEnabled::Disabled;
   mPostingKeyEvents.Clear();
 
-  MOZ_LOG(gGtkIMLog, LogLevel::Debug,
+  MOZ_LOG(gIMELog, LogLevel::Debug,
           ("0x%p   OnDestroyWindow(), succeeded, Completely destroyed", this));
 }
 
@@ -717,12 +721,12 @@ void IMContextWrapper::PrepareToDestroyContext(GtkIMContext* aContext) {
       GType IIMContextType = g_type_from_name("GtkIMContextIIIM");
       if (IIMContextType) {
         sGtkIIIMContextClass = g_type_class_ref(IIMContextType);
-        MOZ_LOG(gGtkIMLog, LogLevel::Info,
+        MOZ_LOG(gIMELog, LogLevel::Info,
                 ("0x%p PrepareToDestroyContext(), added to reference to "
                  "GtkIMContextIIIM class to prevent it from being unloaded",
                  this));
       } else {
-        MOZ_LOG(gGtkIMLog, LogLevel::Error,
+        MOZ_LOG(gIMELog, LogLevel::Error,
                 ("0x%p PrepareToDestroyContext(), FAILED to prevent the "
                  "IIIM module from being uploaded",
                  this));
@@ -736,7 +740,7 @@ void IMContextWrapper::OnFocusWindow(nsWindow* aWindow) {
     return;
   }
 
-  MOZ_LOG(gGtkIMLog, LogLevel::Info,
+  MOZ_LOG(gIMELog, LogLevel::Info,
           ("0x%p OnFocusWindow(aWindow=0x%p), mLastFocusedWindow=0x%p", this,
            aWindow, mLastFocusedWindow));
   mLastFocusedWindow = aWindow;
@@ -748,7 +752,7 @@ void IMContextWrapper::OnBlurWindow(nsWindow* aWindow) {
     return;
   }
 
-  MOZ_LOG(gGtkIMLog, LogLevel::Info,
+  MOZ_LOG(gIMELog, LogLevel::Info,
           ("0x%p OnBlurWindow(aWindow=0x%p), mLastFocusedWindow=0x%p, "
            "mIsIMFocused=%s",
            this, aWindow, mLastFocusedWindow, ToChar(mIsIMFocused)));
@@ -769,9 +773,9 @@ KeyHandlingState IMContextWrapper::OnKeyEvent(
     return KeyHandlingState::eNotHandled;
   }
 
-  MOZ_LOG(gGtkIMLog, LogLevel::Info, (">>>>>>>>>>>>>>>>"));
+  MOZ_LOG(gIMELog, LogLevel::Info, (">>>>>>>>>>>>>>>>"));
   MOZ_LOG(
-      gGtkIMLog, LogLevel::Info,
+      gIMELog, LogLevel::Info,
       ("0x%p OnKeyEvent(aCaller=0x%p, "
        "aEvent(0x%p): { type=%s, keyval=%s, unicode=0x%X, state=%s, "
        "time=%u, hardware_keycode=%u, group=%u }, "
@@ -782,7 +786,7 @@ KeyHandlingState IMContextWrapper::OnKeyEvent(
        aEvent->hardware_keycode, aEvent->group,
        ToChar(aKeyboardEventWasDispatched)));
   MOZ_LOG(
-      gGtkIMLog, LogLevel::Info,
+      gIMELog, LogLevel::Info,
       ("0x%p   OnKeyEvent(), mMaybeInDeadKeySequence=%s, "
        "mCompositionState=%s, current context=%p, active context=%p, "
        "mIMContextID=%s, mIsIMInAsyncKeyHandlingMode=%s",
@@ -791,7 +795,7 @@ KeyHandlingState IMContextWrapper::OnKeyEvent(
        ToChar(mIsIMInAsyncKeyHandlingMode)));
 
   if (aCaller != mLastFocusedWindow) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   OnKeyEvent(), FAILED, the caller isn't focused "
              "window, mLastFocusedWindow=0x%p",
              this, mLastFocusedWindow));
@@ -802,7 +806,7 @@ KeyHandlingState IMContextWrapper::OnKeyEvent(
   // current context since the user expects so.
   GtkIMContext* currentContext = GetCurrentContext();
   if (MOZ_UNLIKELY(!currentContext)) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   OnKeyEvent(), FAILED, there are no context", this));
     return KeyHandlingState::eNotHandled;
   }
@@ -860,7 +864,7 @@ KeyHandlingState IMContextWrapper::OnKeyEvent(
           isHandlingAsyncEvent =
               mPostingKeyEvents.IndexOf(aEvent) != GdkEventKeyQueue::NoIndex();
           if (isHandlingAsyncEvent) {
-            MOZ_LOG(gGtkIMLog, LogLevel::Info,
+            MOZ_LOG(gIMELog, LogLevel::Info,
                     ("0x%p   OnKeyEvent(), aEvent->state does not have "
                      "IBUS_IGNORED_MASK but "
                      "same event in the queue.  So, assuming it's a "
@@ -873,7 +877,7 @@ KeyHandlingState IMContextWrapper::OnKeyEvent(
         // event queue first.  Otherwise the following blocks cannot use
         // `break`.
         if (isHandlingAsyncEvent) {
-          MOZ_LOG(gGtkIMLog, LogLevel::Info,
+          MOZ_LOG(gIMELog, LogLevel::Info,
                   ("0x%p   OnKeyEvent(), aEvent->state has IBUS_IGNORED_MASK "
                    "or aEvent is in the "
                    "posting event queue, so, it won't be handled "
@@ -932,7 +936,7 @@ KeyHandlingState IMContextWrapper::OnKeyEvent(
           isHandlingAsyncEvent =
               mPostingKeyEvents.IndexOf(aEvent) != GdkEventKeyQueue::NoIndex();
           if (isHandlingAsyncEvent) {
-            MOZ_LOG(gGtkIMLog, LogLevel::Info,
+            MOZ_LOG(gIMELog, LogLevel::Info,
                     ("0x%p   OnKeyEvent(), aEvent->state does not have "
                      "FcitxKeyState_IgnoredMask "
                      "but same event in the queue.  So, assuming it's a "
@@ -963,7 +967,7 @@ KeyHandlingState IMContextWrapper::OnKeyEvent(
         // editor cannot use IME actually.
 
         if (isHandlingAsyncEvent) {
-          MOZ_LOG(gGtkIMLog, LogLevel::Info,
+          MOZ_LOG(gIMELog, LogLevel::Info,
                   ("0x%p   OnKeyEvent(), aEvent->state has "
                    "FcitxKeyState_IgnoredMask or aEvent is in "
                    "the posting event queue, so, it won't be handled "
@@ -1053,7 +1057,7 @@ KeyHandlingState IMContextWrapper::OnKeyEvent(
     // need to use information of this key event to dispatch an KeyDown
     // or eKeyUp event later.
     else {
-      MOZ_LOG(gGtkIMLog, LogLevel::Info,
+      MOZ_LOG(gIMELog, LogLevel::Info,
               ("0x%p   OnKeyEvent(), putting aEvent into the queue...", this));
       mPostingKeyEvents.PutEvent(aEvent);
     }
@@ -1071,7 +1075,7 @@ KeyHandlingState IMContextWrapper::OnKeyEvent(
   }
 
   MOZ_LOG(
-      gGtkIMLog, LogLevel::Debug,
+      gIMELog, LogLevel::Debug,
       ("0x%p   OnKeyEvent(), succeeded, filterThisEvent=%s "
        "(isFiltered=%s, mFallbackToKeyEvent=%s, "
        "probablyHandledAsynchronously=%s, maybeHandledAsynchronously=%s), "
@@ -1083,7 +1087,7 @@ KeyHandlingState IMContextWrapper::OnKeyEvent(
        ToChar(maybeHandledAsynchronously), mPostingKeyEvents.Length(),
        GetCompositionStateName(), ToChar(mMaybeInDeadKeySequence),
        ToChar(mKeyboardEventWasDispatched), ToChar(mKeyboardEventWasConsumed)));
-  MOZ_LOG(gGtkIMLog, LogLevel::Info, ("<<<<<<<<<<<<<<<<\n\n"));
+  MOZ_LOG(gIMELog, LogLevel::Info, ("<<<<<<<<<<<<<<<<\n\n"));
 
   if (filterThisEvent) {
     return KeyHandlingState::eHandled;
@@ -1105,7 +1109,7 @@ KeyHandlingState IMContextWrapper::OnKeyEvent(
 
 void IMContextWrapper::OnFocusChangeInGecko(bool aFocus) {
   MOZ_LOG(
-      gGtkIMLog, LogLevel::Info,
+      gIMELog, LogLevel::Info,
       ("0x%p OnFocusChangeInGecko(aFocus=%s), "
        "mCompositionState=%s, mIsIMFocused=%s",
        this, ToChar(aFocus), GetCompositionStateName(), ToChar(mIsIMFocused)));
@@ -1123,13 +1127,13 @@ void IMContextWrapper::OnFocusChangeInGecko(bool aFocus) {
 }
 
 void IMContextWrapper::ResetIME() {
-  MOZ_LOG(gGtkIMLog, LogLevel::Info,
+  MOZ_LOG(gIMELog, LogLevel::Info,
           ("0x%p ResetIME(), mCompositionState=%s, mIsIMFocused=%s", this,
            GetCompositionStateName(), ToChar(mIsIMFocused)));
 
   GtkIMContext* activeContext = GetActiveContext();
   if (MOZ_UNLIKELY(!activeContext)) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   ResetIME(), FAILED, there are no context", this));
     return;
   }
@@ -1152,7 +1156,7 @@ void IMContextWrapper::ResetIME() {
   GetCompositionString(activeContext, compositionString);
 
   MOZ_LOG(
-      gGtkIMLog, LogLevel::Debug,
+      gIMELog, LogLevel::Debug,
       ("0x%p   ResetIME() called gtk_im_context_reset(), "
        "activeContext=0x%p, mCompositionState=%s, compositionString=%s, "
        "mIsIMFocused=%s",
@@ -1175,13 +1179,13 @@ nsresult IMContextWrapper::EndIMEComposition(nsWindow* aCaller) {
     return NS_OK;
   }
 
-  MOZ_LOG(gGtkIMLog, LogLevel::Info,
+  MOZ_LOG(gIMELog, LogLevel::Info,
           ("0x%p EndIMEComposition(aCaller=0x%p), "
            "mCompositionState=%s",
            this, aCaller, GetCompositionStateName()));
 
   if (aCaller != mLastFocusedWindow) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   EndIMEComposition(), FAILED, the caller isn't "
              "focused window, mLastFocusedWindow=0x%p",
              this, mLastFocusedWindow));
@@ -1247,14 +1251,14 @@ void IMContextWrapper::SetInputContext(nsWindow* aCaller,
     return;
   }
 
-  MOZ_LOG(gGtkIMLog, LogLevel::Info,
+  MOZ_LOG(gIMELog, LogLevel::Info,
           ("0x%p SetInputContext(aCaller=0x%p, aContext={ mIMEState={ "
            "mEnabled=%s }, mHTMLInputType=%s })",
            this, aCaller, ToString(aContext->mIMEState.mEnabled).c_str(),
            NS_ConvertUTF16toUTF8(aContext->mHTMLInputType).get()));
 
   if (aCaller != mLastFocusedWindow) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   SetInputContext(), FAILED, "
              "the caller isn't focused window, mLastFocusedWindow=0x%p",
              this, mLastFocusedWindow));
@@ -1262,7 +1266,7 @@ void IMContextWrapper::SetInputContext(nsWindow* aCaller,
   }
 
   if (!mContext) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   SetInputContext(), FAILED, "
              "there are no context",
              this));
@@ -1271,7 +1275,7 @@ void IMContextWrapper::SetInputContext(nsWindow* aCaller,
 
   if (sLastFocusedContext != this) {
     mInputContext = *aContext;
-    MOZ_LOG(gGtkIMLog, LogLevel::Debug,
+    MOZ_LOG(gIMELog, LogLevel::Debug,
             ("0x%p   SetInputContext(), succeeded, "
              "but we're not active",
              this));
@@ -1397,7 +1401,7 @@ bool IMContextWrapper::IsEnabled() const {
 
 void IMContextWrapper::Focus() {
   MOZ_LOG(
-      gGtkIMLog, LogLevel::Info,
+      gIMELog, LogLevel::Info,
       ("0x%p Focus(), sLastFocusedContext=0x%p", this, sLastFocusedContext));
 
   if (mIsIMFocused) {
@@ -1408,7 +1412,7 @@ void IMContextWrapper::Focus() {
 
   GtkIMContext* currentContext = GetCurrentContext();
   if (!currentContext) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   Focus(), FAILED, there are no context", this));
     return;
   }
@@ -1436,7 +1440,7 @@ void IMContextWrapper::Focus() {
 }
 
 void IMContextWrapper::Blur() {
-  MOZ_LOG(gGtkIMLog, LogLevel::Info,
+  MOZ_LOG(gIMELog, LogLevel::Info,
           ("0x%p Blur(), mIsIMFocused=%s", this, ToChar(mIsIMFocused)));
 
   if (!mIsIMFocused) {
@@ -1445,7 +1449,7 @@ void IMContextWrapper::Blur() {
 
   GtkIMContext* currentContext = GetCurrentContext();
   if (!currentContext) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   Blur(), FAILED, there are no context", this));
     return;
   }
@@ -1471,7 +1475,7 @@ void IMContextWrapper::OnSelectionChange(
   const IMENotification::SelectionChangeDataBase& selectionChangeData =
       aIMENotification.mSelectionChangeData;
 
-  MOZ_LOG(gGtkIMLog, LogLevel::Info,
+  MOZ_LOG(gIMELog, LogLevel::Info,
           ("0x%p OnSelectionChange(aCaller=0x%p, aIMENotification={ "
            "mSelectionChangeData=%s }), "
            "mCompositionState=%s, mIsDeletingSurrounding=%s, "
@@ -1482,7 +1486,7 @@ void IMContextWrapper::OnSelectionChange(
            ToChar(isSelectionRangeChanged)));
 
   if (aCaller != mLastFocusedWindow) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   OnSelectionChange(), FAILED, "
              "the caller isn't focused window, mLastFocusedWindow=0x%p",
              this, mLastFocusedWindow));
@@ -1502,7 +1506,7 @@ void IMContextWrapper::OnSelectionChange(
   // we should ignore selection change notification.
   if (mCompositionState == eCompositionState_CompositionStartDispatched) {
     if (NS_WARN_IF(!mSelection.IsValid())) {
-      MOZ_LOG(gGtkIMLog, LogLevel::Error,
+      MOZ_LOG(gIMELog, LogLevel::Error,
               ("0x%p   OnSelectionChange(), FAILED, "
                "new offset is too large, cannot keep composing",
                this));
@@ -1511,7 +1515,7 @@ void IMContextWrapper::OnSelectionChange(
       mCompositionStart = mSelection.mOffset;
       // XXX We should modify mSelectedStringRemovedByComposition?
       // But how?
-      MOZ_LOG(gGtkIMLog, LogLevel::Debug,
+      MOZ_LOG(gIMELog, LogLevel::Debug,
               ("0x%p   OnSelectionChange(), ignored, mCompositionStart "
                "is updated to %u, the selection change doesn't cause "
                "resetting IM context",
@@ -1580,14 +1584,14 @@ void IMContextWrapper::OnStartCompositionCallback(GtkIMContext* aContext,
 }
 
 void IMContextWrapper::OnStartCompositionNative(GtkIMContext* aContext) {
-  MOZ_LOG(gGtkIMLog, LogLevel::Info,
+  MOZ_LOG(gIMELog, LogLevel::Info,
           ("0x%p OnStartCompositionNative(aContext=0x%p), "
            "current context=0x%p, mComposingContext=0x%p",
            this, aContext, GetCurrentContext(), mComposingContext));
 
   // See bug 472635, we should do nothing if IM context doesn't match.
   if (GetCurrentContext() != aContext) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   OnStartCompositionNative(), FAILED, "
              "given context doesn't match",
              this));
@@ -1596,7 +1600,7 @@ void IMContextWrapper::OnStartCompositionNative(GtkIMContext* aContext) {
 
   if (mComposingContext && aContext != mComposingContext) {
     // XXX For now, we should ignore this odd case, just logging.
-    MOZ_LOG(gGtkIMLog, LogLevel::Warning,
+    MOZ_LOG(gIMELog, LogLevel::Warning,
             ("0x%p   OnStartCompositionNative(), Warning, "
              "there is already a composing context but starting new "
              "composition with different context",
@@ -1620,7 +1624,7 @@ void IMContextWrapper::OnEndCompositionCallback(GtkIMContext* aContext,
 }
 
 void IMContextWrapper::OnEndCompositionNative(GtkIMContext* aContext) {
-  MOZ_LOG(gGtkIMLog, LogLevel::Info,
+  MOZ_LOG(gIMELog, LogLevel::Info,
           ("0x%p OnEndCompositionNative(aContext=0x%p), mComposingContext=0x%p",
            this, aContext, mComposingContext));
 
@@ -1628,7 +1632,7 @@ void IMContextWrapper::OnEndCompositionNative(GtkIMContext* aContext) {
   // Note that if this is called after focus move, the context may different
   // from any our owning context.
   if (!IsValidContext(aContext)) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p    OnEndCompositionNative(), FAILED, "
              "given context doesn't match with any context",
              this));
@@ -1637,7 +1641,7 @@ void IMContextWrapper::OnEndCompositionNative(GtkIMContext* aContext) {
 
   // If we've not started composition with aContext, we should ignore it.
   if (aContext != mComposingContext) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Warning,
+    MOZ_LOG(gIMELog, LogLevel::Warning,
             ("0x%p    OnEndCompositionNative(), Warning, "
              "given context doesn't match with mComposingContext",
              this));
@@ -1667,7 +1671,7 @@ void IMContextWrapper::OnChangeCompositionCallback(GtkIMContext* aContext,
 }
 
 void IMContextWrapper::OnChangeCompositionNative(GtkIMContext* aContext) {
-  MOZ_LOG(gGtkIMLog, LogLevel::Info,
+  MOZ_LOG(gIMELog, LogLevel::Info,
           ("0x%p OnChangeCompositionNative(aContext=0x%p), "
            "mComposingContext=0x%p",
            this, aContext, mComposingContext));
@@ -1676,7 +1680,7 @@ void IMContextWrapper::OnChangeCompositionNative(GtkIMContext* aContext) {
   // Note that if this is called after focus move, the context may different
   // from any our owning context.
   if (!IsValidContext(aContext)) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   OnChangeCompositionNative(), FAILED, "
              "given context doesn't match with any context",
              this));
@@ -1685,7 +1689,7 @@ void IMContextWrapper::OnChangeCompositionNative(GtkIMContext* aContext) {
 
   if (mComposingContext && aContext != mComposingContext) {
     // XXX For now, we should ignore this odd case, just logging.
-    MOZ_LOG(gGtkIMLog, LogLevel::Warning,
+    MOZ_LOG(gIMELog, LogLevel::Warning,
             ("0x%p   OnChangeCompositionNative(), Warning, "
              "given context doesn't match with composing context",
              this));
@@ -1694,7 +1698,7 @@ void IMContextWrapper::OnChangeCompositionNative(GtkIMContext* aContext) {
   nsAutoString compositionString;
   GetCompositionString(aContext, compositionString);
   if (!IsComposing() && compositionString.IsEmpty()) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Warning,
+    MOZ_LOG(gIMELog, LogLevel::Warning,
             ("0x%p   OnChangeCompositionNative(), Warning, does nothing "
              "because has not started composition and composing string is "
              "empty",
@@ -1714,14 +1718,14 @@ gboolean IMContextWrapper::OnRetrieveSurroundingCallback(
 }
 
 gboolean IMContextWrapper::OnRetrieveSurroundingNative(GtkIMContext* aContext) {
-  MOZ_LOG(gGtkIMLog, LogLevel::Info,
+  MOZ_LOG(gIMELog, LogLevel::Info,
           ("0x%p OnRetrieveSurroundingNative(aContext=0x%p), "
            "current context=0x%p",
            this, aContext, GetCurrentContext()));
 
   // See bug 472635, we should do nothing if IM context doesn't match.
   if (GetCurrentContext() != aContext) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   OnRetrieveSurroundingNative(), FAILED, "
              "given context doesn't match",
              this));
@@ -1757,14 +1761,14 @@ gboolean IMContextWrapper::OnDeleteSurroundingCallback(
 gboolean IMContextWrapper::OnDeleteSurroundingNative(GtkIMContext* aContext,
                                                      gint aOffset,
                                                      gint aNChars) {
-  MOZ_LOG(gGtkIMLog, LogLevel::Info,
+  MOZ_LOG(gIMELog, LogLevel::Info,
           ("0x%p OnDeleteSurroundingNative(aContext=0x%p, aOffset=%d, "
            "aNChar=%d), current context=0x%p",
            this, aContext, aOffset, aNChars, GetCurrentContext()));
 
   // See bug 472635, we should do nothing if IM context doesn't match.
   if (GetCurrentContext() != aContext) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   OnDeleteSurroundingNative(), FAILED, "
              "given context doesn't match",
              this));
@@ -1778,7 +1782,7 @@ gboolean IMContextWrapper::OnDeleteSurroundingNative(GtkIMContext* aContext,
   }
 
   // failed
-  MOZ_LOG(gGtkIMLog, LogLevel::Error,
+  MOZ_LOG(gIMELog, LogLevel::Error,
           ("0x%p   OnDeleteSurroundingNative(), FAILED, "
            "cannot delete text",
            this));
@@ -1798,7 +1802,7 @@ void IMContextWrapper::OnCommitCompositionNative(GtkIMContext* aContext,
   const gchar* commitString = aUTF8Char ? aUTF8Char : &emptyStr;
   NS_ConvertUTF8toUTF16 utf16CommitString(commitString);
 
-  MOZ_LOG(gGtkIMLog, LogLevel::Info,
+  MOZ_LOG(gIMELog, LogLevel::Info,
           ("0x%p OnCommitCompositionNative(aContext=0x%p), "
            "current context=0x%p, active context=0x%p, commitString=\"%s\", "
            "mProcessingKeyEvent=0x%p, IsComposingOn(aContext)=%s",
@@ -1807,7 +1811,7 @@ void IMContextWrapper::OnCommitCompositionNative(GtkIMContext* aContext,
 
   // See bug 472635, we should do nothing if IM context doesn't match.
   if (!IsValidContext(aContext)) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   OnCommitCompositionNative(), FAILED, "
              "given context doesn't match",
              this));
@@ -1820,7 +1824,7 @@ void IMContextWrapper::OnCommitCompositionNative(GtkIMContext* aContext,
   // events with empty string.  Of course, they are unnecessary events
   // for Web applications and our editor.
   if (!IsComposingOn(aContext) && utf16CommitString.IsEmpty()) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Warning,
+    MOZ_LOG(gIMELog, LogLevel::Warning,
             ("0x%p   OnCommitCompositionNative(), Warning, does nothing "
              "because has not started composition and commit string is empty",
              this));
@@ -1850,7 +1854,7 @@ void IMContextWrapper::OnCommitCompositionNative(GtkIMContext* aContext,
     // mMaybeInDeadKeySequence will be set to false by OnKeyEvent()
     // since we set mFallbackToKeyEvent to true here.
     if (!strcmp(commitString, keyval_utf8)) {
-      MOZ_LOG(gGtkIMLog, LogLevel::Info,
+      MOZ_LOG(gIMELog, LogLevel::Info,
               ("0x%p   OnCommitCompositionNative(), "
                "we'll send normal key event",
                this));
@@ -1873,7 +1877,7 @@ void IMContextWrapper::OnCommitCompositionNative(GtkIMContext* aContext,
       RefPtr<TextEventDispatcher> dispatcher = GetTextEventDispatcher();
       nsresult rv = dispatcher->BeginNativeInputTransaction();
       if (NS_WARN_IF(NS_FAILED(rv))) {
-        MOZ_LOG(gGtkIMLog, LogLevel::Error,
+        MOZ_LOG(gIMELog, LogLevel::Error,
                 ("0x%p   OnCommitCompositionNative(), FAILED, "
                  "due to BeginNativeInputTransaction() failure",
                  this));
@@ -1887,7 +1891,7 @@ void IMContextWrapper::OnCommitCompositionNative(GtkIMContext* aContext,
           eKeyDown, keyDownEvent, status, mProcessingKeyEvent);
       if (!dispatched || status == nsEventStatus_eConsumeNoDefault) {
         mKeyboardEventWasConsumed = true;
-        MOZ_LOG(gGtkIMLog, LogLevel::Info,
+        MOZ_LOG(gIMELog, LogLevel::Info,
                 ("0x%p   OnCommitCompositionNative(), "
                  "doesn't dispatch eKeyPress event because the preceding "
                  "eKeyDown event was not dispatched or was consumed",
@@ -1896,7 +1900,7 @@ void IMContextWrapper::OnCommitCompositionNative(GtkIMContext* aContext,
       }
       if (mLastFocusedWindow != keyDownEvent.mWidget ||
           mLastFocusedWindow->Destroyed()) {
-        MOZ_LOG(gGtkIMLog, LogLevel::Warning,
+        MOZ_LOG(gIMELog, LogLevel::Warning,
                 ("0x%p   OnCommitCompositionNative(), Warning, "
                  "stop dispatching eKeyPress event because the preceding "
                  "eKeyDown event caused changing focused widget or "
@@ -1904,7 +1908,7 @@ void IMContextWrapper::OnCommitCompositionNative(GtkIMContext* aContext,
                  this));
         return;
       }
-      MOZ_LOG(gGtkIMLog, LogLevel::Info,
+      MOZ_LOG(gIMELog, LogLevel::Info,
               ("0x%p   OnCommitCompositionNative(), "
                "dispatched eKeyDown event for the committed character",
                this));
@@ -1912,7 +1916,7 @@ void IMContextWrapper::OnCommitCompositionNative(GtkIMContext* aContext,
       // Next, dispatch eKeyPress event.
       dispatcher->MaybeDispatchKeypressEvents(keyDownEvent, status,
                                               mProcessingKeyEvent);
-      MOZ_LOG(gGtkIMLog, LogLevel::Info,
+      MOZ_LOG(gIMELog, LogLevel::Info,
               ("0x%p   OnCommitCompositionNative(), "
                "dispatched eKeyPress event for the committed character",
                this));
@@ -1938,7 +1942,7 @@ void IMContextWrapper::GetCompositionString(GtkIMContext* aContext,
     aCompositionString.Truncate();
   }
 
-  MOZ_LOG(gGtkIMLog, LogLevel::Info,
+  MOZ_LOG(gIMELog, LogLevel::Info,
           ("0x%p GetCompositionString(aContext=0x%p), "
            "aCompositionString=\"%s\"",
            this, aContext, preedit_string));
@@ -1983,7 +1987,7 @@ bool IMContextWrapper::MaybeDispatchKeyEventAsProcessedByIME(
                                    : mPostingKeyEvents.GetFirstEvent();
 
     MOZ_LOG(
-        gGtkIMLog, LogLevel::Info,
+        gIMELog, LogLevel::Info,
         ("0x%p MaybeDispatchKeyEventAsProcessedByIME("
          "aFollowingEvent=%s), dispatch %s %s "
          "event: { type=%s, keyval=%s, unicode=0x%X, state=%s, "
@@ -2008,13 +2012,13 @@ bool IMContextWrapper::MaybeDispatchKeyEventAsProcessedByIME(
     KeymapWrapper::DispatchKeyDownOrKeyUpEvent(lastFocusedWindow, sourceEvent,
                                                !mMaybeInDeadKeySequence,
                                                &mKeyboardEventWasConsumed);
-    MOZ_LOG(gGtkIMLog, LogLevel::Info,
+    MOZ_LOG(gIMELog, LogLevel::Info,
             ("0x%p   MaybeDispatchKeyEventAsProcessedByIME(), keydown or keyup "
              "event is dispatched",
              this));
 
     if (!mProcessingKeyEvent) {
-      MOZ_LOG(gGtkIMLog, LogLevel::Info,
+      MOZ_LOG(gIMELog, LogLevel::Info,
               ("0x%p   MaybeDispatchKeyEventAsProcessedByIME(), removing first "
                "event from the queue",
                this));
@@ -2069,14 +2073,14 @@ bool IMContextWrapper::MaybeDispatchKeyEventAsProcessedByIME(
       // physical key information during composition.
       fakeKeyDownEvent.mCodeNameIndex = CODE_NAME_INDEX_UNKNOWN;
 
-      MOZ_LOG(gGtkIMLog, LogLevel::Info,
+      MOZ_LOG(gIMELog, LogLevel::Info,
               ("0x%p MaybeDispatchKeyEventAsProcessedByIME("
                "aFollowingEvent=%s), dispatch fake eKeyDown event",
                this, ToChar(aFollowingEvent)));
 
       KeymapWrapper::DispatchKeyDownOrKeyUpEvent(
           lastFocusedWindow, fakeKeyDownEvent, &mKeyboardEventWasConsumed);
-      MOZ_LOG(gGtkIMLog, LogLevel::Info,
+      MOZ_LOG(gIMELog, LogLevel::Info,
               ("0x%p   MaybeDispatchKeyEventAsProcessedByIME(), "
                "fake keydown event is dispatched",
                this));
@@ -2085,7 +2089,7 @@ bool IMContextWrapper::MaybeDispatchKeyEventAsProcessedByIME(
 
   if (lastFocusedWindow->IsDestroyed() ||
       lastFocusedWindow != mLastFocusedWindow) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Warning,
+    MOZ_LOG(gIMELog, LogLevel::Warning,
             ("0x%p   MaybeDispatchKeyEventAsProcessedByIME(), Warning, the "
              "focused widget was destroyed/changed by a key event",
              this));
@@ -2095,7 +2099,7 @@ bool IMContextWrapper::MaybeDispatchKeyEventAsProcessedByIME(
   // If the dispatched keydown event caused moving focus and that also
   // caused changing active context, we need to cancel composition here.
   if (GetCurrentContext() != oldCurrentContext) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Warning,
+    MOZ_LOG(gIMELog, LogLevel::Warning,
             ("0x%p   MaybeDispatchKeyEventAsProcessedByIME(), Warning, the key "
              "event causes changing active IM context",
              this));
@@ -2112,11 +2116,11 @@ bool IMContextWrapper::MaybeDispatchKeyEventAsProcessedByIME(
 }
 
 bool IMContextWrapper::DispatchCompositionStart(GtkIMContext* aContext) {
-  MOZ_LOG(gGtkIMLog, LogLevel::Info,
+  MOZ_LOG(gIMELog, LogLevel::Info,
           ("0x%p DispatchCompositionStart(aContext=0x%p)", this, aContext));
 
   if (IsComposing()) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   DispatchCompositionStart(), FAILED, "
              "we're already in composition",
              this));
@@ -2124,7 +2128,7 @@ bool IMContextWrapper::DispatchCompositionStart(GtkIMContext* aContext) {
   }
 
   if (!mLastFocusedWindow) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   DispatchCompositionStart(), FAILED, "
              "there are no focused window in this module",
              this));
@@ -2132,7 +2136,7 @@ bool IMContextWrapper::DispatchCompositionStart(GtkIMContext* aContext) {
   }
 
   if (NS_WARN_IF(!EnsureToCacheSelection())) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   DispatchCompositionStart(), FAILED, "
              "cannot query the selection offset",
              this));
@@ -2157,7 +2161,7 @@ bool IMContextWrapper::DispatchCompositionStart(GtkIMContext* aContext) {
   // Note that dispatching a keyboard event which is marked as "processed
   // by IME" is okay since Chromium also dispatches keyboard event as so.
   if (!MaybeDispatchKeyEventAsProcessedByIME(eCompositionStart)) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Warning,
+    MOZ_LOG(gIMELog, LogLevel::Warning,
             ("0x%p   DispatchCompositionStart(), Warning, "
              "MaybeDispatchKeyEventAsProcessedByIME() returned false",
              this));
@@ -2167,7 +2171,7 @@ bool IMContextWrapper::DispatchCompositionStart(GtkIMContext* aContext) {
   RefPtr<TextEventDispatcher> dispatcher = GetTextEventDispatcher();
   nsresult rv = dispatcher->BeginNativeInputTransaction();
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   DispatchCompositionStart(), FAILED, "
              "due to BeginNativeInputTransaction() failure",
              this));
@@ -2192,7 +2196,7 @@ bool IMContextWrapper::DispatchCompositionStart(GtkIMContext* aContext) {
                          true);
   }
 
-  MOZ_LOG(gGtkIMLog, LogLevel::Debug,
+  MOZ_LOG(gIMELog, LogLevel::Debug,
           ("0x%p   DispatchCompositionStart(), dispatching "
            "compositionstart... (mCompositionStart=%u)",
            this, mCompositionStart));
@@ -2201,7 +2205,7 @@ bool IMContextWrapper::DispatchCompositionStart(GtkIMContext* aContext) {
   dispatcher->StartComposition(status);
   if (lastFocusedWindow->IsDestroyed() ||
       lastFocusedWindow != mLastFocusedWindow) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   DispatchCompositionStart(), FAILED, the focused "
              "widget was destroyed/changed by compositionstart event",
              this));
@@ -2214,11 +2218,11 @@ bool IMContextWrapper::DispatchCompositionStart(GtkIMContext* aContext) {
 bool IMContextWrapper::DispatchCompositionChangeEvent(
     GtkIMContext* aContext, const nsAString& aCompositionString) {
   MOZ_LOG(
-      gGtkIMLog, LogLevel::Info,
+      gIMELog, LogLevel::Info,
       ("0x%p DispatchCompositionChangeEvent(aContext=0x%p)", this, aContext));
 
   if (!mLastFocusedWindow) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   DispatchCompositionChangeEvent(), FAILED, "
              "there are no focused window in this module",
              this));
@@ -2226,7 +2230,7 @@ bool IMContextWrapper::DispatchCompositionChangeEvent(
   }
 
   if (!IsComposing()) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Debug,
+    MOZ_LOG(gIMELog, LogLevel::Debug,
             ("0x%p   DispatchCompositionChangeEvent(), the composition "
              "wasn't started, force starting...",
              this));
@@ -2237,7 +2241,7 @@ bool IMContextWrapper::DispatchCompositionChangeEvent(
   // If this composition string change caused by a key press, we need to
   // dispatch eKeyDown or eKeyUp before dispatching eCompositionChange event.
   else if (!MaybeDispatchKeyEventAsProcessedByIME(eCompositionChange)) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Warning,
+    MOZ_LOG(gIMELog, LogLevel::Warning,
             ("0x%p   DispatchCompositionChangeEvent(), Warning, "
              "MaybeDispatchKeyEventAsProcessedByIME() returned false",
              this));
@@ -2247,7 +2251,7 @@ bool IMContextWrapper::DispatchCompositionChangeEvent(
   RefPtr<TextEventDispatcher> dispatcher = GetTextEventDispatcher();
   nsresult rv = dispatcher->BeginNativeInputTransaction();
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   DispatchCompositionChangeEvent(), FAILED, "
              "due to BeginNativeInputTransaction() failure",
              this));
@@ -2272,7 +2276,7 @@ bool IMContextWrapper::DispatchCompositionChangeEvent(
 
   rv = dispatcher->SetPendingComposition(aCompositionString, rangeArray);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   DispatchCompositionChangeEvent(), FAILED, "
              "due to SetPendingComposition() failure",
              this));
@@ -2294,7 +2298,7 @@ bool IMContextWrapper::DispatchCompositionChangeEvent(
   nsEventStatus status;
   rv = dispatcher->FlushPendingComposition(status);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   DispatchCompositionChangeEvent(), FAILED, "
              "due to FlushPendingComposition() failure",
              this));
@@ -2303,7 +2307,7 @@ bool IMContextWrapper::DispatchCompositionChangeEvent(
 
   if (lastFocusedWindow->IsDestroyed() ||
       lastFocusedWindow != mLastFocusedWindow) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   DispatchCompositionChangeEvent(), FAILED, the "
              "focused widget was destroyed/changed by "
              "compositionchange event",
@@ -2315,14 +2319,14 @@ bool IMContextWrapper::DispatchCompositionChangeEvent(
 
 bool IMContextWrapper::DispatchCompositionCommitEvent(
     GtkIMContext* aContext, const nsAString* aCommitString) {
-  MOZ_LOG(gGtkIMLog, LogLevel::Info,
+  MOZ_LOG(gIMELog, LogLevel::Info,
           ("0x%p DispatchCompositionCommitEvent(aContext=0x%p, "
            "aCommitString=0x%p, (\"%s\"))",
            this, aContext, aCommitString,
            aCommitString ? NS_ConvertUTF16toUTF8(*aCommitString).get() : ""));
 
   if (!mLastFocusedWindow) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   DispatchCompositionCommitEvent(), FAILED, "
              "there are no focused window in this module",
              this));
@@ -2342,21 +2346,21 @@ bool IMContextWrapper::DispatchCompositionCommitEvent(
   if (!IsComposing() &&
       !StaticPrefs::intl_ime_use_composition_events_for_insert_text()) {
     if (!aCommitString || aCommitString->IsEmpty()) {
-      MOZ_LOG(gGtkIMLog, LogLevel::Error,
+      MOZ_LOG(gIMELog, LogLevel::Error,
               ("0x%p   DispatchCompositionCommitEvent(), FAILED, "
                "did nothing due to inserting empty string without composition",
                this));
       return true;
     }
     if (MOZ_UNLIKELY(!EnsureToCacheSelection())) {
-      MOZ_LOG(gGtkIMLog, LogLevel::Warning,
+      MOZ_LOG(gIMELog, LogLevel::Warning,
               ("0x%p   DispatchCompositionCommitEvent(), Warning, "
                "Failed to cache selection before dispatching "
                "eContentCommandInsertText event",
                this));
     }
     if (!MaybeDispatchKeyEventAsProcessedByIME(eContentCommandInsertText)) {
-      MOZ_LOG(gGtkIMLog, LogLevel::Warning,
+      MOZ_LOG(gIMELog, LogLevel::Warning,
               ("0x%p   DispatchCompositionCommitEvent(), Warning, "
                "MaybeDispatchKeyEventAsProcessedByIME() returned false",
                this));
@@ -2370,7 +2374,7 @@ bool IMContextWrapper::DispatchCompositionCommitEvent(
     if (mSelection.IsValid()) {
       mSelection.CollapseTo(mSelection.mOffset + aCommitString->Length(),
                             mSelection.mWritingMode);
-      MOZ_LOG(gGtkIMLog, LogLevel::Info,
+      MOZ_LOG(gIMELog, LogLevel::Info,
               ("0x%p   DispatchCompositionCommitEvent(), "
                "mSelection={ mOffset=%u, mString=\"%s\", mWritingMode=%s }",
                this, mSelection.mOffset,
@@ -2381,13 +2385,13 @@ bool IMContextWrapper::DispatchCompositionCommitEvent(
   } else {
     if (!IsComposing()) {
       if (!aCommitString || aCommitString->IsEmpty()) {
-        MOZ_LOG(gGtkIMLog, LogLevel::Error,
+        MOZ_LOG(gIMELog, LogLevel::Error,
                 ("0x%p   DispatchCompositionCommitEvent(), FAILED, "
                  "there is no composition and empty commit string",
                  this));
         return true;
       }
-      MOZ_LOG(gGtkIMLog, LogLevel::Debug,
+      MOZ_LOG(gIMELog, LogLevel::Debug,
               ("0x%p   DispatchCompositionCommitEvent(), "
                "the composition wasn't started, force starting...",
                this));
@@ -2399,7 +2403,7 @@ bool IMContextWrapper::DispatchCompositionCommitEvent(
     // eKeyUp before dispatching composition events.
     else if (!MaybeDispatchKeyEventAsProcessedByIME(
                  aCommitString ? eCompositionCommit : eCompositionCommitAsIs)) {
-      MOZ_LOG(gGtkIMLog, LogLevel::Warning,
+      MOZ_LOG(gIMELog, LogLevel::Warning,
               ("0x%p   DispatchCompositionCommitEvent(), Warning, "
                "MaybeDispatchKeyEventAsProcessedByIME() returned false",
                this));
@@ -2411,7 +2415,7 @@ bool IMContextWrapper::DispatchCompositionCommitEvent(
     MOZ_ASSERT(dispatcher);
     nsresult rv = dispatcher->BeginNativeInputTransaction();
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      MOZ_LOG(gGtkIMLog, LogLevel::Error,
+      MOZ_LOG(gIMELog, LogLevel::Error,
               ("0x%p   DispatchCompositionCommitEvent(), FAILED, "
                "due to BeginNativeInputTransaction() failure",
                this));
@@ -2447,7 +2451,7 @@ bool IMContextWrapper::DispatchCompositionCommitEvent(
     lastFocusedWindow->DispatchEvent(&insertTextEvent, status);
 
     if (!insertTextEvent.mSucceeded) {
-      MOZ_LOG(gGtkIMLog, LogLevel::Error,
+      MOZ_LOG(gIMELog, LogLevel::Error,
               ("0x%p   DispatchCompositionChangeEvent(), FAILED, inserting "
                "text failed",
                this));
@@ -2457,7 +2461,7 @@ bool IMContextWrapper::DispatchCompositionCommitEvent(
     nsEventStatus status = nsEventStatus_eIgnore;
     nsresult rv = dispatcher->CommitComposition(status, aCommitString);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      MOZ_LOG(gGtkIMLog, LogLevel::Error,
+      MOZ_LOG(gIMELog, LogLevel::Error,
               ("0x%p   DispatchCompositionChangeEvent(), FAILED, "
                "due to CommitComposition() failure",
                this));
@@ -2467,7 +2471,7 @@ bool IMContextWrapper::DispatchCompositionCommitEvent(
 
   if (lastFocusedWindow->IsDestroyed() ||
       lastFocusedWindow != mLastFocusedWindow) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   DispatchCompositionCommitEvent(), FAILED, "
              "the focused widget was destroyed/changed by "
              "compositioncommit event",
@@ -2480,7 +2484,7 @@ bool IMContextWrapper::DispatchCompositionCommitEvent(
 
 already_AddRefed<TextRangeArray> IMContextWrapper::CreateTextRangeArray(
     GtkIMContext* aContext, const nsAString& aCompositionString) {
-  MOZ_LOG(gGtkIMLog, LogLevel::Info,
+  MOZ_LOG(gIMELog, LogLevel::Info,
           ("0x%p CreateTextRangeArray(aContext=0x%p, "
            "aCompositionString=\"%s\" (Length()=%u))",
            this, aContext, NS_ConvertUTF16toUTF8(aCompositionString).get(),
@@ -2495,7 +2499,7 @@ already_AddRefed<TextRangeArray> IMContextWrapper::CreateTextRangeArray(
                                     &cursor_pos_in_chars);
   if (!preedit_string || !*preedit_string) {
     if (!aCompositionString.IsEmpty()) {
-      MOZ_LOG(gGtkIMLog, LogLevel::Error,
+      MOZ_LOG(gIMELog, LogLevel::Error,
               ("0x%p   CreateTextRangeArray(), FAILED, due to "
                "preedit_string is null",
                this));
@@ -2518,7 +2522,7 @@ already_AddRefed<TextRangeArray> IMContextWrapper::CreateTextRangeArray(
     gchar* charAfterCaret =
         g_utf8_offset_to_pointer(preedit_string, cursor_pos_in_chars);
     if (NS_WARN_IF(!charAfterCaret)) {
-      MOZ_LOG(gGtkIMLog, LogLevel::Warning,
+      MOZ_LOG(gIMELog, LogLevel::Warning,
               ("0x%p   CreateTextRangeArray(), failed to get UTF-8 "
                "string before the caret (cursor_pos_in_chars=%d)",
                this, cursor_pos_in_chars));
@@ -2528,7 +2532,7 @@ already_AddRefed<TextRangeArray> IMContextWrapper::CreateTextRangeArray(
           g_utf8_to_utf16(preedit_string, charAfterCaret - preedit_string,
                           nullptr, &caretOffset, nullptr);
       if (NS_WARN_IF(!utf16StrBeforeCaret) || NS_WARN_IF(caretOffset < 0)) {
-        MOZ_LOG(gGtkIMLog, LogLevel::Warning,
+        MOZ_LOG(gIMELog, LogLevel::Warning,
                 ("0x%p   CreateTextRangeArray(), WARNING, failed to "
                  "convert to UTF-16 string before the caret "
                  "(cursor_pos_in_chars=%d, caretOffset=%ld)",
@@ -2537,7 +2541,7 @@ already_AddRefed<TextRangeArray> IMContextWrapper::CreateTextRangeArray(
         caretOffsetInUTF16 = static_cast<uint32_t>(caretOffset);
         uint32_t compositionStringLength = aCompositionString.Length();
         if (NS_WARN_IF(caretOffsetInUTF16 > compositionStringLength)) {
-          MOZ_LOG(gGtkIMLog, LogLevel::Warning,
+          MOZ_LOG(gIMELog, LogLevel::Warning,
                   ("0x%p   CreateTextRangeArray(), WARNING, "
                    "caretOffsetInUTF16=%u is larger than "
                    "compositionStringLength=%u",
@@ -2554,7 +2558,7 @@ already_AddRefed<TextRangeArray> IMContextWrapper::CreateTextRangeArray(
   PangoAttrIterator* iter;
   iter = pango_attr_list_get_iterator(feedback_list);
   if (!iter) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   CreateTextRangeArray(), FAILED, iterator couldn't "
              "be allocated",
              this));
@@ -2587,7 +2591,7 @@ already_AddRefed<TextRangeArray> IMContextWrapper::CreateTextRangeArray(
     dummyClause.mRangeType = TextRangeType::eRawClause;
     textRangeArray->InsertElementAt(0, dummyClause);
     maxOffsetOfClauses = std::max(maxOffsetOfClauses, dummyClause.mEndOffset);
-    MOZ_LOG(gGtkIMLog, LogLevel::Warning,
+    MOZ_LOG(gIMELog, LogLevel::Warning,
             ("0x%p   CreateTextRangeArray(), inserting a dummy clause "
              "at the beginning of the composition string mStartOffset=%u, "
              "mEndOffset=%u, mRangeType=%s",
@@ -2606,7 +2610,7 @@ already_AddRefed<TextRangeArray> IMContextWrapper::CreateTextRangeArray(
     dummyClause.mEndOffset = aCompositionString.Length();
     dummyClause.mRangeType = TextRangeType::eRawClause;
     textRangeArray->AppendElement(dummyClause);
-    MOZ_LOG(gGtkIMLog, LogLevel::Warning,
+    MOZ_LOG(gIMELog, LogLevel::Warning,
             ("0x%p   CreateTextRangeArray(), inserting a dummy clause "
              "at the end of the composition string mStartOffset=%u, "
              "mEndOffset=%u, mRangeType=%s",
@@ -2619,7 +2623,7 @@ already_AddRefed<TextRangeArray> IMContextWrapper::CreateTextRangeArray(
   range.mRangeType = TextRangeType::eCaret;
   textRangeArray->AppendElement(range);
   MOZ_LOG(
-      gGtkIMLog, LogLevel::Debug,
+      gIMELog, LogLevel::Debug,
       ("0x%p   CreateTextRangeArray(), mStartOffset=%u, "
        "mEndOffset=%u, mRangeType=%s",
        this, range.mStartOffset, range.mEndOffset, ToChar(range.mRangeType)));
@@ -2648,7 +2652,7 @@ bool IMContextWrapper::SetTextRange(PangoAttrIterator* aPangoAttrIter,
   gint utf8ClauseStart, utf8ClauseEnd;
   pango_attr_iterator_range(aPangoAttrIter, &utf8ClauseStart, &utf8ClauseEnd);
   if (utf8ClauseStart == utf8ClauseEnd) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   SetTextRange(), FAILED, due to collapsed range", this));
     return false;
   }
@@ -2662,7 +2666,7 @@ bool IMContextWrapper::SetTextRange(PangoAttrIterator* aPangoAttrIter,
                         &utf16PreviousClausesLength, nullptr);
 
     if (NS_WARN_IF(!utf16PreviousClausesString)) {
-      MOZ_LOG(gGtkIMLog, LogLevel::Error,
+      MOZ_LOG(gIMELog, LogLevel::Error,
               ("0x%p   SetTextRange(), FAILED, due to g_utf8_to_utf16() "
                "failure (retrieving previous string of current clause)",
                this));
@@ -2679,7 +2683,7 @@ bool IMContextWrapper::SetTextRange(PangoAttrIterator* aPangoAttrIter,
       nullptr, &utf16CurrentClauseLength, nullptr);
 
   if (NS_WARN_IF(!utf16CurrentClauseString)) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   SetTextRange(), FAILED, due to g_utf8_to_utf16() "
              "failure (retrieving current clause)",
              this));
@@ -2690,7 +2694,7 @@ bool IMContextWrapper::SetTextRange(PangoAttrIterator* aPangoAttrIter,
   // the composition string but we should ignore it since our code doesn't
   // assume that there is an empty clause.
   if (!utf16CurrentClauseLength) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Warning,
+    MOZ_LOG(gIMELog, LogLevel::Warning,
             ("0x%p   SetTextRange(), FAILED, due to current clause length "
              "is 0",
              this));
@@ -2723,7 +2727,7 @@ bool IMContextWrapper::SetTextRange(PangoAttrIterator* aPangoAttrIter,
         style.mLineStyle = TextRangeStyle::LineStyle::Solid;
         break;
       default:
-        MOZ_LOG(gGtkIMLog, LogLevel::Warning,
+        MOZ_LOG(gIMELog, LogLevel::Warning,
                 ("0x%p   SetTextRange(), retrieved unknown underline "
                  "style: %d",
                  this, attrUnderline->value));
@@ -2803,7 +2807,7 @@ bool IMContextWrapper::SetTextRange(PangoAttrIterator* aPangoAttrIter,
     aTextRange.mRangeType = TextRangeType::eConvertedClause;
   }
 
-  MOZ_LOG(gGtkIMLog, LogLevel::Debug,
+  MOZ_LOG(gIMELog, LogLevel::Debug,
           ("0x%p   SetTextRange(), succeeded, aTextRange= { "
            "mStartOffset=%u, mEndOffset=%u, mRangeType=%s, mRangeStyle=%s }",
            this, aTextRange.mStartOffset, aTextRange.mEndOffset,
@@ -2815,7 +2819,7 @@ bool IMContextWrapper::SetTextRange(PangoAttrIterator* aPangoAttrIter,
 
 void IMContextWrapper::SetCursorPosition(GtkIMContext* aContext) {
   MOZ_LOG(
-      gGtkIMLog, LogLevel::Info,
+      gIMELog, LogLevel::Info,
       ("0x%p SetCursorPosition(aContext=0x%p), "
        "mCompositionTargetRange={ mOffset=%u, mLength=%u }"
        "mSelection={ mOffset=%u, Length()=%u, mWritingMode=%s }",
@@ -2826,7 +2830,7 @@ void IMContextWrapper::SetCursorPosition(GtkIMContext* aContext) {
   bool useCaret = false;
   if (!mCompositionTargetRange.IsValid()) {
     if (!mSelection.IsValid()) {
-      MOZ_LOG(gGtkIMLog, LogLevel::Error,
+      MOZ_LOG(gIMELog, LogLevel::Error,
               ("0x%p   SetCursorPosition(), FAILED, "
                "mCompositionTargetRange and mSelection are invalid",
                this));
@@ -2836,7 +2840,7 @@ void IMContextWrapper::SetCursorPosition(GtkIMContext* aContext) {
   }
 
   if (!mLastFocusedWindow) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   SetCursorPosition(), FAILED, due to no focused "
              "window",
              this));
@@ -2844,7 +2848,7 @@ void IMContextWrapper::SetCursorPosition(GtkIMContext* aContext) {
   }
 
   if (MOZ_UNLIKELY(!aContext)) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   SetCursorPosition(), FAILED, due to no context", this));
     return;
   }
@@ -2870,7 +2874,7 @@ void IMContextWrapper::SetCursorPosition(GtkIMContext* aContext) {
   nsEventStatus status;
   mLastFocusedWindow->DispatchEvent(&queryCaretOrTextRectEvent, status);
   if (queryCaretOrTextRectEvent.Failed()) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   SetCursorPosition(), FAILED, %s was failed", this,
              useCaret ? "eQueryCaretRect" : "eQueryTextRect"));
     return;
@@ -2896,12 +2900,12 @@ void IMContextWrapper::SetCursorPosition(GtkIMContext* aContext) {
 
 nsresult IMContextWrapper::GetCurrentParagraph(nsAString& aText,
                                                uint32_t& aCursorPos) {
-  MOZ_LOG(gGtkIMLog, LogLevel::Info,
+  MOZ_LOG(gIMELog, LogLevel::Info,
           ("0x%p GetCurrentParagraph(), mCompositionState=%s", this,
            GetCompositionStateName()));
 
   if (!mLastFocusedWindow) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   GetCurrentParagraph(), FAILED, there are no "
              "focused window in this module",
              this));
@@ -2918,7 +2922,7 @@ nsresult IMContextWrapper::GetCurrentParagraph(nsAString& aText,
   if (!EditorHasCompositionString()) {
     // Query cursor position & selection
     if (NS_WARN_IF(!EnsureToCacheSelection())) {
-      MOZ_LOG(gGtkIMLog, LogLevel::Error,
+      MOZ_LOG(gIMELog, LogLevel::Error,
               ("0x%p   GetCurrentParagraph(), FAILED, due to no "
                "valid selection information",
                this));
@@ -2929,7 +2933,7 @@ nsresult IMContextWrapper::GetCurrentParagraph(nsAString& aText,
     selLength = mSelection.Length();
   }
 
-  MOZ_LOG(gGtkIMLog, LogLevel::Debug,
+  MOZ_LOG(gIMELog, LogLevel::Debug,
           ("0x%p   GetCurrentParagraph(), selOffset=%u, selLength=%u", this,
            selOffset, selLength));
 
@@ -2938,7 +2942,7 @@ nsresult IMContextWrapper::GetCurrentParagraph(nsAString& aText,
   //     than INT32_MAX.
   if (selOffset > INT32_MAX || selLength > INT32_MAX ||
       selOffset + selLength > INT32_MAX) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   GetCurrentParagraph(), FAILED, The selection is "
              "out of range",
              this));
@@ -2955,7 +2959,7 @@ nsresult IMContextWrapper::GetCurrentParagraph(nsAString& aText,
   }
 
   if (selOffset + selLength > queryTextContentEvent.mReply->DataLength()) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   GetCurrentParagraph(), FAILED, The selection is "
              "invalid, queryTextContentEvent={ mReply=%s }",
              this, ToString(queryTextContentEvent.mReply).c_str()));
@@ -2985,7 +2989,7 @@ nsresult IMContextWrapper::GetCurrentParagraph(nsAString& aText,
   aCursorPos = selOffset - uint32_t(parStart);
 
   MOZ_LOG(
-      gGtkIMLog, LogLevel::Debug,
+      gIMELog, LogLevel::Debug,
       ("0x%p   GetCurrentParagraph(), succeeded, aText=%s, "
        "aText.Length()=%u, aCursorPos=%u",
        this, NS_ConvertUTF16toUTF8(aText).get(), aText.Length(), aCursorPos));
@@ -2995,13 +2999,13 @@ nsresult IMContextWrapper::GetCurrentParagraph(nsAString& aText,
 
 nsresult IMContextWrapper::DeleteText(GtkIMContext* aContext, int32_t aOffset,
                                       uint32_t aNChars) {
-  MOZ_LOG(gGtkIMLog, LogLevel::Info,
+  MOZ_LOG(gIMELog, LogLevel::Info,
           ("0x%p DeleteText(aContext=0x%p, aOffset=%d, aNChars=%u), "
            "mCompositionState=%s",
            this, aContext, aOffset, aNChars, GetCompositionStateName()));
 
   if (!mLastFocusedWindow) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   DeleteText(), FAILED, there are no focused window "
              "in this module",
              this));
@@ -3009,7 +3013,7 @@ nsresult IMContextWrapper::DeleteText(GtkIMContext* aContext, int32_t aOffset,
   }
 
   if (!aNChars) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   DeleteText(), FAILED, aNChars must not be zero", this));
     return NS_ERROR_INVALID_ARG;
   }
@@ -3026,13 +3030,13 @@ nsresult IMContextWrapper::DeleteText(GtkIMContext* aContext, int32_t aOffset,
     selOffset = mCompositionStart;
     if (!DispatchCompositionCommitEvent(aContext,
                                         &mSelectedStringRemovedByComposition)) {
-      MOZ_LOG(gGtkIMLog, LogLevel::Error,
+      MOZ_LOG(gIMELog, LogLevel::Error,
               ("0x%p   DeleteText(), FAILED, quitting from DeletText", this));
       return NS_ERROR_FAILURE;
     }
   } else {
     if (NS_WARN_IF(!EnsureToCacheSelection())) {
-      MOZ_LOG(gGtkIMLog, LogLevel::Error,
+      MOZ_LOG(gIMELog, LogLevel::Error,
               ("0x%p   DeleteText(), FAILED, due to no valid selection "
                "information",
                this));
@@ -3050,7 +3054,7 @@ nsresult IMContextWrapper::DeleteText(GtkIMContext* aContext, int32_t aOffset,
     return NS_ERROR_FAILURE;
   }
   if (queryTextContentEvent.mReply->IsDataEmpty()) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   DeleteText(), FAILED, there is no contents", this));
     return NS_ERROR_FAILURE;
   }
@@ -3060,7 +3064,7 @@ nsresult IMContextWrapper::DeleteText(GtkIMContext* aContext, int32_t aOffset,
   glong offsetInUTF8Characters =
       g_utf8_strlen(utf8Str.get(), utf8Str.Length()) + aOffset;
   if (offsetInUTF8Characters < 0) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   DeleteText(), FAILED, aOffset is too small for "
              "current cursor pos (computed offset: %ld)",
              this, offsetInUTF8Characters));
@@ -3074,7 +3078,7 @@ nsresult IMContextWrapper::DeleteText(GtkIMContext* aContext, int32_t aOffset,
       g_utf8_strlen(utf8Str.get(), utf8Str.Length());
   glong endInUTF8Characters = offsetInUTF8Characters + aNChars;
   if (countOfCharactersInUTF8 < endInUTF8Characters) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   DeleteText(), FAILED, aNChars is too large for "
              "current contents (content length: %ld, computed end offset: %ld)",
              this, countOfCharactersInUTF8, endInUTF8Characters));
@@ -3103,7 +3107,7 @@ nsresult IMContextWrapper::DeleteText(GtkIMContext* aContext, int32_t aOffset,
 
   if (!selectionEvent.mSucceeded || lastFocusedWindow != mLastFocusedWindow ||
       lastFocusedWindow->Destroyed()) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   DeleteText(), FAILED, setting selection caused "
              "focus change or window destroyed",
              this));
@@ -3113,7 +3117,7 @@ nsresult IMContextWrapper::DeleteText(GtkIMContext* aContext, int32_t aOffset,
   // If this deleting text caused by a key press, we need to dispatch
   // eKeyDown or eKeyUp before dispatching eContentCommandDelete event.
   if (!MaybeDispatchKeyEventAsProcessedByIME(eContentCommandDelete)) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Warning,
+    MOZ_LOG(gIMELog, LogLevel::Warning,
             ("0x%p   DeleteText(), Warning, "
              "MaybeDispatchKeyEventAsProcessedByIME() returned false",
              this));
@@ -3128,7 +3132,7 @@ nsresult IMContextWrapper::DeleteText(GtkIMContext* aContext, int32_t aOffset,
   if (!contentCommandEvent.mSucceeded ||
       lastFocusedWindow != mLastFocusedWindow ||
       lastFocusedWindow->Destroyed()) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p   DeleteText(), FAILED, deleting the selection caused "
              "focus change or window destroyed",
              this));
@@ -3142,7 +3146,7 @@ nsresult IMContextWrapper::DeleteText(GtkIMContext* aContext, int32_t aOffset,
   // Restore the composition at new caret position.
   if (!DispatchCompositionStart(aContext)) {
     MOZ_LOG(
-        gGtkIMLog, LogLevel::Error,
+        gIMELog, LogLevel::Error,
         ("0x%p   DeleteText(), FAILED, resterting composition start", this));
     return NS_ERROR_FAILURE;
   }
@@ -3155,7 +3159,7 @@ nsresult IMContextWrapper::DeleteText(GtkIMContext* aContext, int32_t aOffset,
   GetCompositionString(aContext, compositionString);
   if (!DispatchCompositionChangeEvent(aContext, compositionString)) {
     MOZ_LOG(
-        gGtkIMLog, LogLevel::Error,
+        gIMELog, LogLevel::Error,
         ("0x%p   DeleteText(), FAILED, restoring composition string", this));
     return NS_ERROR_FAILURE;
   }
@@ -3180,7 +3184,7 @@ bool IMContextWrapper::EnsureToCacheSelection(nsAString* aSelectedString) {
   }
 
   if (NS_WARN_IF(!mLastFocusedWindow)) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p EnsureToCacheSelection(), FAILED, due to "
              "no focused window",
              this));
@@ -3193,7 +3197,7 @@ bool IMContextWrapper::EnsureToCacheSelection(nsAString* aSelectedString) {
   InitEvent(querySelectedTextEvent);
   mLastFocusedWindow->DispatchEvent(&querySelectedTextEvent, status);
   if (NS_WARN_IF(querySelectedTextEvent.Failed())) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p EnsureToCacheSelection(), FAILED, due to "
              "failure of query selection event",
              this));
@@ -3202,7 +3206,7 @@ bool IMContextWrapper::EnsureToCacheSelection(nsAString* aSelectedString) {
 
   mSelection.Assign(querySelectedTextEvent);
   if (!mSelection.IsValid()) {
-    MOZ_LOG(gGtkIMLog, LogLevel::Error,
+    MOZ_LOG(gIMELog, LogLevel::Error,
             ("0x%p EnsureToCacheSelection(), FAILED, due to "
              "failure of query selection event (invalid result)",
              this));
@@ -3213,7 +3217,7 @@ bool IMContextWrapper::EnsureToCacheSelection(nsAString* aSelectedString) {
     aSelectedString->Assign(querySelectedTextEvent.mReply->DataRef());
   }
 
-  MOZ_LOG(gGtkIMLog, LogLevel::Debug,
+  MOZ_LOG(gIMELog, LogLevel::Debug,
           ("0x%p EnsureToCacheSelection(), Succeeded, mSelection="
            "{ mOffset=%u, Length()=%u, mWritingMode=%s }",
            this, mSelection.mOffset, mSelection.Length(),
