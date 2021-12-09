@@ -103,6 +103,10 @@ class OffscreenCanvas final : public DOMEventTargetHelper,
     }
   }
 
+  already_AddRefed<nsISupports> GetContext(
+      JSContext* aCx, const nsAString& aContextId,
+      JS::Handle<JS::Value> aContextOptions, ErrorResult& aRv);
+
   already_AddRefed<ImageBitmap> TransferToImageBitmap(ErrorResult& aRv);
 
   already_AddRefed<Promise> ToBlob(JSContext* aCx, const nsAString& aType,
@@ -135,10 +139,6 @@ class OffscreenCanvas final : public DOMEventTargetHelper,
 
   virtual already_AddRefed<nsICanvasRenderingContextInternal> CreateContext(
       CanvasContextType aContextType) override;
-
-  virtual already_AddRefed<nsISupports> GetContext(
-      JSContext* aCx, const nsAString& aContextId,
-      JS::Handle<JS::Value> aContextOptions, ErrorResult& aRv) override;
 
   void SetNeutered() { mNeutered = true; }
 
