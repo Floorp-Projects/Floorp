@@ -1156,7 +1156,7 @@ bool AccessibleCaretManager::RestrictCaretDraggingOffsets(
   // position.
   NS_ASSERTION(contentOffset >= 0, "contentOffset should not be negative");
   const Maybe<int32_t> cmpToInactiveCaretPos =
-      nsContentUtils::ComparePoints_FixBothOffsets(
+      nsContentUtils::ComparePoints_AllowNegativeOffsets(
           aOffsets.content, aOffsets.StartOffset(), content, contentOffset);
   if (NS_WARN_IF(!cmpToInactiveCaretPos)) {
     // Potentially handle this properly when Selection across Shadow DOM
@@ -1179,7 +1179,7 @@ bool AccessibleCaretManager::RestrictCaretDraggingOffsets(
   NS_ASSERTION(limit.mContentOffset >= 0,
                "limit.mContentOffset should not be negative");
   const Maybe<int32_t> cmpToLimit =
-      nsContentUtils::ComparePoints_FixBothOffsets(
+      nsContentUtils::ComparePoints_AllowNegativeOffsets(
           aOffsets.content, aOffsets.StartOffset(), limit.mResultContent,
           limit.mContentOffset);
   if (NS_WARN_IF(!cmpToLimit)) {

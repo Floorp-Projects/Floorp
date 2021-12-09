@@ -172,7 +172,7 @@ nsresult RangeUtils::CompareNodeToRange(nsINode* aNode,
   // silence the warning. (Bug 1438996)
 
   // is RANGE(start) <= NODE(start) ?
-  Maybe<int32_t> order = nsContentUtils::ComparePoints_FixOffset2(
+  Maybe<int32_t> order = nsContentUtils::ComparePoints_AllowNegativeOffsets(
       aAbstractRange->StartRef().Container(),
       *aAbstractRange->StartRef().Offset(
           RangeBoundary::OffsetFilter::kValidOrInvalidOffsets),
