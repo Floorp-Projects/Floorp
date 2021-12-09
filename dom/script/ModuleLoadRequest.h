@@ -18,7 +18,6 @@ namespace mozilla {
 namespace dom {
 
 class ModuleScript;
-class ModuleLoader;
 class ScriptLoader;
 
 // A reference counted set of URLs we have visited in the process of loading a
@@ -43,7 +42,7 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
   ModuleLoadRequest(nsIURI* aURI, ScriptFetchOptions* aFetchOptions,
                     const SRIMetadata& aIntegrity, nsIURI* aReferrer,
                     bool aIsTopLevel, bool aIsDynamicImport,
-                    ModuleLoader* aLoader, VisitedURLSet* aVisitedSet);
+                    ScriptLoader* aLoader, VisitedURLSet* aVisitedSet);
 
  public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -83,7 +82,6 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
  private:
   void LoadFinished();
   void CancelImports();
-  void CheckModuleDependenciesLoaded();
 
  public:
   // Is this a request for a top level module script or an import?
@@ -94,7 +92,7 @@ class ModuleLoadRequest final : public ScriptLoadRequest {
 
   // Pointer to the script loader, used to trigger actions when the module load
   // finishes.
-  RefPtr<ModuleLoader> mLoader;
+  RefPtr<ScriptLoader> mLoader;
 
   // Set to a module script object after a successful load or nullptr on
   // failure.
