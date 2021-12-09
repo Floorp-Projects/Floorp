@@ -240,10 +240,77 @@ already_AddRefed<ImageBitmap> OffscreenCanvas::TransferToImageBitmap(
   return result.forget();
 }
 
+already_AddRefed<EncodeCompleteCallback>
+OffscreenCanvas::CreateEncodeCompleteCallback(
+    nsCOMPtr<nsIGlobalObject>&& aGlobal, Promise* aPromise) {
+  // Encoder callback when encoding is complete.
+  class EncodeCallback : public EncodeCompleteCallback {
+   public:
+    EncodeCallback(nsCOMPtr<nsIGlobalObject>&& aGlobal, Promise* aPromise)
+        : mGlobal(std::move(aGlobal)), mPromise(aPromise) {}
+
+    // This is called on main thread.
+    nsresult ReceiveBlobImpl(already_AddRefed<BlobImpl> aBlobImpl) override {
+      RefPtr<BlobImpl> blobImpl = aBlobImpl;
+
+      if (mPromise) {
+        if (NS_WARN_IF(!blobImpl)) {
+          mPromise->MaybeReject(NS_ERROR_FAILURE);
+        } else {
+          RefPtr<Blob> blob = Blob::Create(mGlobal, blobImpl);
+          if (NS_WARN_IF(!blob)) {
+            mPromise->MaybeReject(NS_ERROR_FAILURE);
+          } else {
+            mPromise->MaybeResolve(blob);
+          }
+        }
+      }
+
+      mGlobal = nullptr;
+      mPromise = nullptr;
+
+      return NS_OK;
+    }
+
+    nsCOMPtr<nsIGlobalObject> mGlobal;
+    RefPtr<Promise> mPromise;
+  };
+
+  return MakeAndAddRef<EncodeCallback>(std::move(aGlobal), aPromise);
+}
+
 already_AddRefed<Promise> OffscreenCanvas::ConvertToBlob(
     const ImageEncodeOptions& aOptions, ErrorResult& aRv) {
-  aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-  return nullptr;
+  // do a trust check if this is a write-only canvas
+  if (mIsWriteOnly) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIGlobalObject> global = GetOwnerGlobal();
+
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  nsAutoString type;
+  nsContentUtils::ASCIIToLower(aOptions.mType, type);
+
+  nsAutoString encodeOptions;
+  if (aOptions.mQuality.WasPassed()) {
+    encodeOptions.AppendLiteral("quality=");
+    encodeOptions.AppendInt(NS_lround(aOptions.mQuality.Value() * 100.0));
+  }
+
+  RefPtr<EncodeCompleteCallback> callback =
+      CreateEncodeCompleteCallback(std::move(global), promise);
+  bool usePlaceholder = ShouldResistFingerprinting();
+  CanvasRenderingContextHelper::ToBlob(callback, type, encodeOptions,
+                                       /* aUsingCustomOptions */ false,
+                                       usePlaceholder, aRv);
+
+  return promise.forget();
 }
 
 already_AddRefed<Promise> OffscreenCanvas::ToBlob(JSContext* aCx,
@@ -263,37 +330,8 @@ already_AddRefed<Promise> OffscreenCanvas::ToBlob(JSContext* aCx,
     return nullptr;
   }
 
-  // Encoder callback when encoding is complete.
-  class EncodeCallback : public EncodeCompleteCallback {
-   public:
-    EncodeCallback(nsIGlobalObject* aGlobal, Promise* aPromise)
-        : mGlobal(aGlobal), mPromise(aPromise) {}
-
-    // This is called on main thread.
-    nsresult ReceiveBlobImpl(already_AddRefed<BlobImpl> aBlobImpl) override {
-      RefPtr<BlobImpl> blobImpl = aBlobImpl;
-
-      if (mPromise) {
-        RefPtr<Blob> blob = Blob::Create(mGlobal, blobImpl);
-        if (NS_WARN_IF(!blob)) {
-          mPromise->MaybeReject(NS_ERROR_FAILURE);
-        } else {
-          mPromise->MaybeResolve(blob);
-        }
-      }
-
-      mGlobal = nullptr;
-      mPromise = nullptr;
-
-      return NS_OK;
-    }
-
-    nsCOMPtr<nsIGlobalObject> mGlobal;
-    RefPtr<Promise> mPromise;
-  };
-
-  RefPtr<EncodeCompleteCallback> callback = new EncodeCallback(global, promise);
-
+  RefPtr<EncodeCompleteCallback> callback =
+      CreateEncodeCompleteCallback(std::move(global), promise);
   bool usePlaceholder = ShouldResistFingerprinting();
   CanvasRenderingContextHelper::ToBlob(aCx, callback, aType, aParams,
                                        usePlaceholder, aRv);
