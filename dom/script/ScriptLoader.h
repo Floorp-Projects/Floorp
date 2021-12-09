@@ -21,6 +21,7 @@
 #include "nsURIHashKey.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/dom/LoadedScript.h"
+#include "mozilla/dom/JSExecutionContext.h"  // JSExecutionContext
 #include "mozilla/dom/ScriptLoadRequest.h"
 #include "mozilla/MaybeOneOf.h"
 #include "mozilla/MozPromise.h"
@@ -602,7 +603,30 @@ class ScriptLoader final : public nsISupports {
   nsresult CompileOffThreadOrProcessRequest(ScriptLoadRequest* aRequest);
   void FireScriptAvailable(nsresult aResult, ScriptLoadRequest* aRequest);
   void FireScriptEvaluated(nsresult aResult, ScriptLoadRequest* aRequest);
-  nsresult EvaluateScript(ScriptLoadRequest* aRequest);
+
+  // Implements https://html.spec.whatwg.org/#execute-the-script-block
+  nsresult EvaluateScriptElement(ScriptLoadRequest* aRequest);
+
+  // Handles both bytecode and text source scripts; populates exec with a
+  // compiled script
+  nsresult CompileOrDecodeClassicScript(JSContext* aCx,
+                                        JSExecutionContext& aExec,
+                                        ScriptLoadRequest* aRequest);
+
+  nsresult MaybePrepareForBytecodeEncoding(JS::Handle<JSScript*> aScript,
+                                           ScriptLoadRequest* aRequest,
+                                           nsresult aRv);
+
+  // Implements https://html.spec.whatwg.org/#run-a-classic-script
+  nsresult EvaluateScript(nsIGlobalObject* aGlobalObject,
+                          ScriptLoadRequest* aRequest);
+
+  // Helper function to set up the global correctly for dynamic imports.
+  nsresult EvaluateModule(ScriptLoadRequest* aRequest);
+
+  // Implements https://html.spec.whatwg.org/#run-a-module-script
+  nsresult EvaluateModule(nsIGlobalObject* aGlobalObject,
+                          ScriptLoadRequest* aRequest);
 
   /**
    * Queue the current script load request to be saved, when the page
