@@ -145,16 +145,20 @@ void OffscreenCanvasDisplayHelper::InvalidateElement() {
   MOZ_ASSERT(NS_IsMainThread());
 
   HTMLCanvasElement* canvasElement;
+  uint32_t width, height;
 
   {
     MutexAutoLock lock(mMutex);
     MOZ_ASSERT(mPendingInvalidate);
     mPendingInvalidate = false;
     canvasElement = mCanvasElement;
+    width = mWidth;
+    height = mHeight;
   }
 
   if (canvasElement) {
     SVGObserverUtils::InvalidateDirectRenderingObservers(canvasElement);
+    canvasElement->InvalidateCanvasPlaceholder(width, height);
     canvasElement->InvalidateCanvasContent(nullptr);
   }
 }
