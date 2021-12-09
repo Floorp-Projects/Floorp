@@ -51,13 +51,14 @@ class ConsoleAPIListener {
   constructor(innerWindowId) {
     EventEmitter.decorate(this);
 
-    this.#emittedMessages = new WeakSet();
+    this.#emittedMessages = new Set();
     this.#innerWindowId = innerWindowId;
     this.#listening = false;
   }
 
   destroy() {
     this.stopListening();
+    this.#emittedMessages = null;
   }
 
   startListening() {
