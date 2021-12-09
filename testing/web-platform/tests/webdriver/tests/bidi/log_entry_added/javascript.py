@@ -33,8 +33,6 @@ async def test_types_and_values(bidi_session, current_session, inline, wait_for_
         time_end=time_end
     )
 
-    # TODO: stackTrace
-
     # Navigate to a page with no error to avoid polluting the next tests with
     # JavaScript errors.
     current_session.url = inline("<p>foo")
