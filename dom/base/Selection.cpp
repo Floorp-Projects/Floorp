@@ -24,6 +24,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/HTMLEditor.h"
+#include "mozilla/IntegerRange.h"
 #include "mozilla/Logging.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/RangeBoundary.h"
@@ -468,16 +469,17 @@ static nsresult GetTableSelectionMode(const nsRange& aRange,
   return NS_OK;
 }
 
-nsresult Selection::MaybeAddTableCellRange(nsRange& aRange, bool* aDidAddRange,
-                                           int32_t* aOutIndex) {
-  if (!aDidAddRange || !aOutIndex) {
+nsresult Selection::MaybeAddTableCellRange(nsRange& aRange,
+                                           Maybe<size_t>* aOutIndex) {
+  if (!aOutIndex) {
     return NS_ERROR_NULL_POINTER;
   }
 
-  *aDidAddRange = false;
-  *aOutIndex = -1;
+  MOZ_ASSERT(aOutIndex->isNothing());
 
-  if (!mFrameSelection) return NS_OK;
+  if (!mFrameSelection) {
+    return NS_OK;
+  }
 
   // Get if we are adding a cell selection and the row, col of cell if we are
   TableSelectionMode tableMode;
@@ -499,11 +501,8 @@ nsresult Selection::MaybeAddTableCellRange(nsRange& aRange, bool* aDidAddRange,
     mFrameSelection->mTableSelection.mMode = tableMode;
   }
 
-  result = AddRangesForSelectableNodes(&aRange, aOutIndex,
-                                       DispatchSelectstartEvent::Maybe);
-
-  *aDidAddRange = *aOutIndex != -1;
-  return result;
+  return AddRangesForSelectableNodes(&aRange, aOutIndex,
+                                     DispatchSelectstartEvent::Maybe);
 }
 
 Selection::Selection(SelectionType aSelectionType,
@@ -678,7 +677,7 @@ static int32_t CompareToRangeEnd(const nsINode& aCompareNode,
 }
 
 // static
-int32_t Selection::StyledRanges::FindInsertionPoint(
+size_t Selection::StyledRanges::FindInsertionPoint(
     const nsTArray<StyledRange>* aElementArray, const nsINode& aPointNode,
     uint32_t aPointOffset,
     int32_t (*aComparator)(const nsINode&, uint32_t, const nsRange&)) {
@@ -704,7 +703,7 @@ int32_t Selection::StyledRanges::FindInsertionPoint(
     } while (endSearch - beginSearch > 0);
   }
 
-  return beginSearch;
+  return AssertedCast<size_t>(beginSearch);
 }
 
 // Selection::SubtractRange
@@ -845,10 +844,11 @@ bool Selection::IsUserSelectionCollapsed(
 }
 
 nsresult Selection::AddRangesForUserSelectableNodes(
-    nsRange* aRange, int32_t* aOutIndex,
+    nsRange* aRange, Maybe<size_t>* aOutIndex,
     const DispatchSelectstartEvent aDispatchSelectstartEvent) {
   MOZ_ASSERT(mUserInitiated);
   MOZ_ASSERT(aOutIndex);
+  MOZ_ASSERT(aOutIndex->isNothing());
 
   if (!aRange) {
     return NS_ERROR_NULL_POINTER;
@@ -859,7 +859,9 @@ nsresult Selection::AddRangesForUserSelectableNodes(
   }
 
   AutoTArray<RefPtr<nsRange>, 4> rangesToAdd;
-  *aOutIndex = int32_t(mStyledRanges.Length()) - 1;
+  if (mStyledRanges.Length()) {
+    aOutIndex->emplace(mStyledRanges.Length() - 1);
+  }
 
   Document* doc = GetDocument();
 
@@ -906,7 +908,7 @@ nsresult Selection::AddRangesForUserSelectableNodes(
   size_t newAnchorFocusIndex =
       GetDirection() == eDirPrevious ? 0 : rangesToAdd.Length() - 1;
   for (size_t i = 0; i < rangesToAdd.Length(); ++i) {
-    int32_t index;
+    Maybe<size_t> index;
     const RefPtr<Selection> selection{this};
     // `MOZ_KnownLive` needed because of broken static analysis
     // (https://bugzilla.mozilla.org/show_bug.cgi?id=1622253#c1).
@@ -924,8 +926,11 @@ nsresult Selection::AddRangesForUserSelectableNodes(
 }
 
 nsresult Selection::AddRangesForSelectableNodes(
-    nsRange* aRange, int32_t* aOutIndex,
+    nsRange* aRange, Maybe<size_t>* aOutIndex,
     const DispatchSelectstartEvent aDispatchSelectstartEvent) {
+  MOZ_ASSERT(aOutIndex);
+  MOZ_ASSERT(aOutIndex->isNothing());
+
   if (!aRange) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -933,8 +938,6 @@ nsresult Selection::AddRangesForSelectableNodes(
   if (!aRange->IsPositioned()) {
     return NS_ERROR_UNEXPECTED;
   }
-
-  NS_ASSERTION(aOutIndex, "aOutIndex can't be null");
 
   MOZ_LOG(
       sSelectionLog, LogLevel::Debug,
@@ -953,12 +956,11 @@ nsresult Selection::AddRangesForSelectableNodes(
 }
 
 nsresult Selection::StyledRanges::MaybeAddRangeAndTruncateOverlaps(
-    nsRange* aRange, int32_t* aOutIndex, Selection& aSelection) {
+    nsRange* aRange, Maybe<size_t>* aOutIndex, Selection& aSelection) {
   MOZ_ASSERT(aRange);
   MOZ_ASSERT(aRange->IsPositioned());
   MOZ_ASSERT(aOutIndex);
-
-  *aOutIndex = -1;
+  MOZ_ASSERT(aOutIndex->isNothing());
 
   // a common case is that we have no ranges yet
   if (mRanges.Length() == 0) {
@@ -967,34 +969,38 @@ nsresult Selection::StyledRanges::MaybeAddRangeAndTruncateOverlaps(
     mRanges.AppendElement(StyledRange(aRange));
     aRange->RegisterSelection(aSelection);
 
-    *aOutIndex = 0;
+    aOutIndex->emplace(0u);
     return NS_OK;
   }
 
-  int32_t startIndex, endIndex;
+  Maybe<size_t> maybeStartIndex, maybeEndIndex;
   nsresult rv =
       GetIndicesForInterval(aRange->GetStartContainer(), aRange->StartOffset(),
                             aRange->GetEndContainer(), aRange->EndOffset(),
-                            false, startIndex, endIndex);
+                            false, maybeStartIndex, maybeEndIndex);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (endIndex == -1) {
+  size_t startIndex, endIndex;
+  if (maybeEndIndex.isNothing()) {
     // All ranges start after the given range. We can insert our range at
     // position 0, knowing there are no overlaps (handled below)
     startIndex = 0;
     endIndex = 0;
-  } else if (startIndex == -1) {
+  } else if (maybeStartIndex.isNothing()) {
     // All ranges end before the given range. We can insert our range at
     // the end of the array, knowing there are no overlaps (handled below)
     startIndex = mRanges.Length();
     endIndex = startIndex;
+  } else {
+    startIndex = *maybeStartIndex;
+    endIndex = *maybeEndIndex;
   }
 
   // If the range is already contained in mRanges, silently
   // succeed
   const bool sameRange = HasEqualRangeBoundariesAt(*aRange, startIndex);
   if (sameRange) {
-    *aOutIndex = startIndex;
+    aOutIndex->emplace(startIndex);
     return NS_OK;
   }
 
@@ -1004,7 +1010,7 @@ nsresult Selection::StyledRanges::MaybeAddRangeAndTruncateOverlaps(
     // pretended earlier.
     mRanges.InsertElementAt(startIndex, StyledRange(aRange));
     aRange->RegisterSelection(aSelection);
-    *aOutIndex = startIndex;
+    aOutIndex->emplace(startIndex);
     return NS_OK;
   }
 
@@ -1026,22 +1032,22 @@ nsresult Selection::StyledRanges::MaybeAddRangeAndTruncateOverlaps(
   }
 
   // Remove all the overlapping ranges
-  for (int32_t i = startIndex; i < endIndex; ++i) {
+  for (size_t i = startIndex; i < endIndex; ++i) {
     mRanges[i].mRange->UnregisterSelection();
   }
   mRanges.RemoveElementsAt(startIndex, endIndex - startIndex);
 
   nsTArray<StyledRange> temp;
-  for (int32_t i = overlaps.Length() - 1; i >= 0; i--) {
+  for (const size_t i : Reversed(IntegerRange(overlaps.Length()))) {
     nsresult rv = SubtractRange(overlaps[i], *aRange, &temp);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // Insert the new element into our "leftovers" array
   // `aRange` is positioned, so it has to have a start container.
-  int32_t insertionPoint{FindInsertionPoint(&temp, *aRange->GetStartContainer(),
-                                            aRange->StartOffset(),
-                                            CompareToRangeStart)};
+  size_t insertionPoint{FindInsertionPoint(&temp, *aRange->GetStartContainer(),
+                                           aRange->StartOffset(),
+                                           CompareToRangeStart)};
 
   // XXX(Bug 1631371) Check if this should use a fallible operation as it
   // pretended earlier.
@@ -1058,7 +1064,7 @@ nsresult Selection::StyledRanges::MaybeAddRangeAndTruncateOverlaps(
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1622253.
   }
 
-  *aOutIndex = startIndex + insertionPoint;
+  aOutIndex->emplace(startIndex + insertionPoint);
   return NS_OK;
 }
 
@@ -1119,8 +1125,8 @@ void Selection::Clear(nsPresContext* aPresContext) {
 }
 
 bool Selection::StyledRanges::HasEqualRangeBoundariesAt(
-    const nsRange& aRange, int32_t aRangeIndex) const {
-  if (aRangeIndex >= 0 && aRangeIndex < (int32_t)mRanges.Length()) {
+    const nsRange& aRange, size_t aRangeIndex) const {
+  if (aRangeIndex < mRanges.Length()) {
     const nsRange* range = mRanges[aRangeIndex].mRange;
     return range->HasEqualBoundaries(aRange);
   }
@@ -1158,15 +1164,17 @@ nsresult Selection::GetRangesForIntervalArray(
   }
 
   aRanges->Clear();
-  int32_t startIndex, endIndex;
+  Maybe<size_t> maybeStartIndex, maybeEndIndex;
   nsresult res = mStyledRanges.GetIndicesForInterval(
       aBeginNode, aBeginOffset, aEndNode, aEndOffset, aAllowAdjacent,
-      startIndex, endIndex);
+      maybeStartIndex, maybeEndIndex);
   NS_ENSURE_SUCCESS(res, res);
 
-  if (startIndex == -1 || endIndex == -1) return NS_OK;
+  if (maybeStartIndex.isNothing() || maybeEndIndex.isNothing()) {
+    return NS_OK;
+  }
 
-  for (int32_t i = startIndex; i < endIndex; i++) {
+  for (const size_t i : IntegerRange(*maybeStartIndex, *maybeEndIndex)) {
     // XXX(Bug 1631371) Check if this should use a fallible operation as it
     // pretended earlier.
     aRanges->AppendElement(mStyledRanges.mRanges[i].mRange);
@@ -1177,8 +1185,11 @@ nsresult Selection::GetRangesForIntervalArray(
 
 nsresult Selection::StyledRanges::GetIndicesForInterval(
     const nsINode* aBeginNode, uint32_t aBeginOffset, const nsINode* aEndNode,
-    uint32_t aEndOffset, bool aAllowAdjacent, int32_t& aStartIndex,
-    int32_t& aEndIndex) const {
+    uint32_t aEndOffset, bool aAllowAdjacent, Maybe<size_t>& aStartIndex,
+    Maybe<size_t>& aEndIndex) const {
+  MOZ_ASSERT(aStartIndex.isNothing());
+  MOZ_ASSERT(aEndIndex.isNothing());
+
   if (NS_WARN_IF(!aBeginNode)) {
     return NS_ERROR_INVALID_POINTER;
   }
@@ -1187,18 +1198,17 @@ nsresult Selection::StyledRanges::GetIndicesForInterval(
     return NS_ERROR_INVALID_POINTER;
   }
 
-  aStartIndex = -1;
-  aEndIndex = -1;
-
-  if (mRanges.Length() == 0) return NS_OK;
+  if (mRanges.Length() == 0) {
+    return NS_OK;
+  }
 
   const bool intervalIsCollapsed =
       aBeginNode == aEndNode && aBeginOffset == aEndOffset;
 
   // Ranges that end before the given interval and begin after the given
   // interval can be discarded
-  int32_t endsBeforeIndex{FindInsertionPoint(&mRanges, *aEndNode, aEndOffset,
-                                             &CompareToRangeStart)};
+  size_t endsBeforeIndex{FindInsertionPoint(&mRanges, *aEndNode, aEndOffset,
+                                            &CompareToRangeStart)};
 
   if (endsBeforeIndex == 0) {
     const nsRange* endRange = mRanges[endsBeforeIndex].mRange;
@@ -1217,13 +1227,14 @@ nsresult Selection::StyledRanges::GetIndicesForInterval(
     if (!aAllowAdjacent && !(endRange->Collapsed() && intervalIsCollapsed))
       return NS_OK;
   }
-  aEndIndex = endsBeforeIndex;
+  aEndIndex.emplace(endsBeforeIndex);
 
-  int32_t beginsAfterIndex{FindInsertionPoint(
-      &mRanges, *aBeginNode, aBeginOffset, &CompareToRangeEnd)};
+  size_t beginsAfterIndex{FindInsertionPoint(&mRanges, *aBeginNode,
+                                             aBeginOffset, &CompareToRangeEnd)};
 
-  if (beginsAfterIndex == (int32_t)mRanges.Length())
+  if (beginsAfterIndex == mRanges.Length()) {
     return NS_OK;  // optimization: all ranges are strictly before us
+  }
 
   if (aAllowAdjacent) {
     // At this point, one of the following holds:
@@ -1236,7 +1247,7 @@ nsresult Selection::StyledRanges::GetIndicesForInterval(
     // an adjacent range (they will appear in mRanges in that
     // order). For this final case, we need to increment endsBeforeIndex, until
     // one of the first two possibilites hold
-    while (endsBeforeIndex < (int32_t)mRanges.Length()) {
+    while (endsBeforeIndex < mRanges.Length()) {
       const nsRange* endRange = mRanges[endsBeforeIndex].mRange;
       if (!endRange->StartRef().Equals(aEndNode, aEndOffset)) {
         break;
@@ -1278,7 +1289,7 @@ nsresult Selection::StyledRanges::GetIndicesForInterval(
     // In particular, endsBeforeIndex may point to a collaped range which
     // represents the point at the end of the interval - this range should be
     // included
-    if (endsBeforeIndex < (int32_t)mRanges.Length()) {
+    if (endsBeforeIndex < mRanges.Length()) {
       const nsRange* endRange = mRanges[endsBeforeIndex].mRange;
       if (endRange->StartRef().Equals(aEndNode, aEndOffset) &&
           endRange->Collapsed()) {
@@ -1290,8 +1301,8 @@ nsresult Selection::StyledRanges::GetIndicesForInterval(
   NS_ASSERTION(beginsAfterIndex <= endsBeforeIndex, "Is mRanges not ordered?");
   NS_ENSURE_STATE(beginsAfterIndex <= endsBeforeIndex);
 
-  aStartIndex = beginsAfterIndex;
-  aEndIndex = endsBeforeIndex;
+  aStartIndex.emplace(beginsAfterIndex);
+  aEndIndex = Some(endsBeforeIndex);
   return NS_OK;
 }
 
@@ -1915,30 +1926,28 @@ void Selection::AddRangeAndSelectFramesAndNotifyListeners(nsRange& aRange,
 
   // This inserts a table cell range in proper document order
   // and returns NS_OK if range doesn't contain just one table cell
-  bool didAddRange;
-  int32_t rangeIndex;
-  nsresult result = MaybeAddTableCellRange(*range, &didAddRange, &rangeIndex);
+  Maybe<size_t> maybeRangeIndex;
+  nsresult result = MaybeAddTableCellRange(*range, &maybeRangeIndex);
   if (NS_FAILED(result)) {
     aRv.Throw(result);
     return;
   }
 
-  if (!didAddRange) {
-    result = AddRangesForSelectableNodes(range, &rangeIndex,
+  if (maybeRangeIndex.isNothing()) {
+    result = AddRangesForSelectableNodes(range, &maybeRangeIndex,
                                          DispatchSelectstartEvent::Maybe);
     if (NS_FAILED(result)) {
       aRv.Throw(result);
       return;
     }
+    if (maybeRangeIndex.isNothing()) {
+      return;
+    }
   }
 
-  if (rangeIndex < 0) {
-    return;
-  }
+  MOZ_ASSERT(*maybeRangeIndex < mStyledRanges.Length());
 
-  MOZ_ASSERT(rangeIndex < static_cast<int32_t>(mStyledRanges.Length()));
-
-  SetAnchorFocusRange(static_cast<size_t>(rangeIndex));
+  SetAnchorFocusRange(*maybeRangeIndex);
 
   // Make sure the caret appears on the next line, if at a newline
   if (mSelectionType == SelectionType::eNormal) {
@@ -2147,8 +2156,8 @@ void Selection::CollapseInternal(InLimiter aInLimiter,
          aPoint.Offset());
 #endif
 
-  int32_t rangeIndex = -1;
-  result = AddRangesForSelectableNodes(range, &rangeIndex,
+  Maybe<size_t> maybeRangeIndex;
+  result = AddRangesForSelectableNodes(range, &maybeRangeIndex,
                                        DispatchSelectstartEvent::Maybe);
   if (NS_FAILED(result)) {
     aRv.Throw(result);
@@ -2273,13 +2282,14 @@ nsresult Selection::SetAnchorFocusToRange(nsRange* aRange) {
     return rv;
   }
 
-  int32_t outIndex = -1;
-  rv = AddRangesForSelectableNodes(aRange, &outIndex, dispatchSelectstartEvent);
+  Maybe<size_t> maybeOutIndex;
+  rv = AddRangesForSelectableNodes(aRange, &maybeOutIndex,
+                                   dispatchSelectstartEvent);
   if (NS_FAILED(rv)) {
     return rv;
   }
-  if (outIndex >= 0) {
-    SetAnchorFocusRange(static_cast<size_t>(outIndex));
+  if (maybeOutIndex.isSome()) {
+    SetAnchorFocusRange(*maybeOutIndex);
   } else {
     RemoveAnchorFocusRange();
   }
