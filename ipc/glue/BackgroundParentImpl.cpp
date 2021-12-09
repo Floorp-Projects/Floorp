@@ -718,26 +718,14 @@ bool BackgroundParentImpl::DeallocPParentToChildStreamParent(
   return true;
 }
 
-BackgroundParentImpl::PVsyncParent* BackgroundParentImpl::AllocPVsyncParent() {
+already_AddRefed<BackgroundParentImpl::PVsyncParent>
+BackgroundParentImpl::AllocPVsyncParent() {
   AssertIsInMainOrSocketProcess();
   AssertIsOnBackgroundThread();
 
   RefPtr<mozilla::dom::VsyncParent> actor = new mozilla::dom::VsyncParent();
   actor->UpdateVsyncSource(nullptr);
-  // There still has one ref-count after return, and it will be released in
-  // DeallocPVsyncParent().
-  return actor.forget().take();
-}
-
-bool BackgroundParentImpl::DeallocPVsyncParent(PVsyncParent* aActor) {
-  AssertIsInMainOrSocketProcess();
-  AssertIsOnBackgroundThread();
-  MOZ_ASSERT(aActor);
-
-  // This actor already has one ref-count. Please check AllocPVsyncParent().
-  RefPtr<mozilla::dom::VsyncParent> actor =
-      dont_AddRef(static_cast<mozilla::dom::VsyncParent*>(aActor));
-  return true;
+  return actor.forget();
 }
 
 camera::PCamerasParent* BackgroundParentImpl::AllocPCamerasParent() {
