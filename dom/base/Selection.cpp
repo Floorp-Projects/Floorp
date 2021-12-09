@@ -636,7 +636,7 @@ void Selection::SetAnchorFocusRange(int32_t indx) {
 }
 
 static int32_t CompareToRangeStart(const nsINode& aCompareNode,
-                                   int32_t aCompareOffset,
+                                   uint32_t aCompareOffset,
                                    const nsRange& aRange) {
   MOZ_ASSERT(aRange.GetStartContainer());
   nsINode* start = aRange.GetStartContainer();
@@ -657,12 +657,13 @@ static int32_t CompareToRangeStart(const nsINode& aCompareNode,
   }
 
   // The points are in the same subtree, hence there has to be an order.
-  return *nsContentUtils::ComparePoints(&aCompareNode, aCompareOffset, start,
-                                        aRange.StartOffset());
+  return *nsContentUtils::ComparePoints(
+      &aCompareNode, AssertedCast<int32_t>(aCompareOffset), start,
+      AssertedCast<int32_t>(aRange.StartOffset()));
 }
 
 static int32_t CompareToRangeEnd(const nsINode& aCompareNode,
-                                 int32_t aCompareOffset,
+                                 uint32_t aCompareOffset,
                                  const nsRange& aRange) {
   MOZ_ASSERT(aRange.IsPositioned());
   nsINode* end = aRange.GetEndContainer();
@@ -677,15 +678,16 @@ static int32_t CompareToRangeEnd(const nsINode& aCompareNode,
   }
 
   // The points are in the same subtree, hence there has to be an order.
-  return *nsContentUtils::ComparePoints(&aCompareNode, aCompareOffset, end,
-                                        aRange.EndOffset());
+  return *nsContentUtils::ComparePoints(
+      &aCompareNode, AssertedCast<int32_t>(aCompareOffset), end,
+      AssertedCast<int32_t>(aRange.EndOffset()));
 }
 
 // static
 int32_t Selection::StyledRanges::FindInsertionPoint(
     const nsTArray<StyledRange>* aElementArray, const nsINode& aPointNode,
-    int32_t aPointOffset,
-    int32_t (*aComparator)(const nsINode&, int32_t, const nsRange&)) {
+    uint32_t aPointOffset,
+    int32_t (*aComparator)(const nsINode&, uint32_t, const nsRange&)) {
   int32_t beginSearch = 0;
   int32_t endSearch = aElementArray->Length();  // one beyond what to check
 
@@ -1131,8 +1133,8 @@ bool Selection::StyledRanges::HasEqualRangeBoundariesAt(
   return false;
 }
 
-void Selection::GetRangesForInterval(nsINode& aBeginNode, int32_t aBeginOffset,
-                                     nsINode& aEndNode, int32_t aEndOffset,
+void Selection::GetRangesForInterval(nsINode& aBeginNode, uint32_t aBeginOffset,
+                                     nsINode& aEndNode, uint32_t aEndOffset,
                                      bool aAllowAdjacent,
                                      nsTArray<RefPtr<nsRange>>& aReturn,
                                      mozilla::ErrorResult& aRv) {
@@ -1145,14 +1147,14 @@ void Selection::GetRangesForInterval(nsINode& aBeginNode, int32_t aBeginOffset,
   }
 
   aReturn.SetLength(results.Length());
-  for (uint32_t i = 0; i < results.Length(); ++i) {
+  for (size_t i = 0; i < results.Length(); ++i) {
     aReturn[i] = results[i];  // AddRefs
   }
 }
 
 nsresult Selection::GetRangesForIntervalArray(
-    nsINode* aBeginNode, int32_t aBeginOffset, nsINode* aEndNode,
-    int32_t aEndOffset, bool aAllowAdjacent, nsTArray<nsRange*>* aRanges) {
+    nsINode* aBeginNode, uint32_t aBeginOffset, nsINode* aEndNode,
+    uint32_t aEndOffset, bool aAllowAdjacent, nsTArray<nsRange*>* aRanges) {
   if (NS_WARN_IF(!aBeginNode)) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -1180,8 +1182,8 @@ nsresult Selection::GetRangesForIntervalArray(
 }
 
 nsresult Selection::StyledRanges::GetIndicesForInterval(
-    const nsINode* aBeginNode, int32_t aBeginOffset, const nsINode* aEndNode,
-    int32_t aEndOffset, bool aAllowAdjacent, int32_t& aStartIndex,
+    const nsINode* aBeginNode, uint32_t aBeginOffset, const nsINode* aEndNode,
+    uint32_t aEndOffset, bool aAllowAdjacent, int32_t& aStartIndex,
     int32_t& aEndIndex) const {
   if (NS_WARN_IF(!aBeginNode)) {
     return NS_ERROR_INVALID_POINTER;
@@ -1565,7 +1567,7 @@ nsresult Selection::SelectFrames(nsPresContext* aPresContext, nsRange* aRange,
 //    the aSlowCheck flag would have meaning again.
 
 UniquePtr<SelectionDetails> Selection::LookUpSelection(
-    nsIContent* aContent, int32_t aContentOffset, int32_t aContentLength,
+    nsIContent* aContent, uint32_t aContentOffset, uint32_t aContentLength,
     UniquePtr<SelectionDetails> aDetailsHead, SelectionType aSelectionType,
     bool aSlowCheck) {
   if (!aContent) {
@@ -1591,20 +1593,21 @@ UniquePtr<SelectionDetails> Selection::LookUpSelection(
 
   UniquePtr<SelectionDetails> detailsHead = std::move(aDetailsHead);
 
-  for (uint32_t i = 0; i < overlappingRanges.Length(); i++) {
+  for (size_t i = 0; i < overlappingRanges.Length(); i++) {
     nsRange* range = overlappingRanges[i];
     nsINode* startNode = range->GetStartContainer();
     nsINode* endNode = range->GetEndContainer();
-    int32_t startOffset = range->StartOffset();
-    int32_t endOffset = range->EndOffset();
+    uint32_t startOffset = range->StartOffset();
+    uint32_t endOffset = range->EndOffset();
 
-    int32_t start = -1, end = -1;
+    Maybe<uint32_t> start, end;
     if (startNode == aContent && endNode == aContent) {
       if (startOffset < (aContentOffset + aContentLength) &&
           endOffset > aContentOffset) {
         // this range is totally inside the requested content range
-        start = std::max(0, startOffset - aContentOffset);
-        end = std::min(aContentLength, endOffset - aContentOffset);
+        start.emplace(
+            startOffset >= aContentOffset ? startOffset - aContentOffset : 0u);
+        end.emplace(std::min(aContentLength, endOffset - aContentOffset));
       }
       // otherwise, range is inside the requested node, but does not intersect
       // the requested content range, so ignore it
@@ -1612,31 +1615,34 @@ UniquePtr<SelectionDetails> Selection::LookUpSelection(
       if (startOffset < (aContentOffset + aContentLength)) {
         // the beginning of the range is inside the requested node, but the
         // end is outside, select everything from there to the end
-        start = std::max(0, startOffset - aContentOffset);
-        end = aContentLength;
+        start.emplace(
+            startOffset >= aContentOffset ? startOffset - aContentOffset : 0u);
+        end.emplace(aContentLength);
       }
     } else if (endNode == aContent) {
       if (endOffset > aContentOffset) {
         // the end of the range is inside the requested node, but the beginning
         // is outside, select everything from the beginning to there
-        start = 0;
-        end = std::min(aContentLength, endOffset - aContentOffset);
+        start.emplace(0u);
+        end.emplace(std::min(aContentLength, endOffset - aContentOffset));
       }
     } else {
       // this range does not begin or end in the requested node, but since
       // GetRangesForInterval returned this range, we know it overlaps.
       // Therefore, this node is enclosed in the range, and we select all
       // of it.
-      start = 0;
-      end = aContentLength;
+      start.emplace(0u);
+      end.emplace(aContentLength);
     }
-    if (start < 0) continue;  // the ranges do not overlap the input range
+    if (start.isNothing()) {
+      continue;  // the ranges do not overlap the input range
+    }
 
     auto newHead = MakeUnique<SelectionDetails>();
 
     newHead->mNext = std::move(detailsHead);
-    newHead->mStart = start;
-    newHead->mEnd = end;
+    newHead->mStart = AssertedCast<int32_t>(*start);
+    newHead->mEnd = AssertedCast<int32_t>(*end);
     newHead->mSelectionType = aSelectionType;
     StyledRange* rd = mStyledRanges.FindRangeData(range);
     if (rd) {
@@ -1985,7 +1991,7 @@ void Selection::RemoveRangeAndUnselectFramesAndNotifyListeners(
   }
 
   // find out the length of the end node, so we can select all of it
-  int32_t beginOffset, endOffset;
+  uint32_t beginOffset, endOffset;
   if (endNode->IsText()) {
     // Get the length of the text. We can't just use the offset because
     // another range could be touching this text node but not intersect our
@@ -2322,13 +2328,13 @@ void Selection::ExtendJS(nsINode& aContainer, uint32_t aOffset,
   Extend(aContainer, aOffset, aRv);
 }
 
-nsresult Selection::Extend(nsINode* aContainer, int32_t aOffset) {
+nsresult Selection::Extend(nsINode* aContainer, uint32_t aOffset) {
   if (!aContainer) {
     return NS_ERROR_INVALID_ARG;
   }
 
   ErrorResult result;
-  Extend(*aContainer, static_cast<uint32_t>(aOffset), result);
+  Extend(*aContainer, aOffset, result);
   return result.StealNSResult();
 }
 
