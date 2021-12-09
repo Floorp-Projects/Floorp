@@ -417,6 +417,35 @@ __attribute__((weak))
     return power;
   }
 
+public:
+
+#define WASM_PAGE_SIZE 65536
+#define WASM_HEAP_MAX_ALLOWED_PAGES 65536
+#define WASM_MAX_HEAP (static_cast<uint64_t>(1) << 32)
+  static uint64_t rlbox_wasm2c_get_adjusted_heap_size(uint64_t heap_size)
+  {
+    if (heap_size == 0){
+      return 0;
+    }
+
+    if(heap_size <= WASM_PAGE_SIZE) {
+      return WASM_PAGE_SIZE;
+    } else if (heap_size >= WASM_MAX_HEAP) {
+      return WASM_MAX_HEAP;
+    }
+
+    return next_power_of_two(static_cast<uint32_t>(heap_size));
+  }
+
+  static uint64_t rlbox_wasm2c_get_heap_page_count(uint64_t heap_size)
+  {
+    const uint64_t pages = heap_size / WASM_PAGE_SIZE;
+    return pages;
+  }
+#undef WASM_MAX_HEAP
+#undef WASM_HEAP_MAX_ALLOWED_PAGES
+#undef WASM_PAGE_SIZE
+
 protected:
 
 #ifndef RLBOX_USE_STATIC_CALLS
@@ -524,23 +553,9 @@ protected:
       sandbox_info.wasm_rt_sys_init();
     });
 
-#define WASM_PAGE_SIZE 65536
-#define WASM_HEAP_MAX_ALLOWED_PAGES 65536
-#define WASM_MAX_HEAP (static_cast<uint64_t>(1) << 32)
-    if (override_max_heap_size != 0){
-      if(override_max_heap_size < WASM_PAGE_SIZE) {
-        override_max_heap_size = WASM_PAGE_SIZE;
-      } else if (override_max_heap_size > WASM_MAX_HEAP) {
-        override_max_heap_size = WASM_MAX_HEAP;
-      } else {
-        override_max_heap_size = next_power_of_two(override_max_heap_size);
-      }
-    }
-    const uint64_t override_max_wasm_pages = override_max_heap_size / WASM_PAGE_SIZE;
+    override_max_heap_size = rlbox_wasm2c_get_adjusted_heap_size(override_max_heap_size);
+    const uint64_t override_max_wasm_pages = rlbox_wasm2c_get_heap_page_count(override_max_heap_size);
     FALLIBLE_DYNAMIC_CHECK(infallible, override_max_wasm_pages <= 65536, "Wasm allows a max heap size of 4GB");
-#undef WASM_MAX_HEAP
-#undef WASM_HEAP_MAX_ALLOWED_PAGES
-#undef WASM_PAGE_SIZE
 
     sandbox = sandbox_info.create_wasm2c_sandbox(static_cast<uint32_t>(override_max_wasm_pages));
     FALLIBLE_DYNAMIC_CHECK(infallible, sandbox != nullptr, "Sandbox could not be created");

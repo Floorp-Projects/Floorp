@@ -8,6 +8,10 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/RLBoxSandboxPool.h"
+#ifdef MOZ_USING_WASM_SANDBOXING
+#  include "mozilla/rlbox/rlbox_config.h"
+#  include "mozilla/rlbox/rlbox_wasm2c_sandbox.hpp"
+#endif
 
 using namespace mozilla;
 
@@ -63,18 +67,49 @@ void RLBoxSandboxPool::Push(UniquePtr<RLBoxSandboxDataBase> sbxData) {
   }
 }
 
-UniquePtr<RLBoxSandboxPoolData> RLBoxSandboxPool::PopOrCreate() {
+UniquePtr<RLBoxSandboxPoolData> RLBoxSandboxPool::PopOrCreate(
+    uint64_t aMinSize) {
   MutexAutoLock lock(mMutex);
 
   UniquePtr<RLBoxSandboxDataBase> sbxData;
+
   if (!mPool.IsEmpty()) {
-    sbxData = mPool.PopLastElement();
-    CancelTimer();
-    if (!mPool.IsEmpty()) {
-      StartTimer();
+    const int64_t lastIndex = ReleaseAssertedCast<int64_t>(mPool.Length()) - 1;
+    for (int64_t i = lastIndex; i >= 0; i--) {
+      if (mPool[i]->mSize >= aMinSize) {
+        sbxData = std::move(mPool[i]);
+        mPool.RemoveElementAt(i);
+
+        // If we reuse a sandbox from the pool, reset the timer to clear the
+        // pool
+        CancelTimer();
+        if (!mPool.IsEmpty()) {
+          StartTimer();
+        }
+        break;
+      }
     }
-  } else {
-    sbxData = CreateSandboxData();
+  }
+
+  if (!sbxData) {
+#ifdef MOZ_USING_WASM_SANDBOXING
+    // RLBox's wasm sandboxes have a limited platform dependent capacity. We
+    // track this capacity in this pool. Note the noop sandboxes have no
+    // capacity limit but this design assumes that all sandboxes use the wasm
+    // sandbox limit.
+    const uint64_t defaultCapacityForSandbox =
+        wasm_rt_get_default_max_linear_memory_size();
+    const uint64_t minSandboxCapacity =
+        std::max(aMinSize, defaultCapacityForSandbox);
+    const uint64_t chosenAdjustedCapacity =
+        rlbox::rlbox_wasm2c_sandbox::rlbox_wasm2c_get_adjusted_heap_size(
+            minSandboxCapacity);
+#else
+    // If sandboxing is disabled altogether we just set a limit of 4gb.
+    // This is not actually enforced by the noop sandbox.
+    const uint64_t chosenAdjustedCapacity = static_cast<uint64_t>(1) << 32;
+#endif
+    sbxData = CreateSandboxData(chosenAdjustedCapacity);
     NS_ENSURE_TRUE(sbxData, nullptr);
   }
 

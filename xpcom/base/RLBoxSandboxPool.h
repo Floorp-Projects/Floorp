@@ -44,13 +44,15 @@ class RLBoxSandboxPool : public nsITimerCallback, public nsINamed {
         mMutex("RLBoxSandboxPool::mMutex"){};
 
   void Push(UniquePtr<RLBoxSandboxDataBase> sbx);
-  // PopOrCreate() returns a sandbox from the pool if the pool is not empty and
+  // PopOrCreate returns a sandbox from the pool if the pool is not empty and
   // tries to mint a new one otherwise. If creating a new sandbox fails, the
-  // function returns a nullptr.
-  UniquePtr<RLBoxSandboxPoolData> PopOrCreate();
+  // function returns a nullptr. The parameter aMinSize is the minimum size of
+  // the sandbox memory.
+  UniquePtr<RLBoxSandboxPoolData> PopOrCreate(uint64_t aMinSize = 0);
 
  protected:
-  virtual UniquePtr<RLBoxSandboxDataBase> CreateSandboxData() = 0;
+  // CreateSandboxData takes a parameter which is the size of the sandbox memory
+  virtual UniquePtr<RLBoxSandboxDataBase> CreateSandboxData(uint64_t aSize) = 0;
   virtual ~RLBoxSandboxPool() = default;
 
  private:
@@ -68,6 +70,8 @@ class RLBoxSandboxPool : public nsITimerCallback, public nsINamed {
 // (e.g., callbacks).
 class RLBoxSandboxDataBase {
  public:
+  const uint64_t mSize;
+  explicit RLBoxSandboxDataBase(uint64_t aSize) : mSize(aSize) {}
   virtual ~RLBoxSandboxDataBase() = default;
 };
 
