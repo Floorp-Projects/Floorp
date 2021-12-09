@@ -161,19 +161,15 @@ class QSTestUtils {
     this.info?.("initNimbusFeature awaiting ExperimentAPI.ready");
     await ExperimentAPI.ready();
 
-    this.info?.(
-      "initNimbusFeature awaiting ExperimentFakes.remoteDefaultsHelper"
-    );
-    await ExperimentFakes.remoteDefaultsHelper({
-      feature: NimbusFeatures.urlbar,
-      configuration: {
-        slug: "QuickSuggestTestUtils",
-        variables: { enabled: true },
-        targeting: "true",
-      },
+    this.info?.("initNimbusFeature awaiting ExperimentFakes.enrollWithRollout");
+    let doCleanup = await ExperimentFakes.enrollWithRollout({
+      featureId: NimbusFeatures.urlbar.featureId,
+      value: { enabled: true },
     });
 
     this.info?.("initNimbusFeature done");
+
+    this.registerCleanupFunction(doCleanup);
   }
 
   /**
