@@ -376,7 +376,7 @@ class js::shell::OffThreadJob {
  public:
   using Source = mozilla::Variant<JS::UniqueTwoByteChars, JS::TranscodeBuffer>;
 
-  OffThreadJob(ShellContext* sc, ScriptKind kind, Source&& source);
+  OffThreadJob(ShellContext* sc, OffThreadJobKind kind, Source&& source);
   ~OffThreadJob();
 
   void cancel();
@@ -388,7 +388,7 @@ class js::shell::OffThreadJob {
 
  public:
   const int32_t id;
-  const ScriptKind kind;
+  const OffThreadJobKind kind;
 
  private:
   js::Monitor& monitor;
@@ -397,7 +397,7 @@ class js::shell::OffThreadJob {
   Source source;
 };
 
-static OffThreadJob* NewOffThreadJob(JSContext* cx, ScriptKind kind,
+static OffThreadJob* NewOffThreadJob(JSContext* cx, OffThreadJobKind kind,
                                      CompileOptions& options,
                                      OffThreadJob::Source&& source) {
   ShellContext* sc = GetShellContext(cx);
@@ -416,7 +416,8 @@ static OffThreadJob* NewOffThreadJob(JSContext* cx, ScriptKind kind,
   return job.release();
 }
 
-static OffThreadJob* GetSingleOffThreadJob(JSContext* cx, ScriptKind kind) {
+static OffThreadJob* GetSingleOffThreadJob(JSContext* cx,
+                                           OffThreadJobKind kind) {
   ShellContext* sc = GetShellContext(cx);
   const auto& jobs = sc->offThreadJobs;
   if (jobs.empty()) {
@@ -439,8 +440,8 @@ static OffThreadJob* GetSingleOffThreadJob(JSContext* cx, ScriptKind kind) {
   return job;
 }
 
-static OffThreadJob* LookupOffThreadJobByID(JSContext* cx, ScriptKind kind,
-                                            int32_t id) {
+static OffThreadJob* LookupOffThreadJobByID(JSContext* cx,
+                                            OffThreadJobKind kind, int32_t id) {
   if (id <= 0) {
     JS_ReportErrorASCII(cx, "Bad off-thread job ID");
     return nullptr;
@@ -474,7 +475,8 @@ static OffThreadJob* LookupOffThreadJobByID(JSContext* cx, ScriptKind kind,
   return job;
 }
 
-static OffThreadJob* LookupOffThreadJobForArgs(JSContext* cx, ScriptKind kind,
+static OffThreadJob* LookupOffThreadJobForArgs(JSContext* cx,
+                                               OffThreadJobKind kind,
                                                const CallArgs& args,
                                                size_t arg) {
   // If the optional ID argument isn't present, get the single pending job.
@@ -532,7 +534,8 @@ static void CancelOffThreadJobsForRuntime(JSContext* cx) {
 
 mozilla::Atomic<int32_t> gOffThreadJobSerial(1);
 
-OffThreadJob::OffThreadJob(ShellContext* sc, ScriptKind kind, Source&& source)
+OffThreadJob::OffThreadJob(ShellContext* sc, OffThreadJobKind kind,
+                           Source&& source)
     : id(gOffThreadJobSerial++),
       kind(kind),
       monitor(sc->offThreadMonitor),
@@ -6194,7 +6197,7 @@ static bool OffThreadCompileToStencil(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   OffThreadJob* job =
-      NewOffThreadJob(cx, ScriptKind::ScriptStencil, options,
+      NewOffThreadJob(cx, OffThreadJobKind::CompileScript, options,
                       OffThreadJob::Source(std::move(ownedChars)));
   if (!job) {
     return false;
@@ -6219,7 +6222,7 @@ static bool FinishOffThreadCompileToStencil(JSContext* cx, unsigned argc,
   CallArgs args = CallArgsFromVp(argc, vp);
 
   OffThreadJob* job =
-      LookupOffThreadJobForArgs(cx, ScriptKind::ScriptStencil, args, 0);
+      LookupOffThreadJobForArgs(cx, OffThreadJobKind::CompileScript, args, 0);
   if (!job) {
     return false;
   }
@@ -6289,7 +6292,7 @@ static bool OffThreadCompileModuleToStencil(JSContext* cx, unsigned argc,
   }
 
   OffThreadJob* job =
-      NewOffThreadJob(cx, ScriptKind::ModuleStencil, options,
+      NewOffThreadJob(cx, OffThreadJobKind::CompileModule, options,
                       OffThreadJob::Source(std::move(ownedChars)));
   if (!job) {
     return false;
@@ -6314,7 +6317,7 @@ static bool FinishOffThreadCompileModuleToStencil(JSContext* cx, unsigned argc,
   CallArgs args = CallArgsFromVp(argc, vp);
 
   OffThreadJob* job =
-      LookupOffThreadJobForArgs(cx, ScriptKind::ModuleStencil, args, 0);
+      LookupOffThreadJobForArgs(cx, OffThreadJobKind::CompileModule, args, 0);
   if (!job) {
     return false;
   }
@@ -6339,16 +6342,16 @@ static bool FinishOffThreadCompileModuleToStencil(JSContext* cx, unsigned argc,
   return true;
 }
 
-static bool OffThreadDecodeScript(JSContext* cx, unsigned argc, Value* vp) {
+static bool OffThreadDecodeStencil(JSContext* cx, unsigned argc, Value* vp) {
   if (!CanUseExtraThreads()) {
     JS_ReportErrorASCII(cx,
-                        "Can't use offThreadDecodeScript with --no-threads");
+                        "Can't use offThreadDecodeStencil with --no-threads");
     return false;
   }
 
   CallArgs args = CallArgsFromVp(argc, vp);
 
-  if (!args.requireAtLeast(cx, "offThreadDecodeScript", 1)) {
+  if (!args.requireAtLeast(cx, "offThreadDecodeStencil", 1)) {
     return false;
   }
   if (!args[0].isObject() || !CacheEntry_isCacheEntry(&args[0].toObject())) {
@@ -6360,15 +6363,13 @@ static bool OffThreadDecodeScript(JSContext* cx, unsigned argc, Value* vp) {
 
   UniqueChars fileNameBytes;
   CompileOptions options(cx);
-  options.setIntroductionType("js shell offThreadDecodeScript")
+  options.setIntroductionType("js shell offThreadDecodeStencil")
       .setFileAndLine("<string>", 1);
-
-  options.borrowBuffer = true;
 
   if (args.length() >= 2) {
     if (!args[1].isObject()) {
       JS_ReportErrorASCII(
-          cx, "offThreadDecodeScript: The 2nd argument must be an object");
+          cx, "offThreadDecodeStencil: The 2nd argument must be an object");
       return false;
     }
 
@@ -6405,14 +6406,14 @@ static bool OffThreadDecodeScript(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   OffThreadJob* job =
-      NewOffThreadJob(cx, ScriptKind::DecodeScript, options,
+      NewOffThreadJob(cx, OffThreadJobKind::Decode, options,
                       OffThreadJob::Source(std::move(loadBuffer)));
   if (!job) {
     return false;
   }
 
-  if (!JS::DecodeOffThreadScript(cx, options, job->xdrBuffer(), 0,
-                                 OffThreadCompileScriptCallback, job)) {
+  if (!JS::DecodeStencilOffThread(cx, decodeOptions, job->xdrBuffer(), 0,
+                                  OffThreadCompileScriptCallback, job)) {
     job->cancel();
     DeleteOffThreadJob(cx, job);
     return false;
@@ -6422,11 +6423,12 @@ static bool OffThreadDecodeScript(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static bool runOffThreadDecodedScript(JSContext* cx, unsigned argc, Value* vp) {
+static bool FinishOffThreadDecodeStencil(JSContext* cx, unsigned argc,
+                                         Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
   OffThreadJob* job =
-      LookupOffThreadJobForArgs(cx, ScriptKind::DecodeScript, args, 0);
+      LookupOffThreadJobForArgs(cx, OffThreadJobKind::Decode, args, 0);
   if (!job) {
     return false;
   }
@@ -6434,13 +6436,20 @@ static bool runOffThreadDecodedScript(JSContext* cx, unsigned argc, Value* vp) {
   JS::OffThreadToken* token = job->waitUntilDone(cx);
   MOZ_ASSERT(token);
 
-  RootedScript script(cx, JS::FinishOffThreadScriptDecoder(cx, token));
+  RefPtr<JS::Stencil> stencil = JS::FinishDecodeStencilOffThread(cx, token);
   DeleteOffThreadJob(cx, job);
-  if (!script) {
+  if (!stencil) {
     return false;
   }
 
-  return JS_ExecuteScript(cx, script, args.rval());
+  RootedObject stencilObj(cx,
+                          js::StencilObject::create(cx, std::move(stencil)));
+  if (!stencilObj) {
+    return false;
+  }
+
+  args.rval().setObject(*stencilObj);
+  return true;
 }
 
 class AutoCStringVector {
@@ -9422,18 +9431,19 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "  throw the appropriate exception; otherwise, return the module stencil\n"
 "  object."),
 
-    JS_FN_HELP("offThreadDecodeScript", OffThreadDecodeScript, 1, 0,
-"offThreadDecodeScript(cacheEntry[, options])",
+    JS_FN_HELP("offThreadDecodeStencil", OffThreadDecodeStencil, 1, 0,
+"offThreadDecodeStencil(cacheEntry[, options])",
 "  Decode |code| on a helper thread, returning a job ID. To wait for the\n"
-"  decoding to finish and run the code, call |runOffThreadDecodeScript| passing\n"
+"  decoding to finish and run the code, call |finishOffThreadDecodeStencil| passing\n"
 "  the job ID. If present, |options| may have properties saying how the code\n"
 "  should be compiled (see also offThreadCompileToStencil)."),
 
-    JS_FN_HELP("runOffThreadDecodedScript", runOffThreadDecodedScript, 0, 0,
-"runOffThreadDecodedScript([jobID])",
-"  Wait for off-thread decoding to complete. The job ID can be ommitted if there\n"
-"  is only one job pending. If an error occurred, throw the appropriate\n"
-"  exception; otherwise, run the script and return its value."),
+    JS_FN_HELP("finishOffThreadDecodeStencil", FinishOffThreadDecodeStencil, 0, 0,
+"finishOffThreadDecodeStencil([jobID])",
+"  Wait for an off-thread decode job to complete. The job ID can be\n"
+"  ommitted if there is only one job pending. If an error occurred,\n"
+"  throw the appropriate exception; otherwise, return the decoded stencil\n"
+"  object."),
 
     JS_FN_HELP("offThreadCompileToStencil", OffThreadCompileToStencil, 1, 0,
 "offThreadCompileToStencil(code[, options])",
