@@ -191,12 +191,21 @@ class ProviderQuickSuggest extends UrlbarProvider {
       UrlbarUtils.RESULT_SOURCE.SEARCH,
       ...UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, payload)
     );
-    result.isSuggestedIndexRelativeToGroup = true;
-    result.suggestedIndex = UrlbarPrefs.get(
-      suggestion.is_sponsored
-        ? "quickSuggestSponsoredIndex"
-        : "quickSuggestNonSponsoredIndex"
-    );
+
+    if (
+      !isNaN(suggestion.position) &&
+      UrlbarPrefs.get("quickSuggestAllowPositionInSuggestions")
+    ) {
+      result.suggestedIndex = suggestion.position;
+    } else {
+      result.isSuggestedIndexRelativeToGroup = true;
+      result.suggestedIndex = UrlbarPrefs.get(
+        suggestion.is_sponsored
+          ? "quickSuggestSponsoredIndex"
+          : "quickSuggestNonSponsoredIndex"
+      );
+    }
+
     addCallback(this, result);
 
     this._addedResultInLastQuery = true;

@@ -132,6 +132,7 @@ class Suggestions {
       score: SUGGESTION_SCORE,
       source: QUICK_SUGGEST_SOURCE.REMOTE_SETTINGS,
       icon: await this._fetchIcon(result.icon),
+      position: result.position,
     };
   }
 
