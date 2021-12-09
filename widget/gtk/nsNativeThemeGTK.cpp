@@ -57,7 +57,6 @@
 using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::widget;
-using mozilla::dom::HTMLInputElement;
 using ScrollbarDrawingGTK = mozilla::widget::ScrollbarDrawingGTK;
 
 static int gLastGdkError;
@@ -205,61 +204,24 @@ bool nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
   if (aWidgetFlags) {
     *aWidgetFlags = 0;
   }
+
+  EventStates eventState = GetContentState(aFrame, aAppearance);
   if (aState) {
     memset(aState, 0, sizeof(GtkWidgetState));
 
     // For XUL checkboxes and radio buttons, the state of the parent
     // determines our state.
-    nsIFrame* stateFrame = aFrame;
-    if (aFrame && ((aWidgetFlags && (aAppearance == StyleAppearance::Checkbox ||
-                                     aAppearance == StyleAppearance::Radio)) ||
-                   aAppearance == StyleAppearance::CheckboxLabel ||
-                   aAppearance == StyleAppearance::RadioLabel)) {
-      nsAtom* atom = nullptr;
-      if (IsFrameContentNodeInNamespace(aFrame, kNameSpaceID_XUL)) {
-        if (aAppearance == StyleAppearance::CheckboxLabel ||
-            aAppearance == StyleAppearance::RadioLabel) {
-          // Adjust stateFrame so GetContentState finds the correct state.
-          stateFrame = aFrame = aFrame->GetParent()->GetParent();
-        } else {
-          // GetContentState knows to look one frame up for radio/checkbox
-          // widgets, so don't adjust stateFrame here.
-          aFrame = aFrame->GetParent();
-        }
-        if (aWidgetFlags) {
-          if (!atom) {
-            atom = (aAppearance == StyleAppearance::Checkbox ||
-                    aAppearance == StyleAppearance::CheckboxLabel)
-                       ? nsGkAtoms::checked
-                       : nsGkAtoms::selected;
-          }
-          *aWidgetFlags = CheckBooleanAttr(aFrame, atom);
-        }
-      } else {
-        if (aWidgetFlags) {
-          *aWidgetFlags = 0;
-          HTMLInputElement* inputElt =
-              HTMLInputElement::FromNode(aFrame->GetContent());
-          if (inputElt && inputElt->Checked())
-            *aWidgetFlags |= MOZ_GTK_WIDGET_CHECKED;
-
-          if (GetIndeterminate(aFrame))
-            *aWidgetFlags |= MOZ_GTK_WIDGET_INCONSISTENT;
-        }
+    if (aWidgetFlags) {
+      if (eventState.HasState(NS_EVENT_STATE_CHECKED)) {
+        *aWidgetFlags |= MOZ_GTK_WIDGET_CHECKED;
       }
-    } else if (aAppearance == StyleAppearance::ToolbarbuttonDropdown ||
-               aAppearance == StyleAppearance::Treeheadersortarrow ||
-               aAppearance == StyleAppearance::ButtonArrowPrevious ||
-               aAppearance == StyleAppearance::ButtonArrowNext ||
-               aAppearance == StyleAppearance::ButtonArrowUp ||
-               aAppearance == StyleAppearance::ButtonArrowDown) {
-      // The state of an arrow comes from its parent.
-      stateFrame = aFrame = aFrame->GetParent();
+      if (eventState.HasState(NS_EVENT_STATE_INDETERMINATE)) {
+        *aWidgetFlags |= MOZ_GTK_WIDGET_INCONSISTENT;
+      }
     }
 
-    EventStates eventState = GetContentState(stateFrame, aAppearance);
-
-    aState->disabled = IsDisabled(aFrame, eventState) || IsReadOnly(aFrame);
+    aState->disabled =
+        eventState.HasState(NS_EVENT_STATE_DISABLED) || IsReadOnly(aFrame);
     aState->active = eventState.HasState(NS_EVENT_STATE_ACTIVE);
     aState->focused = eventState.HasState(NS_EVENT_STATE_FOCUS);
     aState->inHover = eventState.HasState(NS_EVENT_STATE_HOVER);
@@ -298,15 +260,9 @@ bool nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
       // For these widget types, some element (either a child or parent)
       // actually has element focus, so we check the focused attribute
       // to see whether to draw in the focused state.
-      if (aAppearance == StyleAppearance::NumberInput ||
-          aAppearance == StyleAppearance::Textfield ||
-          aAppearance == StyleAppearance::Textarea ||
-          aAppearance == StyleAppearance::SpinnerTextfield ||
-          aAppearance == StyleAppearance::RadioContainer ||
-          aAppearance == StyleAppearance::RadioLabel) {
-        aState->focused = IsFocused(aFrame);
-      } else if (aAppearance == StyleAppearance::Radio ||
-                 aAppearance == StyleAppearance::Checkbox) {
+      aState->focused = eventState.HasState(NS_EVENT_STATE_FOCUSRING);
+      if (aAppearance == StyleAppearance::Radio ||
+          aAppearance == StyleAppearance::Checkbox) {
         // In XUL, checkboxes and radios shouldn't have focus rings, their
         // labels do
         aState->focused = FALSE;
@@ -641,7 +597,7 @@ bool nsNativeThemeGTK::GetGtkWidgetAndState(StyleAppearance aAppearance,
       nsIFrame* stateFrame = aFrame->GetParent();
       EventStates eventStates = GetContentState(stateFrame, aAppearance);
 
-      aGtkWidgetType = IsIndeterminateProgress(stateFrame, eventStates)
+      aGtkWidgetType = eventStates.HasState(NS_EVENT_STATE_INDETERMINATE)
                            ? IsVerticalProgress(stateFrame)
                                  ? MOZ_GTK_PROGRESS_CHUNK_VERTICAL_INDETERMINATE
                                  : MOZ_GTK_PROGRESS_CHUNK_INDETERMINATE
