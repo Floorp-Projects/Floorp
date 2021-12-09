@@ -283,7 +283,7 @@ static constexpr uint32_t DefaultFeatures() {
 static constexpr uint32_t StartupExtraDefaultFeatures() {
   // Enable file I/Os by default for startup profiles as startup is heavy on
   // I/O operations.
-  return ProfilerFeature::FileIOAll;
+  return ProfilerFeature::FileIOAll | ProfilerFeature::IPCMessages;
 }
 
 // RAII class to lock the profiler mutex.

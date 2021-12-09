@@ -240,7 +240,7 @@ static constexpr uint32_t DefaultFeatures() {
 static constexpr uint32_t StartupExtraDefaultFeatures() {
   // Enable mainthreadio by default for startup profiles as startup is heavy on
   // I/O operations, and main thread I/O is really important to see there.
-  return ProfilerFeature::MainThreadIO;
+  return ProfilerFeature::MainThreadIO | ProfilerFeature::IPCMessages;
 }
 
 // The auto-lock/unlock mutex that guards accesses to CorePS and ActivePS.
