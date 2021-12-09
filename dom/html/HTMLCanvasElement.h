@@ -162,9 +162,9 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
     SetUnsignedIntAttr(nsGkAtoms::width, aWidth, DEFAULT_CANVAS_WIDTH, aRv);
   }
 
-  virtual already_AddRefed<nsISupports> GetContext(
+  already_AddRefed<nsISupports> GetContext(
       JSContext* aCx, const nsAString& aContextId,
-      JS::Handle<JS::Value> aContextOptions, ErrorResult& aRv) override;
+      JS::Handle<JS::Value> aContextOptions, ErrorResult& aRv);
 
   void ToDataURL(JSContext* aCx, const nsAString& aType,
                  JS::Handle<JS::Value> aParams, nsAString& aDataURL,
