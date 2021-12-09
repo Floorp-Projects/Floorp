@@ -5,7 +5,7 @@ if (helperThreadCount() === 0)
 
 var lfOffThreadGlobal = newGlobal();
 enableShellAllocationMetadataBuilder()
-lfOffThreadGlobal.offThreadCompileScript(`
+lfOffThreadGlobal.offThreadCompileToStencil(`
   if ("gczeal" in this)
     gczeal(8, 1)
   function recurse(x) {
@@ -13,4 +13,5 @@ lfOffThreadGlobal.offThreadCompileScript(`
   };
   recurse(0);
 `);
-lfOffThreadGlobal.runOffThreadScript();
+var stencil = lfOffThreadGlobal.finishOffThreadCompileToStencil();
+lfOffThreadGlobal.evalStencil(stencil);
