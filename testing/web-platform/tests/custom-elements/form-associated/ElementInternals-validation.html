@@ -203,6 +203,13 @@ test(() => {
     control.i.setValidity(flags, m, control);
   }, 'Self');
 
+  let notHTMLElement = document.createElementNS('some-random-namespace', 'foo');
+  control.appendChild(notHTMLElement);
+  assert_throws_js(TypeError, () => {
+    control.i.setValidity(flags, m, notHTMLElement);
+  }, 'Not a HTMLElement');
+  notHTMLElement.remove();
+
   // A descendant
   control.i.setValidity(flags, m, control.querySelector('light-child'));
 
