@@ -18,6 +18,7 @@
 #include "mozilla/dom/HTMLSelectElementBinding.h"
 #include "mozilla/dom/UnionTypes.h"
 #include "mozilla/MappedDeclarations.h"
+#include "mozilla/Maybe.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsContentList.h"
 #include "nsError.h"
@@ -180,8 +181,8 @@ void HTMLSelectElement::GetAutocompleteInfo(AutocompleteInfo& aInfo) {
 void HTMLSelectElement::InsertChildBefore(nsIContent* aKid,
                                           nsIContent* aBeforeThis, bool aNotify,
                                           ErrorResult& aRv) {
-  const int32_t index = aBeforeThis ? ComputeIndexOf_Deprecated(aBeforeThis)
-                                    : static_cast<int32_t>(GetChildCount());
+  const uint32_t index =
+      aBeforeThis ? *ComputeIndexOf(aBeforeThis) : GetChildCount();
   SafeOptionListMutation safeMutation(this, this, aKid, index, aNotify);
   nsGenericHTMLFormControlElementWithState::InsertChildBefore(aKid, aBeforeThis,
                                                               aNotify, aRv);
@@ -192,7 +193,7 @@ void HTMLSelectElement::InsertChildBefore(nsIContent* aKid,
 
 void HTMLSelectElement::RemoveChildNode(nsIContent* aKid, bool aNotify) {
   SafeOptionListMutation safeMutation(this, this, nullptr,
-                                      ComputeIndexOf_Deprecated(aKid), aNotify);
+                                      *ComputeIndexOf(aKid), aNotify);
   nsGenericHTMLFormControlElementWithState::RemoveChildNode(aKid, aNotify);
 }
 

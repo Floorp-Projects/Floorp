@@ -9,6 +9,7 @@
 
 #include "mozilla/ContentIterator.h"
 #include "mozilla/dom/AbstractRange.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/mozalloc.h"
 #include "nsAtom.h"
 #include "nsComponentManagerUtils.h"
@@ -201,29 +202,26 @@ static bool ContentIsInTraversalRange(nsIContent* aContent, bool aIsPreMode,
   if (MOZ_UNLIKELY(NS_WARN_IF(!parentContent))) {
     return false;
   }
-  int32_t offsetInParent = parentContent->ComputeIndexOf_Deprecated(aContent);
+  Maybe<uint32_t> offsetInParent = parentContent->ComputeIndexOf(aContent);
   NS_WARNING_ASSERTION(
-      offsetInParent >= 0,
+      offsetInParent.isSome(),
       "Content is not in the parent, is this called during a DOM mutation?");
-
-  if (!aIsPreMode) {
-    ++offsetInParent;
+  if (MOZ_UNLIKELY(NS_WARN_IF(offsetInParent.isNothing()))) {
+    return false;
   }
 
-  // XXX This should be check immediately after calling ComputeIndexOf().
-  if (MOZ_UNLIKELY(NS_WARN_IF(offsetInParent < 0))) {
-    return false;
+  if (!aIsPreMode) {
+    MOZ_ASSERT(*offsetInParent != UINT32_MAX);
+    ++(*offsetInParent);
   }
 
   const Maybe<int32_t> startRes = nsContentUtils::ComparePoints(
-      aStartContainer, aStartOffset, parentContent,
-      static_cast<uint32_t>(offsetInParent));
+      aStartContainer, aStartOffset, parentContent, *offsetInParent);
   if (MOZ_UNLIKELY(NS_WARN_IF(!startRes))) {
     return false;
   }
-  const Maybe<int32_t> endRes =
-      nsContentUtils::ComparePoints(aEndContainer, aEndOffset, parentContent,
-                                    static_cast<uint32_t>(offsetInParent));
+  const Maybe<int32_t> endRes = nsContentUtils::ComparePoints(
+      aEndContainer, aEndOffset, parentContent, *offsetInParent);
   if (MOZ_UNLIKELY(NS_WARN_IF(!endRes))) {
     return false;
   }

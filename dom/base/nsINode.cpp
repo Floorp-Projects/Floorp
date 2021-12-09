@@ -2258,15 +2258,20 @@ static void EnsureAllowedAsChild(nsINode* aNewChild, nsINode* aParent,
         return;
       }
 
-      const int32_t doctypeIndex =
-          aParent->ComputeIndexOf_Deprecated(docTypeContent);
-      const int32_t insertIndex = aParent->ComputeIndexOf_Deprecated(aRefChild);
+      // The docTypeContent is retrived from the child list of the Document
+      // node so that doctypeIndex is never Nothing.
+      const Maybe<uint32_t> doctypeIndex =
+          aParent->ComputeIndexOf(docTypeContent);
+      MOZ_ASSERT(doctypeIndex.isSome());
+      // If aRefChild is an NAC, its index can be Nothing.
+      const Maybe<uint32_t> insertIndex = aParent->ComputeIndexOf(aRefChild);
 
       // Now we're OK in the following two cases only:
       // 1) We're replacing something that's not before the doctype
       // 2) We're inserting before something that comes after the doctype
-      bool ok = aIsReplace ? (insertIndex >= doctypeIndex)
-                           : insertIndex > doctypeIndex;
+      const bool ok = MOZ_LIKELY(insertIndex.isSome()) &&
+                      (aIsReplace ? *insertIndex >= *doctypeIndex
+                                  : *insertIndex > *doctypeIndex);
       if (!ok) {
         aRv.ThrowHierarchyRequestError(
             "Cannot insert a root element before the doctype");
@@ -2308,13 +2313,16 @@ static void EnsureAllowedAsChild(nsINode* aNewChild, nsINode* aParent,
         return;
       }
 
-      const int32_t rootIndex = aParent->ComputeIndexOf_Deprecated(rootElement);
-      const int32_t insertIndex = aParent->ComputeIndexOf_Deprecated(aRefChild);
+      // rootElement is now in the child list of the Document node so that
+      // ComputeIndexOf must success to find it.
+      const Maybe<uint32_t> rootIndex = aParent->ComputeIndexOf(rootElement);
+      MOZ_ASSERT(rootIndex.isSome());
+      const Maybe<uint32_t> insertIndex = aParent->ComputeIndexOf(aRefChild);
 
       // Now we're OK if and only if insertIndex <= rootIndex.  Indeed, either
       // we end up replacing aRefChild or we end up before it.  Either one is
       // ok as long as aRefChild is not after rootElement.
-      if (insertIndex > rootIndex) {
+      if (MOZ_LIKELY(insertIndex.isSome()) && *insertIndex > *rootIndex) {
         aRv.ThrowHierarchyRequestError(
             "Cannot have a DocumentType node after the root element");
       }

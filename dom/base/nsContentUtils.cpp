@@ -2086,11 +2086,18 @@ bool nsContentUtils::InProlog(nsINode* aNode) {
     return false;
   }
 
-  Document* doc = parent->AsDocument();
-  nsIContent* root = doc->GetRootElement();
-
-  return !root || doc->ComputeIndexOf_Deprecated(aNode) <
-                      doc->ComputeIndexOf_Deprecated(root);
+  const Document* doc = parent->AsDocument();
+  const nsIContent* root = doc->GetRootElement();
+  if (!root) {
+    return true;
+  }
+  const Maybe<uint32_t> indexOfNode = doc->ComputeIndexOf(aNode);
+  const Maybe<uint32_t> indexOfRoot = doc->ComputeIndexOf(root);
+  if (MOZ_LIKELY(indexOfNode.isSome() && indexOfRoot.isSome())) {
+    return *indexOfNode < *indexOfRoot;
+  }
+  // XXX Keep the odd traditional behavior for now.
+  return indexOfNode.isNothing() && indexOfRoot.isSome();
 }
 
 bool nsContentUtils::IsCallerChrome() {
@@ -2693,10 +2700,15 @@ int32_t nsContentUtils::ComparePoints_Deprecated(
     const nsINode* child1 = parents1.ElementAt(--pos1);
     const nsINode* child2 = parents2.ElementAt(--pos2);
     if (child1 != child2) {
-      const int32_t child1index =
+      const Maybe<uint32_t> child1Index =
           aParent1Cache ? aParent1Cache->ComputeIndexOf(parent, child1)
-                        : parent->ComputeIndexOf_Deprecated(child1);
-      return child1index < parent->ComputeIndexOf_Deprecated(child2) ? -1 : 1;
+                        : parent->ComputeIndexOf(child1);
+      const Maybe<uint32_t> child2Index = parent->ComputeIndexOf(child2);
+      if (MOZ_LIKELY(child1Index.isSome() && child2Index.isSome())) {
+        return *child1Index < *child2Index ? -1 : 1;
+      }
+      // XXX Keep the odd traditional behavior for now.
+      return child1Index.isNothing() && child2Index.isSome() ? -1 : 1;
     }
     parent = child1;
   }
@@ -2709,21 +2721,21 @@ int32_t nsContentUtils::ComparePoints_Deprecated(
 
   if (!pos1) {
     const nsINode* child2 = parents2.ElementAt(--pos2);
-    const int32_t child2Index = parent->ComputeIndexOf_Deprecated(child2);
-    if (MOZ_UNLIKELY(NS_WARN_IF(child2Index < 0))) {
+    const Maybe<uint32_t> child2Index = parent->ComputeIndexOf(child2);
+    if (MOZ_UNLIKELY(NS_WARN_IF(child2Index.isNothing()))) {
       return 1;
     }
-    return aOffset1 <= static_cast<uint32_t>(child2Index) ? -1 : 1;
+    return aOffset1 <= *child2Index ? -1 : 1;
   }
 
   const nsINode* child1 = parents1.ElementAt(--pos1);
-  const int32_t child1Index =
+  const Maybe<uint32_t> child1Index =
       aParent1Cache ? aParent1Cache->ComputeIndexOf(parent, child1)
-                    : parent->ComputeIndexOf_Deprecated(child1);
-  if (MOZ_UNLIKELY(NS_WARN_IF(child1Index < 0))) {
+                    : parent->ComputeIndexOf(child1);
+  if (MOZ_UNLIKELY(NS_WARN_IF(child1Index.isNothing()))) {
     return -1;
   }
-  return static_cast<uint32_t>(child1Index) < aOffset2 ? -1 : 1;
+  return *child1Index < aOffset2 ? -1 : 1;
 }
 
 // static
