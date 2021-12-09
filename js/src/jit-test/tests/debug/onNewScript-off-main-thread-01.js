@@ -12,7 +12,6 @@ dbg.onNewScript = function (s) {
 }
 
 log = '';
-g.offThreadCompileToStencil('"t" + "wine"');
-var stencil = g.finishOffThreadCompileToStencil();
-assertEq(g.evalStencil(stencil), 'twine');
+g.offThreadCompileScript('"t" + "wine"');
+assertEq(g.runOffThreadScript(), 'twine');
 assertEq(log, 's');

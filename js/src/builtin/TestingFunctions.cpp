@@ -52,7 +52,9 @@
 #include "builtin/Promise.h"
 #include "builtin/SelfHostingDefines.h"
 #include "builtin/TestingUtility.h"  // js::ParseCompileOptions, js::ParseDebugMetadata
-#include "frontend/BytecodeCompilation.h"  // frontend::CompileGlobalScriptToExtensibleStencil, frontend::DelazifyCanonicalScriptedFunction
+#include "frontend/BytecodeCompilation.h"  // frontend::CanLazilyParse,
+// frontend::CompileGlobalScriptToExtensibleStencil,
+// frontend::DelazifyCanonicalScriptedFunction
 #include "frontend/BytecodeCompiler.h"  // frontend::ParseModuleToExtensibleStencil
 #include "frontend/CompilationStencil.h"  // frontend::CompilationStencil
 #include "gc/Allocator.h"
@@ -6275,6 +6277,13 @@ static bool EvalStencil(JSContext* cx, uint32_t argc, Value* vp) {
                                 &elementAttributeName)) {
       return false;
     }
+  }
+
+  if (stencilObj->stencil()->canLazilyParse !=
+      frontend::CanLazilyParse(options)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_STENCIL_OPTIONS_MISMATCH);
+    return false;
   }
 
   bool useDebugMetadata = !privateValue.isUndefined() || elementAttributeName;

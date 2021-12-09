@@ -9,4 +9,4 @@ function a(b) {
   });
   return c;
 }
-offThreadDecodeStencil(a(""));
+offThreadDecodeScript(a(""));

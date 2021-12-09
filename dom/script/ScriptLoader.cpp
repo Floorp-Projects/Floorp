@@ -1840,8 +1840,7 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
 
     size_t length =
         aRequest->mScriptBytecode.length() - aRequest->mBytecodeOffset;
-    JS::DecodeOptions decodeOptions(options);
-    if (!JS::CanDecodeOffThread(cx, decodeOptions, length)) {
+    if (!JS::CanDecodeOffThread(cx, options, length)) {
       return NS_OK;
     }
   }
@@ -1868,19 +1867,18 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
 
     aRequest->mOffThreadToken =
         maybeSource.constructed<SourceText<char16_t>>()
-            ? JS::CompileModuleToStencilOffThread(
+            ? JS::CompileOffThreadModule(
                   cx, options, maybeSource.ref<SourceText<char16_t>>(),
                   OffThreadScriptLoaderCallback, static_cast<void*>(runnable))
-            : JS::CompileModuleToStencilOffThread(
+            : JS::CompileOffThreadModule(
                   cx, options, maybeSource.ref<SourceText<Utf8Unit>>(),
                   OffThreadScriptLoaderCallback, static_cast<void*>(runnable));
     if (!aRequest->mOffThreadToken) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   } else if (aRequest->IsBytecode()) {
-    JS::DecodeOptions decodeOptions(options);
-    aRequest->mOffThreadToken = JS::DecodeStencilOffThread(
-        cx, decodeOptions, aRequest->mScriptBytecode, aRequest->mBytecodeOffset,
+    aRequest->mOffThreadToken = JS::DecodeOffThreadScript(
+        cx, options, aRequest->mScriptBytecode, aRequest->mBytecodeOffset,
         OffThreadScriptLoaderCallback, static_cast<void*>(runnable));
     if (!aRequest->mOffThreadToken) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -1908,10 +1906,10 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
 
     aRequest->mOffThreadToken =
         maybeSource.constructed<SourceText<char16_t>>()
-            ? JS::CompileToStencilOffThread(
+            ? JS::CompileOffThread(
                   cx, options, maybeSource.ref<SourceText<char16_t>>(),
                   OffThreadScriptLoaderCallback, static_cast<void*>(runnable))
-            : JS::CompileToStencilOffThread(
+            : JS::CompileOffThread(
                   cx, options, maybeSource.ref<SourceText<Utf8Unit>>(),
                   OffThreadScriptLoaderCallback, static_cast<void*>(runnable));
     if (!aRequest->mOffThreadToken) {
@@ -2181,8 +2179,6 @@ nsresult ScriptLoader::FillCompileOptionsForRequest(
   aOptions->setDeferDebugMetadata(true);
 
   aOptions->borrowBuffer = true;
-
-  aOptions->allocateInstantiationStorage = true;
 
   return NS_OK;
 }
