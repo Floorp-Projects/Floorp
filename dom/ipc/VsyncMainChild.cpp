@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "VsyncChild.h"
+#include "VsyncMainChild.h"
 
 #include "mozilla/SchedulerGroup.h"
 #include "mozilla/VsyncDispatcher.h"
@@ -12,14 +12,14 @@
 
 namespace mozilla::dom {
 
-VsyncChild::VsyncChild()
+VsyncMainChild::VsyncMainChild()
     : mIsShutdown(false), mVsyncRate(TimeDuration::Forever()) {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
-VsyncChild::~VsyncChild() { MOZ_ASSERT(NS_IsMainThread()); }
+VsyncMainChild::~VsyncMainChild() { MOZ_ASSERT(NS_IsMainThread()); }
 
-void VsyncChild::AddChildRefreshTimer(VsyncObserver* aVsyncObserver) {
+void VsyncMainChild::AddChildRefreshTimer(VsyncObserver* aVsyncObserver) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mObservers.Contains(aVsyncObserver));
 
@@ -33,7 +33,7 @@ void VsyncChild::AddChildRefreshTimer(VsyncObserver* aVsyncObserver) {
   mObservers.AppendElement(std::move(aVsyncObserver));
 }
 
-void VsyncChild::RemoveChildRefreshTimer(VsyncObserver* aVsyncObserver) {
+void VsyncMainChild::RemoveChildRefreshTimer(VsyncObserver* aVsyncObserver) {
   MOZ_ASSERT(NS_IsMainThread());
   if (mIsShutdown) {
     return;
@@ -44,7 +44,7 @@ void VsyncChild::RemoveChildRefreshTimer(VsyncObserver* aVsyncObserver) {
   }
 }
 
-void VsyncChild::ActorDestroy(ActorDestroyReason aActorDestroyReason) {
+void VsyncMainChild::ActorDestroy(ActorDestroyReason aActorDestroyReason) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mIsShutdown);
   mIsShutdown = true;
@@ -55,8 +55,8 @@ void VsyncChild::ActorDestroy(ActorDestroyReason aActorDestroyReason) {
   mObservers.Clear();
 }
 
-mozilla::ipc::IPCResult VsyncChild::RecvNotify(const VsyncEvent& aVsync,
-                                               const float& aVsyncRate) {
+mozilla::ipc::IPCResult VsyncMainChild::RecvNotify(const VsyncEvent& aVsync,
+                                                   const float& aVsyncRate) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mIsShutdown);
 
@@ -70,6 +70,6 @@ mozilla::ipc::IPCResult VsyncChild::RecvNotify(const VsyncEvent& aVsync,
   return IPC_OK();
 }
 
-TimeDuration VsyncChild::GetVsyncRate() { return mVsyncRate; }
+TimeDuration VsyncMainChild::GetVsyncRate() { return mVsyncRate; }
 
 }  // namespace mozilla::dom

@@ -46,7 +46,6 @@
 #include "mozilla/dom/ServiceWorkerContainerChild.h"
 #include "mozilla/dom/ServiceWorkerManagerChild.h"
 #include "mozilla/dom/BrowserChild.h"
-#include "mozilla/dom/VsyncChild.h"
 #include "mozilla/ipc/IPCStreamAlloc.h"
 #include "mozilla/ipc/PBackgroundTestChild.h"
 #include "mozilla/ipc/PChildToParentStreamChild.h"
@@ -405,22 +404,6 @@ bool BackgroundChildImpl::DeallocPFileDescriptorSetChild(
   MOZ_ASSERT(aActor);
 
   delete static_cast<FileDescriptorSetChild*>(aActor);
-  return true;
-}
-
-dom::PVsyncChild* BackgroundChildImpl::AllocPVsyncChild() {
-  RefPtr<dom::VsyncChild> actor = new dom::VsyncChild();
-  // There still has one ref-count after return, and it will be released in
-  // DeallocPVsyncChild().
-  return actor.forget().take();
-}
-
-bool BackgroundChildImpl::DeallocPVsyncChild(PVsyncChild* aActor) {
-  MOZ_ASSERT(aActor);
-
-  // This actor already has one ref-count. Please check AllocPVsyncChild().
-  RefPtr<dom::VsyncChild> actor =
-      dont_AddRef(static_cast<dom::VsyncChild*>(aActor));
   return true;
 }
 

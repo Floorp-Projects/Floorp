@@ -210,9 +210,7 @@ class BackgroundParentImpl : public PBackgroundParent,
   bool DeallocPFileDescriptorSetParent(
       PFileDescriptorSetParent* aActor) override;
 
-  PVsyncParent* AllocPVsyncParent() override;
-
-  bool DeallocPVsyncParent(PVsyncParent* aActor) override;
+  already_AddRefed<PVsyncParent> AllocPVsyncParent() override;
 
   already_AddRefed<mozilla::psm::PVerifySSLServerCertParent>
   AllocPVerifySSLServerCertParent(

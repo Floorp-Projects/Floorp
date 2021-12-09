@@ -2312,29 +2312,16 @@ bool BrowserChild::DeallocPFilePickerChild(PFilePickerChild* actor) {
   return true;
 }
 
-PVsyncChild* BrowserChild::AllocPVsyncChild() {
-  RefPtr<dom::VsyncChild> actor = new VsyncChild();
-  // There still has one ref-count after return, and it will be released in
-  // DeallocPVsyncChild().
-  return actor.forget().take();
-}
-
-bool BrowserChild::DeallocPVsyncChild(PVsyncChild* aActor) {
-  MOZ_ASSERT(aActor);
-
-  // This actor already has one ref-count. Please check AllocPVsyncChild().
-  RefPtr<VsyncChild> actor = dont_AddRef(static_cast<VsyncChild*>(aActor));
-  return true;
-}
-
-RefPtr<VsyncChild> BrowserChild::GetVsyncChild() {
+RefPtr<VsyncMainChild> BrowserChild::GetVsyncChild() {
   // Initializing mVsyncChild here turns on per-BrowserChild Vsync for a
   // given platform. Note: this only makes sense if nsWindow returns a
   // window-specific VsyncSource.
 #if defined(MOZ_WAYLAND)
   if (IsWaylandEnabled() && !mVsyncChild) {
-    PVsyncChild* actor = SendPVsyncConstructor();
-    mVsyncChild = static_cast<VsyncChild*>(actor);
+    mVsyncChild = MakeRefPtr<VsyncMainChild>();
+    if (!SendPVsyncConstructor(mVsyncChild)) {
+      mVsyncChild = nullptr;
+    }
   }
 #endif
   return mVsyncChild;

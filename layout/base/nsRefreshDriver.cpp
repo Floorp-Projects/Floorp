@@ -64,7 +64,7 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/Selection.h"
-#include "mozilla/dom/VsyncChild.h"
+#include "mozilla/dom/VsyncMainChild.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/RestyleManager.h"
@@ -451,10 +451,10 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
                         aVsyncSource->GetRefreshTimerVsyncDispatcher());
   }
 
-  explicit VsyncRefreshDriverTimer(const RefPtr<VsyncChild>& aVsyncChild)
+  explicit VsyncRefreshDriverTimer(RefPtr<VsyncMainChild>&& aVsyncChild)
       : mVsyncSource(nullptr),
         mVsyncDispatcher(nullptr),
-        mVsyncChild(aVsyncChild),
+        mVsyncChild(std::move(aVsyncChild)),
         mVsyncRate(TimeDuration::Forever()) {
     MOZ_ASSERT(XRE_IsContentProcess());
     MOZ_ASSERT(NS_IsMainThread());
@@ -479,6 +479,9 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
   // explicitly shutdown. We create an inner class that has the VsyncObserver
   // and is shutdown when the RefreshDriverTimer is deleted.
   class RefreshDriverVsyncObserver final : public VsyncObserver {
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(
+        VsyncRefreshDriverTimer::RefreshDriverVsyncObserver, override)
+
    public:
     explicit RefreshDriverVsyncObserver(
         VsyncRefreshDriverTimer* aVsyncRefreshDriverTimer)
@@ -797,7 +800,7 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
   // Used for child process.
   // The mVsyncChild will be always available before VsncChild::ActorDestroy().
   // After ActorDestroy(), StartTimer() and StopTimer() calls will be non-op.
-  RefPtr<VsyncChild> mVsyncChild;
+  RefPtr<VsyncMainChild> mVsyncChild;
   TimeDuration mVsyncRate;
   bool mIsTicking = false;
 };  // VsyncRefreshDriverTimer
@@ -1000,9 +1003,9 @@ void nsRefreshDriver::CreateVsyncRefreshTimer() {
         return;
       }
       if (BrowserChild* browserChild = widget->GetOwningBrowserChild()) {
-        if (RefPtr<VsyncChild> localVsyncSource =
+        if (RefPtr<VsyncMainChild> localVsyncSource =
                 browserChild->GetVsyncChild()) {
-          mOwnTimer = new VsyncRefreshDriverTimer(localVsyncSource);
+          mOwnTimer = new VsyncRefreshDriverTimer(std::move(localVsyncSource));
           sRegularRateTimerList->AppendElement(mOwnTimer.get());
           return;
         }
@@ -1022,15 +1025,14 @@ void nsRefreshDriver::CreateVsyncRefreshTimer() {
         return;
       }
 
-      dom::PVsyncChild* actor = actorChild->SendPVsyncConstructor();
+      auto child = MakeRefPtr<dom::VsyncMainChild>();
+      dom::PVsyncChild* actor = actorChild->SendPVsyncConstructor(child);
       if (NS_WARN_IF(!actor)) {
         return;
       }
 
-      dom::VsyncChild* child = static_cast<dom::VsyncChild*>(actor);
-
       RefPtr<RefreshDriverTimer> vsyncRefreshDriverTimer =
-          new VsyncRefreshDriverTimer(child);
+          new VsyncRefreshDriverTimer(std::move(child));
 
       sRegularRateTimer = std::move(vsyncRefreshDriverTimer);
     }
