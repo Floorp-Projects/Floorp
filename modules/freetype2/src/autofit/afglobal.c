@@ -19,6 +19,7 @@
 #include "afglobal.h"
 #include "afranges.h"
 #include "afshaper.h"
+#include "afws-decl.h"
 #include <freetype/internal/ftdebug.h>
 
 
@@ -31,11 +32,6 @@
 #undef  FT_COMPONENT
 #define FT_COMPONENT  afglobal
 
-
-  /* get writing system specific header files */
-#undef  WRITING_SYSTEM
-#define WRITING_SYSTEM( ws, WS )  /* empty */
-#include "afwrtsys.h"
 
 #include "aferrors.h"
 
@@ -74,7 +70,7 @@
   af_writing_system_classes[] =
   {
 
-#include "afwrtsys.h"
+#include "afws-iter.h"
 
     NULL  /* do not remove */
   };
@@ -481,7 +477,7 @@
             /* IMPORTANT: Clear the error code, see
              * https://gitlab.freedesktop.org/freetype/freetype/-/issues/1063
              */
-            error = 0;
+            error = FT_Err_Ok;
             goto Again;
           }
 

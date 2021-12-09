@@ -141,7 +141,7 @@
     OTV_OPTIONAL_TABLE( DeviceTableOffset );
 
 
-    /* OTV_NAME_ENTER( "MathKern" );*/
+    /* OTV_NAME_ENTER( "MathKern" ); */
 
     OTV_LIMIT_CHECK( 2 );
 

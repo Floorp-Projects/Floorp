@@ -94,7 +94,7 @@
      */
     if ( face->num_glyphs > 0xFFFFL )
     {
-      FT_TRACE1(( "otv_validate: Invalid glyphs index (0x0000FFFF - 0x%08x) ",
+      FT_TRACE1(( "otv_validate: Invalid glyphs index (0x0000FFFF - 0x%08lx) ",
                   face->num_glyphs ));
       FT_TRACE1(( "are not handled by OpenType tables\n" ));
       num_glyphs = 0xFFFF;
