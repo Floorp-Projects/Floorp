@@ -419,7 +419,7 @@ void js::FillImmutableFlagsFromCompileOptionsForFunction(
 // FillImmutableFlagsFromCompileOptionsForTopLevel above.
 //
 // If isMultiDecode is true, this check minimal set of CompileOptions that is
-// shared across multiple scripts in JS::DecodeMultiOffThreadStencils.
+// shared across multiple scripts in JS::DecodeMultiStencilsOffThread.
 // Other options should be checked when getting the decoded script from the
 // cache.
 bool js::CheckCompileOptionsMatch(const ReadOnlyCompileOptions& options,

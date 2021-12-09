@@ -53,9 +53,6 @@ extern JS_PUBLIC_API bool CanDecodeOffThread(JSContext* cx,
                                              const DecodeOptions& options,
                                              size_t length);
 
-extern JS_PUBLIC_API void CancelMultiOffThreadScriptsDecoder(
-    JSContext* cx, OffThreadToken* token);
-
 }  // namespace JS
 
 #endif /* js_OffThreadScriptCompilation_h */
