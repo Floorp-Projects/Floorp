@@ -510,13 +510,13 @@ class nsContentUtils {
    * Returns true if aNode1 is before aNode2 in the same connected
    * tree.
    * aNode1Index and aNode2Index are in/out arguments. If non-null, and value is
-   * not -1, that value is used instead of calling slow ComputeIndexOf on the
-   * parent node. If value is -1, the value will be set to the return value of
-   * ComputeIndexOf.
+   * Some, that value is used instead of calling slow ComputeIndexOf on the
+   * parent node. If value is Nothing, the value will be set to the return value
+   * of ComputeIndexOf.
    */
   static bool PositionIsBefore(nsINode* aNode1, nsINode* aNode2,
-                               int32_t* aNode1Index = nullptr,
-                               int32_t* aNode2Index = nullptr);
+                               mozilla::Maybe<uint32_t>* aNode1Index = nullptr,
+                               mozilla::Maybe<uint32_t>* aNode2Index = nullptr);
 
   struct ComparePointsCache {
     mozilla::Maybe<uint32_t> ComputeIndexOf(const nsINode* aParent,

@@ -2009,9 +2009,9 @@ class nsINode : public mozilla::dom::EventTarget {
   bool HasChildNodes() const { return HasChildren(); }
 
   // See nsContentUtils::PositionIsBefore for aThisIndex and aOtherIndex usage.
-  uint16_t CompareDocumentPosition(nsINode& aOther,
-                                   int32_t* aThisIndex = nullptr,
-                                   int32_t* aOtherIndex = nullptr) const;
+  uint16_t CompareDocumentPosition(
+      nsINode& aOther, mozilla::Maybe<uint32_t>* aThisIndex = nullptr,
+      mozilla::Maybe<uint32_t>* aOtherIndex = nullptr) const;
   void GetNodeValue(nsAString& aNodeValue) { GetNodeValueInternal(aNodeValue); }
   void SetNodeValue(const nsAString& aNodeValue, mozilla::ErrorResult& aError) {
     SetNodeValueInternal(aNodeValue, aError);

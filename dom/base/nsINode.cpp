@@ -982,8 +982,8 @@ void nsINode::LookupPrefix(const nsAString& aNamespaceURI, nsAString& aPrefix) {
 }
 
 uint16_t nsINode::CompareDocumentPosition(nsINode& aOtherNode,
-                                          int32_t* aThisIndex,
-                                          int32_t* aOtherIndex) const {
+                                          Maybe<uint32_t>* aThisIndex,
+                                          Maybe<uint32_t>* aOtherIndex) const {
   if (this == &aOtherNode) {
     return 0;
   }
@@ -1080,28 +1080,26 @@ uint16_t nsINode::CompareDocumentPosition(nsINode& aOtherNode,
     const nsINode* child2 = parents2.ElementAt(--pos2);
     if (child1 != child2) {
       // child1 or child2 can be an attribute here. This will work fine since
-      // ComputeIndexOf_Deprecated will return -1 for the attribute making the
+      // ComputeIndexOf will return Nothing for the attribute making the
       // attribute be considered before any child.
-      int32_t child1Index;
+      Maybe<uint32_t> child1Index;
       bool cachedChild1Index = false;
       if (&aOtherNode == child1 && aOtherIndex) {
         cachedChild1Index = true;
-        child1Index = *aOtherIndex != -1
-                          ? *aOtherIndex
-                          : parent->ComputeIndexOf_Deprecated(child1);
+        child1Index = aOtherIndex->isSome() ? *aOtherIndex
+                                            : parent->ComputeIndexOf(child1);
       } else {
-        child1Index = parent->ComputeIndexOf_Deprecated(child1);
+        child1Index = parent->ComputeIndexOf(child1);
       }
 
-      int32_t child2Index;
+      Maybe<uint32_t> child2Index;
       bool cachedChild2Index = false;
       if (this == child2 && aThisIndex) {
         cachedChild2Index = true;
-        child2Index = *aThisIndex != -1
-                          ? *aThisIndex
-                          : parent->ComputeIndexOf_Deprecated(child2);
+        child2Index =
+            aThisIndex->isSome() ? *aThisIndex : parent->ComputeIndexOf(child2);
       } else {
-        child2Index = parent->ComputeIndexOf_Deprecated(child2);
+        child2Index = parent->ComputeIndexOf(child2);
       }
 
       uint16_t retVal = child1Index < child2Index

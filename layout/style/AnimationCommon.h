@@ -11,6 +11,7 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/dom/Animation.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/TimingParams.h"
 #include "mozilla/dom/Nullable.h"
 #include "nsContentUtils.h"
@@ -110,8 +111,8 @@ class OwningElementRef final {
     return mTarget == aOther.mTarget;
   }
 
-  bool LessThan(int32_t& aChildIndex, const OwningElementRef& aOther,
-                int32_t& aOtherChildIndex) const {
+  bool LessThan(Maybe<uint32_t>& aChildIndex, const OwningElementRef& aOther,
+                Maybe<uint32_t>& aOtherChildIndex) const {
     MOZ_ASSERT(mTarget.mElement && aOther.mTarget.mElement,
                "Elements to compare should not be null");
 
