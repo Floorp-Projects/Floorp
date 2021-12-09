@@ -18,10 +18,9 @@ dbg.onDebuggerStatement = function (frame) {
   assertEq(source.elementAttributeName, 'mass');
 };
 
-var job = g.offThreadCompileToStencil('debugger;');
-var stencil = g.finishOffThreadCompileToStencil(job);
+var job = g.offThreadCompileScript('debugger;');
 log += 'o';
-g.evalStencil(stencil,
+g.runOffThreadScript(job,
   {
     element: elt,
     elementAttributeName: 'mass'

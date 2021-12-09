@@ -12,7 +12,7 @@ gcparam('allocationThreshold', 1);
 gc();
 
 // Start an off-thread parse.
-offThreadCompileToStencil("print('Finished')");
+offThreadCompileScript("print('Finished')");
 
 // Allocate lots of atoms, parsing occasionally.
 for (let i = 0; i < 10; i++) {
@@ -23,5 +23,4 @@ for (let i = 0; i < 10; i++) {
 }
 
 // Finish the off-thread parse.
-var stencil = finishOffThreadCompileToStencil();
-evalStencil(stencil);
+runOffThreadScript();

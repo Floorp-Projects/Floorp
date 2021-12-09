@@ -5,5 +5,5 @@
 
 evalInWorker(`
   var lfGlobal = newGlobal();
-  lfGlobal.offThreadCompileToStencil(\`{ let x; throw 42; }\`);
+  lfGlobal.offThreadCompileScript(\`{ let x; throw 42; }\`);
 `);

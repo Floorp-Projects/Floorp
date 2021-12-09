@@ -7,7 +7,6 @@ gczeal(9);
 function rejectionTracker(state) {}
 setPromiseRejectionTrackerCallback(rejectionTracker)
   lfGlobal = newGlobal();
-offThreadCompileToStencil(`new Promise(()=>rej)`);
-var stencil = lfGlobal.finishOffThreadCompileToStencil();
-lfGlobal.evalStencil(stencil);
+offThreadCompileScript(`new Promise(()=>rej)`);
+lfGlobal.runOffThreadScript();
 for (lfLocal in this);

@@ -1,6 +1,6 @@
 // |jit-test| skip-if: helperThreadCount() === 0
 
-offThreadCompileToStencil(`
+offThreadCompileScript(`
   function foo(x, {}) {
     do {
       re = /erwe/;
@@ -17,5 +17,4 @@ offThreadCompileToStencil(`
   foo(1, 0);
 `);
 
-var stencil = finishOffThreadCompileToStencil();
-evalStencil(stencil);
+runOffThreadScript();

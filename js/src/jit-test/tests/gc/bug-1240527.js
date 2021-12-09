@@ -1,8 +1,7 @@
 // |jit-test| skip-if: helperThreadCount() === 0 || !('oomTest' in this)
 
-offThreadCompileToStencil(`
+offThreadCompileScript(`
  oomTest(() => "".search(/d/));
  fullcompartmentchecks(3);
 `);
-var stencil = finishOffThreadCompileToStencil();
-evalStencil(stencil);
+runOffThreadScript();

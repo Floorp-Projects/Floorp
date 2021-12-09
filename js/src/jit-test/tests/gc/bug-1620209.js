@@ -1,5 +1,5 @@
 // |jit-test| skip-if: helperThreadCount() === 0
 verifyprebarriers();
-offThreadCompileToStencil('');
+offThreadCompileScript('');
 var dbg = new Debugger();
 var objects = dbg.findObjects();

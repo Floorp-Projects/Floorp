@@ -5,16 +5,14 @@
 
 function execOffThread(source)
 {
-    offThreadCompileToStencil(source);
-    var stencil = finishOffThreadCompileToStencil();
-    return evalStencil(stencil);
+    offThreadCompileScript(source);
+    return runOffThreadScript();
 }
 
 function parseModuleOffThread(source)
 {
-    offThreadCompileModuleToStencil(source);
-    var stencil = finishOffThreadCompileModuleToStencil();
-    return instantiateModuleStencil(stencil);
+    offThreadCompileModule(source);
+    return finishOffThreadModule();
 }
 
 let a = { x: 1 };

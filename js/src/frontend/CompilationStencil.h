@@ -1168,18 +1168,6 @@ struct CompilationStencil {
 
   bool isModule() const;
 
-  bool hasMultipleReference() const { return refCount > 1; }
-
-  bool hasOwnedBorrow() const {
-    return storageType == StorageType::OwnedExtensible;
-  }
-
-  ExtensibleCompilationStencil* takeOwnedBorrow() {
-    MOZ_ASSERT(!hasMultipleReference());
-    MOZ_ASSERT(hasOwnedBorrow());
-    return ownedBorrowStencil.release();
-  }
-
 #ifdef DEBUG
   void assertNoExternalDependency() const;
 #endif
@@ -1237,8 +1225,6 @@ struct ExtensibleCompilationStencil {
   RefPtr<StencilModuleMetadata> moduleMetadata;
 
   RefPtr<StencilAsmJSContainer> asmJS;
-
-  explicit ExtensibleCompilationStencil(JSContext* cx, ScriptSource* source);
 
   ExtensibleCompilationStencil(JSContext* cx, CompilationInput& input);
 
