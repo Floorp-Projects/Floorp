@@ -10865,12 +10865,6 @@
   value: false
   mirror: always
 
-# Whether the storage allowed check should be cached on the inner window.
-- name: privacy.antitracking.cacheStorageAllowedForWindow
-  type: bool
-  value: true
-  mirror: always
-
 # Controls the anti-tracking webcompat features. This includes:
 # - All URL-Classifier and state partitioning skip lists (prefs and remote
 #   settings)
