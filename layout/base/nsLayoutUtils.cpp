@@ -1180,19 +1180,20 @@ int32_t nsLayoutUtils::DoCompareTreePosition(
     return 0;
   }
 
-  const int32_t index1 = parent->ComputeIndexOf_Deprecated(content1Ancestor);
-  const int32_t index2 = parent->ComputeIndexOf_Deprecated(content2Ancestor);
+  const Maybe<uint32_t> index1 = parent->ComputeIndexOf(content1Ancestor);
+  const Maybe<uint32_t> index2 = parent->ComputeIndexOf(content2Ancestor);
 
   // None of the nodes are anonymous, just do a regular comparison.
-  if (index1 >= 0 && index2 >= 0) {
-    return index1 - index2;
+  if (index1.isSome() && index2.isSome()) {
+    return static_cast<int32_t>(static_cast<int64_t>(*index1) - *index2);
   }
 
   // Otherwise handle pseudo-element and anonymous content ordering.
   //
   // ::marker -> ::before -> anon siblings -> regular siblings -> ::after
-  auto PseudoIndex = [](const nsINode* aNode, int32_t aNodeIndex) -> int32_t {
-    if (aNodeIndex >= 0) {
+  auto PseudoIndex = [](const nsINode* aNode,
+                        const Maybe<uint32_t>& aNodeIndex) -> int32_t {
+    if (aNodeIndex.isSome()) {
       return 1;  // Not a pseudo.
     }
     if (aNode->IsContent()) {
