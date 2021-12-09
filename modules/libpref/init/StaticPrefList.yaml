@@ -3885,7 +3885,7 @@
   # mouse messages.
 -   name: dom.w3c_pointer_events.dispatch_by_pointer_messages
     type: bool
-    value: @IS_NIGHTLY_BUILD@
+    value: true
     mirror: always
 
 -   name: dom.w3c_pointer_events.scroll_by_pen.enabled
