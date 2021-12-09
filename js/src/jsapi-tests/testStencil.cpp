@@ -377,6 +377,61 @@ static void callback(JS::OffThreadToken* token, void* context) {
 
 END_TEST(testStencil_OffThread)
 
+BEGIN_TEST(testStencil_OffThreadWithInstantiationStorage) {
+  const char* chars =
+      "function f() { return 42; }"
+      "f();";
+
+  JS::SourceText<mozilla::Utf8Unit> srcBuf;
+  CHECK(srcBuf.init(cx, chars, strlen(chars), JS::SourceOwnership::Borrowed));
+
+  js::Monitor monitor(js::mutexid::ShellOffThreadState);
+  JS::CompileOptions options(cx);
+  JS::OffThreadToken* token;
+
+  // Force off-thread even though if this is a small file.
+  options.forceAsync = true;
+
+  options.allocateInstantiationStorage = true;
+
+  CHECK(token = JS::CompileToStencilOffThread(cx, options, srcBuf, callback,
+                                              &monitor));
+
+  {
+    // Finish any active GC in case it is blocking off-thread work.
+    js::gc::FinishGC(cx);
+
+    js::AutoLockMonitor lock(monitor);
+    lock.wait();
+  }
+
+  JS::Rooted<JS::InstantiationStorage> storage(cx);
+  RefPtr<JS::Stencil> stencil =
+      JS::FinishOffThreadCompileToStencil(cx, token, storage.address());
+  CHECK(stencil);
+
+  JS::InstantiateOptions instantiateOptions(options);
+  JS::RootedScript script(
+      cx, JS::InstantiateGlobalStencil(cx, instantiateOptions, stencil,
+                                       storage.address()));
+  CHECK(script);
+
+  JS::RootedValue rval(cx);
+  CHECK(JS_ExecuteScript(cx, script, &rval));
+  CHECK(rval.isNumber() && rval.toNumber() == 42);
+
+  return true;
+}
+
+static void callback(JS::OffThreadToken* token, void* context) {
+  js::Monitor& monitor = *static_cast<js::Monitor*>(context);
+
+  js::AutoLockMonitor lock(monitor);
+  lock.notify();
+}
+
+END_TEST(testStencil_OffThreadWithInstantiationStorage)
+
 BEGIN_TEST(testStencil_OffThreadModule) {
   const char* chars =
       "export function f() { return 42; }"

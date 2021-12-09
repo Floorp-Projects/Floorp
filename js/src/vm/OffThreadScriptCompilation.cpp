@@ -95,11 +95,12 @@ JS_PUBLIC_API JS::OffThreadToken* JS::CompileToStencilOffThread(
 }
 
 JS_PUBLIC_API already_AddRefed<JS::Stencil> JS::FinishOffThreadCompileToStencil(
-    JSContext* cx, JS::OffThreadToken* token) {
+    JSContext* cx, JS::OffThreadToken* token,
+    JS::InstantiationStorage* storage /* = nullptr */) {
   MOZ_ASSERT(cx);
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
   RefPtr<JS::Stencil> stencil =
-      HelperThreadState().finishCompileToStencilTask(cx, token);
+      HelperThreadState().finishCompileToStencilTask(cx, token, storage);
   return stencil.forget();
 }
 
