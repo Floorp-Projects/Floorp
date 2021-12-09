@@ -10,6 +10,8 @@
 #  include "ICUUtils.h"
 #  include "mozilla/StaticPrefs_dom.h"
 #  include "mozilla/intl/LocaleService.h"
+#  include "mozilla/intl/FormatBuffer.h"
+#  include "mozilla/intl/NumberFormat.h"
 #  include "nsIContent.h"
 #  include "mozilla/dom/Document.h"
 #  include "nsString.h"
@@ -75,37 +77,33 @@ bool ICUUtils::LocalizeNumber(double aValue,
                               nsAString& aLocalizedValue) {
   MOZ_ASSERT(aLangTags.IsAtStart(), "Don't call Next() before passing");
 
-  static const int32_t kBufferSize = 256;
-
-  UChar buffer[kBufferSize];
-
   nsAutoCString langTag;
   aLangTags.GetNext(langTag);
+
+  intl::NumberFormatOptions options;
+  if (StaticPrefs::dom_forms_number_grouping()) {
+    options.mGrouping = intl::NumberFormatOptions::Grouping::Always;
+  } else {
+    options.mGrouping = intl::NumberFormatOptions::Grouping::Never;
+  }
+
+  // ICU default is a maximum of 3 significant fractional digits. We don't
+  // want that limit, so we set it to the maximum that a double can represent
+  // (14-16 decimal fractional digits).
+  options.mFractionDigits = Some(std::make_pair(0, 16));
+
   while (!langTag.IsEmpty()) {
-    UErrorCode status = U_ZERO_ERROR;
-    UniqueUNumberFormat format(
-        unum_open(UNUM_DECIMAL, nullptr, 0, langTag.get(), nullptr, &status));
-    // Since unum_setAttribute have no UErrorCode parameter, we have to
-    // check error status.
-    if (U_FAILURE(status)) {
+    auto result = intl::NumberFormat::TryCreate(langTag.get(), options);
+    if (result.isErr()) {
       aLangTags.GetNext(langTag);
       continue;
     }
-    unum_setAttribute(format.get(), UNUM_GROUPING_USED,
-                      StaticPrefs::dom_forms_number_grouping());
-    // ICU default is a maximum of 3 significant fractional digits. We don't
-    // want that limit, so we set it to the maximum that a double can represent
-    // (14-16 decimal fractional digits).
-    unum_setAttribute(format.get(), UNUM_MAX_FRACTION_DIGITS, 16);
-    int32_t length = unum_formatDouble(format.get(), aValue, buffer,
-                                       kBufferSize, nullptr, &status);
-    NS_ASSERTION(length < kBufferSize && status != U_BUFFER_OVERFLOW_ERROR &&
-                     status != U_STRING_NOT_TERMINATED_WARNING,
-                 "Need a bigger buffer?!");
-    if (U_SUCCESS(status)) {
-      ICUUtils::AssignUCharArrayToString(buffer, length, aLocalizedValue);
+    UniquePtr<intl::NumberFormat> nf = result.unwrap();
+    intl::nsTStringToBufferAdapter adapter(aLocalizedValue);
+    if (nf->format(aValue, adapter).isOk()) {
       return true;
     }
+
     aLangTags.GetNext(langTag);
   }
   return false;
