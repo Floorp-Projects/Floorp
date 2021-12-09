@@ -57,6 +57,7 @@ class AutoJSAPI;
 class DocGroup;
 class Document;
 class LoadedScript;
+class ModuleLoader;
 class ModuleLoadRequest;
 class ModuleScript;
 class SRICheckDataVerifier;
@@ -129,6 +130,8 @@ class ScriptLoader final : public nsISupports {
    */
   void DropDocumentReference() { mDocument = nullptr; }
 
+  void EnsureModuleHooksInitialized();
+
   /**
    * Add an observer for all scripts loaded through this loader.
    *
@@ -189,6 +192,8 @@ class ScriptLoader final : public nsISupports {
     }
     mEnabled = aEnabled;
   }
+
+  ModuleLoader* GetModuleLoader() { return mModuleLoader; }
 
   /**
    *  Check whether to speculatively OMT parse scripts as soon as
@@ -463,8 +468,6 @@ class ScriptLoader final : public nsISupports {
  private:
   virtual ~ScriptLoader();
 
-  void EnsureModuleHooksInitialized();
-
   ScriptLoadRequest* CreateLoadRequest(ScriptKind aKind, nsIURI* aURI,
                                        nsIScriptElement* aElement,
                                        nsIPrincipal* aTriggeringPrincipal,
@@ -694,15 +697,6 @@ class ScriptLoader final : public nsISupports {
                                          ScriptLoadRequest* aRequest,
                                          MaybeSourceText* aMaybeSource);
 
-  void SetModuleFetchStarted(ModuleLoadRequest* aRequest);
-  void SetModuleFetchFinishedAndResumeWaitingRequests(
-      ModuleLoadRequest* aRequest, nsresult aResult);
-
-  bool ModuleMapContainsURL(nsIURI* aURL, nsIGlobalObject* aGlobal) const;
-  RefPtr<mozilla::GenericNonExclusivePromise> WaitForModuleFetch(
-      nsIURI* aURL, nsIGlobalObject* aGlobal);
-  ModuleScript* GetFetchedModule(nsIURI* aURL, nsIGlobalObject* aGlobal) const;
-
   friend JSObject* HostResolveImportedModule(
       JSContext* aCx, JS::Handle<JS::Value> aReferencingPrivate,
       JS::Handle<JSString*> aSpecifier);
@@ -792,20 +786,40 @@ class ScriptLoader final : public nsISupports {
 
   TimeDuration mMainThreadParseTime;
 
-  // Module map
-  nsRefPtrHashtable<ModuleMapKey, mozilla::GenericNonExclusivePromise::Private>
-      mFetchingModules;
-  nsRefPtrHashtable<ModuleMapKey, ModuleScript> mFetchedModules;
-
   nsCOMPtr<nsIConsoleReportCollector> mReporter;
 
   // ShutdownObserver for off thread compilations
   RefPtr<AsyncCompileShutdownObserver> mShutdownObserver;
 
+  RefPtr<ModuleLoader> mModuleLoader;
+
   // Logging
  public:
   static LazyLogModule gCspPRLog;
   static LazyLogModule gScriptLoaderLog;
+};
+
+class ModuleLoader : public nsISupports {
+ private:
+  virtual ~ModuleLoader();
+
+  // Module map
+  nsRefPtrHashtable<ModuleMapKey, mozilla::GenericNonExclusivePromise::Private>
+      mFetchingModules;
+  nsRefPtrHashtable<ModuleMapKey, ModuleScript> mFetchedModules;
+
+ public:
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(ModuleLoader)
+
+  void SetModuleFetchStarted(ModuleLoadRequest* aRequest);
+  void SetModuleFetchFinishedAndResumeWaitingRequests(
+      ModuleLoadRequest* aRequest, nsresult aResult);
+
+  bool ModuleMapContainsURL(nsIURI* aURL, nsIGlobalObject* aGlobal) const;
+  RefPtr<mozilla::GenericNonExclusivePromise> WaitForModuleFetch(
+      nsIURI* aURL, nsIGlobalObject* aGlobal);
+  ModuleScript* GetFetchedModule(nsIURI* aURL, nsIGlobalObject* aGlobal) const;
 };
 
 class nsAutoScriptLoaderDisabler {
