@@ -13237,6 +13237,18 @@
     "alert_emails": ["sw-telemetry@mozilla.com", "echuang@mozilla.com"],
     "description": "Time (ms) for spawning a service worker in the remote content process."
   },
+  "SERVICE_WORKER_ISOLATED_LAUNCH_TIME": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox", "fennec"],
+    "expires_in_version": "never",
+    "bug_numbers": [1740335],
+    "kind": "exponential",
+    "high": 30000,
+    "n_buckets": 25,
+    "releaseChannelCollection": "opt-out",
+    "alert_emails": ["sw-telemetry@mozilla.com", "rjesup@mozilla.com", "echuang@mozilla.com"],
+    "description": "Time (ms) for spawning a service worker in an isolated content process."
+  },
   "SERVICE_WORKER_REGISTRATION_LOADING": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
@@ -13936,13 +13948,6 @@
     "alert_emails": ["tdsmith@mozilla.com", "compatibility@lists.mozilla.org"],
     "description": "Number of dedicated workers destroyed; used in conjunction with use counter histograms"
   },
-  "SERVICE_WORKER_REGISTRATIONS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "50",
-    "kind": "count",
-    "description": "Count how many registrations occurs. File bugs in Core::DOM in case of a Telemetry regression."
-  },
   "SERVICE_WORKER_CONTROLLED_DOCUMENTS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
@@ -13960,11 +13965,36 @@
   "SERVICE_WORKER_LIFE_TIME": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
-    "expires_in_version": "50",
+    "expires_in_version": "102",
     "kind": "exponential",
     "high": 120000,
     "n_buckets": 20,
+    "alert_emails": ["sw-telemetry@mozilla.com", "rjesup@mozilla.com", "echuang@mozilla.com"],
     "description": "Tracking how long a ServiceWorker stays alive after it is spawned. File bugs in Core::DOM in case of a Telemetry regression."
+  },
+  "SERVICE_WORKER_RUNNING": {
+    "record_in_processes": ["main"],
+    "products": ["firefox", "fennec"],
+    "expires_in_version": "102",
+    "kind": "linear",
+    "high": 31,
+    "n_buckets": 30,
+    "keyed": true,
+    "keys": ["All", "Fetch"],
+    "bug_numbers": [1740335],
+    "alert_emails": ["sw-telemetry@mozilla.com", "rjesup@mozilla.com", "echuang@mozilla.com"],
+    "description": "The sampled number of simultaneous running ServiceWorkers in a session, sampled once each minute"
+  },
+  "SERVICE_WORKER_FETCH_RUNNING": {
+    "record_in_processes": ["main"],
+    "products": ["firefox", "fennec"],
+    "expires_in_version": "102",
+    "kind": "linear",
+    "high": 31,
+    "n_buckets": 30,
+    "bug_numbers": [1740335],
+    "alert_emails": ["sw-telemetry@mozilla.com", "rjesup@mozilla.com", "echuang@mozilla.com"],
+    "description": "The sampled number of simultaneous running ServiceWorkers handling Fetch in a session, sampled every minute"
   },
   "GRAPHICS_SANITY_TEST": {
     "record_in_processes": ["main", "content"],
