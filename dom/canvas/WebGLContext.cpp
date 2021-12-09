@@ -221,19 +221,16 @@ void WebGLContext::DestroyResourcesAndContext() {
 }
 
 void ClientWebGLContext::MarkCanvasDirty() {
-  if (mIsCanvasDirty) {
-    return;
-  }
+  if (!mCanvasElement) return;
 
-  mIsCanvasDirty = true;
   mCapturedFrameInvalidated = true;
 
-  if (mCanvasElement) {
-    SVGObserverUtils::InvalidateDirectRenderingObservers(mCanvasElement);
-    mCanvasElement->InvalidateCanvasContent(nullptr);
-  } else if (mOffscreenCanvas) {
-    mOffscreenCanvas->QueueCommitToCompositor();
-  }
+  if (mIsCanvasDirty) return;
+  mIsCanvasDirty = true;
+
+  SVGObserverUtils::InvalidateDirectRenderingObservers(mCanvasElement);
+
+  mCanvasElement->InvalidateCanvasContent(nullptr);
 }
 
 void WebGLContext::OnMemoryPressure() {
@@ -1503,7 +1500,7 @@ webgl::AvailabilityRunnable& ClientWebGLContext::EnsureAvailabilityRunnable()
 
 webgl::AvailabilityRunnable::AvailabilityRunnable(
     const ClientWebGLContext* const webgl)
-    : DiscardableRunnable("webgl::AvailabilityRunnable"), mWebGL(webgl) {}
+    : Runnable("webgl::AvailabilityRunnable"), mWebGL(webgl) {}
 
 webgl::AvailabilityRunnable::~AvailabilityRunnable() {
   MOZ_ASSERT(mQueries.empty());

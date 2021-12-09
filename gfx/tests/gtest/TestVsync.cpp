@@ -26,8 +26,6 @@ using ::testing::_;
 const int kVsyncTimeoutMS = 80;
 
 class TestVsyncObserver : public VsyncObserver {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TestVsyncObserver, override)
-
  public:
   TestVsyncObserver()
       : mDidGetVsyncNotification(false), mVsyncMonitor("VsyncMonitor") {}
@@ -62,8 +60,6 @@ class TestVsyncObserver : public VsyncObserver {
   }
 
  private:
-  ~TestVsyncObserver() = default;
-
   bool mDidGetVsyncNotification;
 
  private:

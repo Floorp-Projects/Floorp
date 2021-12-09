@@ -403,7 +403,6 @@ WEBIDL_FILES = [
     "Animatable.webidl",
     "AnimationEffect.webidl",
     "AnimationEvent.webidl",
-    "AnimationFrameProvider.webidl",
     "AnimationTimeline.webidl",
     "AnonymousContent.webidl",
     "AppInfo.webidl",

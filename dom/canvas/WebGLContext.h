@@ -181,7 +181,7 @@ struct IndexedBufferBinding {
 
 namespace webgl {
 
-class AvailabilityRunnable final : public DiscardableRunnable {
+class AvailabilityRunnable final : public Runnable {
  public:
   const WeakPtr<const ClientWebGLContext> mWebGL;
   std::vector<WeakPtr<WebGLQueryJS>> mQueries;
