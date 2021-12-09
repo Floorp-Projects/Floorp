@@ -13,7 +13,6 @@
 #  include "nsIContent.h"
 #  include "mozilla/dom/Document.h"
 #  include "nsString.h"
-#  include "unicode/uloc.h"
 #  include "unicode/unum.h"
 
 using namespace mozilla;
@@ -170,93 +169,5 @@ nsresult ICUUtils::ICUErrorToNsResult(const intl::ICUError aError) {
       return NS_ERROR_FAILURE;
   }
 }
-
-#  if 0
-/* static */
-Locale
-ICUUtils::BCP47CodeToLocale(const nsAString& aBCP47Code)
-{
-  MOZ_ASSERT(!aBCP47Code.IsEmpty(), "Don't pass an empty BCP 47 code");
-
-  Locale locale;
-  locale.setToBogus();
-
-  // BCP47 codes are guaranteed to be ASCII, so lossy conversion is okay
-  NS_LossyConvertUTF16toASCII bcp47code(aBCP47Code);
-
-  UErrorCode status = U_ZERO_ERROR;
-  int32_t needed;
-
-  char localeID[256];
-  needed = uloc_forLanguageTag(bcp47code.get(), localeID,
-                               PR_ARRAY_SIZE(localeID) - 1, nullptr,
-                               &status);
-  MOZ_ASSERT(needed < int32_t(PR_ARRAY_SIZE(localeID)) - 1,
-             "Need a bigger buffer");
-  if (needed <= 0 || U_FAILURE(status)) {
-    return locale;
-  }
-
-  char lang[64];
-  needed = uloc_getLanguage(localeID, lang, PR_ARRAY_SIZE(lang) - 1,
-                            &status);
-  MOZ_ASSERT(needed < int32_t(PR_ARRAY_SIZE(lang)) - 1,
-             "Need a bigger buffer");
-  if (needed <= 0 || U_FAILURE(status)) {
-    return locale;
-  }
-
-  char country[64];
-  needed = uloc_getCountry(localeID, country, PR_ARRAY_SIZE(country) - 1,
-                           &status);
-  MOZ_ASSERT(needed < int32_t(PR_ARRAY_SIZE(country)) - 1,
-             "Need a bigger buffer");
-  if (needed > 0 && U_SUCCESS(status)) {
-    locale = Locale(lang, country);
-  }
-
-  if (locale.isBogus()) {
-    // Using the country resulted in a bogus Locale, so try with only the lang
-    locale = Locale(lang);
-  }
-
-  return locale;
-}
-
-/* static */
-void
-ICUUtils::ToMozString(UnicodeString& aICUString, nsAString& aMozString)
-{
-  // Both ICU's UnicodeString and Mozilla's nsAString use UTF-16, so we can
-  // cast here.
-
-  static_assert(sizeof(UChar) == 2 && sizeof(nsAString::char_type) == 2,
-                "Unexpected character size - the following cast is unsafe");
-
-  const nsAString::char_type* buf =
-    (const nsAString::char_type*)aICUString.getTerminatedBuffer();
-  aMozString.Assign(buf);
-
-  NS_ASSERTION(aMozString.Length() == (uint32_t)aICUString.length(),
-               "Conversion failed");
-}
-
-/* static */
-void
-ICUUtils::ToICUString(nsAString& aMozString, UnicodeString& aICUString)
-{
-  // Both ICU's UnicodeString and Mozilla's nsAString use UTF-16, so we can
-  // cast here.
-
-  static_assert(sizeof(UChar) == 2 && sizeof(nsAString::char_type) == 2,
-                "Unexpected character size - the following cast is unsafe");
-
-  aICUString.setTo((UChar*)PromiseFlatString(aMozString).get(),
-                   aMozString.Length());
-
-  NS_ASSERTION(aMozString.Length() == (uint32_t)aICUString.length(),
-               "Conversion failed");
-}
-#  endif
 
 #endif /* MOZILLA_INTERNAL_API */
