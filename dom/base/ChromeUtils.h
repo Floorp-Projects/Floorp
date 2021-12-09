@@ -88,9 +88,6 @@ class ChromeUtils {
                                 const ProfilerMarkerOptionsOrDouble& aOptions,
                                 const Optional<nsACString>& text);
 
-  static void GetXPCOMErrorName(GlobalObject& aGlobal, uint32_t aErrorCode,
-                                nsACString& aRetval);
-
   static void OriginAttributesToSuffix(
       GlobalObject& aGlobal, const dom::OriginAttributesDictionary& aAttrs,
       nsCString& aSuffix);
