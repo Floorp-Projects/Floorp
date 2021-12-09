@@ -24,11 +24,17 @@ class CanvasManagerParent final : public PCanvasManagerParent {
   void Bind(Endpoint<PCanvasManagerParent>&& aEndpoint);
   void ActorDestroy(ActorDestroyReason aWhy) override;
   already_AddRefed<PWebGLParent> AllocPWebGLParent();
+  mozilla::ipc::IPCResult RecvInitialize(const uint32_t& aId);
+  mozilla::ipc::IPCResult RecvGetSnapshot(
+      const uint32_t& aManagerId, const int32_t& aProtocolId,
+      webgl::FrontBufferSnapshotIpc* aResult);
 
  private:
   static void ShutdownInternal();
 
-  ~CanvasManagerParent();
+  ~CanvasManagerParent() override;
+
+  uint32_t mId = 0;
 
   using ManagerSet = nsTHashSet<CanvasManagerParent*>;
   static ManagerSet sManagers;
