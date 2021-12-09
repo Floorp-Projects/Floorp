@@ -6,6 +6,7 @@
 #ifndef _include_gfx_ipc_CanvasManagerChild_h__
 #define _include_gfx_ipc_CanvasManagerChild_h__
 
+#include "mozilla/Atomics.h"
 #include "mozilla/gfx/PCanvasManagerChild.h"
 #include "mozilla/ThreadLocal.h"
 
@@ -16,12 +17,17 @@ class WorkerPrivate;
 }  // namespace dom
 
 namespace gfx {
+class DataSourceSurface;
 
 class CanvasManagerChild final : public PCanvasManagerChild {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CanvasManagerChild, override);
 
-  CanvasManagerChild();
+  explicit CanvasManagerChild(uint32_t aId);
+  uint32_t Id() const { return mId; }
+  already_AddRefed<DataSourceSurface> GetSnapshot(uint32_t aManagerId,
+                                                  int32_t aProtocolId,
+                                                  bool aHasAlpha);
   void ActorDestroy(ActorDestroyReason aReason) override;
 
   static CanvasManagerChild* Get();
@@ -34,8 +40,10 @@ class CanvasManagerChild final : public PCanvasManagerChild {
   void Destroy();
 
   RefPtr<mozilla::dom::IPCWorkerRef> mWorkerRef;
+  const uint32_t mId;
 
   static MOZ_THREAD_LOCAL(CanvasManagerChild*) sLocalManager;
+  static Atomic<uint32_t> sNextId;
 };
 
 }  // namespace gfx
