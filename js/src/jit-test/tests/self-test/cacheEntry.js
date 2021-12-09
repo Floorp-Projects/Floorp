@@ -3,11 +3,11 @@
 var caught = 0;
 var code = cacheEntry("");
 try {
-    offThreadDecodeStencil(code);
+    offThreadDecodeScript(code);
 }
 catch (e) {
-    // offThreadDecodeStencil does not work with the --no-thread command line option.
-    assertEq(e.message.includes("CacheEntry") || e.message.includes("offThreadDecodeStencil"), true);
+    // offThreadDecodeScript does not work with the --no-thread command line option.
+    assertEq(e.message.includes("CacheEntry") || e.message.includes("offThreadDecodeScript"), true);
     caught++;
 }
 

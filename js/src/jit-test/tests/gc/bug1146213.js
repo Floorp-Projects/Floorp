@@ -5,6 +5,5 @@ setGCCallback({
 schedulezone(this)
 gcslice(3)
 var lfGlobal = newGlobal();
-lfGlobal.offThreadCompileToStencil("");
-var stencil = lfGlobal.finishOffThreadCompileToStencil();
-lfGlobal.evalStencil(stencil);
+lfGlobal.offThreadCompileScript("");
+lfGlobal.runOffThreadScript();

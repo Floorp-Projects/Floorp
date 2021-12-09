@@ -1,6 +1,6 @@
 // |jit-test| allow-overrecursed; skip-if: helperThreadCount() === 0
 function eval(source) {
-    offThreadCompileModuleToStencil(source);
+    offThreadCompileModule(source);
     let get = (eval("function w(){}") ++);
 };
 gczeal(21, 10);
