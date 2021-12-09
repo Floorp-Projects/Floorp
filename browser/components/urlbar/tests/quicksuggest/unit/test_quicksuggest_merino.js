@@ -1052,7 +1052,7 @@ add_task(async function timestamps() {
 });
 
 // Tests that Merino includes the clientVariants and providers urls, if set.
-add_task(async function oneEnabled_merino() {
+add_task(async function clientVariants_providers() {
   UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
   UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, false);
   UrlbarPrefs.set(PREF_DATA_COLLECTION_ENABLED, true);
@@ -1109,6 +1109,103 @@ add_task(async function oneEnabled_merino() {
   });
 
   Assert.equal(checksCalled, 2, "both checks should have been called");
+
+  UrlbarPrefs.clear(PREF_MERINO_CLIENT_VARIANTS);
+  UrlbarPrefs.clear(PREF_MERINO_PROVIDERS);
+});
+
+// When both suggestion types are disabled but data collection is enabled, we
+// should still send requests to Merino, and the requests should include an
+// empty `providers` to tell Merino not to fetch any suggestions.
+add_task(async function suggestedDisabled_dataCollectionEnabled() {
+  UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
+  UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, false);
+  UrlbarPrefs.set(PREF_DATA_COLLECTION_ENABLED, true);
+  UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", false);
+  UrlbarPrefs.set("suggest.quicksuggest.sponsored", false);
+
+  let histograms = getAndClearHistograms();
+
+  // Check that the request is received and includes an empty `providers`.
+  let checkRequestCallCount = 0;
+  setMerinoResponse().checkRequest = req => {
+    checkRequestCallCount++;
+    let params = new URLSearchParams(req.queryString);
+    Assert.deepEqual(
+      params.getAll("providers"),
+      [""],
+      "providers param is specified once and is an empty string"
+    );
+  };
+
+  let context = createContext("test", {
+    providers: [UrlbarProviderQuickSuggest.name],
+    isPrivate: false,
+  });
+  await check_results({
+    context,
+    matches: [],
+  });
+
+  Assert.equal(checkRequestCallCount, 1, "Request received");
+
+  assertAndClearHistograms({
+    histograms,
+    context,
+    response: FETCH_RESPONSE.success,
+    latencyRecorded: true,
+  });
+
+  UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
+  UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
+});
+
+// When both suggestion types are disabled but data collection is enabled, we
+// should still send requests to Merino, and when the `providers` pref is also
+// set, it should be included in the request instead of an empty string.
+add_task(async function suggestedDisabled_dataCollectionEnabled_providers() {
+  UrlbarPrefs.set(PREF_MERINO_ENABLED, true);
+  UrlbarPrefs.set(PREF_REMOTE_SETTINGS_ENABLED, false);
+  UrlbarPrefs.set(PREF_DATA_COLLECTION_ENABLED, true);
+  UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", false);
+  UrlbarPrefs.set("suggest.quicksuggest.sponsored", false);
+
+  UrlbarPrefs.set(PREF_MERINO_PROVIDERS, "blue");
+
+  let histograms = getAndClearHistograms();
+
+  // Check that the request is received and includes the expected `providers`.
+  let checkRequestCallCount = 0;
+  setMerinoResponse().checkRequest = req => {
+    checkRequestCallCount++;
+    let params = new URLSearchParams(req.queryString);
+    Assert.deepEqual(
+      params.getAll("providers"),
+      ["blue"],
+      "providers param is specified once and is 'blue'"
+    );
+  };
+
+  let context = createContext("test", {
+    providers: [UrlbarProviderQuickSuggest.name],
+    isPrivate: false,
+  });
+  await check_results({
+    context,
+    matches: [],
+  });
+
+  Assert.equal(checkRequestCallCount, 1, "Request received");
+
+  assertAndClearHistograms({
+    histograms,
+    context,
+    response: FETCH_RESPONSE.success,
+    latencyRecorded: true,
+  });
+
+  UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
+  UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
 });
 
 function makeMerinoServer(endpointPath) {
