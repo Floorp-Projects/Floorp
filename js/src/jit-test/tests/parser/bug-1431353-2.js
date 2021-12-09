@@ -12,8 +12,9 @@ function execOffThread(source)
 
 function parseModuleOffThread(source)
 {
-    offThreadCompileModule(source);
-    return finishOffThreadModule();
+    offThreadCompileModuleToStencil(source);
+    var stencil = finishOffThreadCompileModuleToStencil();
+    return instantiateModuleStencil(stencil);
 }
 
 let a = { x: 1 };
