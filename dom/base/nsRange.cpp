@@ -806,14 +806,17 @@ bool nsRange::IntersectsNode(nsINode& aNode, ErrorResult& aRv) {
   }
 
   const int32_t nodeIndex = parent->ComputeIndexOf(&aNode);
+  if (nodeIndex < 0) {
+    return false;
+  }
 
   const Maybe<int32_t> startOrder = nsContentUtils::ComparePoints(
       mStart.Container(),
       *mStart.Offset(RangeBoundary::OffsetFilter::kValidOffsets), parent,
-      nodeIndex + 1);
+      static_cast<uint32_t>(nodeIndex) + 1u);
   if (startOrder && (*startOrder < 0)) {
     const Maybe<int32_t> endOrder = nsContentUtils::ComparePoints(
-        parent, nodeIndex, mEnd.Container(),
+        parent, static_cast<uint32_t>(nodeIndex), mEnd.Container(),
         *mEnd.Offset(RangeBoundary::OffsetFilter::kValidOffsets));
     return endOrder && (*endOrder < 0);
   }
@@ -1662,11 +1665,10 @@ void nsRange::CutContents(DocumentFragment** aFragment, ErrorResult& aRv) {
       // has a common ancestor with start and end, hence both have to be
       // comparable to it.
       if (doctype &&
-          *nsContentUtils::ComparePoints(startContainer,
-                                         static_cast<int32_t>(startOffset),
-                                         doctype, 0) < 0 &&
-          *nsContentUtils::ComparePoints(doctype, 0, endContainer,
-                                         static_cast<int32_t>(endOffset)) < 0) {
+          *nsContentUtils::ComparePoints(startContainer, startOffset, doctype,
+                                         0) < 0 &&
+          *nsContentUtils::ComparePoints(doctype, 0, endContainer, endOffset) <
+              0) {
         aRv.ThrowHierarchyRequestError("Start or end position isn't valid.");
         return;
       }
@@ -2004,9 +2006,8 @@ int16_t nsRange::CompareBoundaryPoints(uint16_t aHow,
     return 0;
   }
 
-  const Maybe<int32_t> order = nsContentUtils::ComparePoints(
-      ourNode, static_cast<int32_t>(ourOffset), otherNode,
-      static_cast<int32_t>(otherOffset));
+  const Maybe<int32_t> order =
+      nsContentUtils::ComparePoints(ourNode, ourOffset, otherNode, otherOffset);
 
   // `this` and `aOtherRange` share the same root and (ourNode, ourOffset),
   // (otherNode, otherOffset) correspond to some of their boundaries. Hence,

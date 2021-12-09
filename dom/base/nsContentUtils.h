@@ -542,19 +542,14 @@ class nsContentUtils {
    *  Pass a cache object as aParent1Cache if you expect to repeatedly
    *  call this function with the same value as aParent1.
    *
-   *  XXX aOffset1 and aOffset2 should be uint32_t since valid offset value is
-   *      between 0 - UINT32_MAX.  However, these methods work even with
-   *      negative offset values!  E.g., when aOffset1 is -1 and aOffset is 0,
-   *      these methods return -1.  Some root callers depend on this behavior.
-   *
    *  @return -1 if point1 < point2,
    *          1 if point1 > point2,
    *          0 if point1 == point2.
    *          `Nothing` if the two nodes aren't in the same connected subtree.
    */
   static mozilla::Maybe<int32_t> ComparePoints(
-      const nsINode* aParent1, int32_t aOffset1, const nsINode* aParent2,
-      int32_t aOffset2, ComparePointsCache* aParent1Cache = nullptr);
+      const nsINode* aParent1, uint32_t aOffset1, const nsINode* aParent2,
+      uint32_t aOffset2, ComparePointsCache* aParent1Cache = nullptr);
   template <typename FPT, typename FRT, typename SPT, typename SRT>
   static mozilla::Maybe<int32_t> ComparePoints(
       const mozilla::RangeBoundaryBase<FPT, FRT>& aFirstBoundary,
@@ -571,23 +566,92 @@ class nsContentUtils {
    *
    *  Pass a cache object as aParent1Cache if you expect to repeatedly
    *  call this function with the same value as aParent1.
-   *
-   *  XXX aOffset1 and aOffset2 should be uint32_t since valid offset value is
-   *      between 0 - UINT32_MAX.  However, these methods work even with
-   *      negative offset values!  E.g., when aOffset1 is -1 and aOffset is 0,
-   *      these methods return -1.  Some root callers depend on this behavior.
-   *      On the other hand, nsINode can have ATTRCHILD_ARRAY_MAX_CHILD_COUN
-   *      (0x3FFFFF) at most.  Therefore, they can be int32_t for now.
    */
   static int32_t ComparePoints_Deprecated(
-      const nsINode* aParent1, int32_t aOffset1, const nsINode* aParent2,
-      int32_t aOffset2, bool* aDisconnected = nullptr,
+      const nsINode* aParent1, uint32_t aOffset1, const nsINode* aParent2,
+      uint32_t aOffset2, bool* aDisconnected = nullptr,
       ComparePointsCache* aParent1Cache = nullptr);
   template <typename FPT, typename FRT, typename SPT, typename SRT>
   static int32_t ComparePoints_Deprecated(
       const mozilla::RangeBoundaryBase<FPT, FRT>& aFirstBoundary,
       const mozilla::RangeBoundaryBase<SPT, SRT>& aSecondBoundary,
       bool* aDisconnected = nullptr);
+
+  /**
+   * DO NOT USE these methods for comparing the points in new code.  These
+   * methods emulates same result as `ComparePoints` before bug 1741148.
+   * When the old `ComparePoints` was called with offset value over `INT32_MAX`
+   * or `-1` which is used as "not found" by some API, they were treated without
+   * checking whether the negative value or valid value.  Thus, these API
+   * emulates the odd behavior for keeping the traditional behavior. If you want
+   * to use this in new code, it means that you **should** check the given
+   * offset value and call `ComparePoints` instead.
+   */
+  static mozilla::Maybe<int32_t> ComparePoints_FixOffset1(
+      const nsINode* aParent1, int32_t aOffset1, const nsINode* aParent2,
+      uint32_t aOffset2) {
+    if (MOZ_UNLIKELY(aOffset1 < 0)) {
+      // If in same container, just the offset is compared.
+      if (aParent1 == aParent2) {
+        return mozilla::Some(-1);
+      }
+      // Otherwise, aOffset1 is referred only when aParent2 is a descendant of
+      // aParent1.
+      if (aParent2->IsInclusiveDescendantOf(aParent1)) {
+        return mozilla::Some(-1);
+      }
+      // Otherwise, aOffset1 isn't used so that any value is fine.
+      return ComparePoints(aParent1, UINT32_MAX, aParent2, aOffset2);
+    }
+    return ComparePoints(aParent1, aOffset1, aParent2, aOffset2);
+  }
+  static mozilla::Maybe<int32_t> ComparePoints_FixOffset2(
+      const nsINode* aParent1, uint32_t aOffset1, const nsINode* aParent2,
+      int32_t aOffset2) {
+    if (MOZ_UNLIKELY(aOffset2 < 0)) {
+      // If in same container, just the offset is compared.
+      if (aParent1 == aParent2) {
+        return mozilla::Some(1);
+      }
+      // Otherwise, aOffset2 is referred only when aParent1 is a descendant of
+      // aParent2.
+      if (aParent1->IsInclusiveDescendantOf(aParent2)) {
+        return mozilla::Some(1);
+      }
+      // Otherwise, aOffset2 is not used so that any value is fine.
+      return ComparePoints(aParent1, aOffset1, aParent2, UINT32_MAX);
+    }
+    return ComparePoints(aParent1, aOffset1, aParent2, aOffset2);
+  }
+  static mozilla::Maybe<int32_t> ComparePoints_FixBothOffsets(
+      const nsINode* aParent1, int32_t aOffset1, const nsINode* aParent2,
+      int32_t aOffset2) {
+    if (MOZ_UNLIKELY(aOffset1 < 0 || aOffset2 < 0)) {
+      // If in same container, just the offset is compared.
+      if (aParent1 == aParent2) {
+        const int32_t compOffsets =
+            aOffset1 == aOffset2 ? 0 : (aOffset1 < aOffset2 ? -1 : 1);
+        return mozilla::Some(compOffsets);
+      }
+      // Otherwise, aOffset1 is referred only when aParent2 is a descendant of
+      // aParent1.
+      if (aOffset1 < 0 && aParent2->IsInclusiveDescendantOf(aParent1)) {
+        return mozilla::Some(-1);
+      }
+      // And also aOffset2 is referred only when aParent1 is a descendant of
+      // aParent2.
+      if (aOffset2 < 0 && aParent1->IsInclusiveDescendantOf(aParent2)) {
+        return mozilla::Some(1);
+      }
+      // Otherwise, aOffset1 nor aOffset2 is referred so that any value is fine
+      // if negative.
+      return ComparePoints(
+          aParent1, aOffset1 < 0 ? UINT32_MAX : static_cast<uint32_t>(aOffset1),
+          aParent2,
+          aOffset2 < 0 ? UINT32_MAX : static_cast<uint32_t>(aOffset2));
+    }
+    return ComparePoints(aParent1, aOffset1, aParent2, aOffset2);
+  }
 
   /**
    * Brute-force search of the element subtree rooted at aContent for

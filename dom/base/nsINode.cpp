@@ -291,12 +291,12 @@ class IsItemInRangeComparator {
 
   int operator()(const nsRange* const aRange) const {
     int32_t cmp = nsContentUtils::ComparePoints_Deprecated(
-        &mNode, static_cast<int32_t>(mEndOffset), aRange->GetStartContainer(),
-        static_cast<int32_t>(aRange->StartOffset()), nullptr, mCache);
+        &mNode, mEndOffset, aRange->GetStartContainer(), aRange->StartOffset(),
+        nullptr, mCache);
     if (cmp == 1) {
       cmp = nsContentUtils::ComparePoints_Deprecated(
-          &mNode, static_cast<int32_t>(mStartOffset), aRange->GetEndContainer(),
-          static_cast<int32_t>(aRange->EndOffset()), nullptr, mCache);
+          &mNode, mStartOffset, aRange->GetEndContainer(), aRange->EndOffset(),
+          nullptr, mCache);
       if (cmp == -1) {
         return 0;
       }
@@ -369,19 +369,15 @@ bool nsINode::IsSelected(const uint32_t aStartOffset,
         if (middle + 1 < high &&
             (middlePlus1 = selection->GetRangeAt(middle + 1)) &&
             nsContentUtils::ComparePoints_Deprecated(
-                this, static_cast<int32_t>(aEndOffset),
-                middlePlus1->GetStartContainer(),
-                static_cast<int32_t>(middlePlus1->StartOffset()), nullptr,
-                &cache) > 0) {
+                this, aEndOffset, middlePlus1->GetStartContainer(),
+                middlePlus1->StartOffset(), nullptr, &cache) > 0) {
           result = 1;
           // if node start < end of middle - 1, result = -1
         } else if (middle >= 1 &&
                    (middleMinus1 = selection->GetRangeAt(middle - 1)) &&
                    nsContentUtils::ComparePoints_Deprecated(
-                       this, static_cast<int32_t>(aStartOffset),
-                       middleMinus1->GetEndContainer(),
-                       static_cast<int32_t>(middleMinus1->EndOffset()), nullptr,
-                       &cache) < 0) {
+                       this, aStartOffset, middleMinus1->GetEndContainer(),
+                       middleMinus1->EndOffset(), nullptr, &cache) < 0) {
           result = -1;
         } else {
           break;

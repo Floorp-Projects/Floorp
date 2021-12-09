@@ -50,14 +50,13 @@ using namespace widget;
 /******************************************************************/
 
 void ContentEventHandler::RawRange::AssertStartIsBeforeOrEqualToEnd() {
-  MOZ_ASSERT(*nsContentUtils::ComparePoints(
-                 mStart.Container(),
-                 static_cast<int32_t>(*mStart.Offset(
-                     NodePosition::OffsetFilter::kValidOrInvalidOffsets)),
-                 mEnd.Container(),
-                 static_cast<int32_t>(*mEnd.Offset(
-                     NodePosition::OffsetFilter::kValidOrInvalidOffsets))) <=
-             0);
+  MOZ_ASSERT(
+      *nsContentUtils::ComparePoints(
+          mStart.Container(),
+          *mStart.Offset(NodePosition::OffsetFilter::kValidOrInvalidOffsets),
+          mEnd.Container(),
+          *mEnd.Offset(NodePosition::OffsetFilter::kValidOrInvalidOffsets)) <=
+      0);
 }
 
 nsresult ContentEventHandler::RawRange::SetStart(
