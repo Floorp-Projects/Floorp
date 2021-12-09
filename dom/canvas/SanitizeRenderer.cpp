@@ -162,6 +162,10 @@ static std::string ChooseDeviceReplacement(const std::string& str) {
         return GEFORCE_980;
     }
   }
+  // CI has str:"Tesla M60"
+  if (Contains(str, "Tesla")) return GEFORCE_8800;
+
+  // -
 
   static const std::regex kNouveau("NV(1?[0-9A-F][0-9A-F])");
   if (std::regex_match(str, m, kNouveau)) {
@@ -260,22 +264,22 @@ static std::string ChooseDeviceReplacement(const std::string& str) {
 std::string SanitizeRenderer(const std::string& str) {
   std::smatch m;
 
-  static const std::regex kReAngle("(.*ANGLE [(])(.*)( Direct3D.*)");
+  // e.g. "ANGLE (AMD, AMD Radeon(TM) Graphics Direct3D11 vs_5_0 ps_5_0, D3D11-27.20.1020.2002)"
+  static const std::regex kReAngle(
+      "ANGLE [(]([^,]*), ([^ ]+) ([^,]*)( Direct3D[^,]*), .*[)]");
   if (std::regex_match(str, m, kReAngle)) {
-    auto prefix = m.str(1);
-    auto dev = m.str(2);
+    const auto& vendor = m.str(1);
+    const auto& vendor_again = m.str(2);
+    MOZ_ASSERT(vendor_again == vendor);
+    (void)vendor_again;
+    const auto& renderer = m.str(3);
+    const auto& d3d_suffix = m.str(4);
 
-    // ANGLE seems to do this:
-    // "GeForce RTX 3070..." => ANGLE (NVIDIA GeForce RTX 3070..."
-    static const std::regex kStripAngleVendorPrefix("(NVIDIA) (.*)");
-    std::smatch m2;
-    if (std::regex_match(dev, m2, kStripAngleVendorPrefix)) {
-      prefix += m2.str(1) + " ";
-      dev = m2.str(2);
-    }
-
-    const auto dev2 = ChooseDeviceReplacement(dev);
-    return prefix + dev2 + m.str(3);
+    const auto renderer2 = ChooseDeviceReplacement(renderer);
+    return std::string("ANGLE (") + vendor + ", " + vendor + " " + renderer2 +
+           d3d_suffix + ")";
+  } else if (Contains(str, "ANGLE")) {
+    gfxCriticalError() << "Failed to parse ANGLE renderer: " << str;
   }
 
   static const std::regex kReOpenglEngine("(.*) OpenGL Engine");
