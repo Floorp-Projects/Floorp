@@ -7,6 +7,7 @@
 #include "mozilla/dom/TextTrackManager.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/CycleCollectedJSContext.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Event.h"
@@ -44,13 +45,14 @@ CompareTextTracks::CompareTextTracks(HTMLMediaElement* aMediaElement) {
   mMediaElement = aMediaElement;
 }
 
-int32_t CompareTextTracks::TrackChildPosition(TextTrack* aTextTrack) const {
+Maybe<uint32_t> CompareTextTracks::TrackChildPosition(
+    TextTrack* aTextTrack) const {
   MOZ_DIAGNOSTIC_ASSERT(aTextTrack);
   HTMLTrackElement* trackElement = aTextTrack->GetTrackElement();
   if (!trackElement) {
-    return -1;
+    return Nothing();
   }
-  return mMediaElement->ComputeIndexOf_Deprecated(trackElement);
+  return mMediaElement->ComputeIndexOf(trackElement);
 }
 
 bool CompareTextTracks::Equals(TextTrack* aOne, TextTrack* aTwo) const {
@@ -79,12 +81,13 @@ bool CompareTextTracks::LessThan(TextTrack* aOne, TextTrack* aTwo) const {
   }
   switch (sourceOne) {
     case TextTrackSource::Track: {
-      int32_t positionOne = TrackChildPosition(aOne);
-      int32_t positionTwo = TrackChildPosition(aTwo);
-      // If either position one or positiontwo are -1 then something has gone
-      // wrong. In this case we should just put them at the back of the list.
-      return positionOne != -1 && positionTwo != -1 &&
-             positionOne < positionTwo;
+      Maybe<uint32_t> positionOne = TrackChildPosition(aOne);
+      Maybe<uint32_t> positionTwo = TrackChildPosition(aTwo);
+      // If either position one or positiontwo are Nothing then something has
+      // gone wrong. In this case we should just put them at the back of the
+      // list.
+      return positionOne.isSome() && positionTwo.isSome() &&
+             *positionOne < *positionTwo;
     }
     case TextTrackSource::AddTextTrack:
       // For AddTextTrack sources the tracks will already be in the correct
@@ -469,14 +472,14 @@ class SimpleTextTrackEvent : public Runnable {
 
 class CompareSimpleTextTrackEvents {
  private:
-  int32_t TrackChildPosition(SimpleTextTrackEvent* aEvent) const {
+  Maybe<uint32_t> TrackChildPosition(SimpleTextTrackEvent* aEvent) const {
     if (aEvent->mTrack) {
       HTMLTrackElement* trackElement = aEvent->mTrack->GetTrackElement();
       if (trackElement) {
-        return mMediaElement->ComputeIndexOf_Deprecated(trackElement);
+        return mMediaElement->ComputeIndexOf(trackElement);
       }
     }
-    return -1;
+    return Nothing();
   }
   HTMLMediaElement* mMediaElement;
 
