@@ -27,8 +27,11 @@
 
 #include "psauxerr.h"
 
+
 /* ensure proper sign extension */
-#define Fix2Int( f )  ( (FT_Int)(FT_Short)( (f) >> 16 ) )
+#define Fix2Int( f )   ( (FT_Int) (FT_Short)( (f) >> 16 ) )
+#define Fix2UInt( f )  ( (FT_UInt)(FT_Short)( (f) >> 16 ) )
+
 
   /**************************************************************************
    *
@@ -1025,16 +1028,16 @@
           /* <val> <idx> 2 24 callothersubr               */
           /* ==> set BuildCharArray[cvi( <idx> )] = <val> */
           {
-            FT_Int    idx;
+            FT_UInt   idx;
             PS_Blend  blend = decoder->blend;
 
 
             if ( arg_cnt != 2 || !blend )
               goto Unexpected_OtherSubr;
 
-            idx = Fix2Int( top[1] );
+            idx = Fix2UInt( top[1] );
 
-            if ( idx < 0 || (FT_UInt) idx >= decoder->len_buildchar )
+            if ( idx >= decoder->len_buildchar )
               goto Unexpected_OtherSubr;
 
             decoder->buildchar[idx] = top[0];
@@ -1046,16 +1049,16 @@
           /* ==> push BuildCharArray[cvi( idx )] */
           /*     onto T1 stack                   */
           {
-            FT_Int    idx;
+            FT_UInt   idx;
             PS_Blend  blend = decoder->blend;
 
 
             if ( arg_cnt != 1 || !blend )
               goto Unexpected_OtherSubr;
 
-            idx = Fix2Int( top[0] );
+            idx = Fix2UInt( top[0] );
 
-            if ( idx < 0 || (FT_UInt) idx >= decoder->len_buildchar )
+            if ( idx >= decoder->len_buildchar )
               goto Unexpected_OtherSubr;
 
             top[0] = decoder->buildchar[idx];

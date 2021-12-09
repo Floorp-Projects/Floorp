@@ -1,10 +1,10 @@
 /****************************************************************************
  *
- * sfwoff.h
+ * afws-decl.h
  *
- *   WOFFF format management (specification).
+ *   Auto-fitter writing system declarations (specification only).
  *
- * Copyright (C) 1996-2021 by
+ * Copyright (C) 2013-2021 by
  * David Turner, Robert Wilhelm, and Werner Lemberg.
  *
  * This file is part of the FreeType project, and may only be used,
@@ -16,28 +16,18 @@
  */
 
 
-#ifndef SFWOFF_H_
-#define SFWOFF_H_
+#ifndef AFWS_DECL_H_
+#define AFWS_DECL_H_
 
+  /* Since preprocessor directives can't create other preprocessor */
+  /* directives, we have to include the header files manually.     */
 
-#include <freetype/internal/sfnt.h>
-#include <freetype/internal/ftobjs.h>
+#include "afdummy.h"
+#include "aflatin.h"
+#include "afcjk.h"
+#include "afindic.h"
 
-
-FT_BEGIN_HEADER
-
-#ifdef FT_CONFIG_OPTION_USE_ZLIB
-
-  FT_LOCAL( FT_Error )
-  woff_open_font( FT_Stream  stream,
-                  TT_Face    face );
-
-
-#endif
-
-FT_END_HEADER
-
-#endif /* SFWOFF_H_ */
+#endif /* AFWS_DECL_H_ */
 
 
 /* END */

@@ -438,7 +438,7 @@
       GXV_LIMIT_CHECK( 2 );
       if ( p + 2 >= limit )     /* some fonts have too-short fmt0 array */
       {
-        GXV_TRACE(( "too short, glyphs %d - %d are missing\n",
+        GXV_TRACE(( "too short, glyphs %d - %ld are missing\n",
                     i, gxvalid->face->num_glyphs ));
         GXV_SET_ERR_IF_PARANOID( FT_INVALID_GLYPH_ID );
         break;
@@ -533,7 +533,7 @@
 
       if ( lastGlyph < firstGlyph )
       {
-        GXV_TRACE(( "reverse ordered range specification at unit %d:",
+        GXV_TRACE(( "reverse ordered range specification at unit %d:"
                     " lastGlyph %d < firstGlyph %d ",
                     unit, lastGlyph, firstGlyph ));
         GXV_SET_ERR_IF_PARANOID( FT_INVALID_GLYPH_ID );
@@ -604,7 +604,7 @@
 
       if ( lastGlyph < firstGlyph )
       {
-        GXV_TRACE(( "reverse ordered range specification at unit %d:",
+        GXV_TRACE(( "reverse ordered range specification at unit %d:"
                     " lastGlyph %d < firstGlyph %d ",
                     unit, lastGlyph, firstGlyph ));
         GXV_SET_ERR_IF_PARANOID( FT_INVALID_GLYPH_ID );
@@ -824,7 +824,7 @@
     face = gxvalid->face;
     if ( face->num_glyphs < gid )
     {
-      GXV_TRACE(( " gxv_glyphid_check() gid overflow: num_glyphs %d < %d\n",
+      GXV_TRACE(( " gxv_glyphid_check() gid overflow: num_glyphs %ld < %d\n",
                   face->num_glyphs, gid ));
       GXV_SET_ERR_IF_PARANOID( FT_INVALID_GLYPH_ID );
     }
@@ -1418,7 +1418,7 @@
     GXV_NAME_ENTER( "XStateArray" );
 
     GXV_TRACE(( "parse % 3d bytes by stateSize=% 3d maxClassID=% 3d\n",
-                (int)(*length_p), stateSize, (int)(maxClassID) ));
+                (int)(*length_p), (int)stateSize, (int)(maxClassID) ));
 
     /*
      * 2 states are predefined and must be described:
@@ -1582,10 +1582,10 @@
     stateArray = FT_NEXT_ULONG( p );
     entryTable = FT_NEXT_ULONG( p );
 
-    GXV_TRACE(( "nClasses =0x%08x\n", gxvalid->xstatetable.nClasses ));
-    GXV_TRACE(( "offset to classTable=0x%08x\n", classTable ));
-    GXV_TRACE(( "offset to stateArray=0x%08x\n", stateArray ));
-    GXV_TRACE(( "offset to entryTable=0x%08x\n", entryTable ));
+    GXV_TRACE(( "nClasses =0x%08lx\n", gxvalid->xstatetable.nClasses ));
+    GXV_TRACE(( "offset to classTable=0x%08lx\n", classTable ));
+    GXV_TRACE(( "offset to stateArray=0x%08lx\n", stateArray ));
+    GXV_TRACE(( "offset to entryTable=0x%08lx\n", entryTable ));
 
     if ( gxvalid->xstatetable.nClasses > 0xFFFFU )
       FT_INVALID_DATA;

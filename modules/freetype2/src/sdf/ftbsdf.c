@@ -163,7 +163,7 @@
   {
     FT_Memory  memory;
 
-  } BSDF_TRaster;
+  } BSDF_TRaster, *BSDF_PRaster;
 
 
   /**************************************************************************
@@ -928,7 +928,7 @@
 
       /* Forward pass of rows (left -> right).  Leave the first  */
       /* column, which gets covered in the backward pass.        */
-      for ( i = 1; i < w; i++ )
+      for ( i = 1; i < w - 1; i++ )
       {
         index   = j * w + i;
         current = dm + index;
@@ -997,7 +997,7 @@
 
       /* Forward pass of rows (left -> right).  Leave the first */
       /* column, which gets covered in the backward pass.       */
-      for ( i = 1; i < w; i++ )
+      for ( i = 1; i < w - 1; i++ )
       {
         index   = j * w + i;
         current = dm + index;
@@ -1173,19 +1173,17 @@
 
   /* called when adding a new module through @FT_Add_Module */
   static FT_Error
-  bsdf_raster_new( FT_Memory   memory,
-                   FT_Raster*  araster )
+  bsdf_raster_new( FT_Memory      memory,
+                   BSDF_PRaster*  araster )
   {
-    FT_Error       error  = FT_Err_Ok;
-    BSDF_TRaster*  raster = NULL;
+    FT_Error      error;
+    BSDF_PRaster  raster = NULL;
 
 
-    *araster = 0;
-    if ( !FT_ALLOC( raster, sizeof ( BSDF_TRaster ) ) )
-    {
+    if ( !FT_NEW( raster ) )
       raster->memory = memory;
-      *araster       = (FT_Raster)raster;
-    }
+
+    *araster = raster;
 
     return error;
   }

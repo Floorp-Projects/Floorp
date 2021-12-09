@@ -354,7 +354,16 @@
 
 #endif /* TT_CONFIG_OPTION_EMBEDDED_BITMAPS */
 
-    FT_Request_Metrics( size->face, req );
+    {
+      FT_Error  err = FT_Request_Metrics( size->face, req );
+
+
+      if ( err )
+      {
+        error = err;
+        goto Exit;
+      }
+    }
 
     if ( FT_IS_SCALABLE( size->face ) )
     {
@@ -382,6 +391,7 @@
 #endif
     }
 
+  Exit:
     return error;
   }
 

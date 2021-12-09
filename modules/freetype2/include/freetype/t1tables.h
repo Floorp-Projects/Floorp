@@ -360,7 +360,7 @@ FT_BEGIN_HEADER
 
     FT_UInt        num_subrs;
     FT_ULong       subrmap_offset;
-    FT_Int         sd_bytes;
+    FT_UInt        sd_bytes;
 
   } CID_FaceDictRec;
 
@@ -415,11 +415,11 @@ FT_BEGIN_HEADER
     FT_ULong        xuid[16];
 
     FT_ULong        cidmap_offset;
-    FT_Int          fd_bytes;
-    FT_Int          gd_bytes;
+    FT_UInt         fd_bytes;
+    FT_UInt         gd_bytes;
     FT_ULong        cid_count;
 
-    FT_Int          num_dicts;
+    FT_UInt         num_dicts;
     CID_FaceDict    font_dicts;
 
     FT_ULong        data_offset;

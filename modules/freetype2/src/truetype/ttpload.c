@@ -98,28 +98,15 @@
       goto Exit;
     }
 
-    if ( face->header.Index_To_Loc_Format != 0 )
-    {
-      shift = 2;
+    shift = face->header.Index_To_Loc_Format != 0 ? 2 : 1;
 
-      if ( table_len >= 0x40000L )
-      {
-        FT_TRACE2(( "table too large\n" ));
-        table_len = 0x3FFFFL;
-      }
-      face->num_locations = table_len >> shift;
-    }
-    else
+    if ( table_len > 0x10000UL << shift )
     {
-      shift = 1;
-
-      if ( table_len >= 0x20000L )
-      {
-        FT_TRACE2(( "table too large\n" ));
-        table_len = 0x1FFFFL;
-      }
-      face->num_locations = table_len >> shift;
+      FT_TRACE2(( "table too large\n" ));
+      table_len = 0x10000UL << shift;
     }
+
+    face->num_locations = table_len >> shift;
 
     if ( face->num_locations != (FT_ULong)face->root.num_glyphs + 1 )
     {
@@ -127,7 +114,7 @@
                   face->num_locations - 1, face->root.num_glyphs ));
 
       /* we only handle the case where `maxp' gives a larger value */
-      if ( face->num_locations <= (FT_ULong)face->root.num_glyphs )
+      if ( face->num_locations < (FT_ULong)face->root.num_glyphs + 1 )
       {
         FT_ULong  new_loca_len =
                     ( (FT_ULong)face->root.num_glyphs + 1 ) << shift;
@@ -560,12 +547,6 @@
     num_records = FT_NEXT_USHORT( p );
     record_size = FT_NEXT_ULONG( p );
 
-    /* The maximum number of bytes in an hdmx device record is the */
-    /* maximum number of glyphs + 2; this is 0xFFFF + 2, thus      */
-    /* explaining why `record_size' is a long (which we read as    */
-    /* unsigned long for convenience).  In practice, two bytes are */
-    /* sufficient to hold the size value.                          */
-    /*                                                             */
     /* There are at least two fonts, HANNOM-A and HANNOM-B version */
     /* 2.0 (2005), which get this wrong: The upper two bytes of    */
     /* the size value are set to 0xFF instead of 0x00.  We catch   */
@@ -574,19 +555,30 @@
     if ( record_size >= 0xFFFF0000UL )
       record_size &= 0xFFFFU;
 
+    FT_TRACE2(( "Hdmx " ));
+
     /* The limit for `num_records' is a heuristic value. */
-    if ( num_records > 255              ||
-         ( num_records > 0            &&
-           ( record_size > 0x10001L ||
-             record_size < 4        ) ) )
+    if ( num_records > 255 || num_records == 0 )
     {
-      error = FT_THROW( Invalid_File_Format );
+      FT_TRACE2(( "with unreasonable %u records rejected\n", num_records ));
       goto Fail;
     }
 
-    if ( FT_NEW_ARRAY( face->hdmx_record_sizes, num_records ) )
+    /* Out-of-spec tables are rejected.  The record size must be */
+    /* equal to the number of glyphs + 2 + 32-bit padding.       */
+    if ( (FT_Long)record_size != ( ( face->root.num_glyphs + 2 + 3 ) & ~3 ) )
+    {
+      FT_TRACE2(( "with record size off by %ld bytes rejected\n",
+                  (FT_Long)record_size -
+                    ( ( face->root.num_glyphs + 2 + 3 ) & ~3 ) ));
+      goto Fail;
+    }
+
+    if ( FT_QNEW_ARRAY( face->hdmx_record_sizes, num_records ) )
       goto Fail;
 
+    /* XXX: We do not check if the records are sorted by ppem */
+    /* and cannot use binary search later.                    */
     for ( nn = 0; nn < num_records; nn++ )
     {
       if ( p + record_size > limit )
@@ -599,6 +591,8 @@
     face->hdmx_record_count = nn;
     face->hdmx_table_size   = table_size;
     face->hdmx_record_size  = record_size;
+
+    FT_TRACE2(( "%ux%lu loaded\n", num_records, record_size ));
 
   Exit:
     return error;

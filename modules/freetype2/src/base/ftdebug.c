@@ -88,7 +88,7 @@
   dlg_handler            ft_default_log_handler = NULL;
   FT_Custom_Log_Handler  custom_output_handler  = NULL;
 
-#endif /* FT_DEBUG_LOGGING*/
+#endif /* FT_DEBUG_LOGGING */
 
 
 #ifdef FT_DEBUG_LEVEL_ERROR
