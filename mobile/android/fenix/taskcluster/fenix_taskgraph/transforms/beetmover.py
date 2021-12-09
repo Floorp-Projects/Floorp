@@ -56,6 +56,7 @@ def make_task_description(config, tasks):
             "worker-type": "beetmover",
             "worker": task["worker"],
             "scopes": [
+                # TODO: Adjust scope
                 "project:mobile:fenix:releng:beetmover:bucket:dep",
                 "project:mobile:fenix:releng:beetmover:action:direct-push-to-bucket",
             ],
