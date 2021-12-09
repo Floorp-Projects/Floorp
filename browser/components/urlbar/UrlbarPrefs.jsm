@@ -255,6 +255,10 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Count the restarts before showing the onboarding dialog.
   ["quicksuggest.seenRestarts", 0],
 
+  // Whether quick suggest results can be shown in position specified in the
+  // suggestions.
+  ["quicksuggest.allowPositionInSuggestions", true],
+
   // When using switch to tabs, if set to true this will move the tab into the
   // active window.
   ["switchTabs.adoptIntoActiveWindow", false],

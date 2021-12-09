@@ -419,6 +419,10 @@ pref("browser.urlbar.quicksuggest.nonSponsoredIndex", -1);
 // Whether Remote Settings is enabled as a quick suggest source.
 pref("browser.urlbar.quicksuggest.remoteSettings.enabled", true);
 
+// Whether quick suggest results can be shown in position specified in the
+// suggestions.
+pref("browser.urlbar.quicksuggest.allowPositionInSuggestions", true);
+
 // Whether unit conversion is enabled.
 #ifdef NIGHTLY_BUILD
 pref("browser.urlbar.unitConversion.enabled", true);
