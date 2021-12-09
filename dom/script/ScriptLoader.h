@@ -709,15 +709,10 @@ class ScriptLoader final : public nsISupports {
   nsresult ProcessFetchedModuleSource(ModuleLoadRequest* aRequest);
   void CheckModuleDependenciesLoaded(ModuleLoadRequest* aRequest);
   void ProcessLoadedModuleTree(ModuleLoadRequest* aRequest);
-  bool InstantiateModuleTree(ModuleLoadRequest* aRequest);
-  JS::Value FindFirstParseError(ModuleLoadRequest* aRequest);
   void StartFetchingModuleDependencies(ModuleLoadRequest* aRequest);
 
   RefPtr<mozilla::GenericPromise> StartFetchingModuleAndDependencies(
       ModuleLoadRequest* aParent, nsIURI* aURI);
-
-  nsresult InitDebuggerDataForModuleTree(JSContext* aCx,
-                                         ModuleLoadRequest* aRequest);
 
   void RunScriptWhenSafe(ScriptLoadRequest* aRequest);
 
@@ -820,6 +815,11 @@ class ModuleLoader : public nsISupports {
   RefPtr<mozilla::GenericNonExclusivePromise> WaitForModuleFetch(
       nsIURI* aURL, nsIGlobalObject* aGlobal);
   ModuleScript* GetFetchedModule(nsIURI* aURL, nsIGlobalObject* aGlobal) const;
+
+  JS::Value FindFirstParseError(ModuleLoadRequest* aRequest);
+  bool InstantiateModuleTree(ModuleLoadRequest* aRequest);
+  nsresult InitDebuggerDataForModuleTree(JSContext* aCx,
+                                         ModuleLoadRequest* aRequest);
 };
 
 class nsAutoScriptLoaderDisabler {
