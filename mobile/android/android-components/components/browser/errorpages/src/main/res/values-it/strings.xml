@@ -263,4 +263,10 @@
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>Il sito web %1$s è stato segnalato come sito ingannevole ed è stato bloccato sulla base delle impostazioni di sicurezza.</p>
 	]]></string>
 
-    </resources>
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">Versione sicura del sito non disponibile</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[È stata attivata la modalità solo HTTPS per una maggiore sicurezza ma non è disponibile una versione HTTPS di <em>%1$s</em>.]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">Prosegui sul sito HTTP</string>
+</resources>

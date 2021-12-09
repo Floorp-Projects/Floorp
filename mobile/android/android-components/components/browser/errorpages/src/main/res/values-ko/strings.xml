@@ -260,4 +260,10 @@
 	<p>%1$s의 이 웹페이지는 사기 사이트로 보고되었으며, 사용자의 보안 설정에 따라 차단되었습니다.</p>
 	]]></string>
 
-    </resources>
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">보안 사이트를 사용할 수 없음</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[보안 강화를 위해 HTTPS 전용 모드를 사용하도록 설정했으며 <em>%1$s</em>의 HTTPS 버전을 사용할 수 없습니다.]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">HTTP 사이트로 계속 진행</string>
+</resources>

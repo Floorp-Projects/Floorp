@@ -260,4 +260,11 @@
     <string name="mozac_browser_errorpages_safe_phishing_uri_title">Problema de sitio engañoso</string>
     <!-- The %1$s will be replaced by the malicious website URL-->
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[<p>Se informó la página web %1$s  como un sitio engañoso y se bloqueó basado en tus preferencias de seguridad.</p>]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">No hay sitios seguros disponibles</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[Habilitaste el modo solo HTTPS para aumentar la seguridad y una versión HTTPS de <em> %1$s </em> no está disponible.]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">Continuar al sitio HTTP</string>
 </resources>
