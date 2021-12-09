@@ -11,6 +11,19 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/main/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/main/.config.yml)
 
+* **concept-storage**:
+  * ⚠️ **This is a breaking change**: `KeyProvider#key` has been renamed to `KeyProvider#getOrGenerateKey` and is now `suspend`.
+  * ⚠️ **This is a breaking change**: `KeyRecoveryHandler` has been removed.
+  * ⚠️ **This is a breaking change**: `CreditCardsAddressesStorage` gained a new method - `scrubEncryptedData`.
+  * 🌟️️ **Add an abstract `KeyManager` which implements `KeyProvider` and knows how to store, retrieve and verify managed keys.
+
+* **service-sync-logins**:
+  * `LoginsCrypto` is now using `concept-storage`@`KeyManager` as its basis.
+
+* **service-sync-autofill**:
+  * `AutofillCrypto` is now using `concept-storage`@`KeyManager` as its basis.
+  * `AutofillCrypto` is now able to recover from key loss (by scrubbing encrypted credit card data).
+
 # 96.0.0
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v95.0.0...v96.0.0)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/143?closed=1)
