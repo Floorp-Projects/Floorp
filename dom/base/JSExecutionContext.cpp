@@ -95,18 +95,35 @@ nsresult JSExecutionContext::JoinCompile(JS::OffThreadToken** aOffThreadToken) {
   MOZ_ASSERT(!mWantsReturnValue);
   MOZ_ASSERT(!mScript);
 
-  if (mEncodeBytecode) {
-    mScript.set(JS::FinishOffThreadScriptAndStartIncrementalEncoding(
-        mCx, *aOffThreadToken));
-  } else {
-    mScript.set(JS::FinishOffThreadScript(mCx, *aOffThreadToken));
-  }
+  JS::InstantiateOptions instantiateOptions(mCompileOptions);
+  JS::Rooted<JS::InstantiationStorage> storage(mCx);
+  RefPtr<JS::Stencil> stencil = JS::FinishCompileToStencilOffThread(
+      mCx, *aOffThreadToken, storage.address());
   *aOffThreadToken = nullptr;  // Mark the token as having been finished.
-  if (!mScript) {
+  if (!stencil) {
     mSkip = true;
     mRv = EvaluationExceptionToNSResult(mCx);
     return mRv;
   }
+
+  JS::Rooted<JSScript*> script(
+      mCx, JS::InstantiateGlobalStencil(mCx, instantiateOptions, stencil,
+                                        storage.address()));
+  if (!script) {
+    mSkip = true;
+    mRv = EvaluationExceptionToNSResult(mCx);
+    return mRv;
+  }
+
+  if (mEncodeBytecode) {
+    if (!JS::StartIncrementalEncoding(mCx, std::move(stencil))) {
+      mSkip = true;
+      mRv = EvaluationExceptionToNSResult(mCx);
+      return mRv;
+    }
+  }
+
+  mScript.set(script);
 
   if (!UpdateDebugMetadata()) {
     return NS_ERROR_OUT_OF_MEMORY;

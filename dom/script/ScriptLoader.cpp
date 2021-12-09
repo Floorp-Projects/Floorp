@@ -1904,12 +1904,14 @@ nsresult ScriptLoader::AttemptAsyncScriptCompile(ScriptLoadRequest* aRequest,
     nsresult rv = aRequest->GetScriptSource(cx, &maybeSource);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    options.allocateInstantiationStorage = true;
+
     aRequest->mOffThreadToken =
         maybeSource.constructed<SourceText<char16_t>>()
-            ? JS::CompileOffThread(
+            ? JS::CompileToStencilOffThread(
                   cx, options, maybeSource.ref<SourceText<char16_t>>(),
                   OffThreadScriptLoaderCallback, static_cast<void*>(runnable))
-            : JS::CompileOffThread(
+            : JS::CompileToStencilOffThread(
                   cx, options, maybeSource.ref<SourceText<Utf8Unit>>(),
                   OffThreadScriptLoaderCallback, static_cast<void*>(runnable));
     if (!aRequest->mOffThreadToken) {
