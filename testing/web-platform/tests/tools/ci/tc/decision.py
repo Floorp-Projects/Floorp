@@ -73,6 +73,7 @@ def get_run_jobs(event):
     logger.info("Found changes in paths:%s" % "\n".join(paths))
     path_jobs = jobs.get_jobs(paths)
     all_jobs = path_jobs | get_extra_jobs(event)
+    filter_jobs(all_jobs, event)
     logger.info("Including jobs:\n * %s" % "\n * ".join(all_jobs))
     return all_jobs
 
@@ -98,6 +99,19 @@ def get_extra_jobs(event):
                 jobs.add(item.strip())
             break
     return jobs
+
+
+def filter_jobs(jobs, event):
+
+    # Exclude browser stability tests for exports from that specific browser.
+    try:
+        if event["sender"]["login"] == "chromium-wpt-export-bot":
+            jobs.discard("wpt-chrome-dev-stability")
+        if event["sender"]["login"] == "moz-wptsync-bot":
+            jobs.discard("wpt-firefox-nightly-stability")
+    except KeyError:
+        # Just continue if the username cannot be pulled from the event.
+        logger.debug("Unable to read username from event. Continuing.")
 
 
 def filter_schedule_if(event, tasks):
