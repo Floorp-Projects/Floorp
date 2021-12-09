@@ -2980,6 +2980,20 @@ already_AddRefed<ElementInternals> nsGenericHTMLElement::AttachInternals(
   return nullptr;
 }
 
+ElementInternals* nsGenericHTMLElement::GetInternals() const {
+  if (CustomElementData* data = GetCustomElementData()) {
+    return data->GetElementInternals();
+  }
+  return nullptr;
+}
+
+bool nsGenericHTMLElement::IsFormAssociatedCustomElements() const {
+  if (CustomElementData* data = GetCustomElementData()) {
+    return data->IsFormAssociated();
+  }
+  return false;
+}
+
 void nsGenericHTMLElement::GetAutocapitalize(nsAString& aValue) const {
   GetEnumAttr(nsGkAtoms::autocapitalize, nullptr, kDefaultAutocapitalize->tag,
               aValue);

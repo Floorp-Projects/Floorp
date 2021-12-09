@@ -59,7 +59,9 @@ class ElementInternals final : public nsIFormControl,
   void GetValidationMessage(nsAString& aValidationMessage,
                             ErrorResult& aRv) const;
   bool CheckValidity(ErrorResult& aRv);
+  bool ReportValidity(ErrorResult& aRv);
   already_AddRefed<nsINodeList> GetLabels(ErrorResult& aRv) const;
+  nsGenericHTMLElement* GetValidationAnchor(ErrorResult& aRv) const;
 
   // nsIFormControl
   mozilla::dom::HTMLFieldSetElement* GetFieldSet() override {
