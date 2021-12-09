@@ -256,7 +256,7 @@ already_AddRefed<Promise> OffscreenCanvas::ToBlob(JSContext* aCx,
   RefPtr<EncodeCompleteCallback> callback = new EncodeCallback(global, promise);
 
   bool usePlaceholder = ShouldResistFingerprinting();
-  CanvasRenderingContextHelper::ToBlob(aCx, global, callback, aType, aParams,
+  CanvasRenderingContextHelper::ToBlob(aCx, callback, aType, aParams,
                                        usePlaceholder, aRv);
 
   return promise.forget();
