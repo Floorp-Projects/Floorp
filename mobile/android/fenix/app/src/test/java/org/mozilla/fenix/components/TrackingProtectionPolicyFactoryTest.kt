@@ -254,6 +254,30 @@ class TrackingProtectionPolicyFactoryTest {
     }
 
     @Test
+    fun `GIVEN custom policy WHEN cookie policy is total protection THEN tracking policy should have cookie policy to block cross-site cookies`() {
+        val expected = TrackingProtectionPolicy.select(
+            cookiePolicy = TrackingProtectionPolicy.CookiePolicy.ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS,
+            trackingCategories = allTrackingCategories
+        )
+
+        val factory = TrackingProtectionPolicyFactory(
+            settingsForCustom(
+                shouldBlockCookiesInCustom = true,
+                blockCookiesSelection = "total-protection"
+            ),
+            testContext.resources
+        )
+
+        val privateOnly = factory.createTrackingProtectionPolicy(normalMode = false, privateMode = true)
+        val normalOnly = factory.createTrackingProtectionPolicy(normalMode = true, privateMode = false)
+        val always = factory.createTrackingProtectionPolicy(normalMode = true, privateMode = true)
+
+        expected.assertPolicyEquals(privateOnly, checkPrivacy = false)
+        expected.assertPolicyEquals(normalOnly, checkPrivacy = false)
+        expected.assertPolicyEquals(always, checkPrivacy = false)
+    }
+
+    @Test
     fun `GIVEN custom policy WHEN cookie policy unrecognized THEN tracking policy should have cookie policy block all`() {
         val expected = TrackingProtectionPolicy.select(
             cookiePolicy = TrackingProtectionPolicy.CookiePolicy.ACCEPT_NONE,

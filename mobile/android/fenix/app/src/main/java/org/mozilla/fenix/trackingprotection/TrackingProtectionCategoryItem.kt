@@ -17,12 +17,12 @@ class TrackingProtectionCategoryItem @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : ConstraintLayout(context, attrs, defStyleAttr) {
-    init {
-        val binding = TrackingProtectionCategoryBinding.inflate(
-            LayoutInflater.from(context),
-            this
-        )
+    private val binding = TrackingProtectionCategoryBinding.inflate(
+        LayoutInflater.from(context),
+        this
+    )
 
+    init {
         context.withStyledAttributes(
             attrs,
             R.styleable.TrackingProtectionCategory,
@@ -43,4 +43,14 @@ class TrackingProtectionCategoryItem @JvmOverloads constructor(
             )
         }
     }
+
+    /**
+     * The displayed title of this item.
+     */
+    val trackingProtectionCategoryTitle = binding.trackingProtectionCategoryTitle
+
+    /**
+     * The displayed description of this item.
+     */
+    val trackingProtectionCategoryItemDescription = binding.trackingProtectionCategoryItemDescription
 }

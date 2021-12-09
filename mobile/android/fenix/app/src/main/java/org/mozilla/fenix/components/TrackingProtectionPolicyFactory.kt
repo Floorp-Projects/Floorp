@@ -78,6 +78,7 @@ class TrackingProtectionPolicyFactory(
                 resources.getString(R.string.social) -> CookiePolicy.ACCEPT_NON_TRACKERS
                 resources.getString(R.string.unvisited) -> CookiePolicy.ACCEPT_VISITED
                 resources.getString(R.string.third_party) -> CookiePolicy.ACCEPT_ONLY_FIRST_PARTY
+                resources.getString(R.string.total_protection) -> CookiePolicy.ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS
                 else -> CookiePolicy.ACCEPT_NONE
             }
         }

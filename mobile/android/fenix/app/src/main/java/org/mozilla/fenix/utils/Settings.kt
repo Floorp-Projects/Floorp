@@ -571,9 +571,16 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     val enabledTotalCookieProtection: Boolean
         get() = FxNimbus.features.engineSettings.value().totalCookieProtectionEnabled
 
+    val enabledTotalCookieProtectionSetting: Boolean
+        get() = mr2022Sections[Mr2022Section.TCP_CFR] == true
+
     val blockCookiesSelectionInCustomTrackingProtection by stringPreference(
-        appContext.getPreferenceKey(R.string.pref_key_tracking_protection_custom_cookies_select),
-        appContext.getString(R.string.social)
+        key = appContext.getPreferenceKey(R.string.pref_key_tracking_protection_custom_cookies_select),
+        default = if (enabledTotalCookieProtectionSetting) {
+            appContext.getString(R.string.total_protection)
+        } else {
+            appContext.getString(R.string.social)
+        }
     )
 
     val blockTrackingContentInCustomTrackingProtection by booleanPreference(

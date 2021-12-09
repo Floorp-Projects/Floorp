@@ -3,6 +3,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
+    <string name="total_protection">total-protection</string>
     <string name="social">social</string>
     <string name="unvisited">unvisited</string>
     <string name="third_party">third-party</string>
@@ -10,6 +11,7 @@
     <string name="private_string">private</string>
 
     <string-array name="cookies_options_entries">
+        <item>@string/preference_enhanced_tracking_protection_custom_cookies_5</item>
         <item>@string/preference_enhanced_tracking_protection_custom_cookies_1</item>
         <item>@string/preference_enhanced_tracking_protection_custom_cookies_2</item>
         <item>@string/preference_enhanced_tracking_protection_custom_cookies_3</item>
@@ -17,6 +19,7 @@
     </string-array>
 
     <string-array name="cookies_options_entry_values">
+        <item>@string/total_protection</item>
         <item>@string/social</item>
         <item>@string/unvisited</item>
         <item>@string/third_party</item>
