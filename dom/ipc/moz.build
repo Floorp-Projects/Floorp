@@ -81,6 +81,7 @@ EXPORTS.mozilla.dom += [
     "VsyncChild.h",
     "VsyncMainChild.h",
     "VsyncParent.h",
+    "VsyncWorkerChild.h",
     "WindowGlobalActor.h",
     "WindowGlobalChild.h",
     "WindowGlobalParent.h",
@@ -145,6 +146,7 @@ SOURCES += [
     "ProcessHangMonitor.cpp",
     "VsyncMainChild.cpp",
     "VsyncParent.cpp",
+    "VsyncWorkerChild.cpp",
 ]
 
 PREPROCESSED_IPDL_SOURCES += [
