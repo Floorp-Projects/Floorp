@@ -9,25 +9,7 @@
  * persisted or is an extension origin, then it won't be evicted.
  */
 
-loadScript("dom/quota/test/common/file.js");
-
-async function fillOrigin(principal, size) {
-  let database = getSimpleDatabase(principal);
-
-  let request = database.open("data");
-  await requestFinished(request);
-
-  try {
-    request = database.write(getBuffer(size));
-    await requestFinished(request);
-    ok(true, "Should not have thrown");
-  } catch (ex) {
-    ok(false, "Should not have thrown");
-  }
-
-  request = database.close();
-  await requestFinished(request);
-}
+loadScript("dom/quota/test/xpcshell/common/utils.js");
 
 async function testSteps() {
   // The group limit is calculated as 20% of the global limit and the minimum
