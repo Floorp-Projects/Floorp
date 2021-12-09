@@ -90,6 +90,39 @@ AntialiasMode ScaledFontFontconfig::GetDefaultAAMode() {
   return mInstanceData.mAntialias;
 }
 
+bool FcPatternAllowsBitmaps(FcPattern* aPattern, bool aAntialias,
+                            bool aHinting) {
+  if (!aAntialias) {
+    // Always allow bitmaps when antialiasing is disabled
+    return true;
+  }
+  FcBool bitmap;
+  if (FcPatternGetBool(aPattern, FC_EMBEDDED_BITMAP, 0, &bitmap) !=
+          FcResultMatch ||
+      !bitmap) {
+    // If bitmaps were explicitly disabled, then disallow them
+    return false;
+  }
+  if (aHinting) {
+    // If hinting is used and bitmaps were enabled, then allow them
+    return true;
+  }
+  // When hinting is disabled, then avoid loading bitmaps from outline
+  // fonts. However, emoji fonts may have no outlines while containing
+  // bitmaps intended to be scaled, so still allow those.
+  FcBool outline;
+  if (FcPatternGetBool(aPattern, FC_OUTLINE, 0, &outline) == FcResultMatch &&
+      outline) {
+    return false;
+  }
+  FcBool scalable;
+  if (FcPatternGetBool(aPattern, FC_SCALABLE, 0, &scalable) != FcResultMatch ||
+      !scalable) {
+    return false;
+  }
+  return true;
+}
+
 ScaledFontFontconfig::InstanceData::InstanceData(FcPattern* aPattern)
     : mFlags(0),
       mAntialias(AntialiasMode::NONE),
@@ -151,11 +184,7 @@ ScaledFontFontconfig::InstanceData::InstanceData(FcPattern* aPattern)
 
     // Otherwise, if AA is enabled, disable embedded bitmaps unless explicitly
     // enabled.
-    FcBool bitmap;
-    if (mHinting != FontHinting::NONE &&
-        FcPatternGetBool(aPattern, FC_EMBEDDED_BITMAP, 0, &bitmap) ==
-            FcResultMatch &&
-        bitmap) {
+    if (FcPatternAllowsBitmaps(aPattern, true, mHinting != FontHinting::NONE)) {
       mFlags |= EMBEDDED_BITMAP;
     }
 

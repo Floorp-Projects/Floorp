@@ -99,6 +99,9 @@ class UnscaledFontFontconfig : public UnscaledFontFreeType {
       const wr::FontInstancePlatformOptions* aPlatformOptions,
       const FontVariation* aVariations, uint32_t aNumVariations) override;
 };
+
+extern bool FcPatternAllowsBitmaps(FcPattern* aPattern, bool aAntialias,
+                                   bool aHinting);
 #endif
 
 }  // namespace gfx
