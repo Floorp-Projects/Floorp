@@ -160,6 +160,8 @@ extern JS_PUBLIC_API TranscodeResult DecodeStencil(JSContext* cx,
 extern JS_PUBLIC_API size_t SizeOfStencil(Stencil* stencil,
                                           mozilla::MallocSizeOf mallocSizeOf);
 
+// Start an off-thread task to compile the source text into a JS::Stencil,
+// using the provided options.
 extern JS_PUBLIC_API OffThreadToken* CompileToStencilOffThread(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     SourceText<char16_t>& srcBuf, OffThreadCompileCallback callback,
