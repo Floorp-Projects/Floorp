@@ -2283,7 +2283,7 @@ void Assembler::fmov(const VRegister& vd, float imm) {
     VIXL_ASSERT(vd.Is1S());
     Emit(FMOV_s_imm | Rd(vd) | ImmFP32(imm));
   } else {
-    VIXL_ASSERT(vd.Is2S() | vd.Is4S());
+    VIXL_ASSERT(vd.Is2S() || vd.Is4S());
     Instr op = NEONModifiedImmediate_MOVI;
     Instr q = vd.Is4S() ?  NEON_Q : 0;
     uint32_t encoded_imm = FP32ToImm8(imm);
