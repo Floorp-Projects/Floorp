@@ -3240,68 +3240,40 @@ Tests for page-load performance. The links direct to the actual websites that ar
       * test-linux1804-64-clang-trunk-qr/opt
             * browsertime-tp6-essential-firefox-instagram-e10s: None
             * browsertime-tp6-essential-firefox-instagram-fis-e10s: None
-            * browsertime-tp6-live-firefox-instagram-e10s: None
-            * browsertime-tp6-live-firefox-instagram-fis-e10s: None
       * test-linux1804-64-qr/opt
             * browsertime-tp6-essential-firefox-instagram-e10s: None
             * browsertime-tp6-essential-firefox-instagram-fis-e10s: None
-            * browsertime-tp6-live-firefox-instagram-e10s: None
-            * browsertime-tp6-live-firefox-instagram-fis-e10s: None
       * test-linux1804-64-shippable-qr/opt
             * browsertime-tp6-essential-chrome-instagram-e10s: None
             * browsertime-tp6-essential-chromium-instagram-e10s: None
             * browsertime-tp6-essential-firefox-instagram-e10s: mozilla-beta, trunk
             * browsertime-tp6-essential-firefox-instagram-fis-e10s: mozilla-beta, trunk
-            * browsertime-tp6-live-chrome-instagram-e10s: None
-            * browsertime-tp6-live-chromium-instagram-e10s: None
-            * browsertime-tp6-live-firefox-instagram-e10s: None
-            * browsertime-tp6-live-firefox-instagram-fis-e10s: None
       * test-macosx1014-64-shippable-qr/opt
             * browsertime-tp6-essential-chrome-instagram-e10s: None
             * browsertime-tp6-essential-chromium-instagram-e10s: None
             * browsertime-tp6-essential-firefox-instagram-e10s: trunk
             * browsertime-tp6-essential-firefox-instagram-fis-e10s: trunk
-            * browsertime-tp6-live-chrome-instagram-e10s: None
-            * browsertime-tp6-live-chromium-instagram-e10s: None
-            * browsertime-tp6-live-firefox-instagram-e10s: None
-            * browsertime-tp6-live-firefox-instagram-fis-e10s: None
       * test-macosx1015-64-shippable-qr/opt
             * browsertime-tp6-essential-chrome-instagram-e10s: None
             * browsertime-tp6-essential-chromium-instagram-e10s: None
             * browsertime-tp6-essential-firefox-instagram-e10s: mozilla-beta, trunk
             * browsertime-tp6-essential-firefox-instagram-fis-e10s: mozilla-beta, trunk
-            * browsertime-tp6-live-chrome-instagram-e10s: None
-            * browsertime-tp6-live-chromium-instagram-e10s: None
-            * browsertime-tp6-live-firefox-instagram-e10s: None
-            * browsertime-tp6-live-firefox-instagram-fis-e10s: None
       * test-windows10-32-qr/opt
             * browsertime-tp6-essential-firefox-instagram-e10s: None
             * browsertime-tp6-essential-firefox-instagram-fis-e10s: None
-            * browsertime-tp6-live-firefox-instagram-e10s: None
-            * browsertime-tp6-live-firefox-instagram-fis-e10s: None
       * test-windows10-32-shippable-qr/opt
             * browsertime-tp6-essential-chrome-instagram-e10s: None
             * browsertime-tp6-essential-chromium-instagram-e10s: None
             * browsertime-tp6-essential-firefox-instagram-e10s: None
             * browsertime-tp6-essential-firefox-instagram-fis-e10s: None
-            * browsertime-tp6-live-chrome-instagram-e10s: None
-            * browsertime-tp6-live-chromium-instagram-e10s: None
-            * browsertime-tp6-live-firefox-instagram-e10s: None
-            * browsertime-tp6-live-firefox-instagram-fis-e10s: None
       * test-windows10-64-qr/opt
             * browsertime-tp6-essential-firefox-instagram-e10s: None
             * browsertime-tp6-essential-firefox-instagram-fis-e10s: None
-            * browsertime-tp6-live-firefox-instagram-e10s: None
-            * browsertime-tp6-live-firefox-instagram-fis-e10s: None
       * test-windows10-64-shippable-qr/opt
             * browsertime-tp6-essential-chrome-instagram-e10s: None
             * browsertime-tp6-essential-chromium-instagram-e10s: None
             * browsertime-tp6-essential-firefox-instagram-e10s: mozilla-beta, trunk
             * browsertime-tp6-essential-firefox-instagram-fis-e10s: mozilla-beta, trunk
-            * browsertime-tp6-live-chrome-instagram-e10s: None
-            * browsertime-tp6-live-chromium-instagram-e10s: None
-            * browsertime-tp6-live-firefox-instagram-e10s: None
-            * browsertime-tp6-live-firefox-instagram-fis-e10s: None
 
 
 .. dropdown:: linkedin (BT, FF, CH, CU)
