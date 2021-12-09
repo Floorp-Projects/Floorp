@@ -39,10 +39,14 @@
 #  include "nsWaylandDisplay.h"
 #endif
 
+// For collecting other people's log, tell them `MOZ_LOG=KeyboardHandler:4,sync`
+// rather than `MOZ_LOG=KeyboardHandler:5,sync` since using `5` may create too
+// big file.
+// Therefore you shouldn't use `LogLevel::Verbose` for logging usual behavior.
+mozilla::LazyLogModule gKeyLog("KeyboardHandler");
+
 namespace mozilla {
 namespace widget {
-
-LazyLogModule gKeymapWrapperLog("KeymapWrapperWidgets");
 
 #define IS_ASCII_ALPHABETICAL(key) \
   ((('a' <= key) && (key <= 'z')) || (('A' <= key) && (key <= 'Z')))
@@ -341,7 +345,7 @@ KeymapWrapper::KeymapWrapper()
       mXKBBaseEventCode(0),
       mOnKeysChangedSignalHandle(0),
       mOnDirectionChangedSignalHandle(0) {
-  MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+  MOZ_LOG(gKeyLog, LogLevel::Info,
           ("%p Constructor, mGdkKeymap=%p", this, mGdkKeymap));
 
   g_object_ref(mGdkKeymap);
@@ -359,7 +363,7 @@ void KeymapWrapper::Init() {
   }
   mInitialized = true;
 
-  MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+  MOZ_LOG(gKeyLog, LogLevel::Info,
           ("%p Init, mGdkKeymap=%p", this, mGdkKeymap));
 
   mModifierKeys.Clear();
@@ -376,7 +380,7 @@ void KeymapWrapper::Init() {
 
   gdk_window_add_filter(nullptr, FilterEvents, this);
 
-  MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+  MOZ_LOG(gKeyLog, LogLevel::Info,
           ("%p Init, CapsLock=0x%X, NumLock=0x%X, "
            "ScrollLock=0x%X, Level3=0x%X, Level5=0x%X, "
            "Shift=0x%X, Ctrl=0x%X, Alt=0x%X, Meta=0x%X, Super=0x%X, Hyper=0x%X",
@@ -393,7 +397,7 @@ void KeymapWrapper::InitXKBExtension() {
   int xkbMajorVer = XkbMajorVersion;
   int xkbMinorVer = XkbMinorVersion;
   if (!XkbLibraryVersion(&xkbMajorVer, &xkbMinorVer)) {
-    MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+    MOZ_LOG(gKeyLog, LogLevel::Info,
             ("%p InitXKBExtension failed due to failure of "
              "XkbLibraryVersion()",
              this));
@@ -411,8 +415,8 @@ void KeymapWrapper::InitXKBExtension() {
   int opcode, baseErrorCode;
   if (!XkbQueryExtension(display, &opcode, &mXKBBaseEventCode, &baseErrorCode,
                          &xkbMajorVer, &xkbMinorVer)) {
-    MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
-            ("%p InitXKBExtension failed due to failure of "
+    MOZ_LOG(gKeyLog, LogLevel::Info,
+            ("%p   InitXKBExtension failed due to failure of "
              "XkbQueryExtension(), display=0x%p",
              this, display));
     return;
@@ -420,8 +424,8 @@ void KeymapWrapper::InitXKBExtension() {
 
   if (!XkbSelectEventDetails(display, XkbUseCoreKbd, XkbStateNotify,
                              XkbModifierStateMask, XkbModifierStateMask)) {
-    MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
-            ("%p InitXKBExtension failed due to failure of "
+    MOZ_LOG(gKeyLog, LogLevel::Info,
+            ("%p   InitXKBExtension failed due to failure of "
              "XkbSelectEventDetails() for XModifierStateMask, display=0x%p",
              this, display));
     return;
@@ -429,27 +433,26 @@ void KeymapWrapper::InitXKBExtension() {
 
   if (!XkbSelectEventDetails(display, XkbUseCoreKbd, XkbControlsNotify,
                              XkbPerKeyRepeatMask, XkbPerKeyRepeatMask)) {
-    MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
-            ("%p InitXKBExtension failed due to failure of "
+    MOZ_LOG(gKeyLog, LogLevel::Info,
+            ("%p   InitXKBExtension failed due to failure of "
              "XkbSelectEventDetails() for XkbControlsNotify, display=0x%p",
              this, display));
     return;
   }
 
   if (!XGetKeyboardControl(display, &mKeyboardState)) {
-    MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
-            ("%p InitXKBExtension failed due to failure of "
+    MOZ_LOG(gKeyLog, LogLevel::Info,
+            ("%p   InitXKBExtension failed due to failure of "
              "XGetKeyboardControl(), display=0x%p",
              this, display));
     return;
   }
 
-  MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
-          ("%p InitXKBExtension, Succeeded", this));
+  MOZ_LOG(gKeyLog, LogLevel::Info, ("%p   InitXKBExtension, Succeeded", this));
 }
 
 void KeymapWrapper::InitBySystemSettingsX11() {
-  MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+  MOZ_LOG(gKeyLog, LogLevel::Info,
           ("%p InitBySystemSettingsX11, mGdkKeymap=%p", this, mGdkKeymap));
 
   if (!mOnKeysChangedSignalHandle) {
@@ -472,8 +475,8 @@ void KeymapWrapper::InitBySystemSettingsX11() {
       XGetKeyboardMapping(display, min_keycode, max_keycode - min_keycode + 1,
                           &keysyms_per_keycode);
   if (!xkeymap) {
-    MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
-            ("%p InitBySystemSettings, "
+    MOZ_LOG(gKeyLog, LogLevel::Info,
+            ("%p   InitBySystemSettings, "
              "Failed due to null xkeymap",
              this));
     return;
@@ -481,15 +484,15 @@ void KeymapWrapper::InitBySystemSettingsX11() {
 
   XModifierKeymap* xmodmap = XGetModifierMapping(display);
   if (!xmodmap) {
-    MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
-            ("%p InitBySystemSettings, "
+    MOZ_LOG(gKeyLog, LogLevel::Info,
+            ("%p   InitBySystemSettings, "
              "Failed due to null xmodmap",
              this));
     XFree(xkeymap);
     return;
   }
-  MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
-          ("%p InitBySystemSettings, min_keycode=%d, "
+  MOZ_LOG(gKeyLog, LogLevel::Info,
+          ("%p   InitBySystemSettings, min_keycode=%d, "
            "max_keycode=%d, keysyms_per_keycode=%d, max_keypermod=%d",
            this, min_keycode, max_keycode, keysyms_per_keycode,
            xmodmap->max_keypermod));
@@ -515,8 +518,8 @@ void KeymapWrapper::InitBySystemSettingsX11() {
   const uint32_t map_size = 8 * xmodmap->max_keypermod;
   for (uint32_t i = 0; i < map_size; i++) {
     KeyCode keycode = xmodmap->modifiermap[i];
-    MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
-            ("%p InitBySystemSettings, "
+    MOZ_LOG(gKeyLog, LogLevel::Info,
+            ("%p   InitBySystemSettings, "
              "  i=%d, keycode=0x%08X",
              this, i, keycode));
     if (!keycode || keycode < min_keycode || keycode > max_keycode) {
@@ -542,8 +545,8 @@ void KeymapWrapper::InitBySystemSettingsX11() {
     const int32_t modIndex = bit - 3;
     for (int32_t j = 0; j < keysyms_per_keycode; j++) {
       Modifier modifier = GetModifierForGDKKeyval(syms[j]);
-      MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
-              ("%p InitBySystemSettings, "
+      MOZ_LOG(gKeyLog, LogLevel::Info,
+              ("%p   InitBySystemSettings, "
                "    Mod%d, j=%d, syms[j]=%s(0x%lX), modifier=%s",
                this, modIndex + 1, j, gdk_keyval_name(syms[j]), syms[j],
                GetModifierName(modifier)));
@@ -648,7 +651,7 @@ void KeymapWrapper::SetModifierMasks(xkb_keymap* aKeymap) {
   keymapWrapper->SetModifierMask(aKeymap, INDEX_LEVEL3, "Level3");
   keymapWrapper->SetModifierMask(aKeymap, INDEX_LEVEL5, "Level5");
 
-  MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+  MOZ_LOG(gKeyLog, LogLevel::Info,
           ("%p KeymapWrapper::SetModifierMasks, CapsLock=0x%X, NumLock=0x%X, "
            "ScrollLock=0x%X, Level3=0x%X, Level5=0x%X, "
            "Shift=0x%X, Ctrl=0x%X, Alt=0x%X, Meta=0x%X, Super=0x%X, Hyper=0x%X",
@@ -784,7 +787,7 @@ KeymapWrapper::~KeymapWrapper() {
     g_signal_handler_disconnect(mGdkKeymap, mOnDirectionChangedSignalHandle);
   }
   g_object_unref(mGdkKeymap);
-  MOZ_LOG(gKeymapWrapperLog, LogLevel::Info, ("%p Destructor", this));
+  MOZ_LOG(gKeyLog, LogLevel::Info, ("%p Destructor", this));
 }
 
 /* static */
@@ -803,7 +806,7 @@ GdkFilterReturn KeymapWrapper::FilterEvents(GdkXEvent* aXEvent,
       }
       if (sRepeatState == NOT_PRESSED) {
         sRepeatState = FIRST_PRESS;
-        MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+        MOZ_LOG(gKeyLog, LogLevel::Info,
                 ("FilterEvents(aXEvent={ type=KeyPress, "
                  "xkey={ keycode=0x%08X, state=0x%08X, time=%lu } }, "
                  "aGdkEvent={ state=0x%08X }), "
@@ -818,7 +821,7 @@ GdkFilterReturn KeymapWrapper::FilterEvents(GdkXEvent* aXEvent,
           // On some environment, IM may generate duplicated KeyPress event
           // without any special state flags.  In such case, we shouldn't
           // treat the event as "repeated".
-          MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+          MOZ_LOG(gKeyLog, LogLevel::Info,
                   ("FilterEvents(aXEvent={ type=KeyPress, "
                    "xkey={ keycode=0x%08X, state=0x%08X, time=%lu } }, "
                    "aGdkEvent={ state=0x%08X }), "
@@ -828,7 +831,7 @@ GdkFilterReturn KeymapWrapper::FilterEvents(GdkXEvent* aXEvent,
           break;
         }
         sRepeatState = REPEATING;
-        MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+        MOZ_LOG(gKeyLog, LogLevel::Info,
                 ("FilterEvents(aXEvent={ type=KeyPress, "
                  "xkey={ keycode=0x%08X, state=0x%08X, time=%lu } }, "
                  "aGdkEvent={ state=0x%08X }), "
@@ -841,7 +844,7 @@ GdkFilterReturn KeymapWrapper::FilterEvents(GdkXEvent* aXEvent,
         // So, setting new keycode and setting repeat state as first key
         // press should work fine.
         sRepeatState = FIRST_PRESS;
-        MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+        MOZ_LOG(gKeyLog, LogLevel::Info,
                 ("FilterEvents(aXEvent={ type=KeyPress, "
                  "xkey={ keycode=0x%08X, state=0x%08X, time=%lu } }, "
                  "aGdkEvent={ state=0x%08X }), "
@@ -862,7 +865,7 @@ GdkFilterReturn KeymapWrapper::FilterEvents(GdkXEvent* aXEvent,
         break;
       }
       sRepeatState = NOT_PRESSED;
-      MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+      MOZ_LOG(gKeyLog, LogLevel::Info,
               ("FilterEvents(aXEvent={ type=KeyRelease, "
                "xkey={ keycode=0x%08X, state=0x%08X, time=%lu } }, "
                "aGdkEvent={ state=0x%08X }), "
@@ -889,7 +892,7 @@ GdkFilterReturn KeymapWrapper::FilterEvents(GdkXEvent* aXEvent,
         break;
       }
       if (!XGetKeyboardControl(xkbEvent->any.display, &self->mKeyboardState)) {
-        MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+        MOZ_LOG(gKeyLog, LogLevel::Info,
                 ("%p FilterEvents failed due to failure "
                  "of XGetKeyboardControl(), display=0x%p",
                  self, xkbEvent->any.display));
@@ -919,7 +922,7 @@ void KeymapWrapper::ResetKeyboard() {
 /* static */
 void KeymapWrapper::OnKeysChanged(GdkKeymap* aGdkKeymap,
                                   KeymapWrapper* aKeymapWrapper) {
-  MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+  MOZ_LOG(gKeyLog, LogLevel::Info,
           ("OnKeysChanged, aGdkKeymap=%p, aKeymapWrapper=%p", aGdkKeymap,
            aKeymapWrapper));
 
@@ -942,7 +945,7 @@ void KeymapWrapper::OnDirectionChanged(GdkKeymap* aGdkKeymap,
   // Also, when using ibus, switching to IM might not cause this signal.
   // See https://github.com/ibus/ibus/issues/1848
 
-  MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+  MOZ_LOG(gKeyLog, LogLevel::Info,
           ("OnDirectionChanged, aGdkKeymap=%p, aKeymapWrapper=%p", aGdkKeymap,
            aKeymapWrapper));
 
@@ -1072,7 +1075,7 @@ void KeymapWrapper::InitInputEvent(WidgetInputEvent& aInputEvent,
   // just noisy and there is no reason to log it.
   bool doLog = aInputEvent.mMessage != eMouseMove;
   if (doLog) {
-    MOZ_LOG(gKeymapWrapperLog, LogLevel::Debug,
+    MOZ_LOG(gKeyLog, LogLevel::Debug,
             ("%p InitInputEvent, aModifierState=0x%08X, "
              "aInputEvent={ mMessage=%s, mModifiers=0x%04X (Shift: %s, "
              "Control: %s, Alt: %s, "
@@ -1116,8 +1119,8 @@ void KeymapWrapper::InitInputEvent(WidgetInputEvent& aInputEvent,
 
   if (doLog) {
     MOZ_LOG(
-        gKeymapWrapperLog, LogLevel::Debug,
-        ("%p InitInputEvent, aInputEvent has mButtons, "
+        gKeyLog, LogLevel::Debug,
+        ("%p   InitInputEvent, aInputEvent has mButtons, "
          "aInputEvent.mButtons=0x%04X (Left: %s, Right: %s, Middle: %s, "
          "4th (BACK): %s, 5th (FORWARD): %s)",
          keymapWrapper, mouseEvent.mButtons,
@@ -1381,7 +1384,7 @@ bool KeymapWrapper::DispatchKeyDownOrKeyUpEvent(nsWindow* aWindow,
 
   if (aGdkKeyEvent->type == GDK_KEY_PRESS && aGdkKeyEvent->keyval == GDK_Tab &&
       AreModifiersActive(CTRL | ALT, aGdkKeyEvent->state)) {
-    MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+    MOZ_LOG(gKeyLog, LogLevel::Info,
             ("  DispatchKeyDownOrKeyUpEvent(), didn't dispatch keyboard events "
              "because it's Ctrl + Alt + Tab"));
     return false;
@@ -1405,7 +1408,7 @@ bool KeymapWrapper::DispatchKeyDownOrKeyUpEvent(
   RefPtr<TextEventDispatcher> dispatcher = aWindow->GetTextEventDispatcher();
   nsresult rv = dispatcher->BeginNativeInputTransaction();
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    MOZ_LOG(gKeymapWrapperLog, LogLevel::Error,
+    MOZ_LOG(gKeyLog, LogLevel::Error,
             ("  DispatchKeyDownOrKeyUpEvent(), stopped dispatching %s event "
              "because of failed to initialize TextEventDispatcher",
              ToChar(aKeyboardEvent.mMessage)));
@@ -1472,7 +1475,7 @@ bool KeymapWrapper::MaybeDispatchContextMenuEvent(nsWindow* aWindow,
 /* static*/
 void KeymapWrapper::HandleKeyPressEvent(nsWindow* aWindow,
                                         GdkEventKey* aGdkKeyEvent) {
-  MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+  MOZ_LOG(gKeyLog, LogLevel::Info,
           ("HandleKeyPressEvent(aWindow=%p, aGdkKeyEvent={ type=%s, "
            "keyval=%s(0x%X), state=0x%08X, hardware_keycode=0x%08X, "
            "time=%u, is_modifier=%s })",
@@ -1495,7 +1498,7 @@ void KeymapWrapper::HandleKeyPressEvent(nsWindow* aWindow,
     IMEWasEnabled = imContext->IsEnabled();
     handlingState = imContext->OnKeyEvent(aWindow, aGdkKeyEvent);
     if (handlingState == KeyHandlingState::eHandled) {
-      MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+      MOZ_LOG(gKeyLog, LogLevel::Info,
               ("  HandleKeyPressEvent(), the event was handled by "
                "IMContextWrapper"));
       return;
@@ -1505,7 +1508,7 @@ void KeymapWrapper::HandleKeyPressEvent(nsWindow* aWindow,
   // work around for annoying things.
   if (aGdkKeyEvent->keyval == GDK_Tab &&
       AreModifiersActive(CTRL | ALT, aGdkKeyEvent->state)) {
-    MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+    MOZ_LOG(gKeyLog, LogLevel::Info,
             ("  HandleKeyPressEvent(), didn't dispatch keyboard events "
              "because it's Ctrl + Alt + Tab"));
     return;
@@ -1522,14 +1525,14 @@ void KeymapWrapper::HandleKeyPressEvent(nsWindow* aWindow,
     if (DispatchKeyDownOrKeyUpEvent(aWindow, aGdkKeyEvent, false,
                                     &isKeyDownCancelled) &&
         (MOZ_UNLIKELY(aWindow->IsDestroyed()) || isKeyDownCancelled)) {
-      MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+      MOZ_LOG(gKeyLog, LogLevel::Info,
               ("  HandleKeyPressEvent(), dispatched eKeyDown event and "
                "stopped handling the event because %s",
                aWindow->IsDestroyed() ? "the window has been destroyed"
                                       : "the event was consumed"));
       return;
     }
-    MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+    MOZ_LOG(gKeyLog, LogLevel::Info,
             ("  HandleKeyPressEvent(), dispatched eKeyDown event and "
              "it wasn't consumed"));
     handlingState = KeyHandlingState::eNotHandledButEventDispatched;
@@ -1544,7 +1547,7 @@ void KeymapWrapper::HandleKeyPressEvent(nsWindow* aWindow,
     // unnecessary DOM keydown event in the editor.
     handlingState = imContext->OnKeyEvent(aWindow, aGdkKeyEvent, true);
     if (handlingState == KeyHandlingState::eHandled) {
-      MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+      MOZ_LOG(gKeyLog, LogLevel::Info,
               ("  HandleKeyPressEvent(), the event was handled by "
                "IMContextWrapper which was enabled by the preceding eKeyDown "
                "event"));
@@ -1556,12 +1559,12 @@ void KeymapWrapper::HandleKeyPressEvent(nsWindow* aWindow,
   switch (aGdkKeyEvent->keyval) {
     case GDK_Back:
       aWindow->DispatchCommandEvent(nsGkAtoms::Back);
-      MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+      MOZ_LOG(gKeyLog, LogLevel::Info,
               ("  HandleKeyPressEvent(), dispatched \"Back\" command event"));
       return;
     case GDK_Forward:
       aWindow->DispatchCommandEvent(nsGkAtoms::Forward);
-      MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+      MOZ_LOG(gKeyLog, LogLevel::Info,
               ("  HandleKeyPressEvent(), dispatched \"Forward\" command "
                "event"));
       return;
@@ -1571,17 +1574,17 @@ void KeymapWrapper::HandleKeyPressEvent(nsWindow* aWindow,
       return;
     case GDK_Stop:
       aWindow->DispatchCommandEvent(nsGkAtoms::Stop);
-      MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+      MOZ_LOG(gKeyLog, LogLevel::Info,
               ("  HandleKeyPressEvent(), dispatched \"Stop\" command event"));
       return;
     case GDK_Search:
       aWindow->DispatchCommandEvent(nsGkAtoms::Search);
-      MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+      MOZ_LOG(gKeyLog, LogLevel::Info,
               ("  HandleKeyPressEvent(), dispatched \"Search\" command event"));
       return;
     case GDK_Favorites:
       aWindow->DispatchCommandEvent(nsGkAtoms::Bookmarks);
-      MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+      MOZ_LOG(gKeyLog, LogLevel::Info,
               ("  HandleKeyPressEvent(), dispatched \"Bookmarks\" command "
                "event"));
       return;
@@ -1591,21 +1594,21 @@ void KeymapWrapper::HandleKeyPressEvent(nsWindow* aWindow,
     case GDK_Copy:
     case GDK_F16:  // F16, F20, F18, F14 are old keysyms for Copy Cut Paste Undo
       aWindow->DispatchContentCommandEvent(eContentCommandCopy);
-      MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+      MOZ_LOG(gKeyLog, LogLevel::Info,
               ("  HandleKeyPressEvent(), dispatched \"Copy\" content command "
                "event"));
       return;
     case GDK_Cut:
     case GDK_F20:
       aWindow->DispatchContentCommandEvent(eContentCommandCut);
-      MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+      MOZ_LOG(gKeyLog, LogLevel::Info,
               ("  HandleKeyPressEvent(), dispatched \"Cut\" content command "
                "event"));
       return;
     case GDK_Paste:
     case GDK_F18:
       aWindow->DispatchContentCommandEvent(eContentCommandPaste);
-      MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+      MOZ_LOG(gKeyLog, LogLevel::Info,
               ("  HandleKeyPressEvent(), dispatched \"Paste\" content command "
                "event"));
       return;
@@ -1615,7 +1618,7 @@ void KeymapWrapper::HandleKeyPressEvent(nsWindow* aWindow,
     case GDK_Undo:
     case GDK_F14:
       aWindow->DispatchContentCommandEvent(eContentCommandUndo);
-      MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+      MOZ_LOG(gKeyLog, LogLevel::Info,
               ("  HandleKeyPressEvent(), dispatched \"Undo\" content command "
                "event"));
       return;
@@ -1626,7 +1629,7 @@ void KeymapWrapper::HandleKeyPressEvent(nsWindow* aWindow,
   // before we dispatch a key, check if it's the context menu key.
   // If so, send a context menu key event instead.
   if (MaybeDispatchContextMenuEvent(aWindow, aGdkKeyEvent)) {
-    MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+    MOZ_LOG(gKeyLog, LogLevel::Info,
             ("  HandleKeyPressEvent(), stopped dispatching eKeyPress event "
              "because eContextMenu event was dispatched"));
     return;
@@ -1636,7 +1639,7 @@ void KeymapWrapper::HandleKeyPressEvent(nsWindow* aWindow,
       aWindow->GetTextEventDispatcher();
   nsresult rv = textEventDispatcher->BeginNativeInputTransaction();
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    MOZ_LOG(gKeymapWrapperLog, LogLevel::Error,
+    MOZ_LOG(gKeyLog, LogLevel::Error,
             ("  HandleKeyPressEvent(), stopped dispatching eKeyPress event "
              "because of failed to initialize TextEventDispatcher"));
     return;
@@ -1654,12 +1657,12 @@ void KeymapWrapper::HandleKeyPressEvent(nsWindow* aWindow,
       keypressEvent.mKeyValue.Length() == 1) {
     if (textEventDispatcher->MaybeDispatchKeypressEvents(keypressEvent, status,
                                                          aGdkKeyEvent)) {
-      MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+      MOZ_LOG(gKeyLog, LogLevel::Info,
               ("  HandleKeyPressEvent(), dispatched eKeyPress event "
                "(status=%s)",
                GetStatusName(status)));
     } else {
-      MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+      MOZ_LOG(gKeyLog, LogLevel::Info,
               ("  HandleKeyPressEvent(), didn't dispatch eKeyPress event "
                "(status=%s)",
                GetStatusName(status)));
@@ -1668,7 +1671,7 @@ void KeymapWrapper::HandleKeyPressEvent(nsWindow* aWindow,
     WidgetEventTime eventTime = aWindow->GetWidgetEventTime(aGdkKeyEvent->time);
     textEventDispatcher->CommitComposition(status, &keypressEvent.mKeyValue,
                                            &eventTime);
-    MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+    MOZ_LOG(gKeyLog, LogLevel::Info,
             ("  HandleKeyPressEvent(), dispatched a set of composition "
              "events"));
   }
@@ -1677,7 +1680,7 @@ void KeymapWrapper::HandleKeyPressEvent(nsWindow* aWindow,
 /* static */
 bool KeymapWrapper::HandleKeyReleaseEvent(nsWindow* aWindow,
                                           GdkEventKey* aGdkKeyEvent) {
-  MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+  MOZ_LOG(gKeyLog, LogLevel::Info,
           ("HandleKeyReleaseEvent(aWindow=%p, aGdkKeyEvent={ type=%s, "
            "keyval=%s(0x%X), state=0x%08X, hardware_keycode=0x%08X, "
            "time=%u, is_modifier=%s })",
@@ -1693,7 +1696,7 @@ bool KeymapWrapper::HandleKeyReleaseEvent(nsWindow* aWindow,
     KeyHandlingState handlingState =
         imContext->OnKeyEvent(aWindow, aGdkKeyEvent);
     if (handlingState != KeyHandlingState::eNotHandled) {
-      MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+      MOZ_LOG(gKeyLog, LogLevel::Info,
               ("  HandleKeyReleaseEvent(), the event was handled by "
                "IMContextWrapper"));
       return true;
@@ -1703,12 +1706,12 @@ bool KeymapWrapper::HandleKeyReleaseEvent(nsWindow* aWindow,
   bool isCancelled = false;
   if (NS_WARN_IF(!DispatchKeyDownOrKeyUpEvent(aWindow, aGdkKeyEvent, false,
                                               &isCancelled))) {
-    MOZ_LOG(gKeymapWrapperLog, LogLevel::Error,
+    MOZ_LOG(gKeyLog, LogLevel::Error,
             ("  HandleKeyReleaseEvent(), didn't dispatch eKeyUp event"));
     return false;
   }
 
-  MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+  MOZ_LOG(gKeyLog, LogLevel::Info,
           ("  HandleKeyReleaseEvent(), dispatched eKeyUp event "
            "(isCancelled=%s)",
            GetBoolName(isCancelled)));
@@ -1853,7 +1856,7 @@ void KeymapWrapper::InitKeyEvent(WidgetKeyboardEvent& aKeyEvent,
       aGdkKeyEvent->hardware_keycode == sLastRepeatableHardwareKeyCode;
 
   MOZ_LOG(
-      gKeymapWrapperLog, LogLevel::Info,
+      gKeyLog, LogLevel::Info,
       ("%p InitKeyEvent, modifierState=0x%08X "
        "aKeyEvent={ mMessage=%s, isShift=%s, isControl=%s, "
        "isAlt=%s, isMeta=%s , mKeyCode=0x%02X, mCharCode=%s, "
@@ -2292,7 +2295,7 @@ void KeymapWrapper::WillDispatchKeyboardEventInternal(
 
   uint32_t charCode = GetCharCodeFor(aGdkKeyEvent);
   if (!charCode) {
-    MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+    MOZ_LOG(gKeyLog, LogLevel::Info,
             ("%p WillDispatchKeyboardEventInternal, "
              "mKeyCode=0x%02X, charCode=0x%08X",
              this, aKeyEvent.mKeyCode, aKeyEvent.mCharCode));
@@ -2307,7 +2310,7 @@ void KeymapWrapper::WillDispatchKeyboardEventInternal(
 
   gint level = GetKeyLevel(aGdkKeyEvent);
   if (level != 0 && level != 1) {
-    MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+    MOZ_LOG(gKeyLog, LogLevel::Info,
             ("%p WillDispatchKeyboardEventInternal, "
              "mKeyCode=0x%02X, mCharCode=0x%08X, level=%d",
              this, aKeyEvent.mKeyCode, aKeyEvent.mCharCode, level));
@@ -2345,7 +2348,7 @@ void KeymapWrapper::WillDispatchKeyboardEventInternal(
   // If current keyboard layout can input Latin characters, we don't need
   // more information.
   if (!needLatinKeyCodes) {
-    MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+    MOZ_LOG(gKeyLog, LogLevel::Info,
             ("%p WillDispatchKeyboardEventInternal, "
              "mKeyCode=0x%02X, mCharCode=0x%08X, level=%d, altCharCodes={ "
              "mUnshiftedCharCode=0x%08X, mShiftedCharCode=0x%08X }",
@@ -2357,7 +2360,7 @@ void KeymapWrapper::WillDispatchKeyboardEventInternal(
   // Next, find Latin inputtable keyboard layout.
   gint minGroup = GetFirstLatinGroup();
   if (minGroup < 0) {
-    MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+    MOZ_LOG(gKeyLog, LogLevel::Info,
             ("%p WillDispatchKeyboardEventInternal, "
              "Latin keyboard layout isn't found: "
              "mKeyCode=0x%02X, mCharCode=0x%08X, level=%d, "
@@ -2395,7 +2398,7 @@ void KeymapWrapper::WillDispatchKeyboardEventInternal(
     aKeyEvent.SetCharCode(ch);
   }
 
-  MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
+  MOZ_LOG(gKeyLog, LogLevel::Info,
           ("%p WillDispatchKeyboardEventInternal, "
            "mKeyCode=0x%02X, mCharCode=0x%08X, level=%d, minGroup=%d, "
            "altCharCodes={ mUnshiftedCharCode=0x%08X, "
