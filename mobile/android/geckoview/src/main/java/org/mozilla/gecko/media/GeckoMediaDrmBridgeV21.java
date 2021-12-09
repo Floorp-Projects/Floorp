@@ -15,7 +15,6 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
-import androidx.annotation.RequiresApi;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -32,7 +31,6 @@ import java.util.UUID;
 import org.mozilla.gecko.util.ProxySelector;
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-@RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
   protected final String LOGTAG;
   private static final String INVALID_SESSION_ID = "Invalid";

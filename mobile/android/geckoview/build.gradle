@@ -137,8 +137,8 @@ android {
     project.configureProductFlavors()
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 
     dexOptions {
@@ -224,7 +224,6 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {
 
     kotlinOptions {
         allWarningsAsErrors = true
-        jvmTarget = JavaVersion.VERSION_11
     }
 
     doFirst {
@@ -280,7 +279,7 @@ dependencies {
 
     testImplementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     testImplementation 'junit:junit:4.12'
-    testImplementation 'org.robolectric:robolectric:4.7.3'
+    testImplementation 'org.robolectric:robolectric:4.3'
     testImplementation 'org.mockito:mockito-core:1.10.19'
 
     androidTestImplementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
@@ -329,7 +328,7 @@ android.libraryVariants.all { variant ->
 
         def results = []
         def listener = {
-            if (!it.toLowerCase().contains("warning:") && !it.toLowerCase().contains("error:")) {
+            if (!it.toLowerCase().contains("warning") && !it.toLowerCase().contains("error")) {
               // Likely not an error or a warning
               return
             }
@@ -367,42 +366,45 @@ android.libraryVariants.all { variant ->
              variant.generateBuildConfigProvider.get().sourceOutputDir.asFile.get() +
              variant.aidlCompileProvider.get().sourceOutputDir.asFile.get()
         )
-        options.addStringOption("Xmaxwarns", "1000")
 
         classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
         classpath += variant.javaCompileProvider.get().classpath
 
+        // javadoc 8 has a bug that requires the rt.jar file from the JRE to be
+        // in the bootclasspath (https://stackoverflow.com/a/30458820).
+        options.bootClasspath = [
+            file("${System.properties['java.home']}/lib/rt.jar")] + android.bootClasspath
         options.memberLevel = JavadocMemberLevel.PROTECTED
-        options.source = 11
-        options.links("https://developer.android.com/reference")
+        options.source = 8
+        options.links("https://d.android.com/reference/")
 
         options.docTitle = "GeckoView ${mozconfig.substs.MOZ_APP_VERSION} API"
         options.header = "GeckoView ${mozconfig.substs.MOZ_APP_VERSION} API"
         options.noTimestamp = true
+        options.noIndex = true
         options.noQualifiers = ['java.lang']
         options.tags = ['hide:a:']
     }
 
     def javadocJar = task("javadocJar${name.capitalize()}", type: Jar, dependsOn: javadoc) {
         classifier = 'javadoc'
-        destinationDirectory = javadoc.destinationDir
+        from javadoc.destinationDir
     }
 
     // This task is used by `mach android geckoview-docs`.
     task("javadocCopyJar${name.capitalize()}", type: Copy) {
-        from(javadocJar.destinationDirectory) {
+        from(javadocJar.destinationDir) {
             include 'geckoview-*-javadoc.jar'
             rename { _ -> 'geckoview-javadoc.jar' }
         }
-        into javadocJar.destinationDirectory
+        into javadocJar.destinationDir
         dependsOn javadocJar
     }
 
     def sourcesJar = task("sourcesJar${name.capitalize()}", type: Jar) {
         classifier 'sources'
         description = "Generate Javadoc for build variant $name"
-        destinationDirectory =
-            file("${topobjdir}/mobile/android/geckoview/sources/${variant.baseName}")
+        destinationDir = new File(destinationDir, variant.baseName)
         from files(variant.sourceSets.collect({ it.java.srcDirs }).flatten())
     }
 
@@ -559,7 +561,6 @@ android.libraryVariants.all configureVariantDebugLevel
 task("generateSDKBindings", type: JavaExec) {
     classpath project(':annotations').jar.archivePath
     classpath project(':annotations').compileJava.classpath
-    classpath project(':annotations').sourceSets.main.runtimeClasspath
 
     // To use the lint APIs: "Lint must be invoked with the System property
     // com.android.tools.lint.bindir pointing to the ANDROID_SDK tools
@@ -568,7 +569,7 @@ task("generateSDKBindings", type: JavaExec) {
         'com.android.tools.lint.bindir': "${android.sdkDirectory}/tools",
     ]
 
-    mainClass = 'org.mozilla.gecko.annotationProcessors.SDKProcessor'
+    main = 'org.mozilla.gecko.annotationProcessors.SDKProcessor'
     // We only want to generate bindings for the main framework JAR,
     // but not any of the additional android.test libraries.
     args android.bootClasspath.findAll { it.getName().startsWith('android.jar') }
@@ -595,10 +596,7 @@ apiLint {
     // TODO: Change this to `org` after hiding org.mozilla.gecko
     packageFilter = 'org.mozilla.geckoview'
     changelogFileName = 'src/main/java/org/mozilla/geckoview/doc-files/CHANGELOG.md'
-    skipClassesRegex = [
-        '^org.mozilla.geckoview.BuildConfig$',
-        '^org.mozilla.geckoview.R$',
-    ]
+    skipClassesRegex = ['^org.mozilla.geckoview.BuildConfig$']
     lintFilters = ['GV']
     deprecationAnnotation = 'org.mozilla.geckoview.DeprecationSchedule'
     libraryVersion = mozconfig.substs.MOZILLA_VERSION.split('\\.')[0] as Integer

@@ -149,7 +149,7 @@ public class ContentBlockingController {
       }
 
       protected BlockingData() {
-        category = Event.BLOCKED_TRACKING_CONTENT;
+        category = 0;
         blocked = false;
         count = 0;
       }

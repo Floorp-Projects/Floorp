@@ -2756,9 +2756,9 @@ public class GeckoSession {
 
       /** Empty constructor for tests */
       protected SecurityInformation() {
-        mixedModePassive = CONTENT_UNKNOWN;
-        mixedModeActive = CONTENT_UNKNOWN;
-        securityMode = SECURITY_MODE_UNKNOWN;
+        mixedModePassive = 0;
+        mixedModeActive = 0;
+        securityMode = 0;
         isSecure = false;
         isException = false;
         origin = "";
@@ -3416,11 +3416,7 @@ public class GeckoSession {
   @Retention(RetentionPolicy.SOURCE)
   @IntDef(
       flag = true,
-      value = {
-        SelectionActionDelegate.FLAG_IS_COLLAPSED,
-        SelectionActionDelegate.FLAG_IS_EDITABLE,
-        SelectionActionDelegate.FLAG_IS_PASSWORD
-      })
+      value = {SelectionActionDelegate.FLAG_IS_COLLAPSED, SelectionActionDelegate.FLAG_IS_EDITABLE})
   /* package */ @interface SelectionActionDelegateFlag {}
 
   @Retention(RetentionPolicy.SOURCE)
@@ -3506,7 +3502,7 @@ public class GeckoSession {
       protected LoadRequest() {
         uri = "";
         triggerUri = null;
-        target = TARGET_WINDOW_NONE;
+        target = 0;
         isRedirect = false;
         hasUserGesture = false;
         isDirectNavigation = false;
@@ -4030,7 +4026,7 @@ public class GeckoSession {
         protected AuthOptions() {
           flags = 0;
           uri = "";
-          level = Level.NONE;
+          level = 0;
           username = "";
           password = "";
         }
@@ -5491,8 +5487,8 @@ public class GeckoSession {
         id = null;
         rawId = null;
         name = null;
-        source = SOURCE_CAMERA;
-        type = TYPE_VIDEO;
+        source = 0;
+        type = 0;
       }
     }
 

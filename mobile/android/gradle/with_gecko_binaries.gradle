@@ -192,22 +192,19 @@ ext.configureVariantWithGeckoBinaries = { variant ->
     def omnijarDir = "${topobjdir}/dist/geckoview"
     def distDir = "${topobjdir}/dist/geckoview"
 
-    def syncOmnijarFromDistDir
-    if (mozconfig.substs.COMPILE_ENVIRONMENT) {
-        syncOmnijarFromDistDir = task("syncOmnijarFromDistDirFor${variant.name.capitalize()}", type: Sync) {
-            onlyIf {
-                if (source.empty) {
-                    throw new StopExecutionException("Required omnijar not found in ${omnijarDir}/{omni.ja,assets/omni.ja}.  Have you built and packaged?")
-                }
-                return true
+    def syncOmnijarFromDistDir = task("syncOmnijarFromDistDirFor${variant.name.capitalize()}", type: Sync) {
+        onlyIf {
+            if (source.empty) {
+                throw new StopExecutionException("Required omnijar not found in ${omnijarDir}/{omni.ja,assets/omni.ja}.  Have you built and packaged?")
             }
+            return true
+        }
 
-            into("${project.buildDir}/moz.build/src/${variant.name}/omnijar")
-            from("${omnijarDir}/omni.ja",
-                 "${omnijarDir}/assets/omni.ja") {
-                // Throw an exception if we find multiple, potentially conflicting omni.ja files.
-                duplicatesStrategy 'fail'
-            }
+        into("${project.buildDir}/moz.build/src/${variant.name}/omnijar")
+        from("${omnijarDir}/omni.ja",
+             "${omnijarDir}/assets/omni.ja") {
+            // Throw an exception if we find multiple, potentially conflicting omni.ja files.
+            duplicatesStrategy 'fail'
         }
     }
 
@@ -267,33 +264,31 @@ ext.configureVariantWithGeckoBinaries = { variant ->
         }
     }
 
-    if (mozconfig.substs.COMPILE_ENVIRONMENT) {
-        // Local (read, not 'official') builds want to reflect developer changes to
-        // the omnijar sources, and (when compiling) to reflect developer changes to
-        // the native binaries.  To do this, the Gradle build calls out to the
-        // moz.build system, which can be re-entrant.  Official builds are driven by
-        // the moz.build system and should never be re-entrant in this way.
-        if (!mozconfig.substs.MOZILLA_OFFICIAL) {
-            syncOmnijarFromDistDir.dependsOn rootProject.machStagePackage
-            syncLibsFromDistDir.dependsOn rootProject.machStagePackage
-            syncAssetsFromDistDir.dependsOn rootProject.machStagePackage
-        }
+    // Local (read, not 'official') builds want to reflect developer changes to
+    // the omnijar sources, and (when compiling) to reflect developer changes to
+    // the native binaries.  To do this, the Gradle build calls out to the
+    // moz.build system, which can be re-entrant.  Official builds are driven by
+    // the moz.build system and should never be re-entrant in this way.
+    if (!mozconfig.substs.MOZILLA_OFFICIAL) {
+        syncOmnijarFromDistDir.dependsOn rootProject.machStagePackage
+        syncLibsFromDistDir.dependsOn rootProject.machStagePackage
+        syncAssetsFromDistDir.dependsOn rootProject.machStagePackage
+    }
 
-        def assetGenTask = tasks.findByName("generate${variant.name.capitalize()}Assets")
-        def jniLibFoldersTask = tasks.findByName("merge${variant.name.capitalize()}JniLibFolders")
-        if ((variant.productFlavors*.name).contains('withGeckoBinaries')) {
-            assetGenTask.dependsOn syncOmnijarFromDistDir
-            assetGenTask.dependsOn syncAssetsFromDistDir
-            jniLibFoldersTask.dependsOn syncLibsFromDistDir
+    def assetGenTask = tasks.findByName("generate${variant.name.capitalize()}Assets")
+    def jniLibFoldersTask = tasks.findByName("merge${variant.name.capitalize()}JniLibFolders")
+    if ((variant.productFlavors*.name).contains('withGeckoBinaries')) {
+        assetGenTask.dependsOn syncOmnijarFromDistDir
+        assetGenTask.dependsOn syncAssetsFromDistDir
+        jniLibFoldersTask.dependsOn syncLibsFromDistDir
 
-            android.sourceSets."${variant.name}".assets.srcDir syncOmnijarFromDistDir.destinationDir
-            android.sourceSets."${variant.name}".assets.srcDir syncAssetsFromDistDir.destinationDir
+        android.sourceSets."${variant.name}".assets.srcDir syncOmnijarFromDistDir.destinationDir
+        android.sourceSets."${variant.name}".assets.srcDir syncAssetsFromDistDir.destinationDir
 
-            if (!mozconfig.substs.MOZ_ANDROID_FAT_AAR_ARCHITECTURES) {
-                android.sourceSets."${variant.name}".jniLibs.srcDir syncLibsFromDistDir.destinationDir
-            } else {
-                android.sourceSets."${variant.name}".jniLibs.srcDir "${topobjdir}/dist/fat-aar/output/jni"
-            }
+        if (!mozconfig.substs.MOZ_ANDROID_FAT_AAR_ARCHITECTURES) {
+            android.sourceSets."${variant.name}".jniLibs.srcDir syncLibsFromDistDir.destinationDir
+        } else {
+            android.sourceSets."${variant.name}".jniLibs.srcDir "${topobjdir}/dist/fat-aar/output/jni"
         }
     }
 }
@@ -319,9 +314,11 @@ ext.configureLibraryVariantWithJNIWrappers = { variant, module ->
             // configuration-time: see above comment.
             doFirst {
                 classpath variant.javaCompileProvider.get().classpath
+                // Include android.jar.
+                classpath variant.javaCompileProvider.get().options.bootstrapClasspath
             }
     
-            mainClass = 'org.mozilla.gecko.annotationProcessors.AnnotationProcessor'
+            main = 'org.mozilla.gecko.annotationProcessors.AnnotationProcessor'
             args module
             args bundleJar
             

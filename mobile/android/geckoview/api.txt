@@ -56,9 +56,7 @@ import java.lang.String;
 import java.lang.Throwable;
 import java.lang.Void;
 import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
@@ -158,11 +156,11 @@ package org.mozilla.geckoview {
     method @AnyThread @NonNull public Autocomplete.Address.Builder tel(@Nullable String);
   }
 
-  public static class Autocomplete.AddressSaveOption extends Autocomplete.SaveOption<Autocomplete.Address> {
+  public static class Autocomplete.AddressSaveOption extends Autocomplete.SaveOption {
     ctor public AddressSaveOption(@NonNull Autocomplete.Address);
   }
 
-  public static class Autocomplete.AddressSelectOption extends Autocomplete.SelectOption<Autocomplete.Address> {
+  public static class Autocomplete.AddressSelectOption extends Autocomplete.SelectOption {
     ctor public AddressSelectOption(@NonNull Autocomplete.Address);
   }
 
@@ -191,11 +189,11 @@ package org.mozilla.geckoview {
     method @AnyThread @NonNull public Autocomplete.CreditCard.Builder number(@Nullable String);
   }
 
-  public static class Autocomplete.CreditCardSaveOption extends Autocomplete.SaveOption<Autocomplete.CreditCard> {
+  public static class Autocomplete.CreditCardSaveOption extends Autocomplete.SaveOption {
     ctor public CreditCardSaveOption(@NonNull Autocomplete.CreditCard);
   }
 
-  public static class Autocomplete.CreditCardSelectOption extends Autocomplete.SelectOption<Autocomplete.CreditCard> {
+  public static class Autocomplete.CreditCardSelectOption extends Autocomplete.SelectOption {
     ctor public CreditCardSelectOption(@NonNull Autocomplete.CreditCard);
   }
 
@@ -226,11 +224,11 @@ package org.mozilla.geckoview {
     method @AnyThread @NonNull public Autocomplete.LoginEntry.Builder username(@NonNull String);
   }
 
-  public static class Autocomplete.LoginSaveOption extends Autocomplete.SaveOption<Autocomplete.LoginEntry> {
+  public static class Autocomplete.LoginSaveOption extends Autocomplete.SaveOption {
     ctor public LoginSaveOption(@NonNull Autocomplete.LoginEntry);
   }
 
-  public static class Autocomplete.LoginSelectOption extends Autocomplete.SelectOption<Autocomplete.LoginEntry> {
+  public static class Autocomplete.LoginSelectOption extends Autocomplete.SelectOption {
     ctor public LoginSelectOption(@NonNull Autocomplete.LoginEntry);
   }
 
@@ -240,7 +238,7 @@ package org.mozilla.geckoview {
     field @NonNull public final T value;
   }
 
-  public abstract static class Autocomplete.SaveOption<T> extends Autocomplete.Option<T> {
+  public abstract static class Autocomplete.SaveOption<T> extends Autocomplete.Option {
     ctor public SaveOption(@NonNull T, int);
   }
 
@@ -251,7 +249,7 @@ package org.mozilla.geckoview {
     field public static final int NONE = 0;
   }
 
-  public abstract static class Autocomplete.SelectOption<T> extends Autocomplete.Option<T> {
+  public abstract static class Autocomplete.SelectOption<T> extends Autocomplete.Option {
     ctor public SelectOption(@NonNull T, int);
   }
 
@@ -502,7 +500,7 @@ package org.mozilla.geckoview {
     field public static final Parcelable.Creator<ContentBlocking.Settings> CREATOR;
   }
 
-  @AnyThread public static class ContentBlocking.Settings.Builder extends RuntimeSettings.Builder<ContentBlocking.Settings> {
+  @AnyThread public static class ContentBlocking.Settings.Builder extends RuntimeSettings.Builder {
     ctor public Builder();
     method @NonNull public ContentBlocking.Settings.Builder antiTracking(int);
     method @NonNull public ContentBlocking.Settings.Builder cookieBehavior(int);
@@ -569,7 +567,7 @@ package org.mozilla.geckoview {
     method @AnyThread @NonNull public static GeckoResult<String> sendCrashReport(@NonNull String, @NonNull File, @NonNull JSONObject);
   }
 
-  @Documented @Retention(value=RetentionPolicy.RUNTIME) @Target(value={ElementType.CONSTRUCTOR, ElementType.FIELD, ElementType.LOCAL_VARIABLE, ElementType.METHOD, ElementType.PACKAGE, ElementType.PARAMETER, ElementType.TYPE}) public interface DeprecationSchedule {
+  @Documented @Retention(value=java.lang.annotation.RetentionPolicy.RUNTIME) @Target(value={java.lang.annotation.ElementType.CONSTRUCTOR, java.lang.annotation.ElementType.FIELD, java.lang.annotation.ElementType.LOCAL_VARIABLE, java.lang.annotation.ElementType.METHOD, java.lang.annotation.ElementType.PACKAGE, java.lang.annotation.ElementType.PARAMETER, java.lang.annotation.ElementType.TYPE}) public interface DeprecationSchedule {
     element public String id();
     element public int version();
   }
@@ -604,7 +602,7 @@ package org.mozilla.geckoview {
     ctor public GeckoResult(GeckoResult<T>);
     method @NonNull public GeckoResult<Void> accept(@Nullable GeckoResult.Consumer<T>);
     method @NonNull public GeckoResult<Void> accept(@Nullable GeckoResult.Consumer<T>, @Nullable GeckoResult.Consumer<Throwable>);
-    method @NonNull @SafeVarargs public static <V> GeckoResult<List<V>> allOf(@NonNull GeckoResult<V>...);
+    method @NonNull @SafeVarargs public static <V> GeckoResult<List<V>> allOf(@NonNull GeckoResult<V>);
     method @NonNull public static <V> GeckoResult<List<V>> allOf(@Nullable List<GeckoResult<V>>);
     method @AnyThread @NonNull public static GeckoResult<AllowOrDeny> allow();
     method @NonNull public synchronized GeckoResult<Boolean> cancel();
@@ -714,7 +712,7 @@ package org.mozilla.geckoview {
     method @Nullable public String getConfigFilePath();
     method public boolean getConsoleOutputEnabled();
     method @NonNull public ContentBlocking.Settings getContentBlocking();
-    method @Nullable public Class<? extends android.app.Service> getCrashHandler();
+    method @Nullable public Class<?> getCrashHandler();
     method @Nullable public Float getDisplayDensityOverride();
     method @Nullable public Integer getDisplayDpiOverride();
     method public boolean getDoubleTapZoomingEnabled();
@@ -766,7 +764,7 @@ package org.mozilla.geckoview {
     field public static final int HTTPS_ONLY_PRIVATE = 1;
   }
 
-  @AnyThread public static final class GeckoRuntimeSettings.Builder extends RuntimeSettings.Builder<GeckoRuntimeSettings> {
+  @AnyThread public static final class GeckoRuntimeSettings.Builder extends RuntimeSettings.Builder {
     ctor public Builder();
     method @NonNull public GeckoRuntimeSettings.Builder aboutConfigEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder allowInsecureConnections(int);
@@ -775,7 +773,7 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoRuntimeSettings.Builder configFilePath(@Nullable String);
     method @NonNull public GeckoRuntimeSettings.Builder consoleOutput(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder contentBlocking(@NonNull ContentBlocking.Settings);
-    method @NonNull public GeckoRuntimeSettings.Builder crashHandler(@Nullable Class<? extends android.app.Service>);
+    method @NonNull public GeckoRuntimeSettings.Builder crashHandler(@Nullable Class<?>);
     method @NonNull public GeckoRuntimeSettings.Builder debugLogging(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder displayDensityOverride(float);
     method @NonNull public GeckoRuntimeSettings.Builder displayDpiOverride(int);
@@ -949,7 +947,7 @@ package org.mozilla.geckoview {
     method @AnyThread @NonNull default public String getUri();
   }
 
-  public static interface GeckoSession.HistoryDelegate.HistoryList implements List<GeckoSession.HistoryDelegate.HistoryItem> {
+  public static interface GeckoSession.HistoryDelegate.HistoryList implements List {
     method @AnyThread default public int getCurrentIndex();
   }
 
@@ -1171,10 +1169,6 @@ package org.mozilla.geckoview {
     field @Nullable public final String title;
   }
 
-  protected static interface GeckoSession.PromptDelegate.BasePrompt.Observer {
-    method @AnyThread default public void onPromptCompleted(@NonNull GeckoSession.PromptDelegate.BasePrompt);
-  }
-
   public static class GeckoSession.PromptDelegate.BeforeUnloadPrompt extends GeckoSession.PromptDelegate.BasePrompt {
     ctor protected BeforeUnloadPrompt(@NonNull String, @NonNull GeckoSession.PromptDelegate.BasePrompt.Observer);
     method @NonNull @UiThread public GeckoSession.PromptDelegate.PromptResponse confirm(@Nullable AllowOrDeny);
@@ -1353,7 +1347,7 @@ package org.mozilla.geckoview {
     field @NonNull public final String text;
   }
 
-  @AnyThread public static class GeckoSession.SessionState extends AbstractSequentialList<GeckoSession.HistoryDelegate.HistoryItem> implements Parcelable GeckoSession.HistoryDelegate.HistoryList {
+  @AnyThread public static class GeckoSession.SessionState extends AbstractSequentialList implements GeckoSession.HistoryDelegate.HistoryList Parcelable {
     ctor public SessionState(@NonNull GeckoSession.SessionState);
     method @Nullable public static GeckoSession.SessionState fromString(@Nullable String);
     method public void readFromParcel(@NonNull Parcel);
@@ -1446,12 +1440,9 @@ package org.mozilla.geckoview {
     ctor public GeckoView(Context, AttributeSet);
     method @NonNull @UiThread public GeckoResult<Bitmap> capturePixels();
     method public void coverUntilFirstPaint(int);
-    method public void dispatchDraw(@Nullable Canvas);
     method public boolean getAutofillEnabled();
     method @NonNull public PanZoomController getPanZoomController();
     method @AnyThread @Nullable public GeckoSession getSession();
-    method public void onAttachedToWindow();
-    method public void onDetachedFromWindow();
     method @NonNull public GeckoResult<PanZoomController.InputResultDetail> onTouchEventForDetailResult(@NonNull MotionEvent);
     method @Nullable @UiThread public GeckoSession releaseSession();
     method public void setAutofillEnabled(boolean);
@@ -1645,7 +1636,7 @@ package org.mozilla.geckoview {
     method @AnyThread default public void onStringScalar(@NonNull RuntimeTelemetry.Metric<String>);
   }
 
-  public static class RuntimeTelemetry.Histogram extends RuntimeTelemetry.Metric<long[]> {
+  public static class RuntimeTelemetry.Histogram extends RuntimeTelemetry.Metric {
     ctor protected Histogram();
     field public final boolean isCategorical;
   }
@@ -2195,6 +2186,10 @@ package org.mozilla.geckoview {
     method @NonNull public WebResponse.Builder isSecure(boolean);
     method @NonNull public WebResponse.Builder redirected(boolean);
     method @NonNull public WebResponse.Builder statusCode(int);
+  }
+
+  protected static interface GeckoSession.PromptDelegate.BasePrompt.Observer {
+    method @AnyThread default public void onPromptCompleted(@NonNull GeckoSession.PromptDelegate.BasePrompt);
   }
 
 }
