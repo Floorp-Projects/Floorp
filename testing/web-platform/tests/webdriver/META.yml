@@ -1,7 +1,7 @@
 spec: https://w3c.github.io/webdriver/
 suggested_reviewers:
   - AutomatedTester
-  - andreastt
-  - mjzffr
+  - jgraham
+  - juliandescottes
   - shs96c
   - whimboo
