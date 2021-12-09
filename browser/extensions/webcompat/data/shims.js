@@ -494,7 +494,7 @@ const AVAILABLE_SHIMS = [
   },
   {
     id: "Hamropatro",
-    platform: "desktop",
+    platform: "all",
     name: "Hamropatro",
     bug: "1660446",
     contentScripts: [
@@ -508,7 +508,7 @@ const AVAILABLE_SHIMS = [
   },
   {
     id: "Kinja",
-    platform: "desktop",
+    platform: "all",
     name: "Kinja",
     bug: "1656171",
     contentScripts: [
@@ -556,7 +556,7 @@ const AVAILABLE_SHIMS = [
   },
   {
     id: "Humblebundle",
-    platform: "desktop",
+    platform: "all",
     name: "Humblebundle",
     bug: "1742553",
     contentScripts: [
