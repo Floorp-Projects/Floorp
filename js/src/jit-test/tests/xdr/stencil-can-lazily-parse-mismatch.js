@@ -39,10 +39,15 @@ function testOffThreadXDR(sourceIsLazy1, sourceIsLazy2,
   evaluate(t, { sourceIsLazy: sourceIsLazy1,
                 forceFullParse: forceFullParse1,
                 saveIncrementalBytecode: true });
-  offThreadDecodeScript(t, { sourceIsLazy: sourceIsLazy2,
-                             forceFullParse: forceFullParse2 });
+
   // The compile options are ignored when decoding, and no error is thrown.
-  runOffThreadDecodedScript();
+  offThreadDecodeStencil(t, { sourceIsLazy: sourceIsLazy2,
+                             forceFullParse: forceFullParse2 });
+  const stencil = finishOffThreadDecodeStencil();
+
+  // The laziness options are ignored for instantiation, and no error is thrown.
+  evalStencil(stencil, { sourceIsLazy: sourceIsLazy2,
+                         forceFullParse: forceFullParse2 });
 }
 
 const optionsList = [
