@@ -864,7 +864,7 @@ var dataProviders = {
       prefRollouts,
       prefStudies,
       nimbusExperiments,
-      remoteConfigs,
+      nimbusRollouts,
     ] = await Promise.all(
       [
         NormandyAddonStudies.getAllActive(),
@@ -875,7 +875,7 @@ var dataProviders = {
           .then(() => ExperimentManager.store.getAllActive()),
         ExperimentManager.store
           .ready()
-          .then(() => ExperimentManager.store.getAllRemoteConfigs()),
+          .then(() => ExperimentManager.store.getAllRollouts()),
       ].map(promise =>
         promise
           .catch(error => {
@@ -891,7 +891,7 @@ var dataProviders = {
       prefRollouts,
       prefStudies,
       nimbusExperiments,
-      remoteConfigs,
+      nimbusRollouts,
     });
   },
 };
