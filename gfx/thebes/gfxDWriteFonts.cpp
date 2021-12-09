@@ -84,7 +84,8 @@ gfxDWriteFont::gfxDWriteFont(const RefPtr<UnscaledFontDWrite>& aUnscaledFont,
       mMetrics(nullptr),
       mUseSubpixelPositions(false),
       mAllowManualShowGlyphs(true),
-      mAzureScaledFontUsedClearType(false) {
+      mAzureScaledFontUsedClearType(false),
+      mAzureScaledFontForcedGDI(false) {
   // If the IDWriteFontFace1 interface is available, we can use that for
   // faster glyph width retrieval.
   mFontFace->QueryInterface(__uuidof(IDWriteFontFace1),
@@ -748,13 +749,14 @@ void gfxDWriteFont::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
 }
 
 already_AddRefed<ScaledFont> gfxDWriteFont::GetScaledFont(
-    mozilla::gfx::DrawTarget* aTarget) {
-  if (mAzureScaledFontUsedClearType != UsingClearType()) {
+    const TextRunDrawParams& aRunParams) {
+  bool forceGDI = aRunParams.allowGDI && GetForceGDIClassic();
+  if (mAzureScaledFontUsedClearType != UsingClearType() ||
+      mAzureScaledFontForcedGDI != forceGDI) {
     mAzureScaledFont = nullptr;
   }
   if (!mAzureScaledFont) {
     gfxDWriteFontEntry* fe = static_cast<gfxDWriteFontEntry*>(mFontEntry.get());
-    bool forceGDI = GetForceGDIClassic();
     bool useEmbeddedBitmap =
         (gfxVars::SystemTextRenderingMode() == DWRITE_RENDERING_MODE_DEFAULT ||
          forceGDI) &&
@@ -769,42 +771,10 @@ already_AddRefed<ScaledFont> gfxDWriteFont::GetScaledFont(
     }
     InitializeScaledFont();
     mAzureScaledFontUsedClearType = UsingClearType();
+    mAzureScaledFontForcedGDI = forceGDI;
   }
 
   RefPtr<ScaledFont> scaledFont(mAzureScaledFont);
-  return scaledFont.forget();
-}
-
-already_AddRefed<ScaledFont> gfxDWriteFont::GetScaledFontNoGDI(
-    mozilla::gfx::DrawTarget* aTarget) {
-  if (!GetForceGDIClassic()) {
-    return GetScaledFont(aTarget);
-  }
-
-  if (mAzureScaledFontNoGDIUsedClearType != UsingClearType()) {
-    mAzureScaledFontNoGDI = nullptr;
-  }
-  if (!mAzureScaledFontNoGDI) {
-    gfxDWriteFontEntry* fe = static_cast<gfxDWriteFontEntry*>(mFontEntry.get());
-    bool useEmbeddedBitmap =
-        gfxVars::SystemTextRenderingMode() == DWRITE_RENDERING_MODE_DEFAULT &&
-        fe->IsCJKFont() && HasBitmapStrikeForSize(NS_lround(mAdjustedSize));
-
-    const gfxFontStyle* fontStyle = GetStyle();
-    mAzureScaledFontNoGDI = Factory::CreateScaledFontForDWriteFont(
-        mFontFace, fontStyle, GetUnscaledFont(), GetAdjustedSize(),
-        useEmbeddedBitmap, false);
-    if (!mAzureScaledFontNoGDI) {
-      return nullptr;
-    }
-    float angle = AngleForSyntheticOblique();
-    if (angle != 0.0f) {
-      mAzureScaledFontNoGDI->SetSyntheticObliqueAngle(angle);
-    }
-    mAzureScaledFontNoGDIUsedClearType = UsingClearType();
-  }
-
-  RefPtr<ScaledFont> scaledFont(mAzureScaledFontNoGDI);
   return scaledFont.forget();
 }
 

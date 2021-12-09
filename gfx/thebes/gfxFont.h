@@ -39,6 +39,7 @@
 #include "nsTArray.h"
 #include "nsTHashtable.h"
 #include "nscore.h"
+#include "DrawMode.h"
 
 // Only required for function bodys
 #include <stdlib.h>
@@ -67,7 +68,6 @@ class gfxTextRun;
 class nsIEventTarget;
 class nsITimer;
 struct gfxTextRunDrawCallbacks;
-enum class DrawMode : int;
 
 namespace mozilla {
 class SVGContextPaint;
@@ -1897,11 +1897,9 @@ class gfxFont {
   }
 
   virtual already_AddRefed<mozilla::gfx::ScaledFont> GetScaledFont(
-      DrawTarget* aTarget) = 0;
-  virtual already_AddRefed<mozilla::gfx::ScaledFont> GetScaledFontNoGDI(
-      DrawTarget* aTarget) {
-    return GetScaledFont(aTarget);
-  }
+      const TextRunDrawParams& aRunParams) = 0;
+  already_AddRefed<mozilla::gfx::ScaledFont> GetScaledFont(
+      mozilla::gfx::DrawTarget* aDrawTarget);
 
   void InitializeScaledFont();
 
@@ -2294,21 +2292,21 @@ class gfxFont {
 
 struct MOZ_STACK_CLASS TextRunDrawParams {
   RefPtr<mozilla::gfx::DrawTarget> dt;
-  gfxContext* context;
-  gfxFont::Spacing* spacing;
-  gfxTextRunDrawCallbacks* callbacks;
-  mozilla::SVGContextPaint* runContextPaint;
-  mozilla::gfx::Float direction;
-  double devPerApp;
-  nscolor textStrokeColor;
-  gfxPattern* textStrokePattern;
-  const mozilla::gfx::StrokeOptions* strokeOpts;
-  const mozilla::gfx::DrawOptions* drawOpts;
-  DrawMode drawMode;
-  bool isVerticalRun;
-  bool isRTL;
-  bool paintSVGGlyphs;
-  bool allowGDI;
+  gfxContext* context = nullptr;
+  gfxFont::Spacing* spacing = nullptr;
+  gfxTextRunDrawCallbacks* callbacks = nullptr;
+  mozilla::SVGContextPaint* runContextPaint = nullptr;
+  mozilla::gfx::Float direction = 1.0f;
+  double devPerApp = 1.0;
+  nscolor textStrokeColor = 0;
+  gfxPattern* textStrokePattern = nullptr;
+  const mozilla::gfx::StrokeOptions* strokeOpts = nullptr;
+  const mozilla::gfx::DrawOptions* drawOpts = nullptr;
+  DrawMode drawMode = DrawMode::GLYPH_FILL;
+  bool isVerticalRun = false;
+  bool isRTL = false;
+  bool paintSVGGlyphs = true;
+  bool allowGDI = true;
 };
 
 struct MOZ_STACK_CLASS FontDrawParams {
