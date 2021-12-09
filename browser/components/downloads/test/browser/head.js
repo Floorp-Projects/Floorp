@@ -109,7 +109,7 @@ function promiseInterruptibleDownload() {
   );
 
   registerCleanupFunction(async () => {
-    if (IOUtils.exists(interruptibleFile.path)) {
+    if (await IOUtils.exists(interruptibleFile.path)) {
       if (Services.appinfo.OS === "WINNT") {
         // We need to make the file writable to delete it on Windows.
         await IOUtils.setPermissions(interruptibleFile.path, 0o600);
