@@ -19,7 +19,7 @@
 namespace mozilla::dom {
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(ElementInternals, mSubmissionValue,
-                                      mState, mValidity)
+                                      mState, mValidity, mValidationAnchor)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ElementInternals)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ElementInternals)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ElementInternals)
@@ -187,8 +187,18 @@ void ElementInternals::SetValidity(
    *    then throw a "NotFoundError" DOMException. Otherwise, set element's
    *    validation anchor to anchor.
    */
-  // TODO: Bug 1738262 - Support validation anchor for form-associated custom
-  //       element.
+  nsGenericHTMLElement* anchor =
+      aAnchor.WasPassed() ? &aAnchor.Value() : nullptr;
+  // TODO: maybe create something like IsShadowIncludingDescendantOf if there
+  //       are other places also need such check.
+  if (anchor && (anchor == mTarget ||
+                 !anchor->IsShadowIncludingInclusiveDescendantOf(mTarget))) {
+    aRv.ThrowNotFoundError(
+        "Validation anchor is not a shadow-including descendant of target"
+        "element");
+    return;
+  }
+  mValidationAnchor = anchor;
 }
 
 // https://html.spec.whatwg.org/#dom-elementinternals-willvalidate
