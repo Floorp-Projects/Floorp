@@ -176,7 +176,7 @@ extern JS_PUBLIC_API OffThreadToken* CompileToStencilOffThread(
 // If `options.allocateInstantiationStorage` was true in
 // JS::CompileToStencilOffThread, pre-allocated JS::InstantiationStorage
 // is returned as `storage` out parameter.
-extern JS_PUBLIC_API already_AddRefed<Stencil> FinishOffThreadCompileToStencil(
+extern JS_PUBLIC_API already_AddRefed<Stencil> FinishCompileToStencilOffThread(
     JSContext* cx, OffThreadToken* token,
     InstantiationStorage* storage = nullptr);
 
