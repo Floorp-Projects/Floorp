@@ -3858,9 +3858,7 @@ void nsFrameLoader::MaybeNotifyCrashed(BrowsingContext* aBrowsingContext,
   RefPtr<FrameCrashedEvent> event = FrameCrashedEvent::Constructor(
       mOwnerContent->OwnerDoc(), eventName, init);
   event->SetTrusted(true);
-
-  RefPtr<Element> ownerContent = mOwnerContent;
-  EventDispatcher::DispatchDOMEvent(ownerContent, nullptr, event, nullptr,
+  EventDispatcher::DispatchDOMEvent(mOwnerContent, nullptr, event, nullptr,
                                     nullptr);
 }
 

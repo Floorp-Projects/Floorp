@@ -1564,10 +1564,9 @@ class Document : public nsINode,
 
   void DispatchContentLoadedEvents();
 
-  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230)
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY void DispatchPageTransition(
-      EventTarget* aDispatchTarget, const nsAString& aType, bool aInFrameSwap,
-      bool aPersisted, bool aOnlySystemGroup);
+  void DispatchPageTransition(EventTarget* aDispatchTarget,
+                              const nsAString& aType, bool aInFrameSwap,
+                              bool aPersisted, bool aOnlySystemGroup);
 
   // Call this before the document does something that will unbind all content.
   // That will stop us from doing a lot of work as each element is removed.
