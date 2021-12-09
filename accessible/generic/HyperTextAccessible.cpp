@@ -1216,8 +1216,13 @@ already_AddRefed<AccAttributes> HyperTextAccessible::TextAttributes(
     RenderedToContentOffset(offsetFrame, offsetInAcc, &nodeOffset);
 
     // Set 'misspelled' text attribute.
-    GetSpellTextAttr(accAtOffset->GetNode(), nodeOffset, &startOffset,
-                     &endOffset, attributes);
+    // FYI: Max length of text in a text node is less than INT32_MAX (see
+    //      NS_MAX_TEXT_FRAGMENT_LENGTH) so that nodeOffset should always
+    //      be 0 or greater.
+    MOZ_DIAGNOSTIC_ASSERT(accAtOffset->GetNode()->IsText());
+    MOZ_DIAGNOSTIC_ASSERT(nodeOffset >= 0);
+    GetSpellTextAttr(accAtOffset->GetNode(), static_cast<uint32_t>(nodeOffset),
+                     &startOffset, &endOffset, attributes);
   }
 
   *aStartOffset = startOffset;
@@ -2310,7 +2315,7 @@ nsresult HyperTextAccessible::GetDOMPointByFrameOffset(
 }
 
 // HyperTextAccessible
-void HyperTextAccessible::GetSpellTextAttr(nsINode* aNode, int32_t aNodeOffset,
+void HyperTextAccessible::GetSpellTextAttr(nsINode* aNode, uint32_t aNodeOffset,
                                            uint32_t* aStartOffset,
                                            uint32_t* aEndOffset,
                                            AccAttributes* aAttributes) {
@@ -2336,8 +2341,7 @@ void HyperTextAccessible::GetSpellTextAttr(nsINode* aNode, int32_t aNodeOffset,
     // case there is another range after this one.
     nsINode* endNode = range->GetEndContainer();
     uint32_t endNodeOffset = range->EndOffset();
-    // FYI: Fixed by the following patch.
-    Maybe<int32_t> order = nsContentUtils::ComparePoints_FixOffset1(
+    Maybe<int32_t> order = nsContentUtils::ComparePoints(
         aNode, aNodeOffset, endNode, endNodeOffset);
     if (NS_WARN_IF(!order)) {
       continue;
@@ -2353,9 +2357,8 @@ void HyperTextAccessible::GetSpellTextAttr(nsINode* aNode, int32_t aNodeOffset,
     // must be before the range and after the previous one if any.
     nsINode* startNode = range->GetStartContainer();
     int32_t startNodeOffset = range->StartOffset();
-    // FYI: Fixed by the following patch.
-    order = nsContentUtils::ComparePoints_FixOffset2(startNode, startNodeOffset,
-                                                     aNode, aNodeOffset);
+    order = nsContentUtils::ComparePoints(startNode, startNodeOffset, aNode,
+                                          aNodeOffset);
     if (!order) {
       // As (`aNode`, `aNodeOffset`) is comparable to the end of the range, it
       // should also be comparable to the range's start. Returning here
