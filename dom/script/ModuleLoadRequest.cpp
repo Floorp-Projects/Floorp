@@ -54,10 +54,10 @@ static VisitedURLSet* NewVisitedSetForTopLevelImport(nsIURI* aURI) {
 ModuleLoadRequest* ModuleLoadRequest::CreateTopLevel(
     nsIURI* aURI, ScriptFetchOptions* aFetchOptions,
     const SRIMetadata& aIntegrity, nsIURI* aReferrer, ScriptLoader* aLoader) {
-  return new ModuleLoadRequest(aURI, aFetchOptions, aIntegrity, aReferrer,
-                               true,  /* is top level */
-                               false, /* is dynamic import */
-                               aLoader, NewVisitedSetForTopLevelImport(aURI));
+  return new ModuleLoadRequest(
+      aURI, aFetchOptions, aIntegrity, aReferrer, true, /* is top level */
+      false,                                            /* is dynamic import */
+      aLoader->GetModuleLoader(), NewVisitedSetForTopLevelImport(aURI));
 }
 
 /* static */
@@ -86,7 +86,7 @@ ModuleLoadRequest* ModuleLoadRequest::CreateDynamicImport(
   auto request = new ModuleLoadRequest(
       aURI, aFetchOptions, SRIMetadata(), aBaseURL, true, /* is top level */
       true, /* is dynamic import */
-      aLoader, NewVisitedSetForTopLevelImport(aURI));
+      aLoader->GetModuleLoader(), NewVisitedSetForTopLevelImport(aURI));
 
   request->mIsInline = false;
   request->mScriptMode = ScriptMode::eAsync;
@@ -102,7 +102,7 @@ ModuleLoadRequest* ModuleLoadRequest::CreateDynamicImport(
 ModuleLoadRequest::ModuleLoadRequest(
     nsIURI* aURI, ScriptFetchOptions* aFetchOptions,
     const SRIMetadata& aIntegrity, nsIURI* aReferrer, bool aIsTopLevel,
-    bool aIsDynamicImport, ScriptLoader* aLoader, VisitedURLSet* aVisitedSet)
+    bool aIsDynamicImport, ModuleLoader* aLoader, VisitedURLSet* aVisitedSet)
     : ScriptLoadRequest(ScriptKind::eModule, aURI, aFetchOptions, aIntegrity,
                         aReferrer),
       mIsTopLevel(aIsTopLevel),
@@ -149,14 +149,13 @@ void ModuleLoadRequest::ModuleLoaded() {
 
   LOG(("ScriptLoadRequest (%p): Module loaded", this));
 
-  mModuleScript =
-      mLoader->GetModuleLoader()->GetFetchedModule(mURI, GetWebExtGlobal());
+  mModuleScript = mLoader->GetFetchedModule(mURI, GetWebExtGlobal());
   if (!mModuleScript || mModuleScript->HasParseError()) {
     ModuleErrored();
     return;
   }
 
-  mLoader->GetModuleLoader()->StartFetchingModuleDependencies(this);
+  mLoader->StartFetchingModuleDependencies(this);
 }
 
 void ModuleLoadRequest::ModuleErrored() {
@@ -223,7 +222,7 @@ void ModuleLoadRequest::LoadFailed() {
 }
 
 void ModuleLoadRequest::LoadFinished() {
-  mLoader->GetModuleLoader()->ProcessLoadedModuleTree(this);
+  mLoader->ProcessLoadedModuleTree(this);
 
   mLoader = nullptr;
 }
