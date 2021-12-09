@@ -4228,8 +4228,9 @@ bool nsGlobalWindowInner::DispatchEvent(Event& aEvent, CallerType aCallerType,
   RefPtr<nsPresContext> presContext = mDoc->GetPresContext();
 
   nsEventStatus status = nsEventStatus_eIgnore;
+  // TODO: Bug 1506441
   nsresult rv = EventDispatcher::DispatchDOMEvent(
-      ToSupports(this), nullptr, &aEvent, presContext, &status);
+      MOZ_KnownLive(ToSupports(this)), nullptr, &aEvent, presContext, &status);
   bool retval = !aEvent.DefaultPrevented(aCallerType);
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);

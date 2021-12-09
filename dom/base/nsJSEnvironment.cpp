@@ -377,9 +377,10 @@ class ScriptErrorEvent : public Runnable {
         mError(aRootingCx, aError),
         mErrorStack(aRootingCx, aErrorStack) {}
 
-  NS_IMETHOD Run() override {
+  // TODO: Convert this to MOZ_CAN_RUN_SCRIPT (bug 1415230, bug 1535398)
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override {
     nsEventStatus status = nsEventStatus_eIgnore;
-    nsPIDOMWindowInner* win = mWindow;
+    nsCOMPtr<nsPIDOMWindowInner> win = mWindow;
     MOZ_ASSERT(win);
     MOZ_ASSERT(NS_IsMainThread());
     // First, notify the DOM that we have a script error, but only if
