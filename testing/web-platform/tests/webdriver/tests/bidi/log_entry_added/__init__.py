@@ -23,7 +23,14 @@ def assert_base_entry(entry,
 
     if stacktrace is not None:
         assert "stackTrace" in entry
-        assert isinstance(entry["stackTrace"], list)
+        assert isinstance(entry["stackTrace"], object)
+        assert "callFrames" in entry["stackTrace"]
+
+        call_frames = entry["stackTrace"]["callFrames"]
+        assert isinstance(call_frames, list)
+        assert len(call_frames) == len(stacktrace)
+        for index in range(0, len(call_frames)):
+            assert call_frames[index] == stacktrace[index]
 
 
 def assert_console_entry(entry,
