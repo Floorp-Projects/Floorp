@@ -579,54 +579,18 @@ class nsContentUtils {
       bool* aDisconnected = nullptr);
 
   /**
-   * DO NOT USE these methods for comparing the points in new code.  These
-   * methods emulates same result as `ComparePoints` before bug 1741148.
+   * DO NOT USE this method for comparing the points in new code.  this method
+   * emulates same result as `ComparePoints` before bug 1741148.
    * When the old `ComparePoints` was called with offset value over `INT32_MAX`
-   * or `-1` which is used as "not found" by some API, they were treated without
-   * checking whether the negative value or valid value.  Thus, these API
-   * emulates the odd behavior for keeping the traditional behavior. If you want
-   * to use this in new code, it means that you **should** check the given
-   * offset value and call `ComparePoints` instead.
+   * or `-1` which is used as "not found" by some API, they were treated as-is
+   * without checking whether the negative value or valid value.  Thus, this
+   * handles the negative offset cases in the special paths to keep the
+   * traditional behavior. If you want to use this in new code, it means that
+   * you **should** check the offset values and call `ComparePoints` instead.
    */
-  static mozilla::Maybe<int32_t> ComparePoints_FixOffset1(
-      const nsINode* aParent1, int32_t aOffset1, const nsINode* aParent2,
-      uint32_t aOffset2) {
-    if (MOZ_UNLIKELY(aOffset1 < 0)) {
-      // If in same container, just the offset is compared.
-      if (aParent1 == aParent2) {
-        return mozilla::Some(-1);
-      }
-      // Otherwise, aOffset1 is referred only when aParent2 is a descendant of
-      // aParent1.
-      if (aParent2->IsInclusiveDescendantOf(aParent1)) {
-        return mozilla::Some(-1);
-      }
-      // Otherwise, aOffset1 isn't used so that any value is fine.
-      return ComparePoints(aParent1, UINT32_MAX, aParent2, aOffset2);
-    }
-    return ComparePoints(aParent1, aOffset1, aParent2, aOffset2);
-  }
-  static mozilla::Maybe<int32_t> ComparePoints_FixOffset2(
-      const nsINode* aParent1, uint32_t aOffset1, const nsINode* aParent2,
-      int32_t aOffset2) {
-    if (MOZ_UNLIKELY(aOffset2 < 0)) {
-      // If in same container, just the offset is compared.
-      if (aParent1 == aParent2) {
-        return mozilla::Some(1);
-      }
-      // Otherwise, aOffset2 is referred only when aParent1 is a descendant of
-      // aParent2.
-      if (aParent1->IsInclusiveDescendantOf(aParent2)) {
-        return mozilla::Some(1);
-      }
-      // Otherwise, aOffset2 is not used so that any value is fine.
-      return ComparePoints(aParent1, aOffset1, aParent2, UINT32_MAX);
-    }
-    return ComparePoints(aParent1, aOffset1, aParent2, aOffset2);
-  }
-  static mozilla::Maybe<int32_t> ComparePoints_FixBothOffsets(
-      const nsINode* aParent1, int32_t aOffset1, const nsINode* aParent2,
-      int32_t aOffset2) {
+  static mozilla::Maybe<int32_t> ComparePoints_AllowNegativeOffsets(
+      const nsINode* aParent1, int64_t aOffset1, const nsINode* aParent2,
+      int64_t aOffset2) {
     if (MOZ_UNLIKELY(aOffset1 < 0 || aOffset2 < 0)) {
       // If in same container, just the offset is compared.
       if (aParent1 == aParent2) {
