@@ -1,5 +1,6 @@
 // |jit-test| skip-if: !('oomTest' in this)
 oomTest(function () {
-    offThreadCompileModule('');
-    finishOffThreadModule();
+    offThreadCompileModuleToStencil('');
+    var stencil = finishOffThreadCompileModuleToStencil();
+    instantiateModuleStencil(stencil);
 });
