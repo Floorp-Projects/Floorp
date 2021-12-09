@@ -229,6 +229,7 @@
 #include "mozilla/dom/WindowContext.h"
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/dom/WindowProxyHolder.h"
+#include "mozilla/dom/WorkerDocumentListener.h"
 #include "mozilla/dom/XPathEvaluator.h"
 #include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/nsCSPUtils.h"
@@ -15127,7 +15128,21 @@ void Document::UpdateVisibilityState(DispatchVisibilityChange aDispatchEvent) {
     if (mVisibilityState == dom::VisibilityState::Visible) {
       MaybeActiveMediaComponents();
     }
+
+    bool visible = !Hidden();
+    for (auto* listener : mWorkerListeners) {
+      listener->OnVisible(visible);
+    }
   }
+}
+
+void Document::AddWorkerDocumentListener(WorkerDocumentListener* aListener) {
+  mWorkerListeners.Insert(aListener);
+  aListener->OnVisible(!Hidden());
+}
+
+void Document::RemoveWorkerDocumentListener(WorkerDocumentListener* aListener) {
+  mWorkerListeners.Remove(aListener);
 }
 
 VisibilityState Document::ComputeVisibilityState() const {
