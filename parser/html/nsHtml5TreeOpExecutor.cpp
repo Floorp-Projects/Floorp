@@ -829,10 +829,15 @@ void nsHtml5TreeOpExecutor::CommitToInternalEncoding() {
   }
   mPendingEncodingCommitment = false;
   RunFlushLoop();
-  // The above loop relates to plain text and View Source only. As such,
-  // it never runs content scripts. Unfortunately, the loop may be interrupted
-  // by timer and by extension-injected scripts. In that case, we repost the
-  // runnable and return early. :-(
+  if (MOZ_UNLIKELY(!mParser || !mStreamParser)) {
+    // The parser got terminated somehow. Perhaps by an extension?
+    ClearOpQueue();  // clear in order to be able to assert in destructor
+    return;
+  }
+  // The above loop is supposed to relate to plain text and View Source only.
+  // As such, it never supposed to runs content scripts. Unfortunately, the
+  // loop may be interrupted by timer and by extension-injected scripts. In
+  // that case, we repost the runnable and return early. :-(
   if (!mParser->IsParserEnabled()) {
     mPendingEncodingCommitment = true;
     return;
