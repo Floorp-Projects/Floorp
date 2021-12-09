@@ -57,8 +57,6 @@
 
 using namespace js;
 
-using js::intl::IcuLocale;
-
 const JSClassOps DisplayNamesObject::classOps_ = {nullptr, /* addProperty */
                                                   nullptr, /* delProperty */
                                                   nullptr, /* enumerate */
