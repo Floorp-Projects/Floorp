@@ -62,11 +62,11 @@ class RangeUtils final {
     // If aNode isn't in the child nodes of its parent node, we hit this case.
     // This may occur when we're called by a mutation observer while aNode is
     // removed from the parent node.
-    const int32_t indexInParent = parentNode->ComputeIndexOf_Deprecated(aNode);
-    if (NS_WARN_IF(indexInParent < 0)) {
+    const Maybe<uint32_t> indexInParent = parentNode->ComputeIndexOf(aNode);
+    if (MOZ_UNLIKELY(NS_WARN_IF(indexInParent.isNothing()))) {
       return RawRangeBoundary();
     }
-    return RawRangeBoundary(parentNode, indexInParent);
+    return RawRangeBoundary(parentNode, *indexInParent);
   }
 
   /**
