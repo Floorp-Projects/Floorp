@@ -31,7 +31,8 @@ using JS::ReadOnlyCompileOptions;
 
 enum class OffThread { Compile, Decode };
 
-static bool CanDoOffThread(JSContext* cx, const ReadOnlyCompileOptions& options,
+template <typename OptionT>
+static bool CanDoOffThread(JSContext* cx, const OptionT& options,
                            size_t length) {
   static const size_t TINY_LENGTH = 5 * 1000;
 
@@ -89,6 +90,23 @@ JS_PUBLIC_API JS::OffThreadToken* JS::CompileModuleToStencilOffThread(
                                               callbackData);
 }
 
+JS_PUBLIC_API JS::OffThreadToken* JS::DecodeStencilOffThread(
+    JSContext* cx, const DecodeOptions& options, const TranscodeBuffer& buffer,
+    size_t cursor, OffThreadCompileCallback callback, void* callbackData) {
+  JS::TranscodeRange range(buffer.begin() + cursor, buffer.length() - cursor);
+  MOZ_ASSERT(CanDecodeOffThread(cx, options, range.length()));
+  return StartOffThreadDecodeStencil(cx, options, range, callback,
+                                     callbackData);
+}
+
+JS_PUBLIC_API JS::OffThreadToken* JS::DecodeStencilOffThread(
+    JSContext* cx, const DecodeOptions& options, const TranscodeRange& range,
+    OffThreadCompileCallback callback, void* callbackData) {
+  MOZ_ASSERT(CanDecodeOffThread(cx, options, range.length()));
+  return StartOffThreadDecodeStencil(cx, options, range, callback,
+                                     callbackData);
+}
+
 JS_PUBLIC_API already_AddRefed<JS::Stencil> JS::FinishCompileToStencilOffThread(
     JSContext* cx, JS::OffThreadToken* token,
     JS::InstantiationStorage* storage /* = nullptr */) {
@@ -110,6 +128,16 @@ JS::FinishCompileModuleToStencilOffThread(
   return stencil.forget();
 }
 
+JS_PUBLIC_API already_AddRefed<JS::Stencil> JS::FinishDecodeStencilOffThread(
+    JSContext* cx, JS::OffThreadToken* token,
+    JS::InstantiationStorage* storage /* = nullptr */) {
+  MOZ_ASSERT(cx);
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
+  RefPtr<JS::Stencil> stencil =
+      HelperThreadState().finishDecodeStencilTask(cx, token, storage);
+  return stencil.forget();
+}
+
 JS_PUBLIC_API void JS::CancelCompileToStencilOffThread(
     JSContext* cx, JS::OffThreadToken* token) {
   MOZ_ASSERT(cx);
@@ -126,8 +154,16 @@ JS_PUBLIC_API void JS::CancelCompileModuleToStencilOffThread(
                                       ParseTaskKind::ModuleStencil, token);
 }
 
+JS_PUBLIC_API void JS::CancelDecodeStencilOffThread(JSContext* cx,
+                                                    JS::OffThreadToken* token) {
+  MOZ_ASSERT(cx);
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
+  HelperThreadState().cancelParseTask(cx->runtime(),
+                                      ParseTaskKind::StencilDecode, token);
+}
+
 JS_PUBLIC_API bool JS::CanDecodeOffThread(JSContext* cx,
-                                          const ReadOnlyCompileOptions& options,
+                                          const DecodeOptions& options,
                                           size_t length) {
   return CanDoOffThread(cx, options, length);
 }
@@ -140,7 +176,10 @@ JS_PUBLIC_API JS::OffThreadToken* JS::DecodeOffThreadScript(
     mozilla::Vector<uint8_t>& buffer /* TranscodeBuffer& */, size_t cursor,
     OffThreadCompileCallback callback, void* callbackData) {
   JS::TranscodeRange range(buffer.begin() + cursor, buffer.length() - cursor);
-  MOZ_ASSERT(CanDecodeOffThread(cx, options, range.length()));
+#ifdef DEBUG
+  JS::DecodeOptions decodeOptions(options);
+  MOZ_ASSERT(CanDecodeOffThread(cx, decodeOptions, range.length()));
+#endif
   return StartOffThreadDecodeScript(cx, options, range, callback, callbackData);
 }
 
@@ -148,7 +187,10 @@ JS_PUBLIC_API JS::OffThreadToken* JS::DecodeOffThreadScript(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     const mozilla::Range<uint8_t>& range /* TranscodeRange& */,
     OffThreadCompileCallback callback, void* callbackData) {
-  MOZ_ASSERT(CanDecodeOffThread(cx, options, range.length()));
+#ifdef DEBUG
+  JS::DecodeOptions decodeOptions(options);
+  MOZ_ASSERT(CanDecodeOffThread(cx, decodeOptions, range.length()));
+#endif
   return StartOffThreadDecodeScript(cx, options, range, callback, callbackData);
 }
 
