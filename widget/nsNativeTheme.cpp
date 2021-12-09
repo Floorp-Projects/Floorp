@@ -47,34 +47,52 @@ NS_IMPL_ISUPPORTS(nsNativeTheme, nsITimerCallback, nsINamed)
     return EventStates();
   }
 
-  bool isXULCheckboxRadio = (aAppearance == StyleAppearance::Checkbox ||
-                             aAppearance == StyleAppearance::Radio) &&
-                            aFrame->GetContent()->IsXULElement();
-  if (isXULCheckboxRadio) {
-    aFrame = aFrame->GetParent();
-  }
-
-  if (!aFrame->GetContent()) {
+  nsIContent* frameContent = aFrame->GetContent();
+  if (!frameContent || !frameContent->IsElement()) {
     return EventStates();
   }
 
-  nsIContent* frameContent = aFrame->GetContent();
-  EventStates flags;
-  if (frameContent->IsElement()) {
-    flags = frameContent->AsElement()->State();
-
-    nsNumberControlFrame* numberControlFrame =
-        nsNumberControlFrame::GetNumberControlFrameForSpinButton(aFrame);
-    if (numberControlFrame &&
-        numberControlFrame->GetContent()->AsElement()->State().HasState(
-            NS_EVENT_STATE_DISABLED)) {
-      flags |= NS_EVENT_STATE_DISABLED;
+  const bool isXULElement = frameContent->IsXULElement();
+  if (isXULElement) {
+    if (aAppearance == StyleAppearance::CheckboxLabel ||
+        aAppearance == StyleAppearance::RadioLabel) {
+      aFrame = aFrame->GetParent()->GetParent();
+      frameContent = aFrame->GetContent();
+    } else if (aAppearance == StyleAppearance::Checkbox ||
+               aAppearance == StyleAppearance::Radio ||
+               aAppearance == StyleAppearance::ToolbarbuttonDropdown ||
+               aAppearance == StyleAppearance::Treeheadersortarrow ||
+               aAppearance == StyleAppearance::ButtonArrowPrevious ||
+               aAppearance == StyleAppearance::ButtonArrowNext ||
+               aAppearance == StyleAppearance::ButtonArrowUp ||
+               aAppearance == StyleAppearance::ButtonArrowDown) {
+      aFrame = aFrame->GetParent();
+      frameContent = aFrame->GetContent();
     }
+    MOZ_ASSERT(frameContent && frameContent->IsElement());
   }
 
-  if (isXULCheckboxRadio) {
-    if (aAppearance == StyleAppearance::Radio) {
-      if (IsFocused(aFrame)) {
+  EventStates flags = frameContent->AsElement()->State();
+  nsNumberControlFrame* numberControlFrame =
+      nsNumberControlFrame::GetNumberControlFrameForSpinButton(aFrame);
+  if (numberControlFrame &&
+      numberControlFrame->GetContent()->AsElement()->State().HasState(
+          NS_EVENT_STATE_DISABLED)) {
+    flags |= NS_EVENT_STATE_DISABLED;
+  }
+
+  if (!isXULElement) {
+    return flags;
+  }
+
+  if (CheckBooleanAttr(aFrame, nsGkAtoms::disabled)) {
+    flags |= NS_EVENT_STATE_DISABLED;
+  }
+
+  switch (aAppearance) {
+    case StyleAppearance::RadioLabel:
+    case StyleAppearance::Radio: {
+      if (CheckBooleanAttr(aFrame, nsGkAtoms::focused)) {
         flags |= NS_EVENT_STATE_FOCUS;
         nsPIDOMWindowOuter* window =
             aFrame->GetContent()->OwnerDoc()->GetWindow();
@@ -85,9 +103,30 @@ NS_IMPL_ISUPPORTS(nsNativeTheme, nsITimerCallback, nsINamed)
       if (CheckBooleanAttr(aFrame, nsGkAtoms::selected)) {
         flags |= NS_EVENT_STATE_CHECKED;
       }
-    } else if (CheckBooleanAttr(aFrame, nsGkAtoms::checked)) {
-      flags |= NS_EVENT_STATE_CHECKED;
+      break;
     }
+    case StyleAppearance::CheckboxLabel:
+    case StyleAppearance::Checkbox: {
+      if (CheckBooleanAttr(aFrame, nsGkAtoms::checked)) {
+        flags |= NS_EVENT_STATE_CHECKED;
+      } else if (CheckBooleanAttr(aFrame, nsGkAtoms::indeterminate)) {
+        flags |= NS_EVENT_STATE_INDETERMINATE;
+      }
+      break;
+    }
+    case StyleAppearance::MenulistButton:
+    case StyleAppearance::Menulist:
+    case StyleAppearance::NumberInput:
+    case StyleAppearance::Textfield:
+    case StyleAppearance::Searchfield:
+    case StyleAppearance::Textarea: {
+      if (CheckBooleanAttr(aFrame, nsGkAtoms::focused)) {
+        flags |= NS_EVENT_STATE_FOCUS | NS_EVENT_STATE_FOCUSRING;
+      }
+      break;
+    }
+    default:
+      break;
   }
 
   return flags;
@@ -145,28 +184,6 @@ double nsNativeTheme::GetProgressMaxValue(nsIFrame* aFrame) {
   return static_cast<HTMLProgressElement*>(aFrame->GetContent())->Max();
 }
 
-bool nsNativeTheme::GetCheckedOrSelected(nsIFrame* aFrame,
-                                         bool aCheckSelected) {
-  if (!aFrame) return false;
-
-  nsIContent* content = aFrame->GetContent();
-
-  if (content->IsXULElement()) {
-    // For a XUL checkbox or radio button, the state of the parent determines
-    // the checked state
-    aFrame = aFrame->GetParent();
-  } else {
-    // Check for an HTML input element
-    HTMLInputElement* inputElt = HTMLInputElement::FromNode(content);
-    if (inputElt) {
-      return inputElt->Checked();
-    }
-  }
-
-  return CheckBooleanAttr(
-      aFrame, aCheckSelected ? nsGkAtoms::selected : nsGkAtoms::checked);
-}
-
 bool nsNativeTheme::IsButtonTypeMenu(nsIFrame* aFrame) {
   if (!aFrame) return false;
 
@@ -179,30 +196,10 @@ bool nsNativeTheme::IsButtonTypeMenu(nsIFrame* aFrame) {
 bool nsNativeTheme::IsPressedButton(nsIFrame* aFrame) {
   EventStates eventState =
       GetContentState(aFrame, StyleAppearance::Toolbarbutton);
-  if (IsDisabled(aFrame, eventState)) return false;
+  if (eventState.HasState(NS_EVENT_STATE_DISABLED)) return false;
 
   return IsOpenButton(aFrame) ||
          eventState.HasAllStates(NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_HOVER);
-}
-
-bool nsNativeTheme::GetIndeterminate(nsIFrame* aFrame) {
-  if (!aFrame) return false;
-
-  nsIContent* content = aFrame->GetContent();
-
-  if (content->IsXULElement()) {
-    // For a XUL checkbox or radio button, the state of the parent determines
-    // the state
-    return CheckBooleanAttr(aFrame->GetParent(), nsGkAtoms::indeterminate);
-  }
-
-  // Check for an HTML input element
-  HTMLInputElement* inputElt = HTMLInputElement::FromNode(content);
-  if (inputElt) {
-    return inputElt->Indeterminate();
-  }
-
-  return false;
 }
 
 bool nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext,
@@ -285,27 +282,6 @@ bool nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext,
              aAppearance) &&
          aFrame->GetContent()->IsHTMLElement() &&
          aFrame->Style()->HasAuthorSpecifiedBorderOrBackground();
-}
-
-bool nsNativeTheme::IsDisabled(nsIFrame* aFrame, EventStates aEventStates) {
-  if (!aFrame) {
-    return false;
-  }
-
-  nsIContent* content = aFrame->GetContent();
-  if (!content || !content->IsElement()) {
-    return false;
-  }
-
-  if (content->IsHTMLElement()) {
-    return aEventStates.HasState(NS_EVENT_STATE_DISABLED);
-  }
-
-  // For XML/XUL elements, an attribute must be equal to the literal
-  // string "true" to be counted as true.  An empty string should _not_
-  // be counted as true.
-  return content->AsElement()->AttrValueIs(
-      kNameSpaceID_None, nsGkAtoms::disabled, u"true"_ns, eCaseMatters);
 }
 
 /* static */
@@ -450,16 +426,6 @@ bool nsNativeTheme::IsNextToSelectedTab(nsIFrame* aFrame, int32_t aOffset) {
   if (thisTabIndex == -1 || selectedTabIndex == -1) return false;
 
   return (thisTabIndex - selectedTabIndex == aOffset);
-}
-
-bool nsNativeTheme::IsIndeterminateProgress(nsIFrame* aFrame,
-                                            EventStates aEventStates) {
-  if (!aFrame || !aFrame->GetContent() ||
-      !aFrame->GetContent()->IsHTMLElement(nsGkAtoms::progress)) {
-    return false;
-  }
-
-  return aEventStates.HasState(NS_EVENT_STATE_INDETERMINATE);
 }
 
 bool nsNativeTheme::IsVerticalProgress(nsIFrame* aFrame) {
