@@ -1820,6 +1820,22 @@ Maybe<uint32_t> nsINode::ComputeIndexOf(const nsINode* aPossibleChild) const {
   return Nothing();
 }
 
+Maybe<uint32_t> nsINode::ComputeIndexInParentNode() const {
+  nsINode* parent = GetParentNode();
+  if (MOZ_UNLIKELY(!parent)) {
+    return Nothing();
+  }
+  return parent->ComputeIndexOf(this);
+}
+
+Maybe<uint32_t> nsINode::ComputeIndexInParentContent() const {
+  nsIContent* parent = GetParent();
+  if (MOZ_UNLIKELY(!parent)) {
+    return Nothing();
+  }
+  return parent->ComputeIndexOf(this);
+}
+
 static already_AddRefed<nsINode> GetNodeFromNodeOrString(
     const OwningNodeOrString& aNode, Document* aDocument) {
   if (aNode.IsNode()) {

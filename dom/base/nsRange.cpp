@@ -2331,11 +2331,7 @@ void nsRange::InsertNode(nsINode& aNode, ErrorResult& aRv) {
   uint32_t newOffset;
 
   if (referenceNode) {
-    Maybe<uint32_t> indexInParent;
-    if (referenceNode->GetParentNode()) {
-      indexInParent =
-          referenceNode->GetParentNode()->ComputeIndexOf(referenceNode);
-    }
+    Maybe<uint32_t> indexInParent = referenceNode->ComputeIndexInParentNode();
     if (MOZ_UNLIKELY(NS_WARN_IF(indexInParent.isNothing()))) {
       aRv.Throw(NS_ERROR_FAILURE);
       return;
