@@ -541,8 +541,7 @@ bool ParseTask::init(JSContext* cx, const ReadOnlyCompileOptions& options) {
 
   runtime = cx->runtime();
 
-  bool alwaysNeedsGCOutput =
-      kind == ParseTaskKind::Module || kind == ParseTaskKind::ScriptDecode;
+  bool alwaysNeedsGCOutput = kind == ParseTaskKind::ScriptDecode;
 
   // MultiStencilsDecode doesn't support JS::InstantiationStorage.
   MOZ_ASSERT_IF(this->options.allocateInstantiationStorage,
@@ -734,47 +733,6 @@ bool ParseTask::instantiateStencils(JSContext* cx) {
   }
 
   return result;
-}
-
-template <typename Unit>
-struct ModuleParseTask : public ParseTask {
-  JS::SourceText<Unit> data;
-
-  ModuleParseTask(JSContext* cx, JS::SourceText<Unit>& srcBuf,
-                  JS::OffThreadCompileCallback callback, void* callbackData);
-  void parse(JSContext* cx) override;
-};
-
-template <typename Unit>
-ModuleParseTask<Unit>::ModuleParseTask(JSContext* cx,
-                                       JS::SourceText<Unit>& srcBuf,
-                                       JS::OffThreadCompileCallback callback,
-                                       void* callbackData)
-    : ParseTask(ParseTaskKind::Module, cx, callback, callbackData),
-      data(std::move(srcBuf)) {}
-
-template <typename Unit>
-void ModuleParseTask<Unit>::parse(JSContext* cx) {
-  MOZ_ASSERT(cx->isHelperThreadContext());
-
-  options.setModule();
-
-  stencilInput_ = cx->make_unique<frontend::CompilationInput>(options);
-  if (!stencilInput_) {
-    return;
-  }
-
-  extensibleStencil_ =
-      frontend::ParseModuleToExtensibleStencil(cx, *stencilInput_, data);
-  if (!extensibleStencil_) {
-    return;
-  }
-
-  frontend::BorrowingCompilationStencil borrowingStencil(*extensibleStencil_);
-  if (!frontend::PrepareForInstantiate(cx, *stencilInput_, borrowingStencil,
-                                       *gcOutput_)) {
-    extensibleStencil_.reset();
-  }
 }
 
 ScriptDecodeTask::ScriptDecodeTask(JSContext* cx,
@@ -1035,36 +993,6 @@ JS::OffThreadToken* js::StartOffThreadCompileModuleToStencil(
     void* callbackData) {
   return StartOffThreadCompileModuleToStencilInternal(cx, options, srcBuf,
                                                       callback, callbackData);
-}
-
-template <typename Unit>
-static JS::OffThreadToken* StartOffThreadParseModuleInternal(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    JS::SourceText<Unit>& srcBuf, JS::OffThreadCompileCallback callback,
-    void* callbackData) {
-  auto task = cx->make_unique<ModuleParseTask<Unit>>(cx, srcBuf, callback,
-                                                     callbackData);
-  if (!task) {
-    return nullptr;
-  }
-
-  return StartOffThreadParseTask(cx, std::move(task), options);
-}
-
-JS::OffThreadToken* js::StartOffThreadParseModule(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    JS::SourceText<char16_t>& srcBuf, JS::OffThreadCompileCallback callback,
-    void* callbackData) {
-  return StartOffThreadParseModuleInternal(cx, options, srcBuf, callback,
-                                           callbackData);
-}
-
-JS::OffThreadToken* js::StartOffThreadParseModule(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    JS::SourceText<Utf8Unit>& srcBuf, JS::OffThreadCompileCallback callback,
-    void* callbackData) {
-  return StartOffThreadParseModuleInternal(cx, options, srcBuf, callback,
-                                           callbackData);
 }
 
 JS::OffThreadToken* js::StartOffThreadDecodeScript(
@@ -1964,42 +1892,6 @@ bool GlobalHelperThreadState::finishMultiStencilsDecodeTask(
     mozilla::Vector<RefPtr<JS::Stencil>>* stencils) {
   return finishMultiParseTask(cx, ParseTaskKind::MultiStencilsDecode, token,
                               stencils);
-}
-
-JSObject* GlobalHelperThreadState::finishModuleParseTask(
-    JSContext* cx, JS::OffThreadToken* token) {
-  JSScript* script = finishSingleParseTask(cx, ParseTaskKind::Module, token);
-  if (!script) {
-    return nullptr;
-  }
-
-  return script->module();
-}
-
-already_AddRefed<frontend::CompilationStencil>
-GlobalHelperThreadState::finishStencilParseTask(JSContext* cx,
-                                                JS::OffThreadToken* token) {
-  // TODO: The Script and Module task kinds should be combined in future since
-  //       they both generate the same Stencil type.
-  auto task = static_cast<ParseTask*>(token);
-  MOZ_RELEASE_ASSERT(task->kind == ParseTaskKind::Module);
-
-  Rooted<UniquePtr<ParseTask>> parseTask(
-      cx, finishParseTaskCommon(cx, task->kind, token));
-  if (!parseTask) {
-    return nullptr;
-  }
-
-  MOZ_ASSERT(parseTask->extensibleStencil_);
-
-  RefPtr<frontend::CompilationStencil> stencil =
-      cx->new_<frontend::CompilationStencil>(
-          std::move(parseTask->extensibleStencil_));
-  if (!stencil) {
-    return nullptr;
-  }
-
-  return stencil.forget();
 }
 
 void GlobalHelperThreadState::cancelParseTask(JSRuntime* rt, ParseTaskKind kind,
