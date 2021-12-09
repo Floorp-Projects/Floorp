@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ExternalScrollId, PipelineId, PropertyBinding, PropertyBindingId, ReferenceFrameKind, ScrollClamping, ScrollLocation};
+use api::{ExternalScrollId, PipelineId, PropertyBinding, PropertyBindingId, ReferenceFrameKind, ScrollLocation};
 use api::{TransformStyle, StickyOffsetBounds, SpatialTreeItemKey};
 use api::units::*;
 use crate::internal_types::PipelineInstanceId;
@@ -319,7 +319,7 @@ impl SpatialNode {
         self.children.push(child);
     }
 
-    pub fn set_scroll_origin(&mut self, origin: &LayoutPoint, clamp: ScrollClamping) -> bool {
+    pub fn set_scroll_offset(&mut self, offset: &LayoutVector2D) -> bool {
         let scrolling = match self.node_type {
             SpatialNodeType::ScrollFrame(ref mut scrolling) => scrolling,
             _ => {
@@ -328,26 +328,7 @@ impl SpatialNode {
             }
         };
 
-        let normalized_offset = match clamp {
-            ScrollClamping::ToContentBounds => {
-                let scrollable_size = scrolling.scrollable_size;
-                let scrollable_width = scrollable_size.width;
-                let scrollable_height = scrollable_size.height;
-
-                if scrollable_height <= 0. && scrollable_width <= 0. {
-                    return false;
-                }
-
-                let origin = LayoutPoint::new(origin.x.max(0.0), origin.y.max(0.0));
-                LayoutVector2D::new(
-                    (-origin.x).max(-scrollable_width).min(0.0),
-                    (-origin.y).max(-scrollable_height).min(0.0),
-                )
-            }
-            ScrollClamping::NoClamping => LayoutPoint::zero() - *origin,
-        };
-
-        let new_offset = normalized_offset - scrolling.external_scroll_offset;
+        let new_offset = -*offset - scrolling.external_scroll_offset;
 
         if new_offset == scrolling.offset {
             return false;

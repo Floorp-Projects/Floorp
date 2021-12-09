@@ -220,7 +220,7 @@ class TransactionWrapper final {
   void UpdateScrollPosition(
       const wr::WrPipelineId& aPipelineId,
       const layers::ScrollableLayerGuid::ViewID& aScrollId,
-      const wr::LayoutPoint& aScrollPosition);
+      const wr::LayoutVector2D& aScrollOffset);
   void UpdateIsTransformAsyncZooming(uint64_t aAnimationId, bool aIsZooming);
 
  private:
