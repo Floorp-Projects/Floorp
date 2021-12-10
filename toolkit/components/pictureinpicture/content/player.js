@@ -299,12 +299,7 @@ let Player = {
 
   closePipWindow(closeData) {
     const { reason } = closeData;
-
-    if (PictureInPicture.isMultiPipEnabled) {
-      PictureInPicture.closeSinglePipWindow({ reason, actorRef: this.actor });
-    } else {
-      PictureInPicture.closeAllPipWindows({ reason });
-    }
+    PictureInPicture.closeSinglePipWindow({ reason, actorRef: this.actor });
   },
 
   onDblClick(event) {
