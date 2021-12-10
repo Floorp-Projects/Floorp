@@ -179,6 +179,11 @@ class JS_PUBLIC_API TransitiveCompileOptions {
   // called. There is currently no mechanism to release the data sooner.
   bool usePinnedBytecode = false;
 
+  // When performing off-thread task that generates JS::Stencil as output,
+  // allocate JS::InstantiationStorage off main thread to reduce the
+  // main thread allocation.
+  bool allocateInstantiationStorage = false;
+
   /**
    * |introductionType| is a statically allocated C string: one of "eval",
    * "Function", or "GeneratorFunction".

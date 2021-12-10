@@ -27,19 +27,66 @@
 #include "js/OffThreadScriptCompilation.h"  // JS::OffThreadCompileCallback
 #include "js/SourceText.h"                  // JS::SourceText
 #include "js/Transcoding.h"                 // JS::TranscodeSource
+#include "js/UniquePtr.h"                   // js::UniquePtr
 
 struct JS_PUBLIC_API JSContext;
+class JS_PUBLIC_API JSTracer;
 
 // Underlying opaque type.
-namespace js::frontend {
+namespace js {
+struct ParseTask;
+namespace frontend {
 struct CompilationStencil;
-};
+struct CompilationGCOutput;
+}  // namespace frontend
+}  // namespace js
 
 namespace JS {
 
 class OffThreadToken;
 
 using Stencil = js::frontend::CompilationStencil;
+
+// Temporary storage used during instantiating Stencil.
+//
+// Off-thread APIs can allocate this instance off main thread, and pass it back
+// to the main thread, in order to reduce the main thread allocation.
+struct InstantiationStorage {
+ private:
+  // Owned CompilationGCOutput.
+  //
+  // This uses raw pointer instead of UniquePtr because CompilationGCOutput
+  // is opaque.
+  js::frontend::CompilationGCOutput* gcOutput_ = nullptr;
+
+  friend JS_PUBLIC_API JSScript* InstantiateGlobalStencil(
+      JSContext* cx, const InstantiateOptions& options, Stencil* stencil,
+      InstantiationStorage* storage);
+
+  friend JS_PUBLIC_API JSObject* InstantiateModuleStencil(
+      JSContext* cx, const InstantiateOptions& options, Stencil* stencil,
+      InstantiationStorage* storage);
+
+  friend struct js::ParseTask;
+
+ public:
+  InstantiationStorage() = default;
+  InstantiationStorage(InstantiationStorage&& other)
+      : gcOutput_(other.gcOutput_) {
+    other.gcOutput_ = nullptr;
+  }
+
+  ~InstantiationStorage();
+
+ private:
+  InstantiationStorage(const InstantiationStorage& other) = delete;
+  void operator=(const InstantiationStorage& aOther) = delete;
+
+ public:
+  bool isValid() const { return !!gcOutput_; }
+
+  void trace(JSTracer* trc);
+};
 
 // These non-member functions let us manipulate the ref counts of the opaque
 // Stencil type. The RefPtrTraits below calls these for use when using the
@@ -80,6 +127,9 @@ extern JS_PUBLIC_API already_AddRefed<Stencil> FinishOffThreadStencil(
 // Instantiate the Stencil into current Realm and return the JSScript.
 extern JS_PUBLIC_API JSScript* InstantiateGlobalStencil(
     JSContext* cx, const InstantiateOptions& options, Stencil* stencil);
+extern JS_PUBLIC_API JSScript* InstantiateGlobalStencil(
+    JSContext* cx, const InstantiateOptions& options, Stencil* stencil,
+    InstantiationStorage* storage);
 
 // Return true if the stencil relies on external data as a result of XDR
 // decoding.
@@ -92,6 +142,9 @@ extern JS_PUBLIC_API bool StencilCanLazilyParse(Stencil* stencil);
 // engine this is a js::ModuleObject.
 extern JS_PUBLIC_API JSObject* InstantiateModuleStencil(
     JSContext* cx, const InstantiateOptions& options, Stencil* stencil);
+extern JS_PUBLIC_API JSObject* InstantiateModuleStencil(
+    JSContext* cx, const InstantiateOptions& options, Stencil* stencil,
+    InstantiationStorage* storage);
 
 // Serialize the Stencil into the transcode buffer.
 extern JS_PUBLIC_API TranscodeResult EncodeStencil(JSContext* cx,
@@ -117,8 +170,15 @@ extern JS_PUBLIC_API OffThreadToken* CompileToStencilOffThread(
     SourceText<mozilla::Utf8Unit>& srcBuf, OffThreadCompileCallback callback,
     void* callbackData);
 
+// Finish the off-thread task to compile the source text into a JS::Stencil,
+// started by JS::CompileToStencilOffThread, and return the result JS::Stencil.
+//
+// If `options.allocateInstantiationStorage` was true in
+// JS::CompileToStencilOffThread, pre-allocated JS::InstantiationStorage
+// is returned as `storage` out parameter.
 extern JS_PUBLIC_API already_AddRefed<Stencil> FinishOffThreadCompileToStencil(
-    JSContext* cx, OffThreadToken* token);
+    JSContext* cx, OffThreadToken* token,
+    InstantiationStorage* storage = nullptr);
 
 extern JS_PUBLIC_API OffThreadToken* DecodeMultiOffThreadStencils(
     JSContext* cx, const ReadOnlyCompileOptions& options,
