@@ -196,6 +196,7 @@ impl<'de, R: Read<'de>> Deserializer<R> {
     /// }
     /// ```
     #[cfg(feature = "unbounded_depth")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "unbounded_depth")))]
     pub fn disable_recursion_limit(&mut self) {
         self.disable_recursion_limit = true;
     }
@@ -433,8 +434,8 @@ impl<'de, R: Read<'de>> Deserializer<R> {
                 } else {
                     let neg = (significand as i64).wrapping_neg();
 
-                    // Convert into a float if we underflow.
-                    if neg > 0 {
+                    // Convert into a float if we underflow, or on `-0`.
+                    if neg >= 0 {
                         ParserNumber::F64(-(significand as f64))
                     } else {
                         ParserNumber::I64(neg)
@@ -898,7 +899,7 @@ impl<'de, R: Read<'de>> Deserializer<R> {
     fn scan_number(&mut self, buf: &mut String) -> Result<()> {
         match tri!(self.peek_or_null()) {
             b'.' => self.scan_decimal(buf),
-            b'e' | b'E' => self.scan_exponent(buf),
+            e @ b'e' | e @ b'E' => self.scan_exponent(e as char, buf),
             _ => Ok(()),
         }
     }
@@ -923,19 +924,20 @@ impl<'de, R: Read<'de>> Deserializer<R> {
         }
 
         match tri!(self.peek_or_null()) {
-            b'e' | b'E' => self.scan_exponent(buf),
+            e @ b'e' | e @ b'E' => self.scan_exponent(e as char, buf),
             _ => Ok(()),
         }
     }
 
     #[cfg(feature = "arbitrary_precision")]
-    fn scan_exponent(&mut self, buf: &mut String) -> Result<()> {
+    fn scan_exponent(&mut self, e: char, buf: &mut String) -> Result<()> {
         self.eat_char();
-        buf.push('e');
+        buf.push(e);
 
         match tri!(self.peek_or_null()) {
             b'+' => {
                 self.eat_char();
+                buf.push('+');
             }
             b'-' => {
                 self.eat_char();
@@ -1558,7 +1560,8 @@ impl<'de, 'a, R: Read<'de>> de::Deserializer<'de> for &'a mut Deserializer<R> {
     ///
     /// # Examples
     ///
-    /// You can use this to parse JSON strings containing invalid UTF-8 bytes.
+    /// You can use this to parse JSON strings containing invalid UTF-8 bytes,
+    /// or unpaired surrogates.
     ///
     /// ```
     /// use serde_bytes::ByteBuf;
@@ -1578,20 +1581,18 @@ impl<'de, 'a, R: Read<'de>> de::Deserializer<'de> for &'a mut Deserializer<R> {
     /// ```
     ///
     /// Backslash escape sequences like `\n` are still interpreted and required
-    /// to be valid, and `\u` escape sequences are required to represent valid
-    /// Unicode code points.
+    /// to be valid. `\u` escape sequences are required to represent a valid
+    /// Unicode code point or lone surrogate.
     ///
     /// ```
     /// use serde_bytes::ByteBuf;
     ///
-    /// fn look_at_bytes() {
-    ///     let json_data = b"\"invalid unicode surrogate: \\uD801\"";
-    ///     let parsed: Result<ByteBuf, _> = serde_json::from_slice(json_data);
-    ///
-    ///     assert!(parsed.is_err());
-    ///
-    ///     let expected_msg = "unexpected end of hex escape at line 1 column 35";
-    ///     assert_eq!(expected_msg, parsed.unwrap_err().to_string());
+    /// fn look_at_bytes() -> Result<(), serde_json::Error> {
+    ///     let json_data = b"\"lone surrogate: \\uD801\"";
+    ///     let bytes: ByteBuf = serde_json::from_slice(json_data)?;
+    ///     let expected = b"lone surrogate: \xED\xA0\x81";
+    ///     assert_eq!(expected, bytes.as_slice());
+    ///     Ok(())
     /// }
     /// #
     /// # look_at_bytes();
@@ -2494,6 +2495,7 @@ where
 /// the JSON map or some number is too big to fit in the expected primitive
 /// type.
 #[cfg(feature = "std")]
+#[cfg_attr(docsrs, doc(cfg(feature = "std")))]
 pub fn from_reader<R, T>(rdr: R) -> Result<T>
 where
     R: crate::io::Read,

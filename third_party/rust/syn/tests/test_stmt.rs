@@ -1,3 +1,5 @@
+#![allow(clippy::non_ascii_literal)]
+
 #[macro_use]
 mod macros;
 

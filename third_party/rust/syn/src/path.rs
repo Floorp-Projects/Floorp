@@ -589,7 +589,7 @@ pub mod parsing {
             path: &mut Self,
             expr_style: bool,
         ) -> Result<()> {
-            while input.peek(Token![::]) {
+            while input.peek(Token![::]) && !input.peek3(token::Paren) {
                 let punct: Token![::] = input.parse()?;
                 path.segments.push_punct(punct);
                 let value = PathSegment::parse_helper(input, expr_style)?;

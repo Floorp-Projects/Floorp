@@ -6,9 +6,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
+use crate::error::Error;
+use crate::result::Result;
 use std::fmt;
-use super::error::Error;
-use super::result::Result;
 
 /// The Argon2 version.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, PartialOrd, Ord)]
@@ -57,12 +57,11 @@ impl fmt::Display for Version {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
 
-    use error::Error;
-    use super::*;
+    use crate::error::Error;
+    use crate::version::Version;
 
     #[test]
     fn as_u32_returns_correct_u32() {
