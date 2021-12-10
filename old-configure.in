@@ -1623,14 +1623,6 @@ fi
 fi # COMPILE_ENVIRONMENT
 
 dnl ========================================================
-dnl = Handle dependent MEDIA defines
-dnl ========================================================
-
-MOZ_WEBM_ENCODER=1
-AC_DEFINE(MOZ_WEBM_ENCODER)
-AC_SUBST(MOZ_WEBM_ENCODER)
-
-dnl ========================================================
 dnl NegotiateAuth
 dnl ========================================================
 

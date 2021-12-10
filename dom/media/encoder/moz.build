@@ -14,6 +14,7 @@ EXPORTS += [
     "OpusTrackEncoder.h",
     "TrackEncoder.h",
     "TrackMetadataBase.h",
+    "VP8TrackEncoder.h",
 ]
 
 UNIFIED_SOURCES += [
@@ -21,16 +22,8 @@ UNIFIED_SOURCES += [
     "Muxer.cpp",
     "OpusTrackEncoder.cpp",
     "TrackEncoder.cpp",
+    "VP8TrackEncoder.cpp",
 ]
-
-if CONFIG["MOZ_WEBM_ENCODER"]:
-    EXPORTS += [
-        "VP8TrackEncoder.h",
-    ]
-    UNIFIED_SOURCES += [
-        "VP8TrackEncoder.cpp",
-    ]
-    LOCAL_INCLUDES += ["/media/libyuv/libyuv/include"]
 
 DEFINES["TRACING"] = True
 
@@ -39,6 +32,7 @@ FINAL_LIBRARY = "xul"
 LOCAL_INCLUDES += [
     "/dom/media",
     "/ipc/chromium/src",
+    "/media/libyuv/libyuv/include",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")
