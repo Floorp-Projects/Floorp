@@ -110,6 +110,7 @@ object PhotonColors {
     val Ink60 = Color(0xFF271948)
     val Ink70 = Color(0xFF241541)
     val Ink80 = Color(0xFF20123A)
+    val Ink80A96 = Color(0xF520123A)
     val Ink90 = Color(0xFF1D1133)
 
     // Light grey should primarily be used for the Light Theme and secondary buttons.
