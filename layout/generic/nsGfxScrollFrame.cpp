@@ -2271,6 +2271,9 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter, bool aIsRoot)
       mApzAnimationRequested(false),
       mReclampVVOffsetInReflowFinished(false),
       mMayScheduleScrollAnimations(false),
+#ifdef MOZ_WIDGET_ANDROID
+      mHasVerticalOverflowForDynamicToolbar(false),
+#endif
       mVelocityQueue(aOuter->PresContext()) {
   AppendScrollUpdate(ScrollPositionUpdate::NewScrollframe(nsPoint()));
 
@@ -6447,9 +6450,14 @@ bool ScrollFrameHelper::ReflowFinished() {
     }
 
 #if defined(MOZ_WIDGET_ANDROID)
-    if (mIsRoot && !(GetOverflowState() & OverflowState::Vertical)) {
+    const bool hasVerticalOverflow =
+        GetOverflowState() & OverflowState::Vertical &&
+        GetScrollStylesFromFrame().mVertical != StyleOverflow::Hidden;
+    if (!mFirstReflow && mHasVerticalOverflowForDynamicToolbar &&
+        !hasVerticalOverflow) {
       mOuter->PresShell()->MaybeNotifyShowDynamicToolbar();
     }
+    mHasVerticalOverflowForDynamicToolbar = hasVerticalOverflow;
 #endif  // defined(MOZ_WIDGET_ANDROID)
   }
 
