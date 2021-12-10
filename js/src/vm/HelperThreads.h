@@ -224,7 +224,7 @@ JS::OffThreadToken* StartOffThreadDecodeStencil(
     void* callbackData);
 
 JS::OffThreadToken* StartOffThreadDecodeMultiStencils(
-    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+    JSContext* cx, const JS::DecodeOptions& options,
     JS::TranscodeSources& sources, JS::OffThreadCompileCallback callback,
     void* callbackData);
 
