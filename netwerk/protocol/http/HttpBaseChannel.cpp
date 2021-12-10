@@ -2868,36 +2868,25 @@ bool HttpBaseChannel::EnsureOpaqueResponseIsAllowed() {
 
   InitiateORBTelemetry();
 
-  nsAutoCString contentType;
-  mResponseHead->ContentType(contentType);
-  if (!contentType.IsEmpty()) {
-    if (IsOpaqueSafeListedMIMEType(contentType)) {
+  switch (GetOpaqueResponseBlockedReason(*mResponseHead)) {
+    case OpaqueResponseBlockedReason::ALLOWED_SAFE_LISTED:
       ReportORBTelemetry("Allowed_SafeListed"_ns);
       return true;
-    }
-
-    if (IsOpaqueBlockListedNeverSniffedMIMEType(contentType)) {
+    case OpaqueResponseBlockedReason::BLOCKED_BLOCKLISTED_NEVER_SNIFFED:
       // XXXtt: Report To Console.
       ReportORBTelemetry("Blocked_BlockListedNeverSniffed"_ns);
       return false;
-    }
-
-    if (mResponseHead->Status() == 206 &&
-        IsOpaqueBlockListedMIMEType(contentType)) {
+    case OpaqueResponseBlockedReason::BLOCKED_206_AND_BLOCKLISTED:
       // XXXtt: Report To Console.
       ReportORBTelemetry("Blocked_206AndBlockListed"_ns);
       return false;
-    }
-
-    nsAutoCString contentTypeOptionsHeader;
-    if (mResponseHead->GetContentTypeOptionsHeader(contentTypeOptionsHeader) &&
-        contentTypeOptionsHeader.EqualsIgnoreCase("nosniff") &&
-        (IsOpaqueBlockListedMIMEType(contentType) ||
-         contentType.EqualsLiteral(TEXT_PLAIN))) {
+    case OpaqueResponseBlockedReason::
+        BLOCKED_NOSNIFF_AND_EITHER_BLOCKLISTED_OR_TEXTPLAIN:
       // XXXtt: Report To Console.
       ReportORBTelemetry("Blocked_NosniffAndEitherBlockListedOrTextPlain"_ns);
       return false;
-    }
+    default:
+      break;
   }
 
   // If it's a media subsequent request, we assume that it will only be made
