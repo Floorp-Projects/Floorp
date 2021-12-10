@@ -343,17 +343,15 @@ BEGIN_TEST(testStencil_OffThread) {
   // Force off-thread even though if this is a small file.
   options.forceAsync = true;
 
-  CHECK(token = JS::CompileOffThread(cx, options, srcBuf, callback, &monitor));
+  CHECK(token = JS::CompileToStencilOffThread(cx, options, srcBuf, callback,
+                                              &monitor));
 
   {
-    // Finish any active GC in case it is blocking off-thread work.
-    js::gc::FinishGC(cx);
-
     js::AutoLockMonitor lock(monitor);
     lock.wait();
   }
 
-  RefPtr<JS::Stencil> stencil = JS::FinishOffThreadStencil(cx, token);
+  RefPtr<JS::Stencil> stencil = JS::FinishCompileToStencilOffThread(cx, token);
   CHECK(stencil);
 
   JS::InstantiateOptions instantiateOptions(options);
@@ -398,9 +396,6 @@ BEGIN_TEST(testStencil_OffThreadWithInstantiationStorage) {
                                               &monitor));
 
   {
-    // Finish any active GC in case it is blocking off-thread work.
-    js::gc::FinishGC(cx);
-
     js::AutoLockMonitor lock(monitor);
     lock.wait();
   }
