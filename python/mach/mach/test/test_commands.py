@@ -4,12 +4,12 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import os
 import sys
 
 import pytest
-from mozunit import main
 
+from mozunit import main
+from pathlib import Path
 from buildconfig import topsrcdir
 import mach
 
@@ -26,10 +26,10 @@ ALL_COMMANDS = [
 @pytest.fixture
 def run_completion(run_mach):
     def inner(args=[]):
-        mach_dir = os.path.dirname(mach.__file__)
+        mach_dir = Path(mach.__file__).parent
         providers = [
-            "commands.py",
-            os.path.join(mach_dir, "commands", "commandinfo.py"),
+            Path("commands.py"),
+            mach_dir / "commands" / "commandinfo.py",
         ]
 
         def context_handler(key):
