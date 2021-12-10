@@ -39,6 +39,10 @@ class Analytics(
 ) {
     val crashReporter: CrashReporter by lazyMonitored {
         val services = mutableListOf<CrashReporterService>()
+        val distributionId = when (Config.channel.isMozillaOnline) {
+            true -> "MozillaOnline"
+            false -> "Mozilla"
+        }
 
         if (isSentryEnabled()) {
             val sentryService = SentryService(
@@ -58,7 +62,7 @@ class Analytics(
         val socorroService = MozillaSocorroService(
             context, appName = "Fenix",
             version = MOZ_APP_VERSION, buildId = MOZ_APP_BUILDID, vendor = MOZ_APP_VENDOR,
-            releaseChannel = MOZ_UPDATE_CHANNEL
+            releaseChannel = MOZ_UPDATE_CHANNEL, distributionId = distributionId
         )
         services.add(socorroService)
 
