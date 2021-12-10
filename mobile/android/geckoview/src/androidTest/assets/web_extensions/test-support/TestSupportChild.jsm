@@ -67,6 +67,16 @@ class TestSupportChild extends GeckoViewActorChild {
         );
         return color;
       }
+      case "SetResolutionAndScaleTo": {
+        return new Promise(resolve => {
+          const window = this.contentWindow;
+          const { resolution } = aMsg.data;
+          window.visualViewport.addEventListener("resize", () => resolve(), {
+            once: true,
+          });
+          window.windowUtils.setResolutionAndScaleTo(resolution);
+        });
+      }
     }
     return null;
   }

@@ -14,15 +14,6 @@ const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
 );
 
-function setResolutionAndScaleToFrameScript(resolution) {
-  addMessageListener("PanZoomControllerTest:SetResolutionAndScaleTo", () => {
-    content.window.visualViewport.addEventListener("resize", () => {
-      sendAsyncMessage("PanZoomControllerTest:SetResolutionAndScaleTo");
-    });
-    content.windowUtils.setResolutionAndScaleTo(resolution);
-  });
-}
-
 this.test = class extends ExtensionAPI {
   onStartup() {
     ChromeUtils.registerWindowActor("TestSupport", {
@@ -140,28 +131,9 @@ this.test = class extends ExtensionAPI {
           return Services.telemetry.scalarSet(id, value);
         },
 
-        async setResolutionAndScaleTo(resolution) {
-          const frameScript = `data:text/javascript,(${encodeURI(
-            setResolutionAndScaleToFrameScript
-          )}).call(this, ${resolution})`;
-          Services.mm.loadFrameScript(frameScript, true);
-
-          return new Promise(resolve => {
-            const onMessage = () => {
-              Services.mm.removeMessageListener(
-                "PanZoomControllerTest:SetResolutionAndScaleTo",
-                onMessage
-              );
-              resolve();
-            };
-
-            Services.mm.addMessageListener(
-              "PanZoomControllerTest:SetResolutionAndScaleTo",
-              onMessage
-            );
-            Services.mm.broadcastAsyncMessage(
-              "PanZoomControllerTest:SetResolutionAndScaleTo"
-            );
+        async setResolutionAndScaleTo(tabId, resolution) {
+          return windowActor(tabId).sendQuery("SetResolutionAndScaleTo", {
+            resolution,
           });
         },
 
