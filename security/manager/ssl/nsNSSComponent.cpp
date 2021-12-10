@@ -282,6 +282,8 @@ void nsNSSComponent::GetRevocationBehaviorFromPrefs(
   hardTimeoutMillis =
       std::min(hardTimeoutMillis, OCSP_TIMEOUT_MILLISECONDS_HARD_MAX);
   hardTimeout = TimeDuration::FromMilliseconds(hardTimeoutMillis);
+
+  ClearSSLExternalAndInternalSessionCache();
 }
 
 nsNSSComponent::nsNSSComponent()
@@ -569,7 +571,6 @@ void nsNSSComponent::UnloadEnterpriseRoots() {
   MutexAutoLock lock(mMutex);
   mEnterpriseCerts.clear();
   setValidationOptions(false, lock);
-  ClearSSLExternalAndInternalSessionCache();
 }
 
 static const char* kEnterpriseRootModePref =
