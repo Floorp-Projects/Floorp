@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "hermit-abi"
-version = "0.1.18"
+version = "0.1.19"
 authors = ["Stefan Lankes"]
 description = "hermit-abi is small interface to call functions from the unikernel RustyHermit.\nIt is used to build the target `x86_64-unknown-hermit`.\n"
 documentation = "https://hermitcore.github.io/rusty-hermit/hermit_abi"
@@ -26,7 +26,7 @@ repository = "https://github.com/hermitcore/libhermit-rs"
 default-target = "x86_64-unknown-hermit"
 features = ["docs"]
 [dependencies.compiler_builtins]
-version = "0.1.0"
+version = "0.1"
 optional = true
 
 [dependencies.core]

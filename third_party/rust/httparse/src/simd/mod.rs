@@ -89,9 +89,9 @@ mod runtime {
     //! at least in 1.27.0, the functions don't inline, leaving using it
     //! actually *slower* than just using the scalar fallback.
 
-    use core::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT, Ordering};
+    use core::sync::atomic::{AtomicUsize, Ordering};
 
-    static FEATURE: AtomicUsize = ATOMIC_USIZE_INIT;
+    static FEATURE: AtomicUsize = AtomicUsize::new(0);
 
     const INIT: usize = 0;
 
