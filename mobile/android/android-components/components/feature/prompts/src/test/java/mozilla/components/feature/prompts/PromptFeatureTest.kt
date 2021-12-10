@@ -729,12 +729,6 @@ class PromptFeatureTest {
         feature.handleDialogsRequest(mock<PromptRequest.File>(), mock())
     }
 
-    @Suppress("Deprecation")
-    @Test(expected = IllegalStateException::class)
-    fun `Initializing a PromptFeature without giving an activity or fragment reference will throw an exception`() {
-        PromptFeature(null, null, store, null, fragmentManager) { }
-    }
-
     @Test
     fun `onActivityResult with RESULT_OK and isMultipleFilesSelection false will consume PromptRequest`() {
         var onSingleFileSelectionWasCalled = false

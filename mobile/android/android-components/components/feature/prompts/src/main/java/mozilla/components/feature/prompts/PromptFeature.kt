@@ -231,39 +231,6 @@ class PromptFeature private constructor(
         onSelectCreditCard = onSelectCreditCard
     )
 
-    @Deprecated("Pass only activity or fragment instead")
-    constructor(
-        activity: Activity? = null,
-        fragment: Fragment? = null,
-        store: BrowserStore,
-        customTabId: String? = null,
-        fragmentManager: FragmentManager,
-        loginPickerView: SelectablePromptView<Login>? = null,
-        onManageLogins: () -> Unit = {},
-        creditCardPickerView: SelectablePromptView<CreditCard>? = null,
-        onManageCreditCards: () -> Unit = {},
-        onSelectCreditCard: () -> Unit = {},
-        onNeedToRequestPermissions: OnNeedToRequestPermissions
-    ) : this(
-        container = activity?.let { PromptContainer.Activity(it) }
-            ?: fragment?.let { PromptContainer.Fragment(it) }
-            ?: throw IllegalStateException(
-                "activity and fragment references " +
-                    "must not be both null, at least one must be initialized."
-            ),
-        store = store,
-        customTabId = customTabId,
-        fragmentManager = fragmentManager,
-        shareDelegate = DefaultShareDelegate(),
-        loginValidationDelegate = null,
-        onNeedToRequestPermissions = onNeedToRequestPermissions,
-        loginPickerView = loginPickerView,
-        onManageLogins = onManageLogins,
-        creditCardPickerView = creditCardPickerView,
-        onManageCreditCards = onManageCreditCards,
-        onSelectCreditCard = onSelectCreditCard
-    )
-
     private val filePicker = FilePicker(container, store, customTabId, onNeedToRequestPermissions)
 
     @VisibleForTesting(otherwise = PRIVATE)
