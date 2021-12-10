@@ -21,6 +21,7 @@
 #include "nsDisplayList.h"
 #include "nsGkAtoms.h"
 #include "nsIFrameInlines.h"
+#include "nsIScrollableFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsStyleConsts.h"
 
@@ -908,6 +909,10 @@ bool nsFieldSetFrame::GetNaturalBaselineBOffset(
     *aBaseline += BSize(aWM) - (innerBStart + inner->BSize(aWM));
   }
   return true;
+}
+
+nsIScrollableFrame* nsFieldSetFrame::GetScrollTargetFrame() const {
+  return do_QueryFrame(GetInner());
 }
 
 void nsFieldSetFrame::AppendDirectlyOwnedAnonBoxes(
