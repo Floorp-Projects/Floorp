@@ -14,6 +14,9 @@
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/ProcInfo.h"
+#include "mozilla/RDDChild.h"
+#include "mozilla/RDDParent.h"
+#include "mozilla/RDDProcessManager.h"
 #include "mozilla/Unused.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
@@ -96,12 +99,15 @@ void FlushAllChildData(
     promises.EmplaceBack(parent->SendFlushFOGData());
   }
 
-  GPUProcessManager* gpuManager = GPUProcessManager::Get();
-  GPUChild* gpuChild = nullptr;
-  if (gpuManager) {
-    gpuChild = gpuManager->GetGPUChild();
-    if (gpuChild) {
+  if (GPUProcessManager* gpuManager = GPUProcessManager::Get()) {
+    if (GPUChild* gpuChild = gpuManager->GetGPUChild()) {
       promises.EmplaceBack(gpuChild->SendFlushFOGData());
+    }
+  }
+
+  if (RDDProcessManager* rddManager = RDDProcessManager::Get()) {
+    if (RDDChild* rddChild = rddManager->GetRDDChild()) {
+      promises.EmplaceBack(rddChild->SendFlushFOGData());
     }
   }
 
@@ -154,6 +160,9 @@ void SendFOGData(ipc::ByteBuf&& buf) {
     case GeckoProcessType_GPU:
       Unused << mozilla::gfx::GPUParent::GetSingleton()->SendFOGData(
           std::move(buf));
+      break;
+    case GeckoProcessType_RDD:
+      Unused << mozilla::RDDParent::GetSingleton()->SendFOGData(std::move(buf));
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unsuppored process type");
