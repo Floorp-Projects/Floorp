@@ -128,6 +128,7 @@ FOG supports messaging between the following types of child process and the pare
 * content children (via `PContent`
   (for now. See [bug 1641989](https://bugzilla.mozilla.org/show_bug.cgi?id=1641989))
 * gpu children (via `PGPU`)
+* rdd children (via `PRDD`)
 
 See
 [the process model docs](../../../../dom/ipc/process_model.html)
@@ -164,3 +165,5 @@ mentioned above in "Mechanics" to another process type's protocol (ipdl file).
       (like how `PROCESS_TYPE_DEFAULT` is handled)
     * Or it might be custom code
       (like `PROCESS_TYPE_CONTENT`'s)
+6. Add to the documented [list of supported process types](#supported-process-types)
+   the process type you added support for.
