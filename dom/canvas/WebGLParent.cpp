@@ -88,10 +88,15 @@ void WebGLParent::ActorDestroy(ActorDestroyReason aWhy) { mHost = nullptr; }
 
 IPCResult WebGLParent::RecvGetFrontBufferSnapshot(
     webgl::FrontBufferSnapshotIpc* const ret) {
+  return GetFrontBufferSnapshot(ret, this);
+}
+
+IPCResult WebGLParent::GetFrontBufferSnapshot(
+    webgl::FrontBufferSnapshotIpc* const ret, IProtocol* aProtocol) {
   *ret = {};
 
   if (!mHost) {
-    return IPC_FAIL(this, "HostWebGLContext is not initialized.");
+    return IPC_FAIL(aProtocol, "HostWebGLContext is not initialized.");
   }
 
   const auto maybeSize = mHost->FrontBufferSnapshotInto({});
@@ -100,11 +105,11 @@ IPCResult WebGLParent::RecvGetFrontBufferSnapshot(
     const auto byteSize = 4 * surfSize.x * surfSize.y;
 
     auto shmem = webgl::RaiiShmem::Alloc(
-        this, byteSize,
+        aProtocol, byteSize,
         mozilla::ipc::SharedMemory::SharedMemoryType::TYPE_BASIC);
     if (!shmem) {
       NS_WARNING("Failed to alloc shmem for RecvGetFrontBufferSnapshot.");
-      return IPC_FAIL(this, "Failed to allocate shmem for result");
+      return IPC_FAIL(aProtocol, "Failed to allocate shmem for result");
     }
     const auto range = shmem.ByteRange();
     *ret = {surfSize, Some(shmem.Extract())};
