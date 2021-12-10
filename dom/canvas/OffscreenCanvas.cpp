@@ -111,8 +111,8 @@ already_AddRefed<nsISupports> OffscreenCanvas::GetContext(
     return nullptr;
   }
 
-  RefPtr<nsISupports> result = CanvasRenderingContextHelper::GetContext(
-      aCx, aContextId, aContextOptions, aRv);
+  RefPtr<nsISupports> result = CanvasRenderingContextHelper::GetOrCreateContext(
+      aCx, contextType, aContextOptions, aRv);
 
   if (!mCurrentContext) {
     return nullptr;

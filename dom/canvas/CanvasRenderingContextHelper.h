@@ -39,10 +39,6 @@ class CanvasRenderingContextHelper {
  public:
   CanvasRenderingContextHelper();
 
-  virtual already_AddRefed<nsISupports> GetContext(
-      JSContext* aCx, const nsAString& aContextId,
-      JS::Handle<JS::Value> aContextOptions, ErrorResult& aRv);
-
   virtual bool GetOpaqueAttr() = 0;
 
  protected:
@@ -63,6 +59,14 @@ class CanvasRenderingContextHelper {
               EncodeCompleteCallback* aCallback, const nsAString& aType,
               JS::Handle<JS::Value> aParams, bool aUsePlaceholder,
               ErrorResult& aRv);
+
+  already_AddRefed<nsISupports> GetOrCreateContext(
+      JSContext* aCx, const nsAString& aContextId,
+      JS::Handle<JS::Value> aContextOptions, ErrorResult& aRv);
+
+  already_AddRefed<nsISupports> GetOrCreateContext(
+      JSContext* aCx, CanvasContextType aContextType,
+      JS::Handle<JS::Value> aContextOptions, ErrorResult& aRv);
 
   virtual already_AddRefed<nsICanvasRenderingContextInternal> CreateContext(
       CanvasContextType aContextType);
