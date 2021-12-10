@@ -235,22 +235,28 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeButtonColors(
   bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
   bool isHovered = aState.HasState(NS_EVENT_STATE_HOVER);
 
-  const sRGBColor backgroundColor = [&] {
+  nscolor backgroundColor = [&] {
     if (isDisabled) {
-      return aColors.System(StyleSystemColor::MozButtondisabledface);
+      return aColors.SystemNs(StyleSystemColor::MozButtondisabledface);
     }
     if (isActive) {
-      return aColors.System(StyleSystemColor::MozButtonactiveface);
+      return aColors.SystemNs(StyleSystemColor::MozButtonactiveface);
     }
     if (isHovered) {
-      return aColors.System(StyleSystemColor::MozButtonhoverface);
+      return aColors.SystemNs(StyleSystemColor::MozButtonhoverface);
     }
-    return aColors.System(StyleSystemColor::Buttonface);
+    return aColors.SystemNs(StyleSystemColor::Buttonface);
   }();
+
+  if (aState.HasState(NS_EVENT_STATE_AUTOFILL)) {
+    backgroundColor = NS_ComposeColors(
+        backgroundColor,
+        aColors.SystemNs(StyleSystemColor::MozAutofillBackground));
+  }
 
   const sRGBColor borderColor =
       ComputeBorderColor(aState, aColors, OutlineCoversBorder::Yes);
-  return std::make_pair(backgroundColor, borderColor);
+  return std::make_pair(sRGBColor::FromABGR(backgroundColor), borderColor);
 }
 
 std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeTextfieldColors(
