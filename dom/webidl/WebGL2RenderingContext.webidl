@@ -11,17 +11,20 @@ typedef long long GLint64;
 typedef unsigned long long GLuint64;
 
 [Pref="webgl.enable-webgl2",
- Exposed=Window]
+ Func="mozilla::dom::OffscreenCanvas::PrefEnabledOnWorkerThread",
+ Exposed=(Window,Worker)]
 interface WebGLSampler {
 };
 
 [Pref="webgl.enable-webgl2",
- Exposed=Window]
+ Func="mozilla::dom::OffscreenCanvas::PrefEnabledOnWorkerThread",
+ Exposed=(Window,Worker)]
 interface WebGLSync {
 };
 
 [Pref="webgl.enable-webgl2",
- Exposed=Window]
+ Func="mozilla::dom::OffscreenCanvas::PrefEnabledOnWorkerThread",
+ Exposed=(Window,Worker)]
 interface WebGLTransformFeedback {
 };
 
@@ -30,7 +33,8 @@ typedef ([AllowShared] Uint32Array or sequence<GLuint>) Uint32List;
 // WebGL2 spec has this as an empty interface that pulls in everything
 // via WebGL2RenderingContextBase.
 [Pref="webgl.enable-webgl2",
- Exposed=Window]
+ Func="mozilla::dom::OffscreenCanvas::PrefEnabledOnWorkerThread",
+ Exposed=(Window,Worker)]
 interface WebGL2RenderingContext
 {
 };
@@ -700,12 +704,12 @@ WebGL2RenderingContext includes WebGLRenderingContextBase;
 WebGL2RenderingContext includes WebGL2RenderingContextBase;
 
 [LegacyNoInterfaceObject,
- Exposed=Window]
+ Exposed=(Window,Worker)]
 interface EXT_color_buffer_float {
 };
 
 [LegacyNoInterfaceObject,
- Exposed=Window]
+ Exposed=(Window,Worker)]
 interface OVR_multiview2 {
     const GLenum FRAMEBUFFER_ATTACHMENT_TEXTURE_NUM_VIEWS_OVR = 0x9630;
     const GLenum FRAMEBUFFER_ATTACHMENT_TEXTURE_BASE_VIEW_INDEX_OVR = 0x9632;
