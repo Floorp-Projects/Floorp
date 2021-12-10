@@ -2,7 +2,13 @@
 
 An implementation of Unix Domain Sockets for Tokio
 
-[Documentation](https://docs.rs/tokio-uds/0.2.5/tokio_uds/)
+> **Note:** This crate is **deprecated in tokio 0.2.x** and has been moved into
+> [`tokio::net`] behind the `uds` [feature flag].
+
+[`tokio::net`]: https://docs.rs/tokio/latest/tokio/net/index.html
+[feature flag]: https://docs.rs/tokio/latest/tokio/index.html#feature-flags
+
+[Documentation](https://docs.rs/tokio-uds/0.2.7/tokio_uds/)
 
 ## License
 

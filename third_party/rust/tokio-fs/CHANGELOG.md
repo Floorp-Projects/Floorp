@@ -1,3 +1,21 @@
+# 0.1.7 (February 4, 2020)
+
+* Add `tokio 0.2.x` deprecation notice.
+
+# 0.1.6 (March 1, 2019)
+
+### Added
+- File::try_clone() (#850).
+- Async equivalent of read / write file helpers being added to `std` (#896).
+
+# 0.1.5 (January 6, 2019)
+
+* Add examples to `File` API docs (#786).
+
+# 0.1.4 (October 23, 2018)
+
+* Provide `File::from_std` (#696).
+
 # 0.1.3 (August 6, 2018)
 
 * Add async equivalents to most of `std::fs` (#494).

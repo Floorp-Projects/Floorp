@@ -72,7 +72,7 @@ cfg_tcp! {
 }
 
 impl TcpListener {
-    /// Creates a new TcpListener which will be bound to the specified address.
+    /// Creates a new TcpListener, which will be bound to the specified address.
     ///
     /// The returned listener is ready for accepting connections.
     ///
@@ -80,12 +80,18 @@ impl TcpListener {
     /// to this listener. The port allocated can be queried via the `local_addr`
     /// method.
     ///
-    /// The address type can be any implementor of `ToSocketAddrs` trait.
+    /// The address type can be any implementor of the [`ToSocketAddrs`] trait.
+    /// Note that strings only implement this trait when the **`dns`** feature
+    /// is enabled, as strings may contain domain names that need to be resolved.
     ///
     /// If `addr` yields multiple addresses, bind will be attempted with each of
     /// the addresses until one succeeds and returns the listener. If none of
     /// the addresses succeed in creating a listener, the error returned from
     /// the last attempt (the last address) is returned.
+    ///
+    /// This function sets the `SO_REUSEADDR` option on the socket.
+    ///
+    /// [`ToSocketAddrs`]: trait@crate::net::ToSocketAddrs
     ///
     /// # Examples
     ///
@@ -96,7 +102,26 @@ impl TcpListener {
     ///
     /// #[tokio::main]
     /// async fn main() -> io::Result<()> {
-    ///     let listener = TcpListener::bind("127.0.0.1:0").await?;
+    ///     let listener = TcpListener::bind("127.0.0.1:2345").await?;
+    ///
+    ///     // use the listener
+    ///
+    ///     # let _ = listener;
+    ///     Ok(())
+    /// }
+    /// ```
+    ///
+    /// Without the `dns` feature:
+    ///
+    /// ```no_run
+    /// use tokio::net::TcpListener;
+    /// use std::net::Ipv4Addr;
+    ///
+    /// use std::io;
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> io::Result<()> {
+    ///     let listener = TcpListener::bind((Ipv4Addr::new(127, 0, 0, 1), 2345)).await?;
     ///
     ///     // use the listener
     ///
@@ -135,7 +160,7 @@ impl TcpListener {
     /// established, the corresponding [`TcpStream`] and the remote peer's
     /// address will be returned.
     ///
-    /// [`TcpStream`]: ../struct.TcpStream.html
+    /// [`TcpStream`]: struct@crate::net::TcpStream
     ///
     /// # Examples
     ///
@@ -160,10 +185,10 @@ impl TcpListener {
         poll_fn(|cx| self.poll_accept(cx)).await
     }
 
-    /// Attempts to poll `SocketAddr` and `TcpStream` bound to this address.
+    /// Polls to accept a new incoming connection to this listener.
     ///
-    /// In case if I/O resource isn't ready yet, `Poll::Pending` is returned and
-    /// current task will be notified by a waker.
+    /// If there is no connection to accept, `Poll::Pending` is returned and
+    /// the current task will be notified by a waker.
     pub fn poll_accept(
         &mut self,
         cx: &mut Context<'_>,
@@ -320,7 +345,7 @@ impl TcpListener {
     ///
     /// For more information about this option, see [`set_ttl`].
     ///
-    /// [`set_ttl`]: #method.set_ttl
+    /// [`set_ttl`]: method@Self::set_ttl
     ///
     /// # Examples
     ///
