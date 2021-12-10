@@ -3906,6 +3906,12 @@
   value: -1
   mirror: always
 
+# Maximum value of navigator.hardwareConcurrency.
+- name: dom.maxHardwareConcurrency
+  type: RelaxedAtomicUint32
+  value: 128
+  mirror: always
+
 # W3C pointer events draft.
 - name: dom.w3c_pointer_events.implicit_capture
   type: bool
