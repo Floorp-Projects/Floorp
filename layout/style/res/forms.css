@@ -1000,12 +1000,12 @@ input:is([type=date], [type=time], [type=datetime-local]):is(:disabled, :read-on
   color: GrayText;
 }
 
-input:autofill {
+input:autofill, select:autofill {
   /* The idea behind using background-image instead of plain background-color
    * is that it's less likely to be overridden by the page. */
   background-image: linear-gradient(-moz-autofill-background, -moz-autofill-background);
 }
 
-input:-moz-autofill-preview {
+input:-moz-autofill-preview, select:-moz-autofill-preview {
   color: GrayText;
 }
