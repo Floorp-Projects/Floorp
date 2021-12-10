@@ -105,9 +105,9 @@ cfg_rt_util! {
     /// }
     /// ```
     ///
-    /// [`Send`]: https://doc.rust-lang.org/std/marker/trait.Send.html
+    /// [`Send`]: trait@std::marker::Send
     /// [local task set]: struct@LocalSet
-    /// [`Runtime::block_on`]: ../struct.Runtime.html#method.block_on
+    /// [`Runtime::block_on`]: method@crate::runtime::Runtime::block_on
     /// [`task::spawn_local`]: fn@spawn_local
     pub struct LocalSet {
         /// Current scheduler tick
@@ -195,6 +195,7 @@ cfg_rt_util! {
         F: Future + 'static,
         F::Output: 'static,
     {
+        let future = crate::util::trace::task(future, "local");
         CURRENT.with(|maybe_cx| {
             let cx = maybe_cx
                 .expect("`spawn_local` called from outside of a `task::LocalSet`");
@@ -277,6 +278,7 @@ impl LocalSet {
         F: Future + 'static,
         F::Output: 'static,
     {
+        let future = crate::util::trace::task(future, "local");
         let (task, handle) = unsafe { task::joinable_local(future) };
         self.context.tasks.borrow_mut().queue.push_back(task);
         handle
@@ -341,9 +343,9 @@ impl LocalSet {
     /// ```
     ///
     /// [`spawn_local`]: fn@spawn_local
-    /// [`Runtime::block_on`]: ../struct.Runtime.html#method.block_on
-    /// [in-place blocking]: ../blocking/fn.in_place.html
-    /// [`spawn_blocking`]: ../blocking/fn.spawn_blocking.html
+    /// [`Runtime::block_on`]: method@crate::runtime::Runtime::block_on
+    /// [in-place blocking]: fn@crate::task::block_in_place
+    /// [`spawn_blocking`]: fn@crate::task::spawn_blocking
     pub fn block_on<F>(&self, rt: &mut crate::runtime::Runtime, future: F) -> F::Output
     where
         F: Future,
@@ -520,7 +522,10 @@ impl<T: Future> Future for RunUntil<'_, T> {
                 .waker
                 .register_by_ref(cx.waker());
 
-            if let Poll::Ready(output) = me.future.poll(cx) {
+            let _no_blocking = crate::runtime::enter::disallow_blocking();
+            let f = me.future;
+
+            if let Poll::Ready(output) = crate::coop::budget(|| f.poll(cx)) {
                 return Poll::Ready(output);
             }
 

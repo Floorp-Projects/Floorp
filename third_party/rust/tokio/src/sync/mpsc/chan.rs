@@ -75,7 +75,11 @@ pub(crate) trait Semaphore {
 
     /// The permit is dropped without a value being sent. In this case, the
     /// permit must be returned to the semaphore.
-    fn drop_permit(&self, permit: &mut Self::Permit);
+    ///
+    /// # Return
+    ///
+    /// Returns true if the permit was acquired.
+    fn drop_permit(&self, permit: &mut Self::Permit) -> bool;
 
     fn is_idle(&self) -> bool;
 
@@ -192,7 +196,7 @@ where
 
     pub(crate) fn disarm(&mut self) {
         // TODO: should this error if not acquired?
-        self.inner.semaphore.drop_permit(&mut self.permit)
+        self.inner.semaphore.drop_permit(&mut self.permit);
     }
 
     /// Send a message and notify the receiver.
@@ -234,7 +238,11 @@ where
     S: Semaphore,
 {
     fn drop(&mut self) {
-        self.inner.semaphore.drop_permit(&mut self.permit);
+        let notify = self.inner.semaphore.drop_permit(&mut self.permit);
+
+        if notify && self.inner.semaphore.is_idle() {
+            self.inner.rx_waker.wake();
+        }
 
         if self.inner.tx_count.fetch_sub(1, AcqRel) != 1 {
             return;
@@ -277,7 +285,7 @@ where
         use super::block::Read::*;
 
         // Keep track of task budget
-        ready!(crate::coop::poll_proceed(cx));
+        let coop = ready!(crate::coop::poll_proceed(cx));
 
         self.inner.rx_fields.with_mut(|rx_fields_ptr| {
             let rx_fields = unsafe { &mut *rx_fields_ptr };
@@ -287,6 +295,7 @@ where
                     match rx_fields.list.pop(&self.inner.tx) {
                         Some(Value(value)) => {
                             self.inner.semaphore.add_permit();
+                            coop.made_progress();
                             return Ready(Some(value));
                         }
                         Some(Closed) => {
@@ -297,6 +306,7 @@ where
                             // which ensures that if dropping the tx handle is
                             // visible, then all messages sent are also visible.
                             assert!(self.inner.semaphore.is_idle());
+                            coop.made_progress();
                             return Ready(None);
                         }
                         None => {} // fall through
@@ -314,6 +324,7 @@ where
             try_recv!();
 
             if rx_fields.rx_closed && self.inner.semaphore.is_idle() {
+                coop.made_progress();
                 Ready(None)
             } else {
                 Pending
@@ -421,8 +432,10 @@ impl Semaphore for (crate::sync::semaphore_ll::Semaphore, usize) {
         Permit::new()
     }
 
-    fn drop_permit(&self, permit: &mut Permit) {
+    fn drop_permit(&self, permit: &mut Permit) -> bool {
+        let ret = permit.is_acquired();
         permit.release(1, &self.0);
+        ret
     }
 
     fn add_permit(&self) {
@@ -439,11 +452,15 @@ impl Semaphore for (crate::sync::semaphore_ll::Semaphore, usize) {
         permit: &mut Permit,
     ) -> Poll<Result<(), ClosedError>> {
         // Keep track of task budget
-        ready!(crate::coop::poll_proceed(cx));
+        let coop = ready!(crate::coop::poll_proceed(cx));
 
         permit
             .poll_acquire(cx, 1, &self.0)
             .map_err(|_| ClosedError::new())
+            .map(move |r| {
+                coop.made_progress();
+                r
+            })
     }
 
     fn try_acquire(&self, permit: &mut Permit) -> Result<(), TrySendError> {
@@ -470,7 +487,9 @@ impl Semaphore for AtomicUsize {
 
     fn new_permit() {}
 
-    fn drop_permit(&self, _permit: &mut ()) {}
+    fn drop_permit(&self, _permit: &mut ()) -> bool {
+        false
+    }
 
     fn add_permit(&self) {
         let prev = self.fetch_sub(2, Release);

@@ -3,7 +3,7 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g. crates.io) dependencies
+# to registry (e.g., crates.io) dependencies
 #
 # If you believe there's an error in this file please file an
 # issue against the rust-lang/cargo repository. If you're
@@ -12,11 +12,11 @@
 
 [package]
 name = "tokio-uds"
-version = "0.2.5"
+version = "0.2.7"
 authors = ["Carl Lerche <me@carllerche.com>"]
 description = "Unix Domain sockets for Tokio\n"
 homepage = "https://github.com/tokio-rs/tokio"
-documentation = "https://docs.rs/tokio-uds/0.2.5/tokio_uds/"
+documentation = "https://docs.rs/tokio-uds/0.2.7/tokio_uds/"
 categories = ["asynchronous"]
 license = "MIT"
 repository = "https://github.com/tokio-rs/tokio"
@@ -50,7 +50,7 @@ version = "0.1.6"
 [dependencies.tokio-reactor]
 version = "0.1.1"
 [dev-dependencies.tempfile]
-version = "3"
+version = "~3.1.0"
 
 [dev-dependencies.tokio]
 version = "0.1.6"
