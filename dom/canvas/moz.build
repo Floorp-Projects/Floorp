@@ -89,13 +89,13 @@ UNIFIED_SOURCES += [
     "ImageData.cpp",
     "nsICanvasRenderingContextInternal.cpp",
     "OffscreenCanvas.cpp",
-    "OffscreenCanvasDisplayHelper.cpp",
     "XRWebGLLayer.cpp",
 ]
 
 SOURCES += [
     "DrawTargetWebgl.cpp",  # Isolate Skia
     "ImageUtils.cpp",
+    "OffscreenCanvasDisplayHelper.cpp", # Clang mingw cross compile crash, see bug 1745384
 ]
 
 # WebGL Sources
