@@ -250,7 +250,16 @@ nsresult ModuleLoader::CreateModuleScript(ModuleLoadRequest* aRequest) {
 
     if (NS_SUCCEEDED(rv)) {
       if (aRequest->mWasCompiledOMT) {
-        module = JS::FinishOffThreadModule(cx, aRequest->mOffThreadToken);
+        JS::Rooted<JS::InstantiationStorage> storage(cx);
+
+        RefPtr<JS::Stencil> stencil = JS::FinishCompileModuleToStencilOffThread(
+            cx, aRequest->mOffThreadToken, storage.address());
+        if (stencil) {
+          JS::InstantiateOptions instantiateOptions(options);
+          module = JS::InstantiateModuleStencil(cx, instantiateOptions, stencil,
+                                                storage.address());
+        }
+
         aRequest->mOffThreadToken = nullptr;
         rv = module ? NS_OK : NS_ERROR_FAILURE;
       } else {

@@ -172,6 +172,18 @@ extern JS_PUBLIC_API OffThreadToken* CompileToStencilOffThread(
     SourceText<mozilla::Utf8Unit>& srcBuf, OffThreadCompileCallback callback,
     void* callbackData);
 
+// Start an off-thread task to compile the module source text into a
+// JS::Stencil, using the provided options.
+extern JS_PUBLIC_API OffThreadToken* CompileModuleToStencilOffThread(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    SourceText<char16_t>& srcBuf, OffThreadCompileCallback callback,
+    void* callbackData);
+
+extern JS_PUBLIC_API OffThreadToken* CompileModuleToStencilOffThread(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    SourceText<mozilla::Utf8Unit>& srcBuf, OffThreadCompileCallback callback,
+    void* callbackData);
+
 // Finish the off-thread task to compile the source text into a JS::Stencil,
 // started by JS::CompileToStencilOffThread, and return the result JS::Stencil.
 //
@@ -182,7 +194,14 @@ extern JS_PUBLIC_API already_AddRefed<Stencil> FinishCompileToStencilOffThread(
     JSContext* cx, OffThreadToken* token,
     InstantiationStorage* storage = nullptr);
 
+extern JS_PUBLIC_API already_AddRefed<Stencil>
+FinishCompileModuleToStencilOffThread(JSContext* cx, OffThreadToken* token,
+                                      InstantiationStorage* storage = nullptr);
+
 extern JS_PUBLIC_API void CancelCompileToStencilOffThread(
+    JSContext* cx, OffThreadToken* token);
+
+extern JS_PUBLIC_API void CancelCompileModuleToStencilOffThread(
     JSContext* cx, OffThreadToken* token);
 
 // Register an encoder on its script source, such that all functions can be
