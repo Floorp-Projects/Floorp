@@ -58,18 +58,13 @@ class RequestedFrameRefreshObserver;
 
 // Listen visibilitychange and memory-pressure event and inform
 // context when event is fired.
-class HTMLCanvasElementObserver final : public nsIObserver,
-                                        public nsIDOMEventListener {
+class HTMLCanvasElementObserver final : public nsIObserver {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
-  NS_DECL_NSIDOMEVENTLISTENER
 
   explicit HTMLCanvasElementObserver(HTMLCanvasElement* aElement);
   void Destroy();
-
-  void RegisterVisibilityChangeEvent();
-  void UnregisterVisibilityChangeEvent();
 
   void RegisterObserverEvents();
   void UnregisterObserverEvents();
@@ -319,7 +314,6 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
 
   layers::LayersBackend GetCompositorBackendType() const;
 
-  void OnVisibilityChange();
   void OnMemoryPressure();
   void OnDeviceReset();
 
