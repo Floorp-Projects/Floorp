@@ -25,7 +25,7 @@ class ApplicationReputationService final
   NS_DECL_NSIAPPLICATIONREPUTATIONSERVICE
 
  public:
-  static const char* const kNonBinaryExecutables[3];
+  static const char* const kNonBinaryExecutables[4];
 #ifdef XP_WIN
   static const char* const kBinaryFileExtensions[187];
 #else
