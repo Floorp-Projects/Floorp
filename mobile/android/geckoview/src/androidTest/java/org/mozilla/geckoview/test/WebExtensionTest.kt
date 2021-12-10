@@ -650,7 +650,7 @@ class WebExtensionTest : BaseSessionTest() {
 
         tabsExtension.tabDelegate = object : WebExtension.TabDelegate {
             override fun onNewTab(source: WebExtension, details: WebExtension.CreateTabDetails): GeckoResult<GeckoSession> {
-                val extensionCreatedSession = sessionRule.createClosedSession(sessionRule.session.settings)
+                val extensionCreatedSession = sessionRule.createClosedSession(mainSession.settings)
 
                 extensionCreatedSession.webExtensionController.setTabDelegate(tabsExtension, object : WebExtension.SessionTabDelegate {
                     override fun onCloseTab(source: WebExtension?, session: GeckoSession): GeckoResult<AllowOrDeny> {
@@ -688,7 +688,7 @@ class WebExtensionTest : BaseSessionTest() {
         val onCloseRequestResult = GeckoResult<Void>()
         val tabsExtension = sessionRule.waitForResult(
                 controller.installBuiltIn(TABS_ACTIVATE_REMOVE_BACKGROUND))
-        val newTabSession = sessionRule.createOpenSession(sessionRule.session.settings)
+        val newTabSession = sessionRule.createOpenSession(mainSession.settings)
 
         sessionRule.addExternalDelegateUntilTestEnd(
                 WebExtension.SessionTabDelegate::class,
@@ -704,7 +704,7 @@ class WebExtensionTest : BaseSessionTest() {
             }
         })
 
-        controller.setTabActive(sessionRule.session, false)
+        controller.setTabActive(mainSession, false)
         controller.setTabActive(newTabSession, true)
 
         sessionRule.waitForResult(onCloseRequestResult)
@@ -1051,7 +1051,7 @@ class WebExtensionTest : BaseSessionTest() {
                 controller.setAllowedInPrivateBrowsing(tabsExtensionPB, true))
 
 
-        val newTabSession = sessionRule.createOpenSession(sessionRule.session.settings)
+        val newTabSession = sessionRule.createOpenSession(mainSession.settings)
 
         val newPrivateSession = sessionRule.createOpenSession(
                 GeckoSessionSettings.Builder().usePrivateMode(true).build())
@@ -1092,7 +1092,7 @@ class WebExtensionTest : BaseSessionTest() {
             }
         })
 
-        controller.setTabActive(sessionRule.session, false)
+        controller.setTabActive(mainSession, false)
         controller.setTabActive(newPrivateSession, true)
 
         sessionRule.waitForResult(privateBrowsingPrivateSession)
@@ -1176,7 +1176,7 @@ class WebExtensionTest : BaseSessionTest() {
         val extension = sessionRule.waitForResult(
                 controller.installBuiltIn(EXTENSION_PAGE_RESTORE))
 
-        sessionRule.session.loadUri("${extension.metaData.baseUrl}tab.html")
+        mainSession.loadUri("${extension.metaData.baseUrl}tab.html")
         sessionRule.waitForPageStop()
 
         var savedState : GeckoSession.SessionState? = null
@@ -1188,7 +1188,7 @@ class WebExtensionTest : BaseSessionTest() {
         })
 
         // Test that messages are received in the main session
-        testExtensionMessages(extension, sessionRule.session)
+        testExtensionMessages(extension, mainSession)
 
         val newSession = sessionRule.createOpenSession()
         newSession.restoreState(savedState!!)
@@ -1246,7 +1246,7 @@ class WebExtensionTest : BaseSessionTest() {
         } else {
             webExtension = sessionRule.waitForResult(
                     controller.installBuiltIn(MESSAGING_CONTENT))
-            sessionRule.session.webExtensionController
+            mainSession.webExtensionController
                     .setMessageDelegate(webExtension, messageDelegate, "browser")
         }
 
@@ -1376,7 +1376,7 @@ class WebExtensionTest : BaseSessionTest() {
 
                 if (refresh) {
                     // Refreshing the page should disconnect the port
-                    sessionRule.session.reload()
+                    mainSession.reload()
                 } else {
                     // Let's ask the web extension to disconnect this port
                     val message = JSONObject()
@@ -1544,7 +1544,7 @@ class WebExtensionTest : BaseSessionTest() {
 
         messaging = sessionRule.waitForResult(controller.installBuiltIn(
                 "resource://android/assets/web_extensions/messaging-iframe/"))
-        sessionRule.session.webExtensionController
+        mainSession.webExtensionController
                 .setMessageDelegate(messaging, messageDelegate, "browser")
         sessionRule.waitForResult(portTopLevel)
         sessionRule.waitForResult(portIframe)

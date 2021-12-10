@@ -129,8 +129,8 @@ class ContentBlockingControllerTest : BaseSessionTest() {
     fun getLog() {
         val category = ContentBlocking.AntiTracking.TEST
         sessionRule.runtime.settings.contentBlocking.setAntiTracking(category)
-        sessionRule.session.settings.useTrackingProtection = true
-        sessionRule.session.loadTestPath(TRACKERS_PATH)
+        mainSession.settings.useTrackingProtection = true
+        mainSession.loadTestPath(TRACKERS_PATH)
         
         sessionRule.waitUntilCalled(object : ContentBlocking.Delegate {
             @AssertCalled(count = 1)
@@ -140,7 +140,7 @@ class ContentBlockingControllerTest : BaseSessionTest() {
             }
         })
 
-        sessionRule.waitForResult(sessionRule.runtime.contentBlockingController.getLog(sessionRule.session).accept {
+        sessionRule.waitForResult(sessionRule.runtime.contentBlockingController.getLog(mainSession).accept {
             assertThat("Log must not be null", it, notNullValue())
             assertThat("Log must have at least one entry", it?.size, not(0))
             it?.forEach {
