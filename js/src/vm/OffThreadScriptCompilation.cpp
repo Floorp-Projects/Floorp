@@ -126,37 +126,6 @@ JS_PUBLIC_API void JS::CancelCompileModuleToStencilOffThread(
                                       ParseTaskKind::ModuleStencil, token);
 }
 
-JS_PUBLIC_API JS::OffThreadToken* JS::CompileOffThreadModule(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    JS::SourceText<char16_t>& srcBuf, OffThreadCompileCallback callback,
-    void* callbackData) {
-  MOZ_ASSERT(CanCompileOffThread(cx, options, srcBuf.length()));
-  return StartOffThreadParseModule(cx, options, srcBuf, callback, callbackData);
-}
-
-JS_PUBLIC_API JS::OffThreadToken* JS::CompileOffThreadModule(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    JS::SourceText<Utf8Unit>& srcBuf, OffThreadCompileCallback callback,
-    void* callbackData) {
-  MOZ_ASSERT(CanCompileOffThread(cx, options, srcBuf.length()));
-  return StartOffThreadParseModule(cx, options, srcBuf, callback, callbackData);
-}
-
-JS_PUBLIC_API JSObject* JS::FinishOffThreadModule(JSContext* cx,
-                                                  JS::OffThreadToken* token) {
-  MOZ_ASSERT(cx);
-  MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
-  return HelperThreadState().finishModuleParseTask(cx, token);
-}
-
-JS_PUBLIC_API void JS::CancelOffThreadModule(JSContext* cx,
-                                             JS::OffThreadToken* token) {
-  MOZ_ASSERT(cx);
-  MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
-  HelperThreadState().cancelParseTask(cx->runtime(), ParseTaskKind::Module,
-                                      token);
-}
-
 JS_PUBLIC_API bool JS::CanDecodeOffThread(JSContext* cx,
                                           const ReadOnlyCompileOptions& options,
                                           size_t length) {
