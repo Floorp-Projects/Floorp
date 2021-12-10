@@ -9,7 +9,7 @@
 
 #include "nsISupportsImpl.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/dom/WindowBinding.h"  // For FrameRequestCallback
+#include "mozilla/dom/AnimationFrameProviderBinding.h"
 #include "mozilla/dom/WebXRBinding.h"
 #include "mozilla/dom/XRFrame.h"
 #include "mozilla/gfx/PVRManagerChild.h"
