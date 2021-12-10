@@ -2,7 +2,7 @@
 
 assertEq(isLcovEnabled(), true);
 
-offThreadCompileScript(`
+offThreadCompileToStencil(`
     let hitCount = 0;
     function offThreadFun() {
         hitCount += 1;
@@ -13,7 +13,8 @@ offThreadCompileScript(`
     offThreadFun();
     offThreadFun();
 `);
-runOffThreadScript();
+var stencil = finishOffThreadCompileToStencil();
+evalStencil(stencil);
 assertEq(hitCount, 4);
 
 let report = getLcovInfo();

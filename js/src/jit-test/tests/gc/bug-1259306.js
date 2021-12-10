@@ -11,8 +11,9 @@ oomTest(() => {
             } catch (x) {}
             gczeal(0);
         `;
-        lfGlobal.offThreadCompileScript(lfVarx);
-        lfGlobal.runOffThreadScript();
+        lfGlobal.offThreadCompileToStencil(lfVarx);
+        var stencil = lfGlobal.finishOffThreadCompileToStencil();
+        lfGlobal.evalStencil(stencil);
         runCount++;
     }
 });
