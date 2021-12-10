@@ -125,4 +125,14 @@ interface nsIFOG : nsISupports
    * Trigger test metric instrumentation on the GPU process.
    */
   void testTriggerGPUMetrics();
+
+  /**
+   * ** Test-only Method **
+   *
+   * Trigger test metric instrumentation on the RDD process.
+   *
+   * @returns A promise that resolves when the test data has been added.
+   */
+  [implicit_jscontext]
+  Promise testTriggerRDDMetrics();
 };

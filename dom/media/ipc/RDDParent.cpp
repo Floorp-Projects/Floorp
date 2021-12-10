@@ -30,6 +30,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/MemoryReportRequest.h"
 #include "mozilla/gfx/gfxVars.h"
+#include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/ipc/CrashReporterClient.h"
 #include "mozilla/ipc/ProcessChild.h"
 
@@ -266,6 +267,13 @@ mozilla::ipc::IPCResult RDDParent::RecvInitSandboxTesting(
 mozilla::ipc::IPCResult RDDParent::RecvFlushFOGData(
     FlushFOGDataResolver&& aResolver) {
   glean::FlushFOGData(std::move(aResolver));
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult RDDParent::RecvTestTriggerMetrics(
+    TestTriggerMetricsResolver&& aResolve) {
+  mozilla::glean::test_only_ipc::a_counter.Add(45327);
+  aResolve(true);
   return IPC_OK();
 }
 
