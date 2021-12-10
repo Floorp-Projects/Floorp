@@ -87,6 +87,9 @@ def before_runs(env):
         if second_url:
             add_option(env, "browsertime.secondary_url", second_url)
 
+        inject_deterministic = test_site.get("inject_deterministic", True)
+        env.set_arg("proxy-deterministic", inject_deterministic)
+
         cmds = test_site.get("test_cmds", [])
         if cmds:
             parsed_cmds = [":::".join([str(i) for i in item]) for item in cmds if item]
