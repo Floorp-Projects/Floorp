@@ -59,6 +59,9 @@ class RDDParent final : public PRDDParent {
 
   mozilla::ipc::IPCResult RecvFlushFOGData(FlushFOGDataResolver&& aResolver);
 
+  mozilla::ipc::IPCResult RecvTestTriggerMetrics(
+      TestTriggerMetricsResolver&& aResolve);
+
  private:
   const TimeStamp mLaunchTime;
   RefPtr<ChildProfilerController> mProfilerController;

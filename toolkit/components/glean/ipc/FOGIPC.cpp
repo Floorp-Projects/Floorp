@@ -9,6 +9,7 @@
 #include "mozilla/glean/GleanMetrics.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/Promise.h"
 #include "mozilla/gfx/GPUChild.h"
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/gfx/GPUProcessManager.h"
@@ -192,6 +193,13 @@ RefPtr<GenericPromise> FlushAndUseFOGData() {
 
 void TestTriggerGPUMetrics() {
   gfx::GPUProcessManager::Get()->TestTriggerMetrics();
+}
+
+void TestTriggerRDDMetrics(const RefPtr<dom::Promise>& promise) {
+  RDDProcessManager::Get()->TestTriggerMetrics()->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      [promise]() { promise->MaybeResolveWithUndefined(); },
+      [promise]() { promise->MaybeRejectWithUndefined(); });
 }
 
 }  // namespace glean

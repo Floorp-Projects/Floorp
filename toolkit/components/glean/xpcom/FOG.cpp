@@ -304,6 +304,28 @@ FOG::TestTriggerGPUMetrics() {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+FOG::TestTriggerRDDMetrics(JSContext* aCx,
+                           mozilla::dom::Promise** aOutPromise) {
+  NS_ENSURE_ARG(aOutPromise);
+  *aOutPromise = nullptr;
+  nsIGlobalObject* global = xpc::CurrentNativeGlobal(aCx);
+  if (NS_WARN_IF(!global)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  ErrorResult erv;
+  RefPtr<dom::Promise> promise = dom::Promise::Create(global, erv);
+  if (NS_WARN_IF(erv.Failed())) {
+    return erv.StealNSResult();
+  }
+
+  glean::TestTriggerRDDMetrics(promise);
+
+  promise.forget(aOutPromise);
+  return NS_OK;
+}
+
 NS_IMPL_ISUPPORTS(FOG, nsIFOG, nsIObserver)
 
 }  //  namespace mozilla
