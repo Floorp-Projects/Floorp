@@ -4425,10 +4425,6 @@ JS_PUBLIC_API bool JS::StencilIsBorrowed(Stencil* stencil) {
   return stencil->storageType == CompilationStencil::StorageType::Borrowed;
 }
 
-JS_PUBLIC_API bool JS::StencilCanLazilyParse(Stencil* stencil) {
-  return stencil->canLazilyParse;
-}
-
 JS_PUBLIC_API JSObject* JS::InstantiateModuleStencil(
     JSContext* cx, const JS::InstantiateOptions& options,
     JS::Stencil* stencil) {
