@@ -49,6 +49,27 @@ impl HeaderValue {
     /// This function panics if the argument contains invalid header value
     /// characters.
     ///
+    /// Until [Allow panicking in constants](https://github.com/rust-lang/rfcs/pull/2345)
+    /// makes its way into stable, the panic message at compile-time is
+    /// going to look cryptic, but should at least point at your header value:
+    ///
+    /// ```text
+    /// error: any use of this value will cause an error
+    ///   --> http/src/header/value.rs:67:17
+    ///    |
+    /// 67 |                 ([] as [u8; 0])[0]; // Invalid header value
+    ///    |                 ^^^^^^^^^^^^^^^^^^
+    ///    |                 |
+    ///    |                 index out of bounds: the length is 0 but the index is 0
+    ///    |                 inside `HeaderValue::from_static` at http/src/header/value.rs:67:17
+    ///    |                 inside `INVALID_HEADER` at src/main.rs:73:33
+    ///    |
+    ///   ::: src/main.rs:73:1
+    ///    |
+    /// 73 | const INVALID_HEADER: HeaderValue = HeaderValue::from_static("жsome value");
+    ///    | ----------------------------------------------------------------------------
+    /// ```
+    ///
     /// # Examples
     ///
     /// ```
@@ -57,12 +78,15 @@ impl HeaderValue {
     /// assert_eq!(val, "hello");
     /// ```
     #[inline]
-    pub fn from_static(src: &'static str) -> HeaderValue {
+    #[allow(unconditional_panic)] // required for the panic circumventon
+    pub const fn from_static(src: &'static str) -> HeaderValue {
         let bytes = src.as_bytes();
-        for &b in bytes {
-            if !is_visible_ascii(b) {
-                panic!("invalid header value");
+        let mut i = 0;
+        while i < bytes.len() {
+            if !is_visible_ascii(bytes[i]) {
+                ([] as [u8; 0])[0]; // Invalid header value
             }
+            i += 1;
         }
 
         HeaderValue {
@@ -555,7 +579,7 @@ mod try_from_header_name_tests {
     }
 }
 
-fn is_visible_ascii(b: u8) -> bool {
+const fn is_visible_ascii(b: u8) -> bool {
     b >= 32 && b < 127 || b == b'\t'
 }
 
