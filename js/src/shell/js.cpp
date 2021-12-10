@@ -2173,32 +2173,6 @@ static bool ConvertTranscodeResultToJSException(JSContext* cx,
   }
 }
 
-static bool StartIncrementalEncoding(JSContext* cx,
-                                     const JS::ReadOnlyCompileOptions& options,
-                                     RefPtr<JS::Stencil>&& stencil) {
-  Rooted<frontend::CompilationInput> input(cx,
-                                           frontend::CompilationInput(options));
-
-  auto initial =
-      js::MakeUnique<frontend::ExtensibleCompilationStencil>(cx, input.get());
-  if (!initial) {
-    ReportOutOfMemory(cx);
-    return false;
-  }
-
-  auto* source = stencil->source.get();
-
-  if (!initial->steal(cx, std::move(stencil))) {
-    return false;
-  }
-
-  if (!source->startIncrementalEncoding(cx, std::move(initial))) {
-    return false;
-  }
-
-  return true;
-}
-
 static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -2441,7 +2415,7 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
         }
 
         if (saveIncrementalBytecode) {
-          if (!StartIncrementalEncoding(cx, options, std::move(stencil))) {
+          if (!JS::StartIncrementalEncoding(cx, std::move(stencil))) {
             return false;
           }
         }
