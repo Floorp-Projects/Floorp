@@ -66,6 +66,16 @@ RefPtr<GenericPromise> FlushAndUseFOGData();
  */
 void TestTriggerGPUMetrics();
 
+/**
+ * ** Test-only Method **
+ *
+ * Trigger RDD-process test instrumentation.
+ *
+ * @param promise - a promise that will be resolved when the data has made it to
+ *                  the RDD process.
+ */
+void TestTriggerRDDMetrics(const RefPtr<dom::Promise>& promise);
+
 }  // namespace glean
 }  // namespace mozilla
 
