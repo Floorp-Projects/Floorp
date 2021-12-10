@@ -760,27 +760,6 @@ void DecodeStencilTask::parse(JSContext* cx) {
   }
 }
 
-bool ParseTask::instantiateStencils(JSContext* cx) {
-  MOZ_ASSERT(kind != ParseTaskKind::ScriptStencil &&
-             kind != ParseTaskKind::ModuleStencil);
-
-  if (!stencil_ && !extensibleStencil_) {
-    return false;
-  }
-
-  bool result;
-  if (stencil_) {
-    result = frontend::InstantiateStencils(cx, *stencilInput_, *stencil_,
-                                           *gcOutput_);
-  } else {
-    frontend::BorrowingCompilationStencil borrowingStencil(*extensibleStencil_);
-    result = frontend::InstantiateStencils(cx, *stencilInput_, borrowingStencil,
-                                           *gcOutput_);
-  }
-
-  return result;
-}
-
 MultiStencilsDecodeTask::MultiStencilsDecodeTask(
     JSContext* cx, JS::TranscodeSources& sources,
     JS::OffThreadCompileCallback callback, void* callbackData)
@@ -1784,28 +1763,6 @@ UniquePtr<ParseTask> GlobalHelperThreadState::finishParseTaskCommon(
   }
 
   return std::move(parseTask.get());
-}
-
-JSScript* GlobalHelperThreadState::finishSingleParseTask(
-    JSContext* cx, ParseTaskKind kind, JS::OffThreadToken* token) {
-  Rooted<UniquePtr<ParseTask>> parseTask(
-      cx, finishParseTaskCommon(cx, kind, token));
-  if (!parseTask) {
-    return nullptr;
-  }
-
-  JS::RootedScript script(cx);
-
-  // Finish main-thread initialization of scripts.
-  MOZ_ASSERT(parseTask->stencil_.get() || parseTask->extensibleStencil_.get());
-
-  if (!parseTask->instantiateStencils(cx)) {
-    return nullptr;
-  }
-
-  script = parseTask->gcOutput_->script;
-
-  return script;
 }
 
 already_AddRefed<frontend::CompilationStencil>
