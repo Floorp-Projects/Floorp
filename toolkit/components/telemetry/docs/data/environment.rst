@@ -406,6 +406,10 @@ The following is a partial list of `collected preferences <https://searchfox.org
 
 - ``app.normandy.test-prefs.string``: Test pref that will help troubleshoot uneven unenrollment in experiments. Defaults to "".
 
+- ``network.trr.mode``: User-set DNS over HTTPS mode. Defaults to 0.
+
+- ``network.trr.strict_native_fallback``: Whether strict fallback mode is enabled for DoH mode 2. Defaults to true on Nightly, false elsewhere.
+
 attribution
 ~~~~~~~~~~~
 

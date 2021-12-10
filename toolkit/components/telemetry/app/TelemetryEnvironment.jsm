@@ -325,7 +325,7 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
   ["network.proxy.http", { what: RECORD_PREF_STATE }],
   ["network.proxy.ssl", { what: RECORD_PREF_STATE }],
   ["network.trr.mode", { what: RECORD_PREF_VALUE }],
-  ["network.trr.strict_native_fallback", { what: RECORD_PREF_VALUE }],
+  ["network.trr.strict_native_fallback", { what: RECORD_DEFAULTPREF_VALUE }],
   ["pdfjs.disabled", { what: RECORD_PREF_VALUE }],
   ["places.history.enabled", { what: RECORD_PREF_VALUE }],
   ["plugins.show_infobar", { what: RECORD_PREF_VALUE }],
