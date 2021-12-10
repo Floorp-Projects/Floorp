@@ -2879,6 +2879,10 @@ void nsWindow::RequestFocusWaylandWindow(RefPtr<nsWindow> aWindow) {
     return;
   }
 
+  LOG("  requesting xdg-activation token, surface ID %d serial %d seat ID %d",
+      wl_proxy_get_id((struct wl_proxy*)focusSurface), focusSerial,
+      wl_proxy_get_id((struct wl_proxy*)KeymapWrapper::GetSeat()));
+
   // Store activation token at activated window for further release.
   g_clear_pointer(&aWindow->mXdgToken, xdg_activation_token_v1_destroy);
   aWindow->mXdgToken = xdg_activation_v1_get_activation_token(xdg_activation);
@@ -2941,6 +2945,7 @@ void nsWindow::SetFocus(Raise aRaise, mozilla::dom::CallerType aCallerType) {
       nsGTKToolkit* GTKToolkit = nsGTKToolkit::GetToolkit();
       if (GTKToolkit) {
         timestamp = GTKToolkit->GetFocusTimestamp();
+        GTKToolkit->SetFocusTimestamp(0);
       }
       if (!timestamp) {
         timestamp = GetLastUserInputTime();
@@ -2955,7 +2960,6 @@ void nsWindow::SetFocus(Raise aRaise, mozilla::dom::CallerType aCallerType) {
         RequestFocusWaylandWindow(toplevelWindow);
       }
 #endif
-      if (GTKToolkit) GTKToolkit->SetFocusTimestamp(0);
     }
     return;
   }
