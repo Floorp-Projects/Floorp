@@ -21,7 +21,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   DownloadUtils: "resource://gre/modules/DownloadUtils.jsm",
   DownloadsCommon: "resource:///modules/DownloadsCommon.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
-  OS: "resource://gre/modules/osfile.jsm",
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
@@ -146,7 +145,7 @@ var DownloadsViewUI = {
       return { l10n };
     }
     return download.target.path
-      ? OS.Path.basename(download.target.path)
+      ? PathUtils.filename(download.target.path)
       : download.source.url;
   },
 
@@ -1050,7 +1049,7 @@ DownloadsViewUI.DownloadElementShell.prototype = {
 
     // Do not suggest a file name if we don't know the original target.
     let targetPath = this.download.target.path
-      ? OS.Path.basename(this.download.target.path)
+      ? PathUtils.filename(this.download.target.path)
       : null;
     window.DownloadURL(this.download.source.url, targetPath, document);
   },
