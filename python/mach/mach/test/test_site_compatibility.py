@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import os
 import shutil
 import subprocess
 import sys
@@ -39,7 +40,7 @@ def _requirement_definition_to_pip_format(virtualenv_name, cache, is_mach_or_bui
         lines.append(str(pypi.requirement))
 
     for vendored in requirements.vendored_requirements:
-        lines.append(str(cache.package_for_vendor_dir(Path(vendored.path))))
+        lines.append(cache.package_for_vendor_dir(Path(vendored.path)))
 
     return "\n".join(lines)
 
@@ -70,25 +71,23 @@ class PackageCache:
                     )
                 package_dir = package_dir.parent
 
-            self._cache[vendor_path] = package_dir
-            return package_dir
+            self._cache[vendor_path] = str(package_dir)
+            return str(package_dir)
 
         # Pip requires that wheels have a version number in their name, even if
         # it ignores it. We should parse out the version and put it in here
         # so that failure debugging is easier, but that's non-trivial work.
         # So, this "0" satisfies pip's naming requirement while being relatively
         # obvious that it's a placeholder.
-        output_path = self._storage_dir / f"{vendor_path.name}-0-py3-none-any"
-        shutil.make_archive(str(output_path), "zip", vendor_path)
-
-        whl_path = output_path.parent / (output_path.name + ".whl")
-        (output_path.parent / (output_path.name + ".zip")).rename(whl_path)
+        output_path = str(self._storage_dir / f"{vendor_path.name}-0-py3-none-any")
+        shutil.make_archive(output_path, "zip", vendor_path)
+        whl_path = output_path + ".whl"
+        os.rename(output_path + ".zip", whl_path)
         self._cache[vendor_path] = whl_path
-
         return whl_path
 
 
-def test_sites_compatible(tmpdir: str):
+def test_sites_compatible(tmpdir):
     command_site_names = _resolve_command_site_names()
     work_dir = Path(tmpdir)
     cache = PackageCache(work_dir)
@@ -98,12 +97,12 @@ def test_sites_compatible(tmpdir: str):
     subprocess.check_call(
         [
             sys.executable,
-            str(
-                Path(topsrcdir)
-                / "third_party"
-                / "python"
-                / "virtualenv"
-                / "virtualenv.py"
+            os.path.join(
+                topsrcdir,
+                "third_party",
+                "python",
+                "virtualenv",
+                "virtualenv.py",
             ),
             "--no-download",
             str(work_dir / "env"),
