@@ -60,6 +60,7 @@ EXPORTS.mozilla.dom += [
     "ImageData.h",
     "ImageUtils.h",
     "OffscreenCanvas.h",
+    "OffscreenCanvasDisplayHelper.h",
     "QueueParamTraits.h",
     "TextMetrics.h",
     "WebGLChild.h",
@@ -88,6 +89,7 @@ UNIFIED_SOURCES += [
     "ImageData.cpp",
     "nsICanvasRenderingContextInternal.cpp",
     "OffscreenCanvas.cpp",
+    "OffscreenCanvasDisplayHelper.cpp",
     "XRWebGLLayer.cpp",
 ]
 
