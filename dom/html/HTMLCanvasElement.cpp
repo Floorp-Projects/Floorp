@@ -269,7 +269,6 @@ void HTMLCanvasPrintState::NotifyDone() {
 HTMLCanvasElementObserver::HTMLCanvasElementObserver(
     HTMLCanvasElement* aElement)
     : mElement(aElement) {
-  RegisterVisibilityChangeEvent();
   RegisterObserverEvents();
 }
 
@@ -277,26 +276,7 @@ HTMLCanvasElementObserver::~HTMLCanvasElementObserver() { Destroy(); }
 
 void HTMLCanvasElementObserver::Destroy() {
   UnregisterObserverEvents();
-  UnregisterVisibilityChangeEvent();
   mElement = nullptr;
-}
-
-void HTMLCanvasElementObserver::RegisterVisibilityChangeEvent() {
-  if (!mElement) {
-    return;
-  }
-
-  Document* document = mElement->OwnerDoc();
-  document->AddSystemEventListener(u"visibilitychange"_ns, this, true, false);
-}
-
-void HTMLCanvasElementObserver::UnregisterVisibilityChangeEvent() {
-  if (!mElement) {
-    return;
-  }
-
-  Document* document = mElement->OwnerDoc();
-  document->RemoveSystemEventListener(u"visibilitychange"_ns, this, true);
 }
 
 void HTMLCanvasElementObserver::RegisterObserverEvents() {
@@ -344,19 +324,6 @@ HTMLCanvasElementObserver::Observe(nsISupports*, const char* aTopic,
   } else if (strcmp(aTopic, "canvas-device-reset") == 0) {
     mElement->OnDeviceReset();
   }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLCanvasElementObserver::HandleEvent(Event* aEvent) {
-  nsAutoString type;
-  aEvent->GetType(type);
-  if (!mElement || !type.EqualsLiteral("visibilitychange")) {
-    return NS_OK;
-  }
-
-  mElement->OnVisibilityChange();
 
   return NS_OK;
 }
@@ -1276,22 +1243,6 @@ layers::LayersBackend HTMLCanvasElement::GetCompositorBackendType() const {
   }
 
   return LayersBackend::LAYERS_NONE;
-}
-
-void HTMLCanvasElement::OnVisibilityChange() {
-  if (OwnerDoc()->Hidden()) {
-    return;
-  }
-
-  if (mOffscreenCanvas) {
-    MOZ_CRASH("todo");
-    // Dispatch to GetActiveEventTarget.
-    return;
-  }
-
-  if (mCurrentContext) {
-    mCurrentContext->OnVisibilityChange();
-  }
 }
 
 void HTMLCanvasElement::OnMemoryPressure() {
