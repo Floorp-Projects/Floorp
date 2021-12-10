@@ -279,6 +279,75 @@ add_task(async function testGarbagedCollectedSources() {
   });
 });
 
+/**
+ * Assert that evaluating sources for a new global, in the parent process
+ * using the shared system principal will spawn SOURCE resources.
+ *
+ * For this we use a special `commands` which replicate what browser console
+ * and toolbox use.
+ */
+add_task(async function testParentProcessPrivilegedSources() {
+  // Use a custom loader + server + client in order to spawn the server
+  // in a distinct system compartment, so that it can see the system compartment
+  // sandbox we are about to create in this test
+  const client = await CommandsFactory.spawnClientToDebugSystemPrincipal();
+
+  const commands = await CommandsFactory.forMainProcess({ client });
+  await commands.targetCommand.startListening();
+  const { resourceCommand } = commands;
+
+  info("Check already available resources");
+  const availableResources = [];
+  await resourceCommand.watchResources([resourceCommand.TYPES.SOURCE], {
+    onAvailable: resources => availableResources.push(...resources),
+  });
+  ok(
+    availableResources.length > 0,
+    "We get many sources reported from a multiprocess command"
+  );
+
+  // Clear the list of sources
+  availableResources.length = 0;
+
+  // Force the creation of a new privileged source
+  const systemPrincipal = Cc["@mozilla.org/systemprincipal;1"].createInstance(
+    Ci.nsIPrincipal
+  );
+  const sandbox = Cu.Sandbox(systemPrincipal);
+  Cu.evalInSandbox("function foo() {}", sandbox, null, "http://foo.com");
+
+  info("Wait for the sandbox source");
+  await waitFor(() => {
+    return availableResources.some(
+      resource => resource.url == "http://foo.com/"
+    );
+  });
+
+  const expectedResources = [
+    {
+      description: "privileged sandbox script",
+      sourceForm: {
+        introductionType: undefined,
+        sourceMapBaseURL: "http://foo.com/",
+        url: "http://foo.com/",
+        isBlackBoxed: false,
+        sourceMapURL: null,
+        extensionName: null,
+      },
+      sourceContent: {
+        contentType: "text/javascript",
+        source: "function foo() {}",
+      },
+    },
+  ];
+  const matchingResource = availableResources.filter(resource =>
+    resource.url.includes("http://foo.com")
+  );
+  await assertResources(matchingResource, expectedResources);
+
+  await commands.destroy();
+});
+
 async function assertResources(resources, expected) {
   is(
     resources.length,
