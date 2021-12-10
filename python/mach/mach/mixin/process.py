@@ -12,7 +12,6 @@ import signal
 import subprocess
 import sys
 
-from typing import Optional
 from mozprocess.processhandler import ProcessHandlerMixin
 
 from .logging import LoggingMixin
@@ -48,7 +47,7 @@ class ProcessExecutionMixin(LoggingMixin):
     def run_process(
         self,
         args=None,
-        cwd: Optional[str] = None,
+        cwd=None,
         append_env=None,
         explicit_env=None,
         log_name=None,
