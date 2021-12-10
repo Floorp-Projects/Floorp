@@ -1655,6 +1655,8 @@ impl DriverId {
     pub const COREAVI_PROPRIETARY: Self = Self(15);
     #[doc = "Juice Technologies, Inc."]
     pub const JUICE_PROPRIETARY: Self = Self(16);
+    #[doc = "Verisilicon, Inc."]
+    pub const VERISILICON_PROPRIETARY: Self = Self(17);
 }
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 #[repr(transparent)]

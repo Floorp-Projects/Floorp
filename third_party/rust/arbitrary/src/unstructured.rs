@@ -389,8 +389,8 @@ impl<'a> Unstructured<'a> {
     /// `Arbitrary` implementations like `<Vec<u8>>::arbitrary` and
     /// `String::arbitrary` over using this method directly.
     ///
-    /// If this `Unstructured` does not have enough data to fill the whole
-    /// `buffer`, an error is returned.
+    /// If this `Unstructured` does not have enough underlying data to fill the
+    /// whole `buffer`, it pads the buffer out with zeros.
     ///
     /// # Example
     ///
@@ -400,8 +400,15 @@ impl<'a> Unstructured<'a> {
     /// let mut u = Unstructured::new(&[1, 2, 3, 4]);
     ///
     /// let mut buf = [0; 2];
+    ///
     /// assert!(u.fill_buffer(&mut buf).is_ok());
+    /// assert_eq!(buf, [1, 2]);
+    ///
     /// assert!(u.fill_buffer(&mut buf).is_ok());
+    /// assert_eq!(buf, [3, 4]);
+    ///
+    /// assert!(u.fill_buffer(&mut buf).is_ok());
+    /// assert_eq!(buf, [0, 0]);
     /// ```
     pub fn fill_buffer(&mut self, buffer: &mut [u8]) -> Result<()> {
         let n = std::cmp::min(buffer.len(), self.data.len());

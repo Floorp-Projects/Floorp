@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 
 macro_rules! picky {
-    (ident) => {};
+    ($(t:tt)*) => {};
 }
 
 #[async_trait]
@@ -14,6 +14,7 @@ struct Struct;
 #[async_trait]
 impl Trait for Struct {
     async fn method() {
+        picky!({ 123, self });
         picky!({ 123 });
     }
 }

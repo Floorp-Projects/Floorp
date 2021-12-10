@@ -26,6 +26,31 @@ Released YYYY-MM-DD.
 
 * TODO (or remove section if none)
 
+--------------------------------------------------------------------------------
+
+## 1.0.3
+
+Released 2021-11-20.
+
+### Fixed
+
+* Fixed documentation for `Unstructured::fill_bytes`. We forgot to update this
+  way back in [#53](https://github.com/rust-fuzz/arbitrary/pull/53) when the
+  behavior changed.
+
+--------------------------------------------------------------------------------
+
+## 1.0.2
+
+Released 2021-08-25.
+
+### Added
+
+* `Arbitrary` impls for `HashMap`s and `HashSet`s with custom `Hasher`s
+  [#87](https://github.com/rust-fuzz/arbitrary/pull/87)
+
+--------------------------------------------------------------------------------
+
 ## 1.0.1
 
 Released 2021-05-20.
