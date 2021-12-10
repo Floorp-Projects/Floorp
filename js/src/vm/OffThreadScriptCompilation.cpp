@@ -168,47 +168,6 @@ JS_PUBLIC_API bool JS::CanDecodeOffThread(JSContext* cx,
   return CanDoOffThread(cx, options, length);
 }
 
-// TODO: Once off-thread instantiation is removed, use JS::DecodeOptions here
-//       and split the instantiation off from the off-thread API.
-//       Until then, options here is used for both decode and instantiation.
-JS_PUBLIC_API JS::OffThreadToken* JS::DecodeOffThreadScript(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    mozilla::Vector<uint8_t>& buffer /* TranscodeBuffer& */, size_t cursor,
-    OffThreadCompileCallback callback, void* callbackData) {
-  JS::TranscodeRange range(buffer.begin() + cursor, buffer.length() - cursor);
-#ifdef DEBUG
-  JS::DecodeOptions decodeOptions(options);
-  MOZ_ASSERT(CanDecodeOffThread(cx, decodeOptions, range.length()));
-#endif
-  return StartOffThreadDecodeScript(cx, options, range, callback, callbackData);
-}
-
-JS_PUBLIC_API JS::OffThreadToken* JS::DecodeOffThreadScript(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    const mozilla::Range<uint8_t>& range /* TranscodeRange& */,
-    OffThreadCompileCallback callback, void* callbackData) {
-#ifdef DEBUG
-  JS::DecodeOptions decodeOptions(options);
-  MOZ_ASSERT(CanDecodeOffThread(cx, decodeOptions, range.length()));
-#endif
-  return StartOffThreadDecodeScript(cx, options, range, callback, callbackData);
-}
-
-JS_PUBLIC_API JSScript* JS::FinishOffThreadScriptDecoder(
-    JSContext* cx, JS::OffThreadToken* token) {
-  MOZ_ASSERT(cx);
-  MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
-  return HelperThreadState().finishScriptDecodeTask(cx, token);
-}
-
-JS_PUBLIC_API void JS::CancelOffThreadScriptDecoder(JSContext* cx,
-                                                    JS::OffThreadToken* token) {
-  MOZ_ASSERT(cx);
-  MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
-  HelperThreadState().cancelParseTask(cx->runtime(),
-                                      ParseTaskKind::ScriptDecode, token);
-}
-
 JS_PUBLIC_API JS::OffThreadToken* JS::DecodeMultiOffThreadStencils(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     TranscodeSources& sources, OffThreadCompileCallback callback,
