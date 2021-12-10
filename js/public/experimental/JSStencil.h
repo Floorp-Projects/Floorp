@@ -182,6 +182,9 @@ extern JS_PUBLIC_API already_AddRefed<Stencil> FinishCompileToStencilOffThread(
     JSContext* cx, OffThreadToken* token,
     InstantiationStorage* storage = nullptr);
 
+extern JS_PUBLIC_API void CancelCompileToStencilOffThread(
+    JSContext* cx, OffThreadToken* token);
+
 // Register an encoder on its script source, such that all functions can be
 // encoded as they are parsed, in the same way as
 // JS::CompileAndStartIncrementalEncoding
