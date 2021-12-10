@@ -4,13 +4,14 @@
 
 from __future__ import absolute_import, unicode_literals
 
+from pathlib import Path
 from mach.main import COMMAND_ERROR_TEMPLATE, MODULE_ERROR_TEMPLATE
 from mozunit import main
 
 
 def test_command_error(run_mach):
     result, stdout, stderr = run_mach(
-        ["throw", "--message", "Command Error"], provider_files="throw.py"
+        ["throw", "--message", "Command Error"], provider_files=Path("throw.py")
     )
     assert result == 1
     assert COMMAND_ERROR_TEMPLATE % "throw" in stdout
@@ -18,7 +19,7 @@ def test_command_error(run_mach):
 
 def test_invoked_error(run_mach):
     result, stdout, stderr = run_mach(
-        ["throw_deep", "--message", "Deep stack"], provider_files="throw.py"
+        ["throw_deep", "--message", "Deep stack"], provider_files=Path("throw.py")
     )
     assert result == 1
     assert MODULE_ERROR_TEMPLATE % "throw_deep" in stdout
