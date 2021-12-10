@@ -185,6 +185,6 @@ class FenixApplicationTest {
         // not mock most of the objects telemetry is collected from.
         assertFalse(SearchDefaultEngine.code.testHasValue())
         assertFalse(SearchDefaultEngine.name.testHasValue())
-        assertFalse(SearchDefaultEngine.submissionUrl.testHasValue())
+        assertFalse(SearchDefaultEngine.searchUrl.testHasValue())
     }
 }

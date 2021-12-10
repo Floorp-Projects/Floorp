@@ -647,7 +647,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
                 SearchDefaultEngine.apply {
                     code.set(searchEngine.id)
                     name.set(searchEngine.name)
-                    submissionUrl.set(searchEngine.buildSearchUrl(""))
+                    searchUrl.set(searchEngine.buildSearchUrl(""))
                 }
             }
         }

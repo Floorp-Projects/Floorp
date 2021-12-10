@@ -1834,11 +1834,11 @@ search.default_engine:
       - android-probes@mozilla.com
       - erichards@mozilla.com
     expires: never
-  submission_url:
-    type: string
+  search_url:
+    type: url
     lifetime: application
     description: |
-      If the search engine is pre-loaded with Fenix this value will be he base
+      If the search engine is pre-loaded with Fenix this value will be the base
       URL we use to build the search query for the search engine. For example:
       https://mysearchengine.com/?query=%s. If it's a custom search engine
       (defined: https://github.com/mozilla-mobile/fenix/issues/1607) the value
@@ -1847,6 +1847,7 @@ search.default_engine:
       - metrics
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/800
+      - https://github.com/mozilla-mobile/fenix/issues/20513
     data_reviews:
       - https://github.com/mozilla-mobile/fenix/pull/1606
       - https://github.com/mozilla-mobile/fenix/pull/5216
