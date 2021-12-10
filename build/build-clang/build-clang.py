@@ -652,6 +652,9 @@ if __name__ == "__main__":
 
     config_dir = os.path.dirname(args.config.name)
     config = json.load(args.config)
+    patches = config.get("patches")
+    if patches:
+        config["patches"] = [os.path.join(this_config_dir, p) for p in patches]
 
     stages = 2
     if "stages" in config:
@@ -755,7 +758,7 @@ if __name__ == "__main__":
 
     if not args.skip_patch:
         for p in config.get("patches", []):
-            patch(os.path.join(config_dir, p), source_dir)
+            patch(p, source_dir)
 
     compiler_rt_source_link = llvm_source_dir + "/projects/compiler-rt"
 
