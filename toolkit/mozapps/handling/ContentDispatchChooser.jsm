@@ -523,17 +523,21 @@ class nsContentDispatchChooser {
     }`;
 
     if (aBrowsingContext) {
-      if (!aBrowsingContext.topChromeWindow) {
+      let window = aBrowsingContext.topChromeWindow;
+      if (!window) {
         throw new Error(
           "Can't show external protocol dialog. BrowsingContext has no chrome window associated."
         );
       }
 
-      let window = aBrowsingContext.topChromeWindow;
-      let tabDialogBox = window.gBrowser.getTabDialogBox(
-        aBrowsingContext.embedderElement
-      );
+      let { topFrameElement } = aBrowsingContext;
+      if (topFrameElement?.tagName != "browser") {
+        throw new Error(
+          "Can't show external protocol dialog. BrowsingContext has no browser associated."
+        );
+      }
 
+      let tabDialogBox = window.gBrowser.getTabDialogBox(topFrameElement);
       return tabDialogBox.open(
         aDialogURL,
         {
