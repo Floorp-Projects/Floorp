@@ -148,6 +148,7 @@ EXPORTS.mozilla.dom += [
     "!UseCounterWorkerList.h",
     "AbstractRange.h",
     "AncestorIterator.h",
+    "AnimationFrameProvider.h",
     "AnonymousContent.h",
     "Attr.h",
     "AutoPrintEventDispatcher.h",
@@ -295,6 +296,7 @@ if CONFIG["FUZZING"]:
 
 UNIFIED_SOURCES += [
     "AbstractRange.cpp",
+    "AnimationFrameProvider.cpp",
     "AnonymousContent.cpp",
     "Attr.cpp",
     "AttrArray.cpp",
