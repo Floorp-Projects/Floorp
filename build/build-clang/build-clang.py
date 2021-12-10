@@ -599,6 +599,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-c",
         "--config",
+        action="append",
         required=True,
         type=argparse.FileType("r"),
         help="Clang configuration file",
@@ -650,11 +651,35 @@ if __name__ == "__main__":
         cc_name = "clang-cl"
         cxx_name = "clang-cl"
 
-    config_dir = os.path.dirname(args.config.name)
-    config = json.load(args.config)
-    patches = config.get("patches")
-    if patches:
-        config["patches"] = [os.path.join(this_config_dir, p) for p in patches]
+    config = {}
+    # Merge all the configs we got from the command line.
+    for c in args.config:
+        this_config_dir = os.path.dirname(c.name)
+        this_config = json.load(c)
+        patches = this_config.get("patches")
+        if patches:
+            this_config["patches"] = [os.path.join(this_config_dir, p) for p in patches]
+        for key, value in this_config.items():
+            old_value = config.get(key)
+            if old_value is None:
+                config[key] = value
+            elif value is None:
+                if key in config:
+                    del config[key]
+            elif type(old_value) != type(value):
+                raise Exception(
+                    "{} is overriding `{}` with a value of the wrong type".format(
+                        c.name, key
+                    )
+                )
+            elif isinstance(old_value, list):
+                for v in value:
+                    if v not in old_value:
+                        old_value.append(v)
+            elif isinstance(old_value, dict):
+                raise Exception("{} is setting `{}` to a dict?".format(c.name, key))
+            else:
+                config[key] = value
 
     stages = 2
     if "stages" in config:
