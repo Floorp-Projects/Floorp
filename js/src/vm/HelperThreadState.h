@@ -386,7 +386,8 @@ class GlobalHelperThreadState {
       JSContext* cx, ParseTaskKind kind, JS::OffThreadToken* token,
       StartEncoding startEncoding = StartEncoding::No);
   already_AddRefed<frontend::CompilationStencil> finishCompileToStencilTask(
-      JSContext* cx, ParseTaskKind kind, JS::OffThreadToken* token);
+      JSContext* cx, ParseTaskKind kind, JS::OffThreadToken* token,
+      JS::InstantiationStorage* storage);
   bool finishMultiParseTask(JSContext* cx, ParseTaskKind kind,
                             JS::OffThreadToken* token,
                             mozilla::Vector<RefPtr<JS::Stencil>>* stencils);
@@ -402,7 +403,8 @@ class GlobalHelperThreadState {
       JSContext* cx, JS::OffThreadToken* token,
       StartEncoding startEncoding = StartEncoding::No);
   already_AddRefed<frontend::CompilationStencil> finishCompileToStencilTask(
-      JSContext* cx, JS::OffThreadToken* token);
+      JSContext* cx, JS::OffThreadToken* token,
+      JS::InstantiationStorage* storage);
   JSScript* finishScriptDecodeTask(JSContext* cx, JS::OffThreadToken* token);
   bool finishMultiStencilsDecodeTask(
       JSContext* cx, JS::OffThreadToken* token,
@@ -521,7 +523,7 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
   // The output of the script/module compilation task.
   UniquePtr<frontend::ExtensibleCompilationStencil> extensibleStencil_;
 
-  frontend::CompilationGCOutput gcOutput_;
+  UniquePtr<frontend::CompilationGCOutput> gcOutput_;
 
   // Record any errors happening while parsing or generating bytecode.
   OffThreadFrontendErrors errors;
@@ -531,6 +533,8 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
   virtual ~ParseTask();
 
   bool init(JSContext* cx, const JS::ReadOnlyCompileOptions& options);
+
+  void moveGCOutputInto(JS::InstantiationStorage& storage);
 
   void activate(JSRuntime* rt);
   void deactivate(JSRuntime* rt);
