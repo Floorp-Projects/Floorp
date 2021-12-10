@@ -12,8 +12,8 @@
 
 [package]
 name = "unicode-xid"
-version = "0.2.0"
-authors = ["erick.tryzelaar <erick.tryzelaar@gmail.com>", "kwantam <kwantam@gmail.com>"]
+version = "0.2.2"
+authors = ["erick.tryzelaar <erick.tryzelaar@gmail.com>", "kwantam <kwantam@gmail.com>", "Manish Goregaokar <manishsmail@gmail.com>"]
 exclude = ["/scripts/*", "/.travis.yml"]
 description = "Determine whether characters have the XID_Start\nor XID_Continue properties according to\nUnicode Standard Annex #31.\n"
 homepage = "https://github.com/unicode-rs/unicode-xid"
@@ -22,6 +22,12 @@ readme = "README.md"
 keywords = ["text", "unicode", "xid"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/unicode-rs/unicode-xid"
+
+[[bench]]
+name = "xid"
+harness = false
+[dev-dependencies.criterion]
+version = "0.3"
 
 [features]
 bench = []

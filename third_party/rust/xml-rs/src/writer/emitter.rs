@@ -148,9 +148,9 @@ impl Emitter {
     }
 
     fn write_newline<W: Write>(&mut self, target: &mut W, level: usize) -> Result<()> {
-        target.write(self.config.line_separator.as_bytes())?;
+        target.write_all(self.config.line_separator.as_bytes())?;
         for _ in 0..level {
-            target.write(self.config.indent_string.as_bytes())?;
+            target.write_all(self.config.indent_string.as_bytes())?;
         }
         Ok(())
     }
@@ -244,7 +244,7 @@ impl Emitter {
     fn fix_non_empty_element<W: Write>(&mut self, target: &mut W) -> Result<()> {
         if self.config.normalize_empty_elements && self.just_wrote_start_element {
             self.just_wrote_start_element = false;
-            target.write(b">").map(|_| ()).map_err(From::from)
+            target.write_all(b">").map_err(From::from)
         } else {
             Ok(())
         }
@@ -366,9 +366,9 @@ impl Emitter {
             if self.config.normalize_empty_elements && self.just_wrote_start_element {
                 self.just_wrote_start_element = false;
                 let termination = if self.config.pad_self_closing { " />" } else { "/>" };
-                let result = target.write(termination.as_bytes()).map_err(From::from);
+                let result = target.write_all(termination.as_bytes()).map_err(From::from);
                 self.after_end_element();
-                result.map(|_| ())
+                result
             } else {
                 self.just_wrote_start_element = false;
 
@@ -389,9 +389,9 @@ impl Emitter {
             self.emit_characters(target, content)
         } else {
             // TODO: escape ']]>' characters in CDATA as two adjacent CDATA blocks
-            target.write(b"<![CDATA[")?;
-            target.write(content.as_bytes())?;
-            target.write(b"]]>")?;
+            target.write_all(b"<![CDATA[")?;
+            target.write_all(content.as_bytes())?;
+            target.write_all(b"]]>")?;
 
             self.after_text();
 
@@ -401,8 +401,9 @@ impl Emitter {
 
     pub fn emit_characters<W: Write>(&mut self, target: &mut W,
                                       content: &str) -> Result<()> {
+        self.check_document_started(target)?;
         self.fix_non_empty_element(target)?;
-        target.write(
+        target.write_all(
             (if self.config.perform_escaping {
                 escape_str_pcdata(content)
             } else {
@@ -420,19 +421,19 @@ impl Emitter {
 
         let autopad_comments = self.config.autopad_comments;
         let write = |target: &mut W| -> Result<()> {
-            target.write(b"<!--")?;
+            target.write_all(b"<!--")?;
 
             if autopad_comments && !content.starts_with(char::is_whitespace) {
-                target.write(b" ")?;
+                target.write_all(b" ")?;
             }
 
-            target.write(content.as_bytes())?;
+            target.write_all(content.as_bytes())?;
 
             if autopad_comments && !content.ends_with(char::is_whitespace) {
-                target.write(b" ")?;
+                target.write_all(b" ")?;
             }
 
-            target.write(b"-->")?;
+            target.write_all(b"-->")?;
 
             Ok(())
         };
