@@ -13,7 +13,7 @@ pub struct ParserConfig {
     /// Whether or not should whitespace in textual events be removed. Default is false.
     ///
     /// When true, all standalone whitespace will be removed (this means no
-    /// `Whitespace` events will ve emitted), and leading and trailing whitespace
+    /// `Whitespace` events will be emitted), and leading and trailing whitespace
     /// from `Character` events will be deleted. If after trimming `Characters`
     /// event will be empty, it will also be omitted from output stream. This is
     /// possible, however, only if `whitespace_to_characters` or

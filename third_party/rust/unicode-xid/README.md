@@ -23,17 +23,17 @@ fn main() {
 unicode-xid supports a `no_std` feature. This eliminates dependence
 on std, and instead uses equivalent functions from core.
 
-# crates.io
-
-You can use this package in your project by adding the following
-to your `Cargo.toml`:
-
-```toml
-[dependencies]
-unicode-xid = "0.1.0"
-```
 
 # changelog
+
+## 0.2.2
+
+- Add an ASCII fast-path
+
+## 0.2.1
+
+- Update to Unicode 13.0.0
+- Speed up lookup
 
 ## 0.2.0
 

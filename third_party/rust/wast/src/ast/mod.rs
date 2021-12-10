@@ -330,6 +330,7 @@ pub mod kw {
     custom_keyword!(anyref);
     custom_keyword!(arg);
     custom_keyword!(array);
+    custom_keyword!(assert_exception);
     custom_keyword!(assert_exhaustion);
     custom_keyword!(assert_invalid);
     custom_keyword!(assert_malformed);
@@ -343,7 +344,6 @@ pub mod kw {
     custom_keyword!(assert_return_func);
     custom_keyword!(assert_trap);
     custom_keyword!(assert_unlinkable);
-    custom_keyword!(assert_uncaught_exception);
     custom_keyword!(before);
     custom_keyword!(binary);
     custom_keyword!(block);
