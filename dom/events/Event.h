@@ -148,6 +148,12 @@ class Event : public nsISupports, public nsWrapperCache {
   void StopCrossProcessForwarding();
   void SetTrusted(bool aTrusted);
 
+  // When listening to chrome EventTargets, in the parent process, nsWindowRoot
+  // might receive events we've already handled via
+  // InProcessBrowserChildMessageManager, and handlers should call this to avoid
+  // handling the same event twice.
+  bool ShouldIgnoreChromeEventTargetListener() const;
+
   void InitPresContextData(nsPresContext* aPresContext);
 
   // Returns true if the event should be trusted.
