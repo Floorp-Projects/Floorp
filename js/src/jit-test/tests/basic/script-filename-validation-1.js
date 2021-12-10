@@ -34,8 +34,9 @@ assertEq(ex.toString(), "InternalError: unsafe filename: file://foo.js");
 
 // Off-thread parse throws too, when finishing.
 if (helperThreadCount() > 0) {
-    offThreadCompileScript('throw 1');
-    assertThrowsInstanceOf(() => runOffThreadScript(), InternalError);
+    offThreadCompileToStencil('throw 1');
+    var stencil = finishOffThreadCompileToStencil();
+    assertThrowsInstanceOf(() => evalStencil(stencil), InternalError);
 }
 
 // Unsafe filename is accepted if we opt-out.
