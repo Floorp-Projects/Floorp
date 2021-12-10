@@ -653,7 +653,7 @@ if __name__ == "__main__":
     config_dir = os.path.dirname(args.config.name)
     config = json.load(args.config)
 
-    stages = 3
+    stages = 2
     if "stages" in config:
         stages = int(config["stages"])
         if stages not in (1, 2, 3, 4):
