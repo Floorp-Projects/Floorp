@@ -7,6 +7,7 @@
 #define WEBGLIPDL_H_
 
 #include "ipc/EnumSerializer.h"
+#include "mozilla/GfxMessageUtils.h"
 #include "mozilla/ipc/IPDLParamTraits.h"
 #include "mozilla/ipc/Shmem.h"
 #include "mozilla/layers/LayersSurfaces.h"
