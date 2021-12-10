@@ -35,10 +35,8 @@
 #include "TimeUnits.h"
 #include "Tracing.h"
 
-#ifdef MOZ_WEBM_ENCODER
-#  include "VP8TrackEncoder.h"
-#  include "WebMWriter.h"
-#endif
+#include "VP8TrackEncoder.h"
+#include "WebMWriter.h"
 
 mozilla::LazyLogModule gMediaEncoderLog("MediaEncoder");
 #define LOG(type, msg) MOZ_LOG(gMediaEncoderLog, type, msg)
@@ -702,12 +700,8 @@ already_AddRefed<MediaEncoder> MediaEncoder::CreateEncoder(
 
   if (mimeType->Type() == MEDIAMIMETYPE(VIDEO_WEBM) ||
       mimeType->Type() == MEDIAMIMETYPE(AUDIO_WEBM)) {
-#ifdef MOZ_WEBM_ENCODER
     MOZ_ASSERT_IF(mimeType->Type() == MEDIAMIMETYPE(AUDIO_WEBM), !videoEncoder);
     writer = MakeUnique<WebMWriter>();
-#else
-    MOZ_CRASH("Webm cannot be selected if not supported");
-#endif  // MOZ_WEBM_ENCODER
   } else if (mimeType->Type() == MEDIAMIMETYPE(AUDIO_OGG)) {
     MOZ_ASSERT(audioEncoder);
     MOZ_ASSERT(!videoEncoder);
@@ -1044,11 +1038,7 @@ void MediaEncoder::DisconnectTracks() {
 }
 
 bool MediaEncoder::IsWebMEncoderEnabled() {
-#ifdef MOZ_WEBM_ENCODER
   return StaticPrefs::media_encoder_webm_enabled();
-#else
-  return false;
-#endif
 }
 
 void MediaEncoder::UpdateInitialized() {

@@ -8727,11 +8727,7 @@
 
 - name: media.encoder.webm.enabled
   type: RelaxedAtomicBool
-#if defined(MOZ_WEBM_ENCODER)
   value: true
-#else
-  value: false
-#endif
   mirror: always
 
 - name: media.audio-max-decode-error
