@@ -771,6 +771,8 @@ class ClientWebGLContext final : public nsICanvasRenderingContextInternal,
   bool CreateHostContext(const uvec2& requestedSize);
   void ThrowEvent_WebGLContextCreationError(const std::string&) const;
 
+  void UpdateCanvasParameters();
+
  public:
   void MarkCanvasDirty();
 

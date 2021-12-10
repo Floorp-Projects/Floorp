@@ -464,6 +464,19 @@ bool ClientWebGLContext::InitializeCanvasRenderer(
   return true;
 }
 
+void ClientWebGLContext::UpdateCanvasParameters() {
+  if (!mOffscreenCanvas) {
+    return;
+  }
+
+  const auto& options = *mInitialOptions;
+  const auto& size = DrawingBufferSize();
+  mOffscreenCanvas->UpdateParameters(
+      size.x, size.y, options.alpha,
+      !options.alpha || options.premultipliedAlpha,
+      /* aIsOriginBottomLeft */ true);
+}
+
 layers::LayersBackend ClientWebGLContext::GetCompositorBackendType() const {
   if (mCanvasElement) {
     return mCanvasElement->GetCompositorBackendType();
@@ -563,6 +576,7 @@ ClientWebGLContext::SetDimensions(const int32_t signedWidth,
     state.mDrawingBufferSize = Nothing();
     Run<RPROC(Resize)>(size);
 
+    UpdateCanvasParameters();
     MarkCanvasDirty();
     return NS_OK;
   }
@@ -674,6 +688,7 @@ bool ClientWebGLContext::CreateHostContext(const uvec2& requestedSize) {
     return false;
   }
   mNotLost = pNotLost;
+  UpdateCanvasParameters();
   MarkCanvasDirty();
 
   // Init state
