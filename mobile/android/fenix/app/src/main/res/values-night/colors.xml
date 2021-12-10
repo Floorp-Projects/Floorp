@@ -75,6 +75,10 @@
     <color name="fx_mobile_icon_color_accent_pink" tools:ignore="UnusedResources">@color/photonPink20</color>
     <color name="fx_mobile_icon_color_accent_green" tools:ignore="UnusedResources">@color/photonGreen20</color>
     <color name="fx_mobile_icon_color_accent_yellow" tools:ignore="UnusedResources">@color/photonYellow20</color>
+    <!-- Reader, ETP Shield -->
+    <color name="fx_mobile_icon_color_gradient_start" tools:ignore="UnusedResources">@color/photonViolet20</color>
+    <!-- Reader, ETP Shield -->
+    <color name="fx_mobile_icon_color_gradient_end" tools:ignore="UnusedResources">@color/photonBlue20</color>
 
     <!-- Border -->
     <!-- Form parts -->
