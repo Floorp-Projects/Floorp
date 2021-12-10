@@ -535,24 +535,6 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1727100",
-    platform: "desktop",
-    domain: "slack.com",
-    bug: "1727100",
-    contentScripts: {
-      matches: ["*://app.slack.com/*"],
-      js: [
-        {
-          file: "lib/ua_helpers.js",
-        },
-        {
-          file: "injections/js/bug1727100-slack.com-ua-override.js",
-        },
-      ],
-      allFrames: true,
-    },
-  },
-  {
     id: "bug1738313",
     platform: "desktop",
     domain: "curriculum.gov.bc.ca",
