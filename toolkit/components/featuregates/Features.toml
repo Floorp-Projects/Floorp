@@ -156,16 +156,6 @@ bug-numbers = [1652134]
 is-public = true
 default-value = false
 
-[multi-pip]
-title = "experimental-features-multi-pip"
-description = "experimental-features-multi-pip-description"
-restart-required = false
-preference = "media.videocontrols.picture-in-picture.allow-multiple"
-type = "boolean"
-bug-numbers = [1676162]
-is-public = true
-default-value = true
-
 [url-bar-ime-search]
 title = "experimental-features-ime-search"
 description = "experimental-features-ime-search-description"
