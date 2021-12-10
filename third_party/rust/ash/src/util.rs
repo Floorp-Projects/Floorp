@@ -113,15 +113,12 @@ pub fn read_spv<R: io::Read + io::Seek>(x: &mut R) -> io::Result<Vec<u32>> {
         return Err(io::Error::new(io::ErrorKind::InvalidData, "input too long"));
     }
     let words = (size / 4) as usize;
-    let mut result = Vec::<u32>::with_capacity(words);
+    // https://github.com/MaikKlein/ash/issues/354:
+    // Zero-initialize the result to prevent read_exact from possibly
+    // reading uninitialized memory.
+    let mut result = vec![0u32; words];
     x.seek(io::SeekFrom::Start(0))?;
-    unsafe {
-        x.read_exact(slice::from_raw_parts_mut(
-            result.as_mut_ptr() as *mut u8,
-            words * 4,
-        ))?;
-        result.set_len(words);
-    }
+    x.read_exact(unsafe { slice::from_raw_parts_mut(result.as_mut_ptr() as *mut u8, words * 4) })?;
     const MAGIC_NUMBER: u32 = 0x0723_0203;
     if !result.is_empty() && result[0] == MAGIC_NUMBER.swap_bytes() {
         for word in &mut result {

@@ -217,7 +217,7 @@ error: the trait `Test` cannot be made into an object
 For traits that need to be object safe and need to have default implementations
 for some async methods, there are two resolutions. Either you can add Send
 and/or Sync as supertraits (Send if there are `&mut self` methods with default
-implementations, Sync if there are `&self` methods with default implementions)
+implementations, Sync if there are `&self` methods with default implementations)
 to constrain all implementors of the trait such that the default implementations
 are applicable to them:
 
