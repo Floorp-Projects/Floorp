@@ -4493,13 +4493,6 @@ JS::TranscodeResult JS::DecodeStencil(JSContext* cx,
   return TranscodeResult::Ok;
 }
 
-already_AddRefed<JS::Stencil> JS::FinishOffThreadStencil(
-    JSContext* cx, JS::OffThreadToken* token) {
-  MOZ_ASSERT(cx);
-  MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
-  return HelperThreadState().finishStencilParseTask(cx, token);
-}
-
 JS_PUBLIC_API size_t JS::SizeOfStencil(Stencil* stencil,
                                        mozilla::MallocSizeOf mallocSizeOf) {
   return stencil->sizeOfIncludingThis(mallocSizeOf);
