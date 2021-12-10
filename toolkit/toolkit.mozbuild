@@ -15,10 +15,6 @@ PYTHON_UNITTEST_MANIFESTS += [
     '/testing/talos/talos/unittests/python.ini'
 ]
 
-CONFIGURE_SUBST_FILES += [
-    '/tools/update-packaging/Makefile',
-]
-
 DIRS += [
     '/tools',
     '/xpcom/xpidl',
