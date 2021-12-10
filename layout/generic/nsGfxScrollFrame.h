@@ -766,6 +766,11 @@ class ScrollFrameHelper : public nsIReflowCallback {
   // Whether we need to schedule the scroll-linked animations.
   bool mMayScheduleScrollAnimations : 1;
 
+#ifdef MOZ_WIDGET_ANDROID
+  // True if this scrollable frame was vertically overflowed on the last reflow.
+  bool mHasVerticalOverflowForDynamicToolbar : 1;
+#endif
+
   mozilla::layout::ScrollVelocityQueue mVelocityQueue;
 
  protected:
