@@ -129,17 +129,6 @@ s! {
         pub f_namemax: ::c_ulong,
         __f_spare: [::c_int; 6],
     }
-
-    pub struct termios2 {
-        pub c_iflag: ::tcflag_t,
-        pub c_oflag: ::tcflag_t,
-        pub c_cflag: ::tcflag_t,
-        pub c_lflag: ::tcflag_t,
-        pub c_line: ::cc_t,
-        pub c_cc: [::cc_t; 19],
-        pub c_ispeed: ::speed_t,
-        pub c_ospeed: ::speed_t,
-    }
 }
 
 pub const AF_FILE: ::c_int = 1;
@@ -694,25 +683,10 @@ pub const TIOCGSID: ::c_int = 21545;
 pub const TIOCGSOFTCAR: ::c_int = 21529;
 pub const TIOCGWINSZ: ::c_int = 21523;
 pub const TIOCLINUX: ::c_int = 21532;
-pub const TIOCMBIC: ::c_int = 21527;
-pub const TIOCMBIS: ::c_int = 21526;
-pub const TIOCM_CAR: ::c_int = 64;
-pub const TIOCM_CD: ::c_int = 64;
-pub const TIOCM_CTS: ::c_int = 32;
-pub const TIOCM_DSR: ::c_int = 256;
-pub const TIOCM_DTR: ::c_int = 2;
-pub const TIOCMGET: ::c_int = 21525;
 pub const TIOCMIWAIT: ::c_int = 21596;
-pub const TIOCM_LE: ::c_int = 1;
 pub const TIOCM_LOOP: ::c_int = 32768;
 pub const TIOCM_OUT1: ::c_int = 8192;
 pub const TIOCM_OUT2: ::c_int = 16384;
-pub const TIOCM_RI: ::c_int = 128;
-pub const TIOCM_RNG: ::c_int = 128;
-pub const TIOCM_RTS: ::c_int = 4;
-pub const TIOCMSET: ::c_int = 21528;
-pub const TIOCM_SR: ::c_int = 16;
-pub const TIOCM_ST: ::c_int = 8;
 pub const TIOCNOTTY: ::c_int = 21538;
 pub const TIOCNXCL: ::c_int = 21517;
 pub const TIOCOUTQ: ::c_int = 21521;

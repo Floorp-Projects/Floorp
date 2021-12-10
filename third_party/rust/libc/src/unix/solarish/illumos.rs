@@ -37,4 +37,16 @@ extern "C" {
     pub fn eventfd(init: ::c_uint, flags: ::c_int) -> ::c_int;
 
     pub fn mincore(addr: ::caddr_t, len: ::size_t, vec: *mut ::c_char) -> ::c_int;
+
+    pub fn pset_bind_lwp(
+        pset: ::psetid_t,
+        id: ::id_t,
+        pid: ::pid_t,
+        opset: *mut ::psetid_t,
+    ) -> ::c_int;
+    pub fn pset_getloadavg(pset: ::psetid_t, load: *mut ::c_double, num: ::c_int) -> ::c_int;
+
+    pub fn preadv(fd: ::c_int, iov: *const ::iovec, iovcnt: ::c_int, offset: ::off_t) -> ::ssize_t;
+    pub fn pwritev(fd: ::c_int, iov: *const ::iovec, iovcnt: ::c_int, offset: ::off_t)
+        -> ::ssize_t;
 }

@@ -84,10 +84,20 @@ pub const MSG_WAITALL: ::c_int = 0x02;
 pub const MSG_MORE: ::c_int = 0x10;
 pub const MSG_NOSIGNAL: ::c_int = 0x20;
 
-extern "C" {
-    pub fn sendmsg(s: ::c_int, msg: *const ::msghdr, flags: ::c_int) -> ::ssize_t;
-    pub fn recvmsg(s: ::c_int, msg: *mut ::msghdr, flags: ::c_int) -> ::ssize_t;
+pub const PTHREAD_STACK_MIN: ::size_t = 768;
 
-    pub fn writev(s: ::c_int, iov: *const ::iovec, iovcnt: ::c_int) -> ::c_int;
-    pub fn readv(fd: ::c_int, iov: *const ::iovec, iovcnt: ::c_int) -> ::ssize_t;
+extern "C" {
+    pub fn pthread_create(
+        native: *mut ::pthread_t,
+        attr: *const ::pthread_attr_t,
+        f: extern "C" fn(_: *mut ::c_void) -> *mut ::c_void,
+        value: *mut ::c_void,
+    ) -> ::c_int;
+
+    pub fn getrandom(buf: *mut ::c_void, buflen: ::size_t, flags: ::c_uint) -> ::ssize_t;
+
+    #[link_name = "lwip_sendmsg"]
+    pub fn sendmsg(s: ::c_int, msg: *const ::msghdr, flags: ::c_int) -> ::ssize_t;
+    #[link_name = "lwip_recvmsg"]
+    pub fn recvmsg(s: ::c_int, msg: *mut ::msghdr, flags: ::c_int) -> ::ssize_t;
 }

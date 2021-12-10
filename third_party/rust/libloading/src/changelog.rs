@@ -1,6 +1,33 @@
 //! The change log.
 
-/// Release 0.7.0 (2021-01-31)
+/// Release 0.7.2 (2021-11-14)
+///
+/// Cargo.toml now specifies the MSRV bounds, which enables tooling to report an early failure when
+/// the version of the toolchain is insufficient. Refer to the [min-rust-version RFC] and its
+/// [tracking issue].
+///
+/// [min-rust-version RFC]: https://rust-lang.github.io/rfcs/2495-min-rust-version.html
+/// [tracking issue]: https://github.com/rust-lang/rust/issues/65262
+///
+/// Additionally, on platforms `libloading` has no support (today: `not(any(unix, windows))`), we
+/// will no longer attempt to implement the cross-platform `Library` and `Symbol` types. This makes
+/// `libloading` compile on targets such as `wasm32-unknown-unknown` and gives ability to the
+/// downstream consumers of this library to decide how they want to handle the absence of the
+/// library loading implementation in their code. One of such approaches could be depending on
+/// `libloading` itself optionally as such:
+///
+/// ```toml
+/// [target.'cfg(any(unix, windows))'.dependencies.libloading]
+/// version = "0.7"
+/// ```
+pub mod r0_7_2 {}
+
+/// Release 0.7.1 (2021-10-09)
+///
+/// Significantly improved the consistency and style of the documentation.
+pub mod r0_7_1 {}
+
+/// Release 0.7.0 (2021-02-06)
 ///
 /// ## Breaking changes
 ///
@@ -187,7 +214,6 @@ pub mod r0_6_1 {}
 /// [`Error`]: crate::Error
 pub mod r0_6_0 {}
 
-
 /// Release 0.5.2 (2019-07-07)
 ///
 /// * Added API to convert OS-specific `Library` and `Symbol` conversion to underlying resources.
@@ -218,14 +244,12 @@ pub mod r0_5_0 {}
 /// * `cargo test --release` now works when testing libloading.
 pub mod r0_4_3 {}
 
-
 /// Release 0.4.2 (2017-09-24)
 ///
 /// * Improved error and race-condition handling on Windows;
 /// * Improved documentation about thread-safety of Library;
 /// * Added `Symbol::<Option<T>::lift_option() -> Option<Symbol<T>>` convenience method.
 pub mod r0_4_2 {}
-
 
 /// Release 0.4.1 (2017-08-29)
 ///

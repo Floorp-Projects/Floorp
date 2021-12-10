@@ -253,6 +253,7 @@ pub const FIOSETOWN: ::c_ulong = 0x8004667c;
 pub const FIOGETOWN: ::c_ulong = 0x4004667b;
 
 pub const PATH_MAX: ::c_int = 1024;
+pub const MAXPATHLEN: ::c_int = PATH_MAX;
 
 pub const IOV_MAX: ::c_int = 1024;
 
@@ -337,7 +338,15 @@ pub const F_RDLCK: ::c_short = 1;
 pub const F_UNLCK: ::c_short = 2;
 pub const F_WRLCK: ::c_short = 3;
 
-pub const MNT_FORCE: ::c_int = 0x80000;
+pub const MNT_RDONLY: ::c_int = 0x00000001;
+pub const MNT_SYNCHRONOUS: ::c_int = 0x00000002;
+pub const MNT_NOEXEC: ::c_int = 0x00000004;
+pub const MNT_NOSUID: ::c_int = 0x00000008;
+pub const MNT_ASYNC: ::c_int = 0x00000040;
+pub const MNT_EXPORTED: ::c_int = 0x00000100;
+pub const MNT_UPDATE: ::c_int = 0x00010000;
+pub const MNT_RELOAD: ::c_int = 0x00040000;
+pub const MNT_FORCE: ::c_int = 0x00080000;
 
 pub const Q_SYNC: ::c_int = 0x600;
 pub const Q_QUOTAON: ::c_int = 0x100;
@@ -533,7 +542,7 @@ f! {
         return
     }
 
-    pub fn FD_ISSET(fd: ::c_int, set: *mut fd_set) -> bool {
+    pub fn FD_ISSET(fd: ::c_int, set: *const fd_set) -> bool {
         let bits = ::mem::size_of_val(&(*set).fds_bits[0]) * 8;
         let fd = fd as usize;
         return ((*set).fds_bits[fd / bits] & (1 << (fd % bits))) != 0
@@ -759,6 +768,8 @@ extern "C" {
     )]
     pub fn pthread_cancel(thread: ::pthread_t) -> ::c_int;
     pub fn pthread_kill(thread: ::pthread_t, sig: ::c_int) -> ::c_int;
+    pub fn sched_get_priority_min(policy: ::c_int) -> ::c_int;
+    pub fn sched_get_priority_max(policy: ::c_int) -> ::c_int;
     pub fn sem_unlink(name: *const ::c_char) -> ::c_int;
     #[cfg_attr(target_os = "netbsd", link_name = "__getpwnam_r50")]
     pub fn getpwnam_r(
@@ -852,6 +863,10 @@ extern "C" {
     ) -> ::size_t;
 
     pub fn regfree(preg: *mut regex_t);
+
+    pub fn arc4random() -> u32;
+    pub fn arc4random_buf(buf: *mut ::c_void, size: ::size_t);
+    pub fn arc4random_uniform(l: u32) -> u32;
 }
 
 cfg_if! {

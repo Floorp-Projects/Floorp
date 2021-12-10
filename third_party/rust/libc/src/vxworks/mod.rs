@@ -631,6 +631,7 @@ pub const EFAULT: ::c_int = 14;
 pub const ENOTEMPTY: ::c_int = 15;
 pub const EBUSY: ::c_int = 16;
 pub const EEXIST: ::c_int = 17;
+pub const EXDEV: ::c_int = 18;
 pub const ENODEV: ::c_int = 19;
 pub const ENOTDIR: ::c_int = 20;
 pub const EISDIR: ::c_int = 21;
@@ -638,7 +639,9 @@ pub const EINVAL: ::c_int = 22;
 pub const ENAMETOOLONG: ::c_int = 26;
 pub const EFBIG: ::c_int = 27;
 pub const ENOSPC: ::c_int = 28;
+pub const ESPIPE: ::c_int = 29;
 pub const EROFS: ::c_int = 30;
+pub const EMLINK: ::c_int = 31;
 pub const EPIPE: ::c_int = 32;
 pub const EDEADLK: ::c_int = 33;
 pub const ERANGE: ::c_int = 38;
@@ -664,6 +667,10 @@ pub const ESHUTDOWN: ::c_int = 58;
 pub const ETOOMANYREFS: ::c_int = 59;
 pub const ETIMEDOUT: ::c_int = 60;
 pub const ECONNREFUSED: ::c_int = 61;
+pub const ENETDOWN: ::c_int = 62;
+pub const ETXTBSY: ::c_int = 63;
+pub const ELOOP: ::c_int = 64;
+pub const EHOSTUNREACH: ::c_int = 65;
 pub const EINPROGRESS: ::c_int = 68;
 pub const EALREADY: ::c_int = 69;
 pub const EWOULDBLOCK: ::c_int = 70;
@@ -1114,6 +1121,7 @@ extern "C" {
     pub fn perror(s: *const c_char);
     pub fn atoi(s: *const c_char) -> c_int;
     pub fn strtod(s: *const c_char, endp: *mut *mut c_char) -> c_double;
+    pub fn strtof(s: *const c_char, endp: *mut *mut c_char) -> c_float;
     pub fn strtol(s: *const c_char, endp: *mut *mut c_char, base: c_int) -> c_long;
     pub fn strtoul(s: *const c_char, endp: *mut *mut c_char, base: c_int) -> c_ulong;
     pub fn calloc(nobj: size_t, size: size_t) -> *mut c_void;
@@ -1211,6 +1219,8 @@ extern "C" {
     pub fn pthread_attr_setdetachstate(attr: *mut ::pthread_attr_t, state: ::c_int) -> ::c_int;
 
     pub fn strerror_r(errnum: ::c_int, buf: *mut c_char, buflen: ::size_t) -> ::c_int;
+
+    pub fn sigaddset(set: *mut sigset_t, signum: ::c_int) -> ::c_int;
 
     pub fn sigaction(signum: ::c_int, act: *const sigaction, oldact: *mut sigaction) -> ::c_int;
 
