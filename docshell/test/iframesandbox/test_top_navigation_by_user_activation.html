@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1744321
+-->
+<head>
+<meta charset="utf-8">
+<title>Iframe sandbox top navigation by user activation</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script>
+function waitForMessage(aCallback) {
+  return new Promise((aResolve) => {
+    window.addEventListener("message", function listener(aEvent) {
+      aCallback(aEvent);
+      aResolve();
+    }, { once: true });
+  });
+}
+
+[
+  {
+    desc: "A same-origin iframe in sandbox with 'allow-top-navigation-by-user-activation' cannot navigate its top level page, if the navigation is not triggered by a user gesture",
+    sameOrigin: true,
+    userGesture: false,
+  },
+  {
+    desc: "A same-origin iframe in sandbox with 'allow-top-navigation-by-user-activation' can navigate its top level page, if the navigation is triggered by a user gesture",
+    sameOrigin: true,
+    userGesture: true,
+  },
+  {
+    desc: "A cross-origin iframe in sandbox with 'allow-top-navigation-by-user-activation' cannot navigate its top level page, if the navigation is not triggered by a user gesture",
+    sameOrigin: false,
+    userGesture: false,
+  },
+  {
+    desc: "A cross-origin iframe in sandbox with 'allow-top-navigation-by-user-activation' can navigate its top level page, if the navigation is triggered by a user gesture",
+    sameOrigin: false,
+    userGesture: true,
+  },
+].forEach(({desc, sameOrigin, userGesture}) => {
+  add_task(async function() {
+    info(`Test: ${desc}`);
+
+    let url = "file_top_navigation_by_user_activation.html";
+    if (sameOrigin) {
+      url = "http://example.org/tests/docshell/test/iframesandbox/" + url;
+    }
+
+    let promise = waitForMessage((e) => {
+      is(e.data, "READY", "Ready for test");
+    });
+    let testWin = window.open(url);
+    await promise;
+
+    promise = waitForMessage((e) => {
+      is(e.data, userGesture ? "NAVIGATED" : "BLOCKED", "Check the result");
+    });
+    testWin.postMessage(userGesture ? "CLICK" : "SCRIPT", "*");
+    await promise;
+    testWin.close();
+  });
+});
+</script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1744321">Mozilla Bug 1744321</a>
+<p id="display"></p>
+<div id="content">
+Tests for Bug 1744321
+</div>
+</body>
+</html>
