@@ -256,43 +256,8 @@ fn new_ct_font_with_variations_from_ct_font_desc(ct_font_desc: &CTFontDescriptor
         return ct_font;
     }
     let mut vals: Vec<(CFNumber, CFNumber)> = Vec::with_capacity(variations.len() as usize);
-    let axes = match ct_font.get_variation_axes() {
-        Some(axes) => axes,
-        None => return ct_font,
-    };
-
-    for axis in axes.iter() {
-        let tag = if let Some(tag) = get_tag_from_axis(&axis, unsafe { kCTFontVariationAxisIdentifierKey }) {
-            tag
-        } else {
-            return ct_font;
-        };
-
-        let mut val = match variations.iter().find(|variation| (variation.tag as i64) == tag) {
-            Some(variation) => variation.value as f64,
-            None => continue,
-        };
-
-        let min_val = if let Some(num) = get_value_from_axis(&axis, unsafe { kCTFontVariationAxisMinimumValueKey }) {
-            num
-        } else {
-            return ct_font;
-        };
-        let max_val = if let Some(num) = get_value_from_axis(&axis, unsafe { kCTFontVariationAxisMaximumValueKey }) {
-            num
-        } else {
-            return ct_font;
-        };
-        let def_val = if let Some(num) = get_value_from_axis(&axis, unsafe { kCTFontVariationAxisDefaultValueKey }) {
-            num
-        } else {
-            return ct_font;
-        };
-
-        val = val.max(min_val).min(max_val);
-        if val != def_val {
-            vals.push((CFNumber::from(tag), CFNumber::from(val)));
-        }
+    for variation in variations {
+        vals.push((CFNumber::from(variation.tag as i64), CFNumber::from(variation.value as f64)));
     }
     if vals.is_empty() {
         return ct_font;
