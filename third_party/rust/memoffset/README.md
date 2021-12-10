@@ -1,6 +1,6 @@
 # memoffset #
 
-[![](http://meritbadge.herokuapp.com/memoffset)](https://crates.io/crates/memoffset)
+[![](https://img.shields.io/crates/v/memoffset.svg)](https://crates.io/crates/memoffset)
 
 C-Like `offset_of` functionality for Rust structs.
 
@@ -21,17 +21,9 @@ memoffset = "0.6"
 
 These versions will compile fine with rustc versions greater or equal to 1.19.
 
-Add the following lines at the top of your `main.rs` or `lib.rs` files.
-
-```rust,ignore
-#[macro_use]
-extern crate memoffset;
-```
-
 ## Examples ##
 ```rust
-#[macro_use]
-extern crate memoffset;
+use memoffset::{offset_of, span_of};
 
 #[repr(C, packed)]
 struct Foo {
@@ -69,5 +61,5 @@ features = ["unstable_const"]
 
 Your crate root: (`lib.rs`/`main.rs`)
 ```rust,ignore
-#![feature(const_ptr_offset_from, const_maybe_uninit_as_ptr, const_raw_ptr_deref, const_refs_to_cell)]
+#![feature(const_ptr_offset_from, const_refs_to_cell)]
 ```

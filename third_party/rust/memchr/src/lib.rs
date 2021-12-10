@@ -160,7 +160,7 @@ standard library exposes a platform independent SIMD API.
 #![cfg_attr(miri, allow(dead_code, unused_macros))]
 
 // Supporting 8-bit (or others) would be fine. If you need it, please submit a
-// bug report at https://github.com/BurntSushi/rust-memchr
+// bug report at https://github.com/BurntSushi/memchr
 #[cfg(not(any(
     target_pointer_width = "16",
     target_pointer_width = "32",

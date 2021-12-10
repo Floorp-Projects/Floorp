@@ -5,7 +5,7 @@ use core::ops;
 /// The purpose of this type is to permit usage of a "borrowed or owned
 /// byte string" in a way that keeps std/no-std compatibility. That is, in
 /// no-std mode, this type devolves into a simple &[u8] with no owned variant
-/// availble. We can't just use a plain Cow because Cow is not in core.
+/// available. We can't just use a plain Cow because Cow is not in core.
 #[derive(Clone, Debug)]
 pub struct CowBytes<'a>(Imp<'a>);
 

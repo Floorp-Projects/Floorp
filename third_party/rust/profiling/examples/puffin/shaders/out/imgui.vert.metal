@@ -10,6 +10,7 @@ struct Args
 
 struct spvDescriptorSetBuffer0
 {
+    texture2d<float> tex [[id(1)]];
     constant Args* uniform_buffer [[id(2)]];
 };
 
@@ -29,6 +30,7 @@ struct main0_in
 
 vertex main0_out main0(main0_in in [[stage_in]], constant spvDescriptorSetBuffer0& spvDescriptorSet0 [[buffer(0)]])
 {
+    constexpr sampler smp(filter::linear, mip_filter::linear, address::repeat, compare_func::never, max_anisotropy(1));
     main0_out out = {};
     out.uv = in.in_uv;
     out.color = in.in_color;

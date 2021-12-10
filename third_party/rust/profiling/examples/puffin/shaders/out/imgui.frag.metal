@@ -11,6 +11,7 @@ struct Args
 struct spvDescriptorSetBuffer0
 {
     texture2d<float> tex [[id(1)]];
+    constant Args* uniform_buffer [[id(2)]];
 };
 
 struct main0_out
