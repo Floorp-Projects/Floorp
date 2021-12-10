@@ -949,6 +949,9 @@ pref("print.shrink-to-fit.scale-limit-percent", 20);
 // Whether we should display simplify page checkbox on print preview UI
 pref("print.use_simplify_page", false);
 
+// Whether or not to force the Page Setup submenu of the File menu to shown
+pref("print.show_page_setup_menu", false);
+
 // Print header customization
 // Use the following codes:
 // &T - Title
