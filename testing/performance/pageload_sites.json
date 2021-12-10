@@ -147,7 +147,8 @@
       "login": false,
       "name": "bing-search",
       "test_url": "https://www.bing.com/search?q=barack+obama",
-      "secondary_url": "https://www.bing.com/search?q=barack+obama+quotes"
+      "secondary_url": "https://www.bing.com/search?q=barack+obama+quotes",
+      "inject_deterministic": false
     },
     {
       "login": false,
@@ -233,7 +234,8 @@
     {
       "login": false,
       "name": "imgur",
-      "test_url": "https://imgur.com/gallery/m5tYJL6"
+      "test_url": "https://imgur.com/gallery/m5tYJL6",
+      "inject_deterministic": false
     },
     {
       "login": true,
