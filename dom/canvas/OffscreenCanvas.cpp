@@ -15,11 +15,14 @@
 #include "mozilla/layers/CanvasClient.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/webgpu/CanvasContext.h"
 #include "CanvasRenderingContext2D.h"
 #include "CanvasUtils.h"
+#include "ClientWebGLContext.h"
 #include "GLContext.h"
 #include "GLScreenBuffer.h"
 #include "ImageBitmap.h"
+#include "ImageBitmapRenderingContext.h"
 #include "nsContentUtils.h"
 
 namespace mozilla::dom {
@@ -88,50 +91,80 @@ void OffscreenCanvas::ClearResources() {
   }
 }
 
-already_AddRefed<nsISupports> OffscreenCanvas::GetContext(
-    JSContext* aCx, const nsAString& aContextId,
-    JS::Handle<JS::Value> aContextOptions, ErrorResult& aRv) {
+void OffscreenCanvas::GetContext(
+    JSContext* aCx, const OffscreenRenderingContextId& aContextId,
+    JS::Handle<JS::Value> aContextOptions,
+    Nullable<OwningOffscreenRenderingContext>& aResult, ErrorResult& aRv) {
   if (mNeutered) {
+    aResult.SetNull();
     aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
+    return;
   }
 
-  // We only support WebGL in workers for now
   CanvasContextType contextType;
-  if (!CanvasUtils::GetCanvasContextType(aContextId, &contextType)) {
-    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-    return nullptr;
-  }
-
-  if (!(contextType == CanvasContextType::WebGL1 ||
-        contextType == CanvasContextType::WebGL2 ||
-        contextType == CanvasContextType::WebGPU ||
-        contextType == CanvasContextType::ImageBitmap)) {
-    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-    return nullptr;
+  switch (aContextId) {
+    case OffscreenRenderingContextId::Bitmaprenderer:
+      contextType = CanvasContextType::ImageBitmap;
+      break;
+    case OffscreenRenderingContextId::Webgl:
+      contextType = CanvasContextType::WebGL1;
+      break;
+    case OffscreenRenderingContextId::Webgl2:
+      contextType = CanvasContextType::WebGL2;
+      break;
+    case OffscreenRenderingContextId::Webgpu:
+      contextType = CanvasContextType::WebGPU;
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unhandled canvas type!");
+      aResult.SetNull();
+      aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+      return;
   }
 
   RefPtr<nsISupports> result = CanvasRenderingContextHelper::GetOrCreateContext(
       aCx, contextType, aContextOptions, aRv);
-
-  if (!mCurrentContext) {
-    return nullptr;
+  if (!result) {
+    aResult.SetNull();
+    return;
   }
+
+  MOZ_ASSERT(mCurrentContext);
 
   if (mCanvasRenderer) {
     // mCanvasRenderer->SetContextType(contextType);
     if (contextType == CanvasContextType::WebGL1 ||
         contextType == CanvasContextType::WebGL2) {
       MOZ_ASSERT_UNREACHABLE("WebGL OffscreenCanvas not yet supported.");
-      return nullptr;
+      aResult.SetNull();
+      return;
     }
     if (contextType == CanvasContextType::WebGPU) {
       MOZ_ASSERT_UNREACHABLE("WebGPU OffscreenCanvas not yet supported.");
-      return nullptr;
+      aResult.SetNull();
+      return;
     }
   }
 
-  return result.forget();
+  switch (mCurrentContextType) {
+    case CanvasContextType::ImageBitmap:
+      aResult.SetValue().SetAsImageBitmapRenderingContext() =
+          *static_cast<ImageBitmapRenderingContext*>(mCurrentContext.get());
+      break;
+    case CanvasContextType::WebGL1:
+    case CanvasContextType::WebGL2:
+      aResult.SetValue().SetAsWebGLRenderingContext() =
+          *static_cast<ClientWebGLContext*>(mCurrentContext.get());
+      break;
+    case CanvasContextType::WebGPU:
+      aResult.SetValue().SetAsGPUCanvasContext() =
+          *static_cast<webgpu::CanvasContext*>(mCurrentContext.get());
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("Unhandled canvas type!");
+      aResult.SetNull();
+      break;
+  }
 }
 
 layers::ImageContainer* OffscreenCanvas::GetImageContainer() {
@@ -205,6 +238,12 @@ already_AddRefed<ImageBitmap> OffscreenCanvas::TransferToImageBitmap(
 
   // TODO: Clear the content?
   return result.forget();
+}
+
+already_AddRefed<Promise> OffscreenCanvas::ConvertToBlob(
+    const ImageEncodeOptions& aOptions, ErrorResult& aRv) {
+  aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+  return nullptr;
 }
 
 already_AddRefed<Promise> OffscreenCanvas::ToBlob(JSContext* aCx,
