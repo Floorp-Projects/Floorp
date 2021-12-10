@@ -148,6 +148,7 @@ mozilla::LazyLogModule ApplicationReputationService::prlog(
 const char* const ApplicationReputationService::kNonBinaryExecutables[] = {
     ".ad",
     ".air",
+    ".fileloc",
     ".inetloc",
 };
 
