@@ -1287,10 +1287,6 @@ nsresult nsHttpChannel::SetupTransaction() {
   // See bug #466080. Transfer LOAD_ANONYMOUS flag to socket-layer.
   if (mLoadFlags & LOAD_ANONYMOUS) mCaps |= NS_HTTP_LOAD_ANONYMOUS;
 
-  if (mLoadFlags & LOAD_CALL_CONTENT_SNIFFERS) {
-    mCaps |= NS_HTTP_CALL_CONTENT_SNIFFER;
-  }
-
   if (LoadTimingEnabled()) mCaps |= NS_HTTP_TIMING_ENABLED;
 
   if (mUpgradeProtocolCallback) {
