@@ -58,7 +58,7 @@ class ExtensionActionTest : BaseSessionTest() {
         extension = sessionRule.waitForResult(
                 controller.installBuiltIn("resource://android/assets/web_extensions/actions/"));
 
-        sessionRule.session.webExtensionController.setMessageDelegate(
+        mainSession.webExtensionController.setMessageDelegate(
                 extension!!,
                 object : WebExtension.MessageDelegate {
                     override fun onConnect(port: WebExtension.Port) {
@@ -86,7 +86,7 @@ class ExtensionActionTest : BaseSessionTest() {
             }
         })
 
-        sessionRule.session.loadUri("http://example.com")
+        mainSession.loadUri("http://example.com")
         sessionRule.waitForPageStop()
 
         val pageAction = sessionRule.waitForResult(pageActionDefaultResult)
@@ -174,8 +174,8 @@ class ExtensionActionTest : BaseSessionTest() {
         sessionRule.addExternalDelegateDuringNextWait(
                 WebExtension.ActionDelegate::class,
                 { delegate ->
-                    sessionRule.session.webExtensionController.setActionDelegate(extension!!, delegate) },
-                { sessionRule.session.webExtensionController.setActionDelegate(extension!!, null) },
+                    mainSession.webExtensionController.setActionDelegate(extension!!, delegate) },
+                { mainSession.webExtensionController.setActionDelegate(extension!!, null) },
         object : WebExtension.ActionDelegate {
             override fun onBrowserAction(extension: WebExtension, session: GeckoSession?, action: WebExtension.Action) {
                 assertEquals(id, "#browserAction")
@@ -505,7 +505,7 @@ class ExtensionActionTest : BaseSessionTest() {
         }"""))
 
         val openPopup = GeckoResult<Void>()
-        sessionRule.session.webExtensionController.setActionDelegate(extension!!,
+        mainSession.webExtensionController.setActionDelegate(extension!!,
                 object : WebExtension.ActionDelegate {
             override fun onOpenPopup(extension: WebExtension,
                                      popupAction: WebExtension.Action): GeckoResult<GeckoSession>? {
@@ -518,7 +518,7 @@ class ExtensionActionTest : BaseSessionTest() {
 
         sessionRule.waitForPageStops(2)
         // openPopup needs user activation
-        sessionRule.session.synthesizeTap(50, 50)
+        mainSession.synthesizeTap(50, 50)
 
         sessionRule.waitForResult(openPopup)
     }
