@@ -138,12 +138,6 @@ ifeq ($(MOZ_PKG_FORMAT),ZIP)
   INNER_UNMAKE_PACKAGE = $(call py_action,make_unzip,$(UNPACKAGE))
 endif
 
-ifeq ($(MOZ_PKG_FORMAT),SFX7Z)
-  PKG_SUFFIX	= .exe
-  INNER_MAKE_PACKAGE = $(call py_action,exe_7z_archive,'$(MOZ_PKG_DIR)' '$(MOZ_INSTALLER_PATH)/app.tag' '$(MOZ_SFX_PACKAGE)' '$(PACKAGE)')
-  INNER_UNMAKE_PACKAGE = $(call py_action,exe_7z_extract,$(UNPACKAGE) $(MOZ_PKG_DIR))
-endif
-
 #Create an RPM file
 ifeq ($(MOZ_PKG_FORMAT),RPM)
   PKG_SUFFIX  = .rpm
