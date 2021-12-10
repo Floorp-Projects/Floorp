@@ -42,6 +42,7 @@ import org.mozilla.fenix.databinding.TabstrayMultiselectItemsBinding
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.ext.runIfFragmentIsAttached
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.HomeScreenViewModel
 import org.mozilla.fenix.share.ShareFragment
@@ -485,18 +486,20 @@ class TabsTrayFragment : AppCompatDialogFragment() {
         isNewCollection: Boolean = false,
         collectionToSelect: Long?
     ) {
-        FenixSnackbar
-            .make(requireView())
-            .collectionMessage(tabSize, isNewCollection)
-            .anchorWithAction(getSnackbarAnchor()) {
-                findNavController().navigate(
-                    TabsTrayFragmentDirections.actionGlobalHome(
-                        focusOnAddressBar = false,
-                        focusOnCollection = collectionToSelect.orDefault()
+        runIfFragmentIsAttached {
+            FenixSnackbar
+                .make(requireView())
+                .collectionMessage(tabSize, isNewCollection)
+                .anchorWithAction(getSnackbarAnchor()) {
+                    findNavController().navigate(
+                        TabsTrayFragmentDirections.actionGlobalHome(
+                            focusOnAddressBar = false,
+                            focusOnCollection = collectionToSelect.orDefault()
+                        )
                     )
-                )
-                dismissTabsTray()
-            }.show()
+                    dismissTabsTray()
+                }.show()
+        }
     }
 
     @VisibleForTesting
