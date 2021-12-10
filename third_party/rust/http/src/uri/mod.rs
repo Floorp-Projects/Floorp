@@ -711,6 +711,15 @@ impl TryFrom<String> for Uri {
     }
 }
 
+impl<'a> TryFrom<Vec<u8>> for Uri {
+    type Error = InvalidUri;
+
+    #[inline]
+    fn try_from(vec: Vec<u8>) -> Result<Self, Self::Error> {
+        Uri::from_shared(Bytes::from(vec))
+    }
+}
+
 impl TryFrom<Parts> for Uri {
     type Error = InvalidUriParts;
 
