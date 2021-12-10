@@ -116,22 +116,9 @@ TEST(SanitizeRenderer, TestPipe)
 
 TEST(SanitizeRenderer, TestAngleVega)
 {
-  const std::string renderer(
-      "ANGLE (AMD, Radeon RX Vega Direct3D11 vs_5_0 ps_5_0, "
-      "D3D11-27.20.22025.1006)");
+  const std::string renderer("ANGLE (Radeon RX Vega Direct3D11 vs_5_0 ps_5_0)");
   const std::string expectation(
-      "ANGLE (AMD, Radeon R9 200 Series Direct3D11 vs_5_0 ps_5_0)");
-  const auto sanitized = mozilla::webgl::SanitizeRenderer(renderer);
-  EXPECT_EQ(sanitized, expectation);
-}
-
-TEST(SanitizeRenderer, TestAngleRadeon)
-{
-  const std::string renderer(
-      "ANGLE (AMD, AMD Radeon(TM) Graphics Direct3D11 vs_5_0 ps_5_0, "
-      "D3D11-27.20.1020.2002)");
-  const std::string expectation(
-      "ANGLE (AMD, Radeon HD 3200 Graphics Direct3D11 vs_5_0 ps_5_0)");
+      "ANGLE (Radeon R9 200 Series Direct3D11 vs_5_0 ps_5_0)");
   const auto sanitized = mozilla::webgl::SanitizeRenderer(renderer);
   EXPECT_EQ(sanitized, expectation);
 }
@@ -139,10 +126,8 @@ TEST(SanitizeRenderer, TestAngleRadeon)
 TEST(SanitizeRenderer, TestAngleWarp)
 {
   const std::string renderer(
-      "ANGLE (Unknown, Microsoft Basic Render Driver Direct3D11 vs_5_0 ps_5_0, "
-      "D3D11-10.0.22000.1)");
-  const std::string expectation =
-      "ANGLE (Unknown, Microsoft Basic Render Driver Direct3D11 vs_5_0 ps_5_0)";
+      "ANGLE (Microsoft Basic Render Driver Direct3D11 vs_5_0 ps_5_0)");
+  const std::string expectation = renderer;
   const auto sanitized = mozilla::webgl::SanitizeRenderer(renderer);
   EXPECT_EQ(sanitized, expectation);
 }
@@ -150,10 +135,9 @@ TEST(SanitizeRenderer, TestAngleWarp)
 TEST(SanitizeRenderer, TestAngle3070)
 {
   const std::string renderer(
-      "ANGLE (NVIDIA, NVIDIA GeForce RTX 3070 Direct3D11 vs_5_0 ps_5_0, "
-      "D3D11-10.0.22000.1)");
+      "ANGLE (NVIDIA GeForce RTX 3070 Direct3D11 vs_5_0 ps_5_0)");
   const std::string expectation(
-      "ANGLE (NVIDIA, NVIDIA GeForce GTX 980 Direct3D11 vs_5_0 ps_5_0)");
+      "ANGLE (NVIDIA GeForce GTX 980 Direct3D11 vs_5_0 ps_5_0)");
   const auto sanitized = mozilla::webgl::SanitizeRenderer(renderer);
   EXPECT_EQ(sanitized, expectation);
 }
@@ -169,10 +153,9 @@ TEST(SanitizeRenderer, TestWindows3070)
 TEST(SanitizeRenderer, TestAngleK600)
 {
   const std::string renderer(
-      "ANGLE (NVIDIA, NVIDIA Quadro K600 Direct3D11 vs_5_0 ps_5_0, somethig "
-      "like D3D11-10.0.22000.1)");
+      "ANGLE (NVIDIA Quadro K600 Direct3D11 vs_5_0 ps_5_0)");
   const std::string expectation(
-      "ANGLE (NVIDIA, NVIDIA GeForce GTX 480 Direct3D11 vs_5_0 ps_5_0)");
+      "ANGLE (NVIDIA GeForce GTX 480 Direct3D11 vs_5_0 ps_5_0)");
   const auto sanitized = mozilla::webgl::SanitizeRenderer(renderer);
   EXPECT_EQ(sanitized, expectation);
 }
