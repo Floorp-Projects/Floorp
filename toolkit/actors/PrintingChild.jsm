@@ -361,10 +361,7 @@ class PrintingChild extends JSWindowActorChild {
       let printSettings = this.getPrintSettings(lastUsedPrinterName);
 
       // Disable the progress dialog for generating previews.
-      printSettings.showPrintProgress = !Services.prefs.getBoolPref(
-        "print.tab_modal.enabled",
-        false
-      );
+      printSettings.showPrintProgress = false;
 
       // If we happen to be on simplified mode, we need to set docURL in order
       // to generate header/footer content correctly, since simplified tab has
