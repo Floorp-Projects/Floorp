@@ -840,6 +840,9 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Tynnu</string>
 
+    <!-- Text for the dialog title for renaming a top site -->
+    <string name="rename_top_site">Ailenwi</string>
+
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
     <string name="contextmenu_erased_images_note2">Fydd delweddau sydd wedi eu cadw a’u rhannu &lt;b&gt;ddim yn cael eu dileu&lt;/b&gt; pan fyddwch yn dileu hanes %1$s.</string>
@@ -856,4 +859,8 @@ The new line here must be kept as the second half of the string is clickable for
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Dilyn thema’r ddyfais</string>
 
+
+    <!-- Sessions List -->
+    <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
+    <string name="close_tab">Cau tab</string>
 </resources>

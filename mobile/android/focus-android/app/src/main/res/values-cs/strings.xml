@@ -835,6 +835,9 @@ V nabídce aplikace %1$s vyberte Přidat zkratku</string>
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">Odebrat</string>
 
+    <!-- Text for the dialog title for renaming a top site -->
+    <string name="rename_top_site">Přejmenovat</string>
+
     <!-- Text for context menu additional note.
     %1$s is a placeholder for the app name. -->
     <string name="contextmenu_erased_images_note2">Uložené a sdílené obrázky &lt;b&gt;nebudou&lt;/b&gt; smazány když smažete historii aplikace %1$s</string>
@@ -851,4 +854,8 @@ V nabídce aplikace %1$s vyberte Přidat zkratku</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Podle nastavení zařízení</string>
 
+
+    <!-- Sessions List -->
+    <!-- Content description (not visible, for screen readers etc.): Button that closes a tab n the sessions list -->
+    <string name="close_tab">Zavřít panel</string>
 </resources>
