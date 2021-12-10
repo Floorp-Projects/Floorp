@@ -4,7 +4,7 @@ set -x -e -v
 # This script is for building clang.
 
 ORIGPWD="$PWD"
-JSON_CONFIG="$1"
+CONFIGS=$(for c; do echo -n " -c $GECKO_PATH/$c"; done)
 
 cd $GECKO_PATH
 
@@ -16,7 +16,7 @@ if [ -d "$MOZ_FETCHES_DIR/binutils/bin" ]; then
   export PATH="$MOZ_FETCHES_DIR/binutils/bin:$PATH"
 fi
 
-case "$JSON_CONFIG" in
+case "$CONFIGS" in
 *macosx64*)
   # these variables are used in build-clang.py
   export CROSS_CCTOOLS_PATH=$MOZ_FETCHES_DIR/cctools
@@ -38,7 +38,7 @@ case "$JSON_CONFIG" in
 *linux64*|*android*)
   ;;
 *)
-  echo Cannot figure out build configuration for $JSON_CONFIG
+  echo Cannot figure out build configuration for $CONFIGS
   exit 1
   ;;
 esac
@@ -47,7 +47,7 @@ esac
 set +x
 
 cd $MOZ_FETCHES_DIR/llvm-project
-python3 $GECKO_PATH/build/build-clang/build-clang.py -c $GECKO_PATH/$1
+python3 $GECKO_PATH/build/build-clang/build-clang.py $CONFIGS
 
 set -x
 
