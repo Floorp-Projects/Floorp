@@ -11,9 +11,9 @@
  */
 
 interface mixin SVGAnimatedPathData {
+  [Pref="dom.svg.pathSeg.enabled"]
   readonly attribute SVGPathSegList pathSegList;
-  //readonly attribute SVGPathSegList normalizedPathSegList;
+  [Pref="dom.svg.pathSeg.enabled"]
   readonly attribute SVGPathSegList animatedPathSegList;
-  //readonly attribute SVGPathSegList animatedNormalizedPathSegList;
 };
 

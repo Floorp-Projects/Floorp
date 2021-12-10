@@ -1180,8 +1180,6 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "SVGPathElement", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "SVGPathSegList", insecureContext: true },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "SVGPatternElement", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "SVGPoint", insecureContext: true },
