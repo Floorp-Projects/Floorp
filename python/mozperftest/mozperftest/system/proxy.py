@@ -160,6 +160,10 @@ class ProxyRunner(Layer):
         else:
             raise ValueError("Proxy mode not provided please provide proxy mode")
 
+        inject_deterministic = self.get_arg("deterministic")
+        if inject_deterministic:
+            command.extend(["--deterministic"])
+
         print(" ".join(command))
         self.output_handler = OutputHandler()
         self.proxy = ProcessHandler(

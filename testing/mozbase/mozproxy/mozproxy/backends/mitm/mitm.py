@@ -281,10 +281,15 @@ class Mitmproxy(Playback):
                     os.path.normpath(self.recording.recording_path),
                     "--set",
                     "websocket=false",
-                    "--scripts",
-                    os.path.join(mitm_folder, "scripts", "inject-deterministic.py"),
                 ]
             )
+            if "inject_deterministic" in self.config.keys():
+                command.extend(
+                    [
+                        "--scripts",
+                        os.path.join(mitm_folder, "scripts", "inject-deterministic.py"),
+                    ]
+                )
             self.recording.set_metadata(
                 "proxy_version", self.config["playback_version"]
             )
