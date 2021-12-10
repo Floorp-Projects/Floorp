@@ -17,8 +17,8 @@
     <!-- Selected tab -->
     <color name="fx_mobile_layer_color_accent_nonopaque" tools:ignore="UnusedResources">@color/photonViolet90A20</color>
     <color name="fx_mobile_layer_color_scrim" tools:ignore="UnusedResources">@color/photonDarkGrey05A45</color>
-    <color name="fx_mobile_layer_color_scrim_start" tools:ignore="UnusedResources">@color/photonDarkGrey90</color>
-    <color name="fx_mobile_layer_color_scrim_end" tools:ignore="UnusedResources">@color/photonDarkGrey30</color>
+    <color name="fx_mobile_layer_color_scrim_start" tools:ignore="UnusedResources">@color/photonDarkGrey90A96</color>
+    <color name="fx_mobile_layer_color_scrim_end" tools:ignore="UnusedResources">@color/photonDarkGrey30A96</color>
     <!-- Tooltip -->
     <color name="fx_mobile_layer_color_gradient_start" tools:ignore="UnusedResources">@color/photonViolet70</color>
     <!-- Tooltip -->
