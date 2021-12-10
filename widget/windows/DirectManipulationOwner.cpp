@@ -67,6 +67,9 @@ class DManipEventHandler : public IDirectManipulationViewportEventHandler,
   void Update();
 
   class VObserver final : public mozilla::VsyncObserver {
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DManipEventHandler::VObserver,
+                                          override)
+
    public:
     bool NotifyVsync(const mozilla::VsyncEvent& aVsync) override {
       if (mOwner) {
