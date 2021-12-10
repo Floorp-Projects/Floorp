@@ -120,7 +120,7 @@
 #include "js/experimental/CTypes.h"        // JS::InitCTypesClass
 #include "js/experimental/Intl.h"  // JS::AddMoz{DateTimeFormat,DisplayNames}Constructor
 #include "js/experimental/JitInfo.h"  // JSJit{Getter,Setter,Method}CallArgs, JSJitGetterInfo, JSJit{Getter,Setter}Op, JSJitInfo
-#include "js/experimental/JSStencil.h"  // JS::Stencil, JS::CompileToStencilOffThread, JS::FinishOffThreadCompileToStencil
+#include "js/experimental/JSStencil.h"  // JS::Stencil, JS::CompileToStencilOffThread, JS::FinishCompileToStencilOffThread
 #include "js/experimental/SourceHook.h"  // js::{Set,Forget,}SourceHook
 #include "js/experimental/TypedData.h"   // JS_NewUint8Array
 #include "js/friend/DumpFunctions.h"     // JS::FormatStackDump
@@ -6393,7 +6393,7 @@ static bool FinishOffThreadCompileToStencil(JSContext* cx, unsigned argc,
   JS::OffThreadToken* token = job->waitUntilDone(cx);
   MOZ_ASSERT(token);
 
-  RefPtr<JS::Stencil> stencil = JS::FinishOffThreadCompileToStencil(cx, token);
+  RefPtr<JS::Stencil> stencil = JS::FinishCompileToStencilOffThread(cx, token);
   DeleteOffThreadJob(cx, job);
   if (!stencil) {
     return false;
