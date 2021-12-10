@@ -81,25 +81,25 @@ class RuntimeSettingsTest : BaseSessionTest() {
     @Test fun fontSize() {
         val settings = sessionRule.runtime.settings
         settings.fontSizeFactor = 1.0f
-        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
+        mainSession.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
 
         val fontSizeJs = "parseFloat(window.getComputedStyle(document.querySelector('p')).fontSize)"
-        val initialFontSize = sessionRule.session.evaluateJS(fontSizeJs) as Double
+        val initialFontSize = mainSession.evaluateJS(fontSizeJs) as Double
 
         val textSizeFactor = 2.0f
         settings.fontSizeFactor = textSizeFactor
-        sessionRule.session.reload()
+        mainSession.reload()
         sessionRule.waitForPageStop()
-        var fontSize = sessionRule.session.evaluateJS(fontSizeJs) as Double
+        var fontSize = mainSession.evaluateJS(fontSizeJs) as Double
         val expectedFontSize = initialFontSize * textSizeFactor
         assertThat("old text size ${initialFontSize}px, new size should be ${expectedFontSize}px",
                 fontSize, closeTo(expectedFontSize, 0.1))
 
         settings.fontSizeFactor = 1.0f
-        sessionRule.session.reload()
+        mainSession.reload()
         sessionRule.waitForPageStop()
-        fontSize = sessionRule.session.evaluateJS(fontSizeJs) as Double
+        fontSize = mainSession.evaluateJS(fontSizeJs) as Double
         assertThat("text size should be ${initialFontSize}px again",
                 fontSize, closeTo(initialFontSize, 0.1))
     }
