@@ -231,6 +231,8 @@ void ClientWebGLContext::MarkCanvasDirty() {
   if (mCanvasElement) {
     SVGObserverUtils::InvalidateDirectRenderingObservers(mCanvasElement);
     mCanvasElement->InvalidateCanvasContent(nullptr);
+  } else if (mOffscreenCanvas) {
+    mOffscreenCanvas->QueueCommitToCompositor();
   }
 }
 
