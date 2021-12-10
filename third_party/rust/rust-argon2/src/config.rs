@@ -6,10 +6,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use super::common;
-use super::thread_mode::ThreadMode;
-use super::variant::Variant;
-use super::version::Version;
+use crate::common;
+use crate::thread_mode::ThreadMode;
+use crate::variant::Variant;
+use crate::version::Version;
 
 /// Structure containing configuration settings.
 ///
@@ -81,13 +81,13 @@ impl<'a> Default for Config<'a> {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
 
-    use super::*;
-    use variant::Variant;
-    use version::Version;
+    use crate::config::Config;
+    use crate::thread_mode::ThreadMode;
+    use crate::variant::Variant;
+    use crate::version::Version;
 
     #[test]
     fn default_returns_correct_instance() {

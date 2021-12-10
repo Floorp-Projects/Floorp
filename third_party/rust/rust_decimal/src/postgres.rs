@@ -1,4 +1,4 @@
-use crate::constants::MAX_PRECISION;
+use crate::constants::MAX_PRECISION_U32;
 use crate::{
     ops::array::{div_by_u32, is_all_zero, mul_by_u32},
     Decimal,
@@ -61,16 +61,16 @@ impl Decimal {
         }
         // adding fractional part
         if fractionals_part_count > 0 {
-            let dec: Vec<_> = digits.into_iter().collect();
             let start_fractionals = if weight < 0 { (-weight as u32) - 1 } else { 0 };
-            for (i, digit) in dec.into_iter().enumerate() {
+            for (i, digit) in digits.into_iter().enumerate() {
                 let fract_pow = 4 * (i as u32 + 1 + start_fractionals);
-                if fract_pow <= MAX_PRECISION {
+                if fract_pow <= MAX_PRECISION_U32 {
                     result += Decimal::new(digit as i64, 0) / Decimal::from_i128_with_scale(10i128.pow(fract_pow), 0);
-                } else if fract_pow == MAX_PRECISION + 4 {
+                } else if fract_pow == MAX_PRECISION_U32 + 4 {
                     // rounding last digit
                     if digit >= 5000 {
-                        result += Decimal::new(1_i64, 0) / Decimal::from_i128_with_scale(10i128.pow(MAX_PRECISION), 0);
+                        result +=
+                            Decimal::new(1_i64, 0) / Decimal::from_i128_with_scale(10i128.pow(MAX_PRECISION_U32), 0);
                     }
                 }
             }
@@ -139,8 +139,8 @@ impl Decimal {
     }
 }
 
-#[cfg(feature = "diesel")]
-mod diesel {
+#[cfg(feature = "db-diesel-postgres")]
+mod diesel_postgres {
     use super::*;
     use ::diesel::{
         deserialize::{self, FromSql},
@@ -205,8 +205,8 @@ mod diesel {
     }
 
     impl From<Decimal> for PgNumeric {
-        fn from(bigdecimal: Decimal) -> Self {
-            (&bigdecimal).into()
+        fn from(decimal: Decimal) -> Self {
+            (&decimal).into()
         }
     }
 
@@ -224,7 +224,7 @@ mod diesel {
     }
 
     #[cfg(test)]
-    mod pg_tests {
+    mod tests {
         use super::*;
         use core::str::FromStr;
 
@@ -349,7 +349,6 @@ mod diesel {
         }
 
         #[test]
-        #[cfg(feature = "unstable")]
         fn decimal_to_pg_numeric_retains_sign() {
             let decimal = Decimal::from_str("123.456").unwrap();
             let expected = PgNumeric::Positive {
@@ -460,7 +459,7 @@ mod diesel {
     }
 }
 
-#[cfg(feature = "postgres")]
+#[cfg(any(feature = "db-postgres", feature = "db-tokio-postgres"))]
 mod postgres {
     use super::*;
     use ::postgres::types::{to_sql_checked, FromSql, IsNull, ToSql, Type};

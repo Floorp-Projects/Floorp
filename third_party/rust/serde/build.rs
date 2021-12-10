@@ -53,16 +53,20 @@ fn main() {
     // 128-bit integers stabilized in Rust 1.26:
     // https://blog.rust-lang.org/2018/05/10/Rust-1.26.html
     //
-    // Disabled on Emscripten targets as Emscripten doesn't
-    // currently support integers larger than 64 bits.
-    if minor >= 26 && !emscripten {
+    // Disabled on Emscripten targets before Rust 1.40 since
+    // Emscripten did not support 128-bit integers until Rust 1.40
+    // (https://github.com/rust-lang/rust/pull/65251)
+    if minor >= 26 && (!emscripten || minor >= 40) {
         println!("cargo:rustc-cfg=integer128");
     }
 
     // Inclusive ranges methods stabilized in Rust 1.27:
     // https://github.com/rust-lang/rust/pull/50758
+    // Also Iterator::try_for_each:
+    // https://blog.rust-lang.org/2018/06/21/Rust-1.27.html#library-stabilizations
     if minor >= 27 {
         println!("cargo:rustc-cfg=range_inclusive");
+        println!("cargo:rustc-cfg=iterator_try_fold");
     }
 
     // Non-zero integers stabilized in Rust 1.28:

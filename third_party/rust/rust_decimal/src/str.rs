@@ -1,5 +1,5 @@
 use crate::{
-    constants::MAX_STR_BUFFER_SIZE,
+    constants::{MAX_PRECISION, MAX_STR_BUFFER_SIZE},
     error::Error,
     ops::array::{add_by_internal, add_one_internal, div_by_u32, is_all_zero, mul_by_10, mul_by_u32},
     Decimal,
@@ -15,7 +15,7 @@ pub(crate) fn to_str_internal(
     value: &Decimal,
     append_sign: bool,
     precision: Option<usize>,
-) -> ArrayString<[u8; MAX_STR_BUFFER_SIZE]> {
+) -> (ArrayString<[u8; MAX_STR_BUFFER_SIZE]>, Option<usize>) {
     // Get the scale - where we need to put the decimal point
     let scale = value.scale() as usize;
 
@@ -30,17 +30,28 @@ pub(crate) fn to_str_internal(
         chars.push('0');
     }
 
-    let prec = match precision {
-        Some(prec) => prec,
-        None => scale,
+    let (prec, additional) = match precision {
+        Some(prec) => {
+            let max: usize = MAX_PRECISION.into();
+            if prec > max {
+                (max, Some(prec - max))
+            } else {
+                (prec, None)
+            }
+        }
+        None => (scale, None),
     };
 
     let len = chars.len();
     let whole_len = len - scale;
     let mut rep = ArrayString::new();
-    if append_sign && value.is_sign_negative() {
+    // Append the negative sign if necessary while also keeping track of the length of an "empty" string representation
+    let empty_len = if append_sign && value.is_sign_negative() {
         rep.push('-');
-    }
+        1
+    } else {
+        0
+    };
     for i in 0..whole_len + prec {
         if i == len - scale {
             if i == 0 {
@@ -58,11 +69,11 @@ pub(crate) fn to_str_internal(
     }
 
     // corner case for when we truncated everything in a low fractional
-    if rep.is_empty() {
+    if rep.len() == empty_len {
         rep.push('0');
     }
 
-    rep
+    (rep, additional)
 }
 
 pub(crate) fn fmt_scientific_notation(
@@ -526,4 +537,19 @@ pub(crate) fn parse_str_radix_n(str: &str, radix: u32) -> Result<Decimal, crate:
     }
 
     Ok(Decimal::from_parts(data[0], data[1], data[2], negative, scale))
+}
+
+#[cfg(test)]
+mod test {
+    use crate::Decimal;
+    use arrayvec::ArrayString;
+    use core::{fmt::Write, str::FromStr};
+
+    #[test]
+    fn display_does_not_overflow_max_capacity() {
+        let num = Decimal::from_str("1.2").unwrap();
+        let mut buffer = ArrayString::<[u8; 64]>::new();
+        let _ = buffer.write_fmt(format_args!("{:.31}", num)).unwrap();
+        assert_eq!("1.2000000000000000000000000000000", buffer.as_str());
+    }
 }
