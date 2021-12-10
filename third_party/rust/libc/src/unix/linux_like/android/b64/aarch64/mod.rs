@@ -1,5 +1,6 @@
 pub type c_char = u8;
 pub type wchar_t = u32;
+pub type __u64 = ::c_ulonglong;
 
 s! {
     pub struct stat {
@@ -125,6 +126,7 @@ pub const SYS_epoll_ctl: ::c_long = 21;
 pub const SYS_epoll_pwait: ::c_long = 22;
 pub const SYS_dup: ::c_long = 23;
 pub const SYS_dup3: ::c_long = 24;
+pub const SYS_fcntl: ::c_long = 25;
 pub const SYS_inotify_init1: ::c_long = 26;
 pub const SYS_inotify_add_watch: ::c_long = 27;
 pub const SYS_inotify_rm_watch: ::c_long = 28;

@@ -10,12 +10,11 @@
 # You can get the latest idna table from
 # http://www.unicode.org/Public/idna/latest/IdnaMappingTable.txt
 
-from __future__ import print_function
 import collections
 import itertools
 
 print('''\
-// Copyright 2013-2014 The rust-url developers.
+// Copyright 2013-2020 The rust-url developers.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
 // http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
@@ -32,7 +31,7 @@ def escape_char(c):
     return "\\u{%x}" % ord(c[0])
 
 def char(s):
-    return unichr(int(s, 16))
+    return chr(int(s, 16))
 
 strtab = collections.OrderedDict()
 strtab_offset = 0
@@ -107,7 +106,7 @@ for (k, g) in grouped_ranges:
     # the codepoint space.
     a, b = itertools.tee(group)
     next(b, None)
-    for (g1, g2) in itertools.izip(a, b):
+    for (g1, g2) in zip(a, b):
         last_char = int(g1[1], 16)
         next_char = int(g2[0], 16)
         if last_char + 1 == next_char:
@@ -150,7 +149,7 @@ def merge_single_char_ranges(ranges):
 optimized_ranges = list(merge_single_char_ranges(optimized_ranges))
 
 
-print("static TABLE: &'static [Range] = &[")
+print("static TABLE: &[Range] = &[")
 
 for ranges in optimized_ranges:
     first = ranges[0][0]
@@ -160,7 +159,7 @@ for ranges in optimized_ranges:
 
 print("];\n")
 
-print("static INDEX_TABLE: &'static [u16] = &[")
+print("static INDEX_TABLE: &[u16] = &[")
 
 SINGLE_MARKER = 1 << 15
 
@@ -175,7 +174,7 @@ for ranges in optimized_ranges:
 
 print("];\n")
 
-print("static MAPPING_TABLE: &'static [Mapping] = &[")
+print("static MAPPING_TABLE: &[Mapping] = &[")
 
 for ranges in optimized_ranges:
     for (first, last, mapping, unicode_str) in ranges:
@@ -188,5 +187,5 @@ print("];\n")
 def escape_str(s):
     return [escape_char(c) for c in s]
 
-print("static STRING_TABLE: &'static str = \"%s\";"
-      % '\\\n  '.join(itertools.chain(*[escape_str(s) for s in strtab.iterkeys()])))
+print("static STRING_TABLE: &str = \"%s\";"
+      % '\\\n  '.join(itertools.chain(*[escape_str(s) for s in strtab.keys()])))

@@ -12,13 +12,12 @@ replacement for `std::time::Instant` that works on WASM too. This defines the ty
 Note that even if the **stdweb** or **wasm-bindgen** feature is enabled, this crate will continue to rely on `std::time::Instant`
 as long as you are not targeting wasm32. This allows for portable code that will work on both native and WASM platforms.
 
-### The feature `now`.
-By enabling the feature `now` the function `instant::now()` will be exported and will either:
+This crate also exports the function `instant::now()` which returns a representation of the current time as an `f64`, expressed in milliseconds, in a platform-agnostic way. `instant::now()` will either:
 
 * Call `performance.now()` when compiling for a WASM platform with the features **stdweb** or **wasm-bindgen** enabled, or using a custom javascript function.
-* Call `time::precise_time_s() * 1000.0` otherwise.
+* Return the time elapsed since the *Unix Epoch* on *native*, *non-WASM* platforms.
 
-The result is expressed in milliseconds.
+*Note*: The old feature, `now`, has been deprecated. `instant::now()` is always exported and the `now` feature flag no longer has any effect. It remains listed in `Cargo.toml` to avoid introducing breaking changes and may be removed in future versions.
 
 ## Examples
 ### Using `instant` for a native platform.
@@ -32,7 +31,7 @@ _main.rs_:
 ```rust
 fn main() {
     // Will be the same as `std::time::Instant`.
-    let now = instant::Instant::new();
+    let now = instant::Instant::now();
 }
 ```
 
@@ -51,7 +50,7 @@ _main.rs_:
 ```rust
 fn main() {
     // Will emulate `std::time::Instant` based on `performance.now()`.
-    let now = instant::Instant::new();
+    let now = instant::Instant::now();
 }
 ```
 
@@ -70,7 +69,7 @@ _main.rs_:
 ```rust
 fn main() {
     // Will emulate `std::time::Instant` based on `Date.now()`.
-    let now = instant::Instant::new();
+    let now = instant::Instant::now();
 }
 ```
 
@@ -93,13 +92,13 @@ _lib.rs_:
 fn my_function() {
     // Will select the proper implementation depending on the
     // feature selected by the user.
-    let now = instant::Instant::new();
+    let now = instant::Instant::now();
 }
 ```
 
 -----
 
-### Using the feature `now`.
+### Using `instant::now()`
 _Cargo.toml_:
 ```toml
 [features]
@@ -107,7 +106,7 @@ stdweb = [ "instant/stdweb" ]
 wasm-bindgen = [ "instant/wasm-bindgen" ]
 
 [dependencies]
-instant = { version = "0.1", features = [ "now" ] }
+instant = "0.1"
 ```
 
 _lib.rs_:
@@ -115,7 +114,7 @@ _lib.rs_:
 fn my_function() {
     // Will select the proper implementation depending on the
     // feature selected by the user.
-    let now_instant = instant::Instant::new();
+    let now_instant = instant::Instant::now();
     let now_milliseconds = instant::now(); // In milliseconds.
 }
 ```
@@ -124,14 +123,14 @@ fn my_function() {
 _Cargo.toml_:
 ```toml
 [dependencies]
-instant = { version = "0.", features = [ "now" ] }
+instant = "0.1"
 ```
 
 _lib.rs_:
 ```rust
 fn my_function() {
     // Will use the 'now' javascript implementation.
-    let now_instant = instant::Instant::new();
+    let now_instant = instant::Instant::now();
     let now_milliseconds = instant::now(); // In milliseconds.
 }
 ```

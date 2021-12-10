@@ -692,25 +692,24 @@ pub const SOCK_SEQPACKET: ::c_int = 5;
 pub const SOL_SOCKET: ::c_int = 1;
 
 // sys/termios.h
-pub const NCCS: usize = 32;
-
-pub const VINTR: usize = 0;
-pub const VQUIT: usize = 1;
-pub const VERASE: usize = 2;
-pub const VKILL: usize = 3;
-pub const VEOF: usize = 4;
-pub const VTIME: usize = 5;
-pub const VMIN: usize = 6;
+pub const VEOF: usize = 0;
+pub const VEOL: usize = 1;
+pub const VEOL2: usize = 2;
+pub const VERASE: usize = 3;
+pub const VWERASE: usize = 4;
+pub const VKILL: usize = 5;
+pub const VREPRINT: usize = 6;
 pub const VSWTC: usize = 7;
-pub const VSTART: usize = 8;
-pub const VSTOP: usize = 9;
+pub const VINTR: usize = 8;
+pub const VQUIT: usize = 9;
 pub const VSUSP: usize = 10;
-pub const VEOL: usize = 11;
-pub const VREPRINT: usize = 12;
-pub const VDISCARD: usize = 13;
-pub const VWERASE: usize = 14;
-pub const VLNEXT: usize = 15;
-pub const VEOL2: usize = 16;
+pub const VSTART: usize = 12;
+pub const VSTOP: usize = 13;
+pub const VLNEXT: usize = 14;
+pub const VDISCARD: usize = 15;
+pub const VMIN: usize = 16;
+pub const VTIME: usize = 17;
+pub const NCCS: usize = 32;
 
 pub const IGNBRK: ::tcflag_t = 0o000_001;
 pub const BRKINT: ::tcflag_t = 0o000_002;
@@ -721,25 +720,17 @@ pub const ISTRIP: ::tcflag_t = 0o000_040;
 pub const INLCR: ::tcflag_t = 0o000_100;
 pub const IGNCR: ::tcflag_t = 0o000_200;
 pub const ICRNL: ::tcflag_t = 0o000_400;
-pub const IUCLC: ::tcflag_t = 0o001_000;
-pub const IXON: ::tcflag_t = 0o002_000;
-pub const IXANY: ::tcflag_t = 0o004_000;
-pub const IXOFF: ::tcflag_t = 0o010_000;
-pub const IMAXBEL: ::tcflag_t = 0o020_000;
-pub const IUTF8: ::tcflag_t = 0o040_000;
+pub const IXON: ::tcflag_t = 0o001_000;
+pub const IXOFF: ::tcflag_t = 0o002_000;
 
 pub const OPOST: ::tcflag_t = 0o000_001;
-pub const OLCUC: ::tcflag_t = 0o000_002;
-pub const ONLCR: ::tcflag_t = 0o000_004;
+pub const ONLCR: ::tcflag_t = 0o000_002;
+pub const OLCUC: ::tcflag_t = 0o000_004;
 pub const OCRNL: ::tcflag_t = 0o000_010;
 pub const ONOCR: ::tcflag_t = 0o000_020;
-pub const ONLRET: ::tcflag_t = 0o00_0040;
-pub const OFILL: ::tcflag_t = 0o000_100;
-pub const OFDEL: ::tcflag_t = 0o000_200;
-
-pub const VTDLY: usize = 0o040_000;
-pub const VT0: usize = 0o000_000;
-pub const VT1: usize = 0o040_000;
+pub const ONLRET: ::tcflag_t = 0o000_040;
+pub const OFILL: ::tcflag_t = 0o0000_100;
+pub const OFDEL: ::tcflag_t = 0o0000_200;
 
 pub const B0: speed_t = 0o000_000;
 pub const B50: speed_t = 0o000_001;
@@ -758,43 +749,45 @@ pub const B9600: speed_t = 0o000_015;
 pub const B19200: speed_t = 0o000_016;
 pub const B38400: speed_t = 0o000_017;
 
-pub const B57600: speed_t = 0o010_001;
-pub const B115200: speed_t = 0o010_002;
-pub const B230400: speed_t = 0o010_003;
-pub const B460800: speed_t = 0o010_004;
-pub const B500000: speed_t = 0o010_005;
-pub const B576000: speed_t = 0o010_006;
-pub const B921600: speed_t = 0o010_007;
-pub const B1000000: speed_t = 0o010_010;
-pub const B1152000: speed_t = 0o010_011;
-pub const B1500000: speed_t = 0o010_012;
-pub const B2000000: speed_t = 0o010_013;
-pub const B2500000: speed_t = 0o010_014;
-pub const B3000000: speed_t = 0o010_015;
-pub const B3500000: speed_t = 0o010_016;
-pub const B4000000: speed_t = 0o010_017;
+pub const B57600: speed_t = 0o0_020;
+pub const B115200: speed_t = 0o0_021;
+pub const B230400: speed_t = 0o0_022;
+pub const B460800: speed_t = 0o0_023;
+pub const B500000: speed_t = 0o0_024;
+pub const B576000: speed_t = 0o0_025;
+pub const B921600: speed_t = 0o0_026;
+pub const B1000000: speed_t = 0o0_027;
+pub const B1152000: speed_t = 0o0_030;
+pub const B1500000: speed_t = 0o0_031;
+pub const B2000000: speed_t = 0o0_032;
+pub const B2500000: speed_t = 0o0_033;
+pub const B3000000: speed_t = 0o0_034;
+pub const B3500000: speed_t = 0o0_035;
+pub const B4000000: speed_t = 0o0_036;
 
-pub const CSIZE: ::tcflag_t = 0o000_060;
+pub const CSIZE: ::tcflag_t = 0o001_400;
 pub const CS5: ::tcflag_t = 0o000_000;
-pub const CS6: ::tcflag_t = 0o000_020;
-pub const CS7: ::tcflag_t = 0o000_040;
-pub const CS8: ::tcflag_t = 0o000_060;
-pub const CSTOPB: ::tcflag_t = 0o000_100;
-pub const CREAD: ::tcflag_t = 0o000_200;
-pub const PARENB: ::tcflag_t = 0o000_400;
-pub const PARODD: ::tcflag_t = 0o001_000;
-pub const HUPCL: ::tcflag_t = 0o002_000;
-pub const CLOCAL: ::tcflag_t = 0o004_000;
+pub const CS6: ::tcflag_t = 0o000_400;
+pub const CS7: ::tcflag_t = 0o001_000;
+pub const CS8: ::tcflag_t = 0o001_400;
 
-pub const ISIG: ::tcflag_t = 0o000_001;
-pub const ICANON: ::tcflag_t = 0o000_002;
-pub const ECHO: ::tcflag_t = 0o000_010;
-pub const ECHOE: ::tcflag_t = 0o000_020;
-pub const ECHOK: ::tcflag_t = 0o000_040;
-pub const ECHONL: ::tcflag_t = 0o000_100;
-pub const NOFLSH: ::tcflag_t = 0o000_200;
-pub const TOSTOP: ::tcflag_t = 0o000_400;
-pub const IEXTEN: ::tcflag_t = 0o100_000;
+pub const CSTOPB: ::tcflag_t = 0o002_000;
+pub const CREAD: ::tcflag_t = 0o004_000;
+pub const PARENB: ::tcflag_t = 0o010_000;
+pub const PARODD: ::tcflag_t = 0o020_000;
+pub const HUPCL: ::tcflag_t = 0o040_000;
+
+pub const CLOCAL: ::tcflag_t = 0o0100000;
+
+pub const ISIG: ::tcflag_t = 0x0000_0080;
+pub const ICANON: ::tcflag_t = 0x0000_0100;
+pub const ECHO: ::tcflag_t = 0x0000_0008;
+pub const ECHOE: ::tcflag_t = 0x0000_0002;
+pub const ECHOK: ::tcflag_t = 0x0000_0004;
+pub const ECHONL: ::tcflag_t = 0x0000_0010;
+pub const NOFLSH: ::tcflag_t = 0x8000_0000;
+pub const TOSTOP: ::tcflag_t = 0x0040_0000;
+pub const IEXTEN: ::tcflag_t = 0x0000_0400;
 
 pub const TCOOFF: ::c_int = 0;
 pub const TCOON: ::c_int = 1;
@@ -826,6 +819,8 @@ pub const __WCLONE: ::c_int = 0x8000_0000;
 // time.h
 pub const CLOCK_REALTIME: ::c_int = 1;
 pub const CLOCK_MONOTONIC: ::c_int = 4;
+pub const CLOCK_PROCESS_CPUTIME_ID: ::clockid_t = 2;
+pub const CLOCKS_PER_SEC: ::clock_t = 1_000_000;
 
 // unistd.h
 // POSIX.1 {
@@ -898,7 +893,7 @@ f! {
         return
     }
 
-    pub fn FD_ISSET(fd: ::c_int, set: *mut fd_set) -> bool {
+    pub fn FD_ISSET(fd: ::c_int, set: *const fd_set) -> bool {
         let fd = fd as usize;
         let size = ::mem::size_of_val(&(*set).fds_bits[0]) * 8;
         return ((*set).fds_bits[fd / size] & (1 << (fd % size))) != 0
@@ -1006,6 +1001,8 @@ extern "C" {
         set: *const ::sigset_t,
         oldset: *mut ::sigset_t,
     ) -> ::c_int;
+    pub fn pthread_cancel(thread: ::pthread_t) -> ::c_int;
+    pub fn pthread_kill(thread: ::pthread_t, sig: ::c_int) -> ::c_int;
 
     // sys/epoll.h
     pub fn epoll_create(size: ::c_int) -> ::c_int;
