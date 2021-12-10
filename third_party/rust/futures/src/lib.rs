@@ -67,7 +67,7 @@
 //!     };
 //!
 //!     // Actually execute the above future, which will invoke Future::poll and
-//!     // subsequenty chain appropriate Future::poll and methods needing executors
+//!     // subsequently chain appropriate Future::poll and methods needing executors
 //!     // to drive all futures. Eventually fut_values will be driven to completion.
 //!     let values: Vec<i32> = executor::block_on(fut_values);
 //!
@@ -80,11 +80,20 @@
 
 #![cfg_attr(feature = "read-initializer", feature(read_initializer))]
 #![cfg_attr(not(feature = "std"), no_std)]
-#![warn(missing_docs, missing_debug_implementations, rust_2018_idioms, unreachable_pub)]
-// It cannot be included in the published code because this lints have false positives in the minimum required version.
-#![cfg_attr(test, warn(single_use_lifetimes))]
-#![warn(clippy::all)]
-#![doc(test(attr(deny(warnings), allow(dead_code, unused_assignments, unused_variables))))]
+#![warn(
+    missing_debug_implementations,
+    missing_docs,
+    rust_2018_idioms,
+    single_use_lifetimes,
+    unreachable_pub
+)]
+#![doc(test(
+    no_crate_inject,
+    attr(
+        deny(warnings, rust_2018_idioms, single_use_lifetimes),
+        allow(dead_code, unused_assignments, unused_variables)
+    )
+))]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
 #[cfg(all(feature = "bilock", not(feature = "unstable")))]
@@ -93,26 +102,26 @@ compile_error!("The `bilock` feature requires the `unstable` feature as an expli
 #[cfg(all(feature = "read-initializer", not(feature = "unstable")))]
 compile_error!("The `read-initializer` feature requires the `unstable` feature as an explicit opt-in to unstable features");
 
-#[doc(hidden)]
+#[doc(no_inline)]
 pub use futures_core::future::{Future, TryFuture};
-#[doc(hidden)]
+#[doc(no_inline)]
 pub use futures_util::future::{FutureExt, TryFutureExt};
 
-#[doc(hidden)]
+#[doc(no_inline)]
 pub use futures_core::stream::{Stream, TryStream};
-#[doc(hidden)]
+#[doc(no_inline)]
 pub use futures_util::stream::{StreamExt, TryStreamExt};
 
-#[doc(hidden)]
+#[doc(no_inline)]
 pub use futures_sink::Sink;
-#[doc(hidden)]
+#[doc(no_inline)]
 pub use futures_util::sink::SinkExt;
 
 #[cfg(feature = "std")]
-#[doc(hidden)]
+#[doc(no_inline)]
 pub use futures_io::{AsyncBufRead, AsyncRead, AsyncSeek, AsyncWrite};
 #[cfg(feature = "std")]
-#[doc(hidden)]
+#[doc(no_inline)]
 pub use futures_util::{AsyncBufReadExt, AsyncReadExt, AsyncSeekExt, AsyncWriteExt};
 
 // Macro reexports
@@ -127,6 +136,10 @@ pub use futures_util::{join, pending, poll, select_biased, try_join}; // Async-a
 // Module reexports
 #[doc(inline)]
 pub use futures_util::{future, never, sink, stream, task};
+
+#[cfg(feature = "std")]
+#[cfg(feature = "async-await")]
+pub use futures_util::stream_select;
 
 #[cfg(feature = "alloc")]
 #[doc(inline)]

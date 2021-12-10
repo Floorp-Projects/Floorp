@@ -3,21 +3,19 @@
 # When uploading crates to the registry Cargo will automatically
 # "normalize" Cargo.toml files for maximal compatibility
 # with all versions of Cargo and also rewrite `path` dependencies
-# to registry (e.g., crates.io) dependencies
+# to registry (e.g., crates.io) dependencies.
 #
-# If you believe there's an error in this file please file an
-# issue against the rust-lang/cargo repository. If you're
-# editing this file be aware that the upstream Cargo.toml
-# will likely look very different (and much more reasonable)
+# If you are reading this file be aware that the original Cargo.toml
+# will likely look very different (and much more reasonable).
+# See Cargo.toml.orig for the original contents.
 
 [package]
 edition = "2018"
+rust-version = "1.45"
 name = "futures"
-version = "0.3.15"
-authors = ["Alex Crichton <alex@alexcrichton.com>"]
+version = "0.3.18"
 description = "An implementation of futures and streams featuring zero allocations,\ncomposability, and iterator-like interfaces.\n"
 homepage = "https://rust-lang.github.io/futures-rs"
-documentation = "https://docs.rs/futures/0.3"
 readme = "../README.md"
 keywords = ["futures", "async", "future"]
 categories = ["asynchronous"]
@@ -30,33 +28,33 @@ rustdoc-args = ["--cfg", "docsrs"]
 [package.metadata.playground]
 features = ["std", "async-await", "compat", "io-compat", "executor", "thread-pool"]
 [dependencies.futures-channel]
-version = "0.3.15"
+version = "0.3.18"
 features = ["sink"]
 default-features = false
 
 [dependencies.futures-core]
-version = "0.3.15"
+version = "0.3.18"
 default-features = false
 
 [dependencies.futures-executor]
-version = "0.3.15"
+version = "0.3.18"
 optional = true
 default-features = false
 
 [dependencies.futures-io]
-version = "0.3.15"
+version = "0.3.18"
 default-features = false
 
 [dependencies.futures-sink]
-version = "0.3.15"
+version = "0.3.18"
 default-features = false
 
 [dependencies.futures-task]
-version = "0.3.15"
+version = "0.3.18"
 default-features = false
 
 [dependencies.futures-util]
-version = "0.3.15"
+version = "0.3.18"
 features = ["sink"]
 default-features = false
 [dev-dependencies.assert_matches]
