@@ -1354,10 +1354,14 @@ bool BrowsingContext::IsSandboxedFrom(BrowsingContext* aTarget) {
   }
 
   // If SANDBOXED_TOPLEVEL_NAVIGATION_USER_ACTIVATION flag is not on, we are not
-  // sandboxed from our top if we have user interaction.
+  // sandboxed from our top if we have user interaction. We assume there is a
+  // valid transient user gesture interaction if this check happens in the
+  // target process given that we have checked in the triggering process
+  // already.
   if (!(sandboxFlags & SANDBOXED_TOPLEVEL_NAVIGATION_USER_ACTIVATION) &&
       mCurrentWindowContext &&
-      mCurrentWindowContext->HasValidTransientUserGestureActivation() &&
+      (!mCurrentWindowContext->IsInProcess() ||
+       mCurrentWindowContext->HasValidTransientUserGestureActivation()) &&
       aTarget == Top()) {
     return false;
   }
