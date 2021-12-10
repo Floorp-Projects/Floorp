@@ -48,8 +48,6 @@ gtest:
     instance-size: xlarge
     run-on-projects:
         by-test-platform:
-            windows.*-shippable-qr/.*: []  # permafails on shippable
-            windows.*-nightly-qr/.*: []  # permafails on nightly too
             .*-devedition.*/.*: []  # don't run on devedition
             linux1804-32-qr/debug: ['mozilla-central']  # try and m-c
             linux1804-32-qr/opt: []  # try only, shippable on m-c
@@ -59,12 +57,7 @@ gtest:
         by-test-platform:
             android-em-7.*: geckoview-test_runner.apk
             default: null
-    tier:
-        by-test-platform:
-            windows7-32-shippable.*: 3
-            windows10-64-2004-shippable.*: 3
-            windows10-64-2004-asan.*: 3
-            default: default
+    tier: default
 
 jittest:
     description: "JIT Test run"
