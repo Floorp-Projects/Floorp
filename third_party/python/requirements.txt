@@ -162,9 +162,9 @@ fluent.syntax==0.18.1 \
     #   -r requirements-mach-vendor-python.in
     #   compare-locales
     #   fluent.migrate
-glean_parser==4.3.1 \
-    --hash=sha256:a8924a3a4aca7fba35dc69d93031993d6481c6ec9cd43362c068eb3e18ea43e8 \
-    --hash=sha256:c194aba35a57ff9d139527c5321ef526599794994e355bad4c314bd3ab64c3eb
+glean_parser==3.6.0 \
+    --hash=sha256:1da46764d93ec563eb93235bd477814444742d1ee6b5231dc6684cebf46a6057 \
+    --hash=sha256:655a2038ec0be5364f351f592d5476fe7b028ebb0d9fd75f07c6c54287859552
     # via -r requirements-mach-vendor-python.in
 idna-ssl==1.1.0 \
     --hash=sha256:a933e3bb13da54383f9e8f35dc4f9cb9eb9b3b78c6b36f311254d6d0d92c6c7c

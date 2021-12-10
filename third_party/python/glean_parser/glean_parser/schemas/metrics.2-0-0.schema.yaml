@@ -94,8 +94,6 @@ definitions:
 
             - `uuid`: Record a UUID v4.
 
-            - `url`: Record a valid URL string.
-
             - `memory_distribution`: A histogram for recording memory usage
               values. Additional properties: `memory_unit`.
 
@@ -117,8 +115,6 @@ definitions:
 
                 `labeled_boolean`, `labeled_string`, `labeled_counter`.
 
-            - `text`: Record long text data.
-
         type: string
         enum:
           - event
@@ -133,13 +129,11 @@ definitions:
           - memory_distribution
           - datetime
           - uuid
-          - url
           - jwe
           - labeled_boolean
           - labeled_string
           - labeled_counter
           - rate
-          - text
 
       description:
         title: Description
@@ -152,22 +146,6 @@ definitions:
           Descriptions may contain [markdown
           syntax](https://www.markdownguide.org/basic-syntax/).
         type: string
-
-      metadata:
-        title: Metadata
-        description: |
-          Additional metadata about this metric. Currently limited to a list of
-          tags.
-        type: object
-        properties:
-          tags:
-            title: Tags
-            description: Which tags are specified for this metric.
-            type: array
-            items:
-              type: string
-              maxLength: 80
-        default: {}
 
       lifetime:
         title: Lifetime
@@ -535,9 +513,6 @@ propertyNames:
         - not:
             description: "'pings' is reserved as a category name."
             const: pings
-        - not:
-            description: "'tags' is reserved as a category name."
-            const: tags
     - enum: ['$schema']
 
 properties:
@@ -647,41 +622,3 @@ additionalProperties:
               description: |
                 `denominator_metric` is only allowed for `rate`.
               maxLength: 0
-      -
-        if:
-          properties:
-            type:
-              const: text
-        then:
-          properties:
-            lifetime:
-              description: >
-                Text metrics must have ping or application lifetime.
-              enum:
-                - ping
-                - application
-
-            data_sensitivity:
-              description: >
-                Text metrics require Category 3 (`web_activity`)
-                or Category 4 (`highly_sensitive`).
-              type: array
-              items:
-                enum:
-                  - web_activity
-                  - highly_sensitive
-
-            send_in_pings:
-              description: |
-                Text metrics can only be sent in custom pings.
-                Built-in pings are not allowed.
-              type: array
-              items:
-                allOf:
-                  - $ref: "#/definitions/kebab_case"
-                  - not:
-                      description: >
-                        Text metrics can only be sent in custom pings.
-                        Built-in pings are not allowed."
-                      pattern:
-                        "^(metrics|baseline|events|deletion-request|default|glean_.*)$"
