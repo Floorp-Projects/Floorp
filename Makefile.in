@@ -202,10 +202,6 @@ ifdef MOZ_CRASHREPORTER
 	$(PYTHON3) -u $(topsrcdir)/toolkit/crashreporter/tools/upload_symbols.py '$(DIST)/$(PKG_PATH)$(SYMBOL_FULL_ARCHIVE_BASENAME).tar.zst'
 endif
 
-.PHONY: update-packaging
-update-packaging:
-	$(MAKE) -C tools/update-packaging
-
 .PHONY: package-generated-sources
 package-generated-sources:
 	$(call py_action,package_generated_sources,'$(DIST)/$(PKG_PATH)$(GENERATED_SOURCE_FILE_PACKAGE)')
