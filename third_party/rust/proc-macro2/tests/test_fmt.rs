@@ -1,3 +1,5 @@
+#![allow(clippy::from_iter_instead_of_collect)]
+
 use proc_macro2::{Delimiter, Group, Ident, Span, TokenStream, TokenTree};
 use std::iter::{self, FromIterator};
 
@@ -12,7 +14,7 @@ fn test_fmt_group() {
     let braces_empty = Group::new(Delimiter::Brace, TokenStream::new());
     let braces_nonempty = Group::new(Delimiter::Brace, inner.clone());
     let none_empty = Group::new(Delimiter::None, TokenStream::new());
-    let none_nonempty = Group::new(Delimiter::None, inner.clone());
+    let none_nonempty = Group::new(Delimiter::None, inner);
 
     // Matches libproc_macro.
     assert_eq!("()", parens_empty.to_string());

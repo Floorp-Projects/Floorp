@@ -8,7 +8,7 @@ error: no rules expected the token `[`
 7 | | }
   | |_^ no rules expected this token in macro call
   |
-  = note: this error originates in a macro (in Nightly builds, run with -Z macro-backtrace for more info)
+  = note: this error originates in the macro `pin_project` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: no rules expected the token `[`
   --> $DIR/invalid-bounds.rs:9:1
@@ -20,7 +20,7 @@ error: no rules expected the token `[`
 13 | | }
    | |_^ no rules expected this token in macro call
    |
-   = note: this error originates in a macro (in Nightly builds, run with -Z macro-backtrace for more info)
+   = note: this error originates in the macro `pin_project` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: expected one of `+`, `,`, `=`, or `>`, found `:`
   --> $DIR/invalid-bounds.rs:15:1
@@ -36,7 +36,7 @@ error: expected one of `+`, `,`, `=`, or `>`, found `:`
    | |_unexpected token
    |   in this macro invocation
    |
-   = note: this error originates in a macro (in Nightly builds, run with -Z macro-backtrace for more info)
+   = note: this error originates in the macro `$crate::__pin_project_internal` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: expected one of `+`, `,`, `=`, or `>`, found `:`
   --> $DIR/invalid-bounds.rs:21:1
@@ -52,7 +52,7 @@ error: expected one of `+`, `,`, `=`, or `>`, found `:`
    | |_unexpected token
    |   in this macro invocation
    |
-   = note: this error originates in a macro (in Nightly builds, run with -Z macro-backtrace for more info)
+   = note: this error originates in the macro `$crate::__pin_project_internal` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: expected one of `+`, `,`, `=`, or `>`, found `:`
   --> $DIR/invalid-bounds.rs:27:1
@@ -68,7 +68,7 @@ error: expected one of `+`, `,`, `=`, or `>`, found `:`
    | |_unexpected token
    |   in this macro invocation
    |
-   = note: this error originates in a macro (in Nightly builds, run with -Z macro-backtrace for more info)
+   = note: this error originates in the macro `$crate::__pin_project_internal` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: no rules expected the token `[`
   --> $DIR/invalid-bounds.rs:33:1
@@ -80,7 +80,7 @@ error: no rules expected the token `[`
 37 | | }
    | |_^ no rules expected this token in macro call
    |
-   = note: this error originates in a macro (in Nightly builds, run with -Z macro-backtrace for more info)
+   = note: this error originates in the macro `pin_project` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: no rules expected the token `[`
   --> $DIR/invalid-bounds.rs:39:1
@@ -94,7 +94,7 @@ error: no rules expected the token `[`
 46 | | }
    | |_^ no rules expected this token in macro call
    |
-   = note: this error originates in a macro (in Nightly builds, run with -Z macro-backtrace for more info)
+   = note: this error originates in the macro `pin_project` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: no rules expected the token `[`
   --> $DIR/invalid-bounds.rs:48:1
@@ -108,7 +108,7 @@ error: no rules expected the token `[`
 55 | | }
    | |_^ no rules expected this token in macro call
    |
-   = note: this error originates in a macro (in Nightly builds, run with -Z macro-backtrace for more info)
+   = note: this error originates in the macro `pin_project` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: expected `where`, or `{` after struct name, found `:`
   --> $DIR/invalid-bounds.rs:57:1
@@ -125,7 +125,7 @@ error: expected `where`, or `{` after struct name, found `:`
    | |_expected `where`, or `{` after struct name
    |   in this macro invocation
    |
-   = note: this error originates in a macro (in Nightly builds, run with -Z macro-backtrace for more info)
+   = note: this error originates in the macro `$crate::__pin_project_internal` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: expected `where`, or `{` after struct name, found `:`
   --> $DIR/invalid-bounds.rs:66:1
@@ -142,7 +142,7 @@ error: expected `where`, or `{` after struct name, found `:`
    | |_expected `where`, or `{` after struct name
    |   in this macro invocation
    |
-   = note: this error originates in a macro (in Nightly builds, run with -Z macro-backtrace for more info)
+   = note: this error originates in the macro `$crate::__pin_project_internal` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: expected `where`, or `{` after struct name, found `:`
   --> $DIR/invalid-bounds.rs:75:1
@@ -159,7 +159,7 @@ error: expected `where`, or `{` after struct name, found `:`
    | |_expected `where`, or `{` after struct name
    |   in this macro invocation
    |
-   = note: this error originates in a macro (in Nightly builds, run with -Z macro-backtrace for more info)
+   = note: this error originates in the macro `$crate::__pin_project_internal` (in Nightly builds, run with -Z macro-backtrace for more info)
 
 error: no rules expected the token `[`
   --> $DIR/invalid-bounds.rs:84:1
@@ -173,4 +173,4 @@ error: no rules expected the token `[`
 91 | | }
    | |_^ no rules expected this token in macro call
    |
-   = note: this error originates in a macro (in Nightly builds, run with -Z macro-backtrace for more info)
+   = note: this error originates in the macro `pin_project` (in Nightly builds, run with -Z macro-backtrace for more info)

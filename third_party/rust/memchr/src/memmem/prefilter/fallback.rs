@@ -20,7 +20,7 @@ make use of the background frequency distribution of bytes though.)
 
 This fallback implementation was originally formulated in regex many moons ago:
 https://github.com/rust-lang/regex/blob/3db8722d0b204a85380fe2a65e13d7065d7dd968/src/literal/imp.rs#L370-L501
-Prior to that, I'm not aware of anyone using this technique in any prominant
+Prior to that, I'm not aware of anyone using this technique in any prominent
 substring search implementation. Although, I'm sure folks have had this same
 insight long before me.
 
