@@ -212,6 +212,8 @@ class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
   mozilla::pkix::Input GetSCTListFromCertificate() const;
   mozilla::pkix::Input GetSCTListFromOCSPStapling() const;
 
+  bool GetIsBuiltChainRootBuiltInRoot() const;
+
   bool GetIsErrorDueToDistrustedCAPolicy() const;
 
  private:
@@ -263,6 +265,7 @@ class NSSCertDBTrustDomain : public mozilla::pkix::TrustDomain {
       mThirdPartyIntermediateInputs;                             // non-owning
   const Maybe<nsTArray<nsTArray<uint8_t>>>& mExtraCertificates;  // non-owning
   nsTArray<nsTArray<uint8_t>>& mBuiltChain;                      // non-owning
+  bool mIsBuiltChainRootBuiltInRoot;
   PinningTelemetryInfo* mPinningTelemetryInfo;
   const char* mHostname;  // non-owning - only used for pinning checks
   nsCOMPtr<nsICertStorage> mCertStorage;
