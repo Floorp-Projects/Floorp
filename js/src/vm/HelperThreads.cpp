@@ -541,13 +541,11 @@ bool ParseTask::init(JSContext* cx, const ReadOnlyCompileOptions& options) {
 
   runtime = cx->runtime();
 
-  bool alwaysNeedsGCOutput = kind == ParseTaskKind::ScriptDecode;
-
   // MultiStencilsDecode doesn't support JS::InstantiationStorage.
   MOZ_ASSERT_IF(this->options.allocateInstantiationStorage,
                 kind != ParseTaskKind::MultiStencilsDecode);
 
-  if (alwaysNeedsGCOutput || this->options.allocateInstantiationStorage) {
+  if (this->options.allocateInstantiationStorage) {
     gcOutput_ = cx->make_unique<frontend::CompilationGCOutput>();
     if (!gcOutput_) {
       return false;
@@ -783,48 +781,6 @@ bool ParseTask::instantiateStencils(JSContext* cx) {
   return result;
 }
 
-ScriptDecodeTask::ScriptDecodeTask(JSContext* cx,
-                                   const JS::TranscodeRange& range,
-                                   JS::OffThreadCompileCallback callback,
-                                   void* callbackData)
-    : ParseTask(ParseTaskKind::ScriptDecode, cx, callback, callbackData),
-      range(range) {
-  MOZ_ASSERT(JS::IsTranscodingBytecodeAligned(range.begin().get()));
-}
-
-void ScriptDecodeTask::parse(JSContext* cx) {
-  MOZ_ASSERT(cx->isHelperThreadContext());
-
-  stencilInput_ = cx->make_unique<frontend::CompilationInput>(options);
-  if (!stencilInput_) {
-    return;
-  }
-  if (!stencilInput_->initForGlobal(cx)) {
-    return;
-  }
-
-  stencil_ = cx->new_<frontend::CompilationStencil>(stencilInput_->source);
-  if (!stencil_) {
-    return;
-  }
-
-  // NOTE: Decoding can fail for either internal errors (eg. OOM), or because
-  // the data is invalid. In either case, fail the task by clearing out the
-  // stencil. We ignore the normal return value since helper-threads do not have
-  // JS exceptions to propagate.
-  bool succeeded = false;
-  (void)stencil_->deserializeStencils(cx, *stencilInput_, range, &succeeded);
-  if (!succeeded) {
-    stencil_ = nullptr;
-    return;
-  }
-
-  if (!frontend::PrepareForInstantiate(cx, *stencilInput_, *stencil_,
-                                       *gcOutput_)) {
-    stencil_ = nullptr;
-  }
-}
-
 MultiStencilsDecodeTask::MultiStencilsDecodeTask(
     JSContext* cx, JS::TranscodeSources& sources,
     JS::OffThreadCompileCallback callback, void* callbackData)
@@ -1057,19 +1013,6 @@ JS::OffThreadToken* js::StartOffThreadDecodeStencil(
   options.copyTo(compileOptions);
 
   return StartOffThreadParseTask(cx, std::move(task), compileOptions);
-}
-
-JS::OffThreadToken* js::StartOffThreadDecodeScript(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    const JS::TranscodeRange& range, JS::OffThreadCompileCallback callback,
-    void* callbackData) {
-  auto task =
-      cx->make_unique<ScriptDecodeTask>(cx, range, callback, callbackData);
-  if (!task) {
-    return nullptr;
-  }
-
-  return StartOffThreadParseTask(cx, std::move(task), options);
 }
 
 JS::OffThreadToken* js::StartOffThreadDecodeMultiStencils(
@@ -1961,14 +1904,6 @@ GlobalHelperThreadState::finishDecodeStencilTask(
   }
 
   return parseTask->stencil_.forget();
-}
-
-JSScript* GlobalHelperThreadState::finishScriptDecodeTask(
-    JSContext* cx, JS::OffThreadToken* token) {
-  JSScript* script =
-      finishSingleParseTask(cx, ParseTaskKind::ScriptDecode, token);
-  MOZ_ASSERT_IF(script, script->isGlobalCode());
-  return script;
 }
 
 bool GlobalHelperThreadState::finishMultiStencilsDecodeTask(
