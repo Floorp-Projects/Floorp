@@ -1588,7 +1588,15 @@ void nsLookAndFeel::PerThemeData::Init() {
     mTitlebarInactiveText = GDK_RGBA_TO_NS_RGBA(color);
     mTitlebarInactiveBackground =
         GetBackgroundColor(style, mTitlebarText, GTK_STATE_FLAG_BACKDROP);
-    mTitlebarRadius = IsSolidCSDStyleUsed() ? 0 : GetBorderRadius(style);
+    mTitlebarRadius = 0;
+    if (!IsSolidCSDStyleUsed()) {
+      mTitlebarRadius = GetBorderRadius(style);
+      if (!mTitlebarRadius) {
+        // Some themes like ElementaryOS set the radius on the headerbar parent.
+        style = GetStyleContext(MOZ_GTK_HEADERBAR_FIXED);
+        mTitlebarRadius = GetBorderRadius(style);
+      }
+    }
   }
 
   style = GetStyleContext(MOZ_GTK_MENUPOPUP);

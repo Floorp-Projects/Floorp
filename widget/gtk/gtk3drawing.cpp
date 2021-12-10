@@ -2168,12 +2168,37 @@ static gint moz_gtk_check_menu_item_paint(WidgetNodeType widgetType,
   return MOZ_GTK_SUCCESS;
 }
 
+static gint GetBorderRadius(GtkStyleContext* aStyle) {
+  GValue value = G_VALUE_INIT;
+  gtk_style_context_get_property(aStyle, "border-radius", GTK_STATE_FLAG_NORMAL,
+                                 &value);
+  gint result = 0;
+  if (G_VALUE_TYPE(&value) == G_TYPE_INT) {
+    result = g_value_get_int(&value);
+  }
+  g_value_unset(&value);
+  return result;
+}
+
 static gint moz_gtk_header_bar_paint(WidgetNodeType widgetType, cairo_t* cr,
                                      GdkRectangle* rect,
                                      GtkWidgetState* state) {
   GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
   GtkStyleContext* style =
       GetStyleContext(widgetType, state->scale, GTK_TEXT_DIR_NONE, state_flags);
+
+  // Some themes like Elementary's style the container of the headerbar rather
+  // than the header bar itself.
+  if (!GetBorderRadius(style)) {
+    auto containerType = widgetType == MOZ_GTK_HEADER_BAR
+                             ? MOZ_GTK_HEADERBAR_FIXED
+                             : MOZ_GTK_HEADERBAR_FIXED_MAXIMIZED;
+    GtkStyleContext* containerStyle = GetStyleContext(
+        containerType, state->scale, GTK_TEXT_DIR_NONE, state_flags);
+    if (GetBorderRadius(containerStyle)) {
+      style = containerStyle;
+    }
+  }
 
 // Some themes (Adwaita for instance) draws bold dark line at
 // titlebar bottom. It does not fit well with Firefox tabs so
@@ -2185,7 +2210,7 @@ static gint moz_gtk_header_bar_paint(WidgetNodeType widgetType, cairo_t* cr,
   if (widgetType == MOZ_GTK_HEADER_BAR) {
     GtkStyleContext* windowStyle =
         GetStyleContext(MOZ_GTK_HEADERBAR_WINDOW, state->scale);
-    bool solidDecorations =
+    const bool solidDecorations =
         gtk_style_context_has_class(windowStyle, "solid-csd");
     GtkStyleContext* decorationStyle =
         GetStyleContext(solidDecorations ? MOZ_GTK_WINDOW_DECORATION_SOLID
