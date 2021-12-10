@@ -541,7 +541,26 @@ bool ParseTask::init(JSContext* cx, const ReadOnlyCompileOptions& options) {
 
   runtime = cx->runtime();
 
+  bool alwaysNeedsGCOutput = kind == ParseTaskKind::Script ||
+                             kind == ParseTaskKind::Module ||
+                             kind == ParseTaskKind::ScriptDecode;
+
+  // MultiStencilsDecode doesn't support JS::InstantiationStorage.
+  MOZ_ASSERT_IF(this->options.allocateInstantiationStorage,
+                kind != ParseTaskKind::MultiStencilsDecode);
+
+  if (alwaysNeedsGCOutput || this->options.allocateInstantiationStorage) {
+    gcOutput_ = cx->make_unique<frontend::CompilationGCOutput>();
+    if (!gcOutput_) {
+      return false;
+    }
+  }
+
   return true;
+}
+
+void ParseTask::moveGCOutputInto(JS::InstantiationStorage& storage) {
+  storage.gcOutput_ = gcOutput_.release();
 }
 
 void ParseTask::activate(JSRuntime* rt) { rt->addParseTaskRef(); }
@@ -559,7 +578,9 @@ void ParseTask::trace(JSTracer* trc) {
     stencilInput_->trace(trc);
   }
 
-  gcOutput_.trace(trc);
+  if (gcOutput_) {
+    gcOutput_->trace(trc);
+  }
 }
 
 size_t ParseTask::sizeOfExcludingThis(
@@ -571,13 +592,14 @@ size_t ParseTask::sizeOfExcludingThis(
   size_t extensibleStencilSize =
       extensibleStencil_ ? extensibleStencil_->sizeOfIncludingThis(mallocSizeOf)
                          : 0;
+  size_t gcOutputSize =
+      gcOutput_ ? gcOutput_->sizeOfExcludingThis(mallocSizeOf) : 0;
 
   // TODO: 'errors' requires adding support to `CompileError`. They are not
   // common though.
 
   return options.sizeOfExcludingThis(mallocSizeOf) + stencilInputSize +
-         stencilSize + extensibleStencilSize +
-         gcOutput_.sizeOfExcludingThis(mallocSizeOf);
+         stencilSize + extensibleStencilSize + gcOutputSize;
 }
 
 void ParseTask::runHelperThreadTask(AutoLockHelperThreadState& locked) {
@@ -647,7 +669,7 @@ void ScriptParseTask<Unit>::parse(JSContext* cx) {
 
   frontend::BorrowingCompilationStencil borrowingStencil(*extensibleStencil_);
   if (!frontend::PrepareForInstantiate(cx, *stencilInput_, borrowingStencil,
-                                       gcOutput_)) {
+                                       *gcOutput_)) {
     extensibleStencil_.reset();
   }
 }
@@ -683,6 +705,17 @@ void CompileToStencilTask<Unit>::parse(JSContext* cx) {
 
   extensibleStencil_ = frontend::CompileGlobalScriptToExtensibleStencil(
       cx, *stencilInput_, data, scopeKind);
+  if (!extensibleStencil_) {
+    return;
+  }
+
+  if (options.allocateInstantiationStorage) {
+    frontend::BorrowingCompilationStencil borrowingStencil(*extensibleStencil_);
+    if (!frontend::PrepareForInstantiate(cx, *stencilInput_, borrowingStencil,
+                                         *gcOutput_)) {
+      extensibleStencil_.reset();
+    }
+  }
 }
 
 bool ParseTask::instantiateStencils(JSContext* cx) {
@@ -694,12 +727,12 @@ bool ParseTask::instantiateStencils(JSContext* cx) {
 
   bool result;
   if (stencil_) {
-    result =
-        frontend::InstantiateStencils(cx, *stencilInput_, *stencil_, gcOutput_);
+    result = frontend::InstantiateStencils(cx, *stencilInput_, *stencil_,
+                                           *gcOutput_);
   } else {
     frontend::BorrowingCompilationStencil borrowingStencil(*extensibleStencil_);
     result = frontend::InstantiateStencils(cx, *stencilInput_, borrowingStencil,
-                                           gcOutput_);
+                                           *gcOutput_);
   }
 
   return result;
@@ -741,7 +774,7 @@ void ModuleParseTask<Unit>::parse(JSContext* cx) {
 
   frontend::BorrowingCompilationStencil borrowingStencil(*extensibleStencil_);
   if (!frontend::PrepareForInstantiate(cx, *stencilInput_, borrowingStencil,
-                                       gcOutput_)) {
+                                       *gcOutput_)) {
     extensibleStencil_.reset();
   }
 }
@@ -783,7 +816,7 @@ void ScriptDecodeTask::parse(JSContext* cx) {
   }
 
   if (!frontend::PrepareForInstantiate(cx, *stencilInput_, *stencil_,
-                                       gcOutput_)) {
+                                       *gcOutput_)) {
     stencil_ = nullptr;
   }
 }
@@ -1838,7 +1871,7 @@ JSScript* GlobalHelperThreadState::finishSingleParseTask(
     return nullptr;
   }
 
-  script = parseTask->gcOutput_.script;
+  script = parseTask->gcOutput_->script;
 
   // Start the incremental-XDR encoder.
   if (startEncoding == StartEncoding::Yes) {
@@ -1869,9 +1902,9 @@ JSScript* GlobalHelperThreadState::finishSingleParseTask(
 }
 
 already_AddRefed<frontend::CompilationStencil>
-GlobalHelperThreadState::finishCompileToStencilTask(JSContext* cx,
-                                                    ParseTaskKind kind,
-                                                    JS::OffThreadToken* token) {
+GlobalHelperThreadState::finishCompileToStencilTask(
+    JSContext* cx, ParseTaskKind kind, JS::OffThreadToken* token,
+    JS::InstantiationStorage* storage) {
   Rooted<UniquePtr<ParseTask>> parseTask(
       cx, finishParseTaskCommon(cx, kind, token));
   if (!parseTask) {
@@ -1886,6 +1919,11 @@ GlobalHelperThreadState::finishCompileToStencilTask(JSContext* cx,
           std::move(parseTask->extensibleStencil_));
   if (!stencil) {
     return nullptr;
+  }
+
+  if (storage) {
+    MOZ_ASSERT(parseTask->options.allocateInstantiationStorage);
+    parseTask->moveGCOutputInto(*storage);
   }
 
   return stencil.forget();
@@ -1935,9 +1973,11 @@ JSScript* GlobalHelperThreadState::finishScriptParseTask(
 }
 
 already_AddRefed<frontend::CompilationStencil>
-GlobalHelperThreadState::finishCompileToStencilTask(JSContext* cx,
-                                                    JS::OffThreadToken* token) {
-  return finishCompileToStencilTask(cx, ParseTaskKind::ScriptStencil, token);
+GlobalHelperThreadState::finishCompileToStencilTask(
+    JSContext* cx, JS::OffThreadToken* token,
+    JS::InstantiationStorage* storage) {
+  return finishCompileToStencilTask(cx, ParseTaskKind::ScriptStencil, token,
+                                    storage);
 }
 
 JSScript* GlobalHelperThreadState::finishScriptDecodeTask(
