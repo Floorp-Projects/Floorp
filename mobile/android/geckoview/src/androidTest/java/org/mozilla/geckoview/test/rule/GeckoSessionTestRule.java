@@ -2398,8 +2398,9 @@ public class GeckoSessionTestRule implements TestRule {
   }
 
   /** Invokes nsIDOMWindowUtils.setResolutionAndScaleTo. */
-  public void setResolutionAndScaleTo(final float resolution) {
+  public void setResolutionAndScaleTo(final GeckoSession session, final float resolution) {
     webExtensionApiCall(
+        session,
         "SetResolutionAndScaleTo",
         args -> {
           args.put("resolution", resolution);

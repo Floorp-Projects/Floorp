@@ -50,8 +50,8 @@ const APIS = {
   SetPrefs({ oldPrefs, newPrefs }) {
     return browser.test.setPrefs(oldPrefs, newPrefs);
   },
-  SetResolutionAndScaleTo({ resolution }) {
-    return browser.test.setResolutionAndScaleTo(resolution);
+  SetResolutionAndScaleTo({ tab, resolution }) {
+    return browser.test.setResolutionAndScaleTo(tab.id, resolution);
   },
   FlushApzRepaints({ tab }) {
     return browser.test.flushApzRepaints(tab.id);

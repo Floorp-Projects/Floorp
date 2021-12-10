@@ -120,6 +120,10 @@
         "parameters": [
           {
             "type": "number",
+            "name": "tabId"
+          },
+          {
+            "type": "number",
             "name": "resolution"
           }
         ]

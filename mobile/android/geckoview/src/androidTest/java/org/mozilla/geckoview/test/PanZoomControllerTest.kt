@@ -185,7 +185,7 @@ class PanZoomControllerTest : BaseSessionTest() {
         assertThat("Visual viewport scale is the initial scale", originalScale, closeTo(0.5, 0.01))
 
         // Change the resolution so that the visual viewport will be different from the layout viewport.
-        sessionRule.setResolutionAndScaleTo(2.0f)
+        mainSession.setResolutionAndScaleTo(2.0f)
 
         val scale = mainSession.evaluateJS("visualViewport.scale") as Double
         assertThat("Visual viewport scale is now greater than the initial scale", scale, greaterThan(originalScale))
