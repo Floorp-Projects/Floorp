@@ -378,8 +378,6 @@ class GlobalHelperThreadState {
   UniquePtr<ParseTask> finishParseTaskCommon(JSContext* cx, ParseTaskKind kind,
                                              JS::OffThreadToken* token);
 
-  JSScript* finishSingleParseTask(JSContext* cx, ParseTaskKind kind,
-                                  JS::OffThreadToken* token);
   already_AddRefed<frontend::CompilationStencil> finishCompileToStencilTask(
       JSContext* cx, ParseTaskKind kind, JS::OffThreadToken* token,
       JS::InstantiationStorage* storage);
@@ -533,7 +531,6 @@ struct ParseTask : public mozilla::LinkedListElement<ParseTask>,
   void deactivate(JSRuntime* rt);
 
   virtual void parse(JSContext* cx) = 0;
-  bool instantiateStencils(JSContext* cx);
 
   bool runtimeMatches(JSRuntime* rt) { return runtime == rt; }
 
