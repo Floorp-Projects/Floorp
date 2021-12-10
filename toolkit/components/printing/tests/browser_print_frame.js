@@ -17,13 +17,6 @@ async function getPreviewText(previewBrowser) {
 add_task(async function print_frame() {
   let i = 0;
   for (const source of SOURCES) {
-    // Testing the native print dialog is much harder.
-    // Note we need to do this from here since resetPrintPrefs() below clears
-    // out the pref.
-    await SpecialPowers.pushPrefEnv({
-      set: [["print.tab_modal.enabled", true]],
-    });
-
     is(
       document.querySelector(".printPreviewBrowser"),
       null,
