@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef GPU_AdapterFeatures_H_
-#define GPU_AdapterFeatures_H_
+#ifndef GPU_SupportedFeatures_H_
+#define GPU_SupportedFeatures_H_
 
 #include "nsWrapperCache.h"
 #include "ObjectModel.h"
@@ -13,19 +13,19 @@ namespace mozilla {
 namespace webgpu {
 class Adapter;
 
-class AdapterFeatures final : public nsWrapperCache, public ChildOf<Adapter> {
+class SupportedFeatures final : public nsWrapperCache, public ChildOf<Adapter> {
  public:
-  GPU_DECL_CYCLE_COLLECTION(AdapterFeatures)
-  GPU_DECL_JS_WRAP(AdapterFeatures)
+  GPU_DECL_CYCLE_COLLECTION(SupportedFeatures)
+  GPU_DECL_JS_WRAP(SupportedFeatures)
 
-  explicit AdapterFeatures(Adapter* const aParent);
+  explicit SupportedFeatures(Adapter* const aParent);
 
  private:
-  ~AdapterFeatures() = default;
+  ~SupportedFeatures() = default;
   void Cleanup() {}
 };
 
 }  // namespace webgpu
 }  // namespace mozilla
 
-#endif  // GPU_AdapterFeatures_H_
+#endif  // GPU_SupportedFeatures_H_

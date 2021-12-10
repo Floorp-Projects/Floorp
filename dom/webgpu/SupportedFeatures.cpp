@@ -3,17 +3,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "AdapterFeatures.h"
+#include "SupportedFeatures.h"
 #include "Adapter.h"
 #include "mozilla/dom/WebGPUBinding.h"
 
 namespace mozilla {
 namespace webgpu {
 
-GPU_IMPL_CYCLE_COLLECTION(AdapterFeatures, mParent)
-GPU_IMPL_JS_WRAP(AdapterFeatures)
+GPU_IMPL_CYCLE_COLLECTION(SupportedFeatures, mParent)
+GPU_IMPL_JS_WRAP(SupportedFeatures)
 
-AdapterFeatures::AdapterFeatures(Adapter* const aParent) : ChildOf(aParent) {}
+SupportedFeatures::SupportedFeatures(Adapter* const aParent)
+    : ChildOf(aParent) {}
 
 }  // namespace webgpu
 }  // namespace mozilla
