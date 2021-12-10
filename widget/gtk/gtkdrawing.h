@@ -303,6 +303,10 @@ enum WidgetNodeType : int {
   MOZ_GTK_HEADERBAR_WINDOW,
   /* Used only as a container for MOZ_GTK_HEADER_BAR_MAXIMIZED. */
   MOZ_GTK_HEADERBAR_WINDOW_MAXIMIZED,
+  /* Used only as a container for MOZ_GTK_HEADER_BAR. */
+  MOZ_GTK_HEADERBAR_FIXED,
+  /* Used only as a container for MOZ_GTK_HEADER_BAR_MAXIMIZED. */
+  MOZ_GTK_HEADERBAR_FIXED_MAXIMIZED,
   /* Window container for all widgets */
   MOZ_GTK_WINDOW_CONTAINER,
   /* Used for widget tree construction. */
