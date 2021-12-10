@@ -407,7 +407,7 @@ BEGIN_TEST(testStencil_OffThreadWithInstantiationStorage) {
 
   JS::Rooted<JS::InstantiationStorage> storage(cx);
   RefPtr<JS::Stencil> stencil =
-      JS::FinishOffThreadCompileToStencil(cx, token, storage.address());
+      JS::FinishCompileToStencilOffThread(cx, token, storage.address());
   CHECK(stencil);
 
   JS::InstantiateOptions instantiateOptions(options);
