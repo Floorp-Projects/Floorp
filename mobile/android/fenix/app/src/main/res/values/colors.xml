@@ -93,7 +93,6 @@
     <color name="foundation_light_theme">@color/photonLightGrey20</color>
     <color name="accent_light_theme">@color/photonInk20</color>
     <color name="accent_bright_light_theme">@color/photonViolet70</color>
-    <color name="about_link_normal_theme">@color/photonViolet70</color>
     <color name="dark_grey_90_gradient_start">@color/photonDarkGrey90</color>
     <color name="dark_grey_90_gradient_end">#0015141A</color>
     <color name="readermode_start_gradient_normal_theme">@color/photonViolet50</color>

@@ -45,7 +45,6 @@
         <item name="contrastText">@color/contrast_text_normal_theme</item>
         <item name="accent">@color/accent_normal_theme</item>
         <item name="accentBright">@color/accent_bright_normal_theme</item>
-        <item name="aboutLink">@color/about_link_normal_theme</item>
         <item name="accentHighContrast">@color/accent_high_contrast_normal_theme</item>
         <item name="foundation">@color/foundation_normal_theme</item>
         <item name="above">@color/above_normal_theme</item>
@@ -552,7 +551,7 @@
     <style name="ShareDialogStyle" parent="DialogStyleBase"/>
 
     <style name="AboutItemText" parent="TextAppearance.MaterialComponents.Body2">
-        <item name="android:textColor">?aboutLink</item>
+        <item name="android:textColor">@color/fx_mobile_text_color_action</item>
         <item name="android:textSize">@dimen/about_items_text_size</item>
         <item name="android:paddingStart">@dimen/about_list_item_text_padding</item>
         <item name="android:paddingEnd">@dimen/about_list_item_text_padding</item>

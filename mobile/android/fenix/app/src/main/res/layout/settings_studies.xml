@@ -31,7 +31,7 @@
         android:importantForAccessibility="no"
         android:text="@string/preference_experiments_summary_2"
         android:textColor="?attr/secondaryText"
-        android:textColorLink="?aboutLink"
+        android:textColorLink="@color/fx_mobile_text_color_action"
         app:layout_constraintEnd_toEndOf="@id/studiesTitle"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="@id/studiesTitle"
