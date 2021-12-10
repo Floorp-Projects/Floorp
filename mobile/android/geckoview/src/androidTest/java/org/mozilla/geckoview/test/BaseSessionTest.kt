@@ -233,6 +233,8 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
 
     fun GeckoSession.promiseAllPaintsDone() = sessionRule.promiseAllPaintsDone(this)
 
+    fun GeckoSession.getLinkColor(selector: String) = sessionRule.getLinkColor(this, selector)
+
     var GeckoSession.active: Boolean
             get() = sessionRule.getActive(this)
             set(value) = setActive(value)
