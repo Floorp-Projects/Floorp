@@ -173,7 +173,7 @@ void ScriptLoadRequest::MaybeCancelOffThreadScript() {
   if (IsModuleRequest()) {
     JS::CancelOffThreadModule(cx, mOffThreadToken);
   } else if (IsSource()) {
-    JS::CancelOffThreadScript(cx, mOffThreadToken);
+    JS::CancelCompileToStencilOffThread(cx, mOffThreadToken);
   } else {
     MOZ_ASSERT(IsBytecode());
     JS::CancelOffThreadScriptDecoder(cx, mOffThreadToken);
