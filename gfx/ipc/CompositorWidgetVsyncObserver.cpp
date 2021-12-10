@@ -18,6 +18,8 @@ CompositorWidgetVsyncObserver::CompositorWidgetVsyncObserver(
   MOZ_ASSERT(NS_IsMainThread());
 }
 
+CompositorWidgetVsyncObserver::~CompositorWidgetVsyncObserver() = default;
+
 bool CompositorWidgetVsyncObserver::NotifyVsync(const VsyncEvent& aVsync) {
   // Vsync notifications should only arrive on the vsync thread.
   MOZ_ASSERT(XRE_IsParentProcess());
