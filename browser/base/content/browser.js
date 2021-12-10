@@ -5451,9 +5451,8 @@ var XULBrowserWindow = {
     Services.obs.notifyObservers(
       window,
       "toggle-screenshot-disable",
-      (aLocationURI.scheme == "about" &&
-        !aLocationURI.spec.startsWith("about:reader")) ||
-        Services.prefs.getBoolPref("extensions.screenshots.disabled")
+      aLocationURI.scheme == "about" &&
+        !aLocationURI.spec.startsWith("about:reader")
     );
 
     gPermissionPanel.onLocationChange();
