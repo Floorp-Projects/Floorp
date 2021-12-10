@@ -633,25 +633,6 @@ const AVAILABLE_UA_OVERRIDES = [
   },
   {
     /*
-     * Bug 1727100 - Add UA override for slack.com
-     *
-     * Slack locks some features (like Huddles, and some Call features) behind
-     * UA sniffing. However, in our tests, everything appears to be working fine
-     * if we spoof as Chrome.
-     */
-    id: "bug1727100",
-    platform: "desktop",
-    domain: "slack.com",
-    bug: "1727100",
-    config: {
-      matches: ["*://app.slack.com/*"],
-      uaTransformer: () => {
-        return UAHelpers.getDeviceAppropriateChromeUA("95.0.4638.54");
-      },
-    },
-  },
-  {
-    /*
      * Bug 1738317 - Add UA override for vmos.cn
      * Webcompat issue #90432 - https://github.com/webcompat/web-bugs/issues/90432
      *
