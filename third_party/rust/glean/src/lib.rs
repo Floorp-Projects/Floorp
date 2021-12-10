@@ -566,7 +566,7 @@ pub(crate) fn submit_ping_by_name_sync(ping: &str, reason: Option<&str>) {
             return false;
         }
 
-        glean.submit_ping_by_name(ping, reason)
+        glean.submit_ping_by_name(ping, reason.as_deref())
     });
 
     if submitted_ping {
