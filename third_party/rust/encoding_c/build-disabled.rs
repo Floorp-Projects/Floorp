@@ -1,4 +1,4 @@
-// Copyright 2016 Mozilla Foundation. See the COPYRIGHT
+// Copyright Mozilla Foundation. See the COPYRIGHT
 // file at the top-level directory of this distribution.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
@@ -16,7 +16,7 @@ fn replace(path: &str) -> std::io::Result<()> {
     let mut f = try!(File::open(path));
     let mut s = String::new();
     try!(f.read_to_string(&mut s));
-    s = s.replace("#ifndef cheddar_generated_encoding_rs_h", "// Copyright 2015-2016 Mozilla Foundation. See the COPYRIGHT
+    s = s.replace("#ifndef cheddar_generated_encoding_rs_h", "// Copyright Mozilla Foundation. See the COPYRIGHT
 // file at the top-level directory of this distribution.
 //
 // Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or

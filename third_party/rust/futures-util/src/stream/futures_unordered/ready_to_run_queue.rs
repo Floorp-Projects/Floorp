@@ -94,7 +94,7 @@ impl<Fut> ReadyToRunQueue<Fut> {
     //
     // # Safety
     //
-    // - All tasks **must** have had their futures dropped already (by FuturesUnordered::clear)
+    // - All tasks **must** have had their futures dropped already (by FuturesUnordered::clear_head_all)
     // - The caller **must** guarantee unique access to `self`
     pub(crate) unsafe fn clear(&self) {
         loop {
@@ -104,19 +104,6 @@ impl<Fut> ReadyToRunQueue<Fut> {
                 Dequeue::Inconsistent => abort("inconsistent in drop"),
                 Dequeue::Data(ptr) => drop(Arc::from_raw(ptr)),
             }
-        }
-    }
-}
-
-impl<Fut> Drop for ReadyToRunQueue<Fut> {
-    fn drop(&mut self) {
-        // Once we're in the destructor for `Inner<Fut>` we need to clear out
-        // the ready to run queue of tasks if there's anything left in there.
-
-        // All tasks have had their futures dropped already by the `FuturesUnordered`
-        // destructor above, and we have &mut self, so this is safe.
-        unsafe {
-            self.clear();
         }
     }
 }

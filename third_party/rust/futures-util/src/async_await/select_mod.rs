@@ -29,9 +29,6 @@ macro_rules! document_select_macro {
         /// It is also gated behind the `async-await` feature of this library, which is
         /// activated by default.
         ///
-        /// Note that `select!` relies on `proc-macro-hack`, and may require to set the
-        /// compiler's recursion limit very high, e.g. `#![recursion_limit="1024"]`.
-        ///
         /// # Examples
         ///
         /// ```
@@ -309,12 +306,10 @@ macro_rules! document_select_macro {
 #[cfg(feature = "std")]
 #[allow(unreachable_pub)]
 #[doc(hidden)]
-#[cfg_attr(not(fn_like_proc_macro), proc_macro_hack::proc_macro_hack(support_nested))]
 pub use futures_macro::select_internal;
 
 #[allow(unreachable_pub)]
 #[doc(hidden)]
-#[cfg_attr(not(fn_like_proc_macro), proc_macro_hack::proc_macro_hack(support_nested))]
 pub use futures_macro::select_biased_internal;
 
 document_select_macro! {

@@ -91,14 +91,12 @@ impl<Si: Sink<Item>, Item> Sink<Item> for Buffer<Si, Item> {
         }
     }
 
-    #[allow(clippy::debug_assert_with_mut_call)]
     fn poll_flush(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         ready!(self.as_mut().try_empty_buffer(cx))?;
         debug_assert!(self.buf.is_empty());
         self.project().sink.poll_flush(cx)
     }
 
-    #[allow(clippy::debug_assert_with_mut_call)]
     fn poll_close(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         ready!(self.as_mut().try_empty_buffer(cx))?;
         debug_assert!(self.buf.is_empty());

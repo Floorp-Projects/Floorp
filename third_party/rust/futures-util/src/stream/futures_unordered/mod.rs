@@ -97,7 +97,7 @@ impl LocalSpawn for FuturesUnordered<LocalFutureObj<'_, ()>> {
 // Each task is wrapped in an `Arc` and thereby atomically reference counted.
 // Also, each task contains an `AtomicBool` which acts as a flag that indicates
 // whether the task is currently inserted in the atomic queue. When a wake-up
-// notifiaction is received, the task will only be inserted into the ready to
+// notification is received, the task will only be inserted into the ready to
 // run queue if it isn't inserted already.
 
 impl<Fut> Default for FuturesUnordered<Fut> {
@@ -558,7 +558,7 @@ impl<Fut> FuturesUnordered<Fut> {
     pub fn clear(&mut self) {
         self.clear_head_all();
 
-        // we just cleared all the tasks, and we have &mut self, so this is safe.
+        // SAFETY: we just cleared all the tasks and we have &mut self
         unsafe { self.ready_to_run_queue.clear() };
 
         self.is_terminated.store(false, Relaxed);
@@ -575,24 +575,9 @@ impl<Fut> FuturesUnordered<Fut> {
 
 impl<Fut> Drop for FuturesUnordered<Fut> {
     fn drop(&mut self) {
-        // When a `FuturesUnordered` is dropped we want to drop all futures
-        // associated with it. At the same time though there may be tons of
-        // wakers flying around which contain `Task<Fut>` references
-        // inside them. We'll let those naturally get deallocated.
         self.clear_head_all();
-
-        // Note that at this point we could still have a bunch of tasks in the
-        // ready to run queue. None of those tasks, however, have futures
-        // associated with them so they're safe to destroy on any thread. At
-        // this point the `FuturesUnordered` struct, the owner of the one strong
-        // reference to the ready to run queue will drop the strong reference.
-        // At that point whichever thread releases the strong refcount last (be
-        // it this thread or some other thread as part of an `upgrade`) will
-        // clear out the ready to run queue and free all remaining tasks.
-        //
-        // While that freeing operation isn't guaranteed to happen here, it's
-        // guaranteed to happen "promptly" as no more "blocking work" will
-        // happen while there's a strong refcount held.
+        // SAFETY: we just cleared all the tasks and we have &mut self
+        unsafe { self.ready_to_run_queue.clear() };
     }
 }
 
