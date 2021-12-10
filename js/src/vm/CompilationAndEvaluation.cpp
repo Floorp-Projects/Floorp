@@ -21,9 +21,10 @@
 #include "frontend/CompilationStencil.h"  // for frontened::{CompilationStencil, BorrowingCompilationStencil, CompilationGCOutput}
 #include "frontend/Parser.h"       // frontend::Parser, frontend::ParseGoal
 #include "js/CharacterEncoding.h"  // JS::UTF8Chars, JS::UTF8CharsToNewTwoByteCharsZ
-#include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
-#include "js/RootingAPI.h"            // JS::Rooted
-#include "js/SourceText.h"            // JS::SourceText
+#include "js/experimental/JSStencil.h"  // JS::Stencil
+#include "js/friend/ErrorMessages.h"    // js::GetErrorMessage, JSMSG_*
+#include "js/RootingAPI.h"              // JS::Rooted
+#include "js/SourceText.h"              // JS::SourceText
 #include "js/TypeDecls.h"          // JS::HandleObject, JS::MutableHandleScript
 #include "js/Utility.h"            // js::MallocArena, JS::UniqueTwoByteChars
 #include "js/Value.h"              // JS::Value
@@ -132,6 +133,32 @@ JSScript* JS::CompileAndStartIncrementalEncoding(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     SourceText<Utf8Unit>& srcBuf) {
   return CompileSourceBufferAndStartIncrementalEncoding(cx, options, srcBuf);
+}
+
+JS_PUBLIC_API bool JS::StartIncrementalEncoding(JSContext* cx,
+                                                RefPtr<JS::Stencil>&& stencil) {
+  MOZ_ASSERT(cx);
+  MOZ_ASSERT(!stencil->hasMultipleReference());
+
+  auto* source = stencil->source.get();
+
+  UniquePtr<frontend::ExtensibleCompilationStencil> initial;
+  if (stencil->hasOwnedBorrow()) {
+    initial.reset(stencil->takeOwnedBorrow());
+    stencil = nullptr;
+  } else {
+    initial = cx->make_unique<frontend::ExtensibleCompilationStencil>(
+        cx, stencil->source);
+    if (!initial) {
+      return false;
+    }
+
+    if (!initial->steal(cx, std::move(stencil))) {
+      return false;
+    }
+  }
+
+  return source->startIncrementalEncoding(cx, std::move(initial));
 }
 
 JSScript* JS::CompileUtf8File(JSContext* cx,
