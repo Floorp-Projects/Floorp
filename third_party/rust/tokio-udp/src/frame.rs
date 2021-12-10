@@ -1,12 +1,12 @@
 use std::io;
-use std::net::{SocketAddr, Ipv4Addr, SocketAddrV4};
+use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 
-use futures::{Async, Poll, Stream, Sink, StartSend, AsyncSink};
+use futures::{Async, AsyncSink, Poll, Sink, StartSend, Stream};
 
 use super::UdpSocket;
 
+use bytes::{BufMut, BytesMut};
 use tokio_codec::{Decoder, Encoder};
-use bytes::{BytesMut, BufMut};
 
 /// A unified `Stream` and `Sink` interface to an underlying `UdpSocket`, using
 /// the `Encoder` and `Decoder` traits to encode and decode frames.
@@ -33,28 +33,71 @@ pub struct UdpFramed<C> {
     wr: BytesMut,
     out_addr: SocketAddr,
     flushed: bool,
+    is_readable: bool,
+    repeat_decode: bool,
+    current_addr: Option<SocketAddr>,
 }
 
 impl<C: Decoder> Stream for UdpFramed<C> {
     type Item = (C::Item, SocketAddr);
     type Error = C::Error;
 
-    fn poll(&mut self) -> Poll<Option<(Self::Item)>, Self::Error> {
+    fn poll(&mut self) -> Poll<Option<Self::Item>, Self::Error> {
         self.rd.reserve(INITIAL_RD_CAPACITY);
 
-        let (n, addr) = unsafe {
-            // Read into the buffer without having to initialize the memory.
-            let (n, addr) = try_ready!(self.socket.poll_recv_from(self.rd.bytes_mut()));
-            self.rd.advance_mut(n);
-            (n, addr)
-        };
-        trace!("received {} bytes, decoding", n);
-        let frame_res = self.codec.decode(&mut self.rd);
-        self.rd.clear();
-        let frame = frame_res?;
-        let result = frame.map(|frame| (frame, addr)); // frame -> (frame, addr)
-        trace!("frame decoded from buffer");
-        Ok(Async::Ready(result))
+        if self.repeat_decode {
+            loop {
+                // Are there are still bytes left in the read buffer to decode?
+                if self.is_readable {
+                    // Use deocde_eof since every datagram contains its own
+                    // eof which is just the end of the datagram. This supports
+                    // the lines use case where there may not be a terminating
+                    // delimiter and thus you may never get the end of the frame.
+                    // This is generally fine for most implementations of codec
+                    // since by default this will defer to calling decode.
+                    if let Some(frame) = self.codec.decode_eof(&mut self.rd)? {
+                        trace!("frame decoded from buffer");
+
+                        let current_addr = self
+                            .current_addr
+                            .expect("will always be set before this line is called");
+
+                        return Ok(Async::Ready(Some((frame, current_addr))));
+                    }
+
+                    // if this line has been reached then decode has returned `None`.
+                    self.is_readable = false;
+                    self.rd.clear();
+                }
+
+                // We're out of data. Try and fetch more data to decode
+                let (n, addr) = unsafe {
+                    // Read into the buffer without having to initialize the memory.
+                    let (n, addr) = try_ready!(self.socket.poll_recv_from(self.rd.bytes_mut()));
+                    self.rd.advance_mut(n);
+                    (n, addr)
+                };
+
+                self.current_addr = Some(addr);
+                self.is_readable = true;
+
+                trace!("received {} bytes, decoding", n);
+            }
+        } else {
+            let (n, addr) = unsafe {
+                // Read into the buffer without having to initialize the memory.
+                let (n, addr) = try_ready!(self.socket.poll_recv_from(self.rd.bytes_mut()));
+                self.rd.advance_mut(n);
+                (n, addr)
+            };
+            trace!("received {} bytes, decoding", n);
+            let frame_res = self.codec.decode(&mut self.rd);
+            self.rd.clear();
+            let frame = frame_res?;
+            let result = frame.map(|frame| (frame, addr)); // frame -> (frame, addr)
+            trace!("frame decoded from buffer");
+            Ok(Async::Ready(result))
+        }
     }
 }
 
@@ -66,8 +109,8 @@ impl<C: Encoder> Sink for UdpFramed<C> {
         trace!("sending frame");
 
         if !self.flushed {
-            match try!(self.poll_complete()) {
-                Async::Ready(()) => {},
+            match self.poll_complete()? {
+                Async::Ready(()) => {}
                 Async::NotReady => return Ok(AsyncSink::NotReady(item)),
             }
         }
@@ -83,7 +126,7 @@ impl<C: Encoder> Sink for UdpFramed<C> {
 
     fn poll_complete(&mut self) -> Poll<(), C::Error> {
         if self.flushed {
-            return Ok(Async::Ready(()))
+            return Ok(Async::Ready(()));
         }
 
         trace!("flushing frame; length={}", self.wr.len());
@@ -97,8 +140,11 @@ impl<C: Encoder> Sink for UdpFramed<C> {
         if wrote_all {
             Ok(Async::Ready(()))
         } else {
-            Err(io::Error::new(io::ErrorKind::Other,
-                               "failed to write entire datagram to socket").into())
+            Err(io::Error::new(
+                io::ErrorKind::Other,
+                "failed to write entire datagram to socket",
+            )
+            .into())
         }
     }
 
@@ -123,6 +169,27 @@ impl<C> UdpFramed<C> {
             rd: BytesMut::with_capacity(INITIAL_RD_CAPACITY),
             wr: BytesMut::with_capacity(INITIAL_WR_CAPACITY),
             flushed: true,
+            is_readable: false,
+            repeat_decode: false,
+            current_addr: None,
+        }
+    }
+
+    /// Create a new `UdpFramed` backed by the given socket and codec. That will
+    /// continue to call `decode_eof` until the decoder has cleared the entire buffer.
+    ///
+    /// See struct level documentation for more details.
+    pub fn with_decode(socket: UdpSocket, codec: C, repeat_decode: bool) -> UdpFramed<C> {
+        UdpFramed {
+            socket: socket,
+            codec: codec,
+            out_addr: SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::new(0, 0, 0, 0), 0)),
+            rd: BytesMut::with_capacity(INITIAL_RD_CAPACITY),
+            wr: BytesMut::with_capacity(INITIAL_WR_CAPACITY),
+            flushed: true,
+            is_readable: false,
+            repeat_decode,
+            current_addr: None,
         }
     }
 

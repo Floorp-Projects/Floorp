@@ -18,20 +18,22 @@
 #![doc(hidden)]
 #![allow(deprecated)]
 
+mod bytes_codec;
 mod decoder;
 mod encoder;
-mod bytes_codec;
 mod lines_codec;
 
+pub use self::bytes_codec::BytesCodec;
 pub use self::decoder::Decoder;
 pub use self::encoder::Encoder;
-pub use self::bytes_codec::BytesCodec;
 pub use self::lines_codec::LinesCodec;
 
 pub use framed::{Framed, FramedParts};
 pub use framed_read::FramedRead;
 pub use framed_write::FramedWrite;
 
+#[deprecated(since = "0.1.8", note = "Moved to tokio-codec")]
+#[doc(hidden)]
 pub mod length_delimited {
     //! Frame a stream of bytes based on a length prefix
     //!
@@ -44,7 +46,7 @@ pub mod length_delimited {
     //! # Getting started
     //!
     //! If implementing a protocol from scratch, using length delimited framing
-    //! is an easy way to get started. [`Framed::new()`] will adapt a
+    //! is an easy way to get started. [`Framed::new()`](length_delimited::Framed::new) will adapt a
     //! full-duplex byte stream with a length delimited framer using default
     //! configuration values.
     //!
@@ -104,7 +106,7 @@ pub mod length_delimited {
     //! [`FramedRead`] adapts an [`AsyncRead`] into a `Stream` of [`BytesMut`],
     //! such that each yielded [`BytesMut`] value contains the contents of an
     //! entire frame. There are many configuration parameters enabling
-    //! [`FrameRead`] to handle a wide range of protocols. Here are some
+    //! [`FramedRead`] to handle a wide range of protocols. Here are some
     //! examples that will cover the various options at a high level.
     //!
     //! ## Example 1
@@ -370,7 +372,7 @@ pub mod length_delimited {
     //! [`AsyncRead`]: ../../trait.AsyncRead.html
     //! [`AsyncWrite`]: ../../trait.AsyncWrite.html
     //! [`Encoder`]: ../trait.Encoder.html
-    //! [`BytesMut`]: https://docs.rs/bytes/~0.4/bytes/struct.BytesMut.html
+    //! [`BytesMut`]: https://docs.rs/bytes/0.4/bytes/struct.BytesMut.html
 
-    pub use ::length_delimited::*;
+    pub use length_delimited::*;
 }

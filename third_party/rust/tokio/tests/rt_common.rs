@@ -1,8 +1,8 @@
-#![allow(clippy::needless_range_loop)]
+#![allow(clippy::needless_range_loop, clippy::stable_sort_primitive)]
 #![warn(rust_2018_idioms)]
 #![cfg(feature = "full")]
 
-// Tests to run on both current-thread & therad-pool runtime variants.
+// Tests to run on both current-thread & thread-pool runtime variants.
 
 macro_rules! rt_test {
     ($($t:tt)*) => {
@@ -83,10 +83,40 @@ rt_test! {
     }
 
     #[test]
+    fn block_on_handle_sync() {
+        let rt = rt();
+
+        let mut win = false;
+        rt.handle().block_on(async {
+            win = true;
+        });
+
+        assert!(win);
+    }
+
+    #[test]
     fn block_on_async() {
         let mut rt = rt();
 
         let out = rt.block_on(async {
+            let (tx, rx) = oneshot::channel();
+
+            thread::spawn(move || {
+                thread::sleep(Duration::from_millis(50));
+                tx.send("ZOMG").unwrap();
+            });
+
+            assert_ok!(rx.await)
+        });
+
+        assert_eq!(out, "ZOMG");
+    }
+
+    #[test]
+    fn block_on_handle_async() {
+        let rt = rt();
+
+        let out = rt.handle().block_on(async {
             let (tx, rx) = oneshot::channel();
 
             thread::spawn(move || {
@@ -571,6 +601,19 @@ rt_test! {
     }
 
     #[test]
+    // IOCP requires setting the "max thread" concurrency value. The sane,
+    // default, is to set this to the number of cores. Threads that poll I/O
+    // become associated with the IOCP handle. Once those threads sleep for any
+    // reason (mutex), they yield their ownership.
+    //
+    // This test hits an edge case on windows where more threads than cores are
+    // created, none of those threads ever yield due to being at capacity, so
+    // IOCP gets "starved".
+    //
+    // For now, this is a very edge case that is probably not a real production
+    // concern. There also isn't a great/obvious solution to take. For now, the
+    // test is disabled.
+    #[cfg(not(windows))]
     fn io_driver_called_when_under_load() {
         let mut rt = rt();
 
@@ -826,6 +869,21 @@ rt_test! {
     }
 
     #[test]
+    fn shutdown_wakeup_time() {
+        let mut runtime = rt();
+
+        runtime.block_on(async move {
+            tokio::time::delay_for(std::time::Duration::from_millis(100)).await;
+        });
+
+        runtime.shutdown_timeout(Duration::from_secs(10_000));
+    }
+
+    // This test is currently ignored on Windows because of a
+    // rust-lang issue in thread local storage destructors.
+    // See https://github.com/rust-lang/rust/issues/74875
+    #[test]
+    #[cfg(not(windows))]
     fn runtime_in_thread_local() {
         use std::cell::RefCell;
         use std::thread;

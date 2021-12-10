@@ -1,42 +1,39 @@
 extern crate futures;
 extern crate rand;
-extern crate tempdir;
+extern crate tempfile;
 extern crate tokio_fs;
 extern crate tokio_io;
-extern crate tokio_threadpool;
 
 use tokio_fs::*;
 use tokio_io::io;
-use tokio_threadpool::*;
 
-use futures::Future;
 use futures::future::poll_fn;
-use futures::sync::oneshot;
-use rand::{thread_rng, Rng};
-use tempdir::TempDir;
+use futures::Future;
+use rand::{distributions, thread_rng, Rng};
+use tempfile::Builder as TmpBuilder;
 
-use std::fs::File as StdFile;
-use std::io::{Read, SeekFrom};
+use std::fs;
+use std::io::SeekFrom;
+
+mod pool;
 
 #[test]
 fn read_write() {
     const NUM_CHARS: usize = 16 * 1_024;
 
-    let dir = TempDir::new("tokio-fs-tests").unwrap();
+    let dir = TmpBuilder::new()
+        .prefix("tokio-fs-tests")
+        .tempdir()
+        .unwrap();
     let file_path = dir.path().join("read_write.txt");
 
-    let contents: Vec<u8> = thread_rng().gen_ascii_chars()
+    let contents: Vec<u8> = thread_rng()
+        .sample_iter(&distributions::Alphanumeric)
         .take(NUM_CHARS)
         .collect::<String>()
         .into();
 
-    let pool = Builder::new()
-        .pool_size(1)
-        .build();
-
-    let (tx, rx) = oneshot::channel();
-
-    pool.spawn({
+    pool::run({
         let file_path = file_path.clone();
         let contents = contents.clone();
 
@@ -44,51 +41,69 @@ fn read_write() {
             .and_then(|file| file.metadata())
             .inspect(|&(_, ref metadata)| assert!(metadata.is_file()))
             .and_then(move |(file, _)| io::write_all(file, contents))
-            .and_then(|(mut file, _)| {
-                poll_fn(move || file.poll_sync_all())
-            })
+            .and_then(|(mut file, _)| poll_fn(move || file.poll_sync_all()))
             .then(|res| {
                 let _ = res.unwrap();
-                tx.send(()).unwrap();
                 Ok(())
             })
     });
 
-    rx.wait().unwrap();
-
-    let mut file = StdFile::open(&file_path).unwrap();
-
-    let mut dst = vec![];
-    file.read_to_end(&mut dst).unwrap();
-
+    let dst = fs::read(&file_path).unwrap();
     assert_eq!(dst, contents);
 
-    let (tx, rx) = oneshot::channel();
-
-    pool.spawn({
+    pool::run({
         File::open(file_path)
             .and_then(|file| io::read_to_end(file, vec![]))
             .then(move |res| {
                 let (_, buf) = res.unwrap();
                 assert_eq!(buf, contents);
-                tx.send(()).unwrap();
                 Ok(())
             })
     });
+}
 
-    rx.wait().unwrap();
+#[test]
+fn read_write_helpers() {
+    const NUM_CHARS: usize = 16 * 1_024;
+
+    let dir = TmpBuilder::new()
+        .prefix("tokio-fs-tests")
+        .tempdir()
+        .unwrap();
+    let file_path = dir.path().join("read_write_all.txt");
+
+    let contents: Vec<u8> = thread_rng()
+        .sample_iter(&distributions::Alphanumeric)
+        .take(NUM_CHARS)
+        .collect::<String>()
+        .into();
+
+    pool::run(write(file_path.clone(), contents.clone()).then(|res| {
+        let _ = res.unwrap();
+        Ok(())
+    }));
+
+    let dst = fs::read(&file_path).unwrap();
+    assert_eq!(dst, contents);
+
+    pool::run({
+        read(file_path).then(move |res| {
+            let buf = res.unwrap();
+            assert_eq!(buf, contents);
+            Ok(())
+        })
+    });
 }
 
 #[test]
 fn metadata() {
-    let dir = TempDir::new("tokio-fs-tests").unwrap();
+    let dir = TmpBuilder::new()
+        .prefix("tokio-fs-tests")
+        .tempdir()
+        .unwrap();
     let file_path = dir.path().join("metadata.txt");
 
-    let pool = Builder::new().pool_size(1).build();
-
-    let (tx, rx) = oneshot::channel();
-
-    pool.spawn({
+    pool::run({
         let file_path = file_path.clone();
         let file_path2 = file_path.clone();
         let file_path3 = file_path.clone();
@@ -102,23 +117,20 @@ fn metadata() {
             .and_then(|_| tokio_fs::metadata(file_path3))
             .then(|r| {
                 assert!(r.unwrap().is_file());
-                tx.send(())
+                Ok(())
             })
     });
-
-    rx.wait().unwrap();
 }
 
 #[test]
 fn seek() {
-    let dir = TempDir::new("tokio-fs-tests").unwrap();
+    let dir = TmpBuilder::new()
+        .prefix("tokio-fs-tests")
+        .tempdir()
+        .unwrap();
     let file_path = dir.path().join("seek.txt");
 
-    let pool = Builder::new().pool_size(1).build();
-
-    let (tx, rx) = oneshot::channel();
-
-    pool.spawn(
+    pool::run({
         OpenOptions::new()
             .create(true)
             .read(true)
@@ -138,9 +150,41 @@ fn seek() {
             })
             .then(|r| {
                 let _ = r.unwrap();
-                tx.send(())
+                Ok(())
+            })
+    });
+}
+
+#[test]
+fn clone() {
+    use std::io::prelude::*;
+
+    let dir = TmpBuilder::new()
+        .prefix("tokio-fs-tests")
+        .tempdir()
+        .unwrap();
+    let file_path = dir.path().join("clone.txt");
+
+    pool::run(
+        File::create(file_path.clone())
+            .and_then(|file| {
+                file.try_clone()
+                    .map_err(|(_file, err)| err)
+                    .and_then(|(file, clone)| {
+                        io::write_all(file, "clone ")
+                            .and_then(|_| io::write_all(clone, "successful"))
+                    })
+            })
+            .then(|res| {
+                let _ = res.unwrap();
+                Ok(())
             }),
     );
 
-    rx.wait().unwrap();
+    let mut file = std::fs::File::open(&file_path).unwrap();
+
+    let mut dst = vec![];
+    file.read_to_end(&mut dst).unwrap();
+
+    assert_eq!(dst, b"clone successful")
 }
