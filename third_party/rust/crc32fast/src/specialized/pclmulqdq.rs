@@ -89,7 +89,7 @@ unsafe fn debug(_s: &str, a: arch::__m128i) -> arch::__m128i {
 }
 
 #[target_feature(enable = "pclmulqdq", enable = "sse2", enable = "sse4.1")]
-pub unsafe fn calculate(crc: u32, mut data: &[u8]) -> u32 {
+unsafe fn calculate(crc: u32, mut data: &[u8]) -> u32 {
     // In theory we can accelerate smaller chunks too, but for now just rely on
     // the fallback implementation as it's too much hassle and doesn't seem too
     // beneficial.

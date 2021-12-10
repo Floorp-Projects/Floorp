@@ -20,7 +20,7 @@ use std::env;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use glob::MatchOptions;
+use glob::{MatchOptions, Pattern};
 
 /// `libclang` directory patterns for FreeBSD and Linux.
 const DIRECTORIES_LINUX: &[&str] = &[
@@ -49,6 +49,19 @@ const DIRECTORIES_WINDOWS: &[&str] = &[
     // LLVM + Clang can be installed as a component of Visual Studio.
     // https://github.com/KyleMayes/clang-sys/issues/121
     "C:\\Program Files*\\Microsoft Visual Studio\\*\\BuildTools\\VC\\Tools\\Llvm\\**\\bin",
+    // Scoop user installation https://scoop.sh/.
+    // Chocolatey, WinGet and other installers use to the system wide dir listed above
+    "C:\\Users\\*\\scoop\\apps\\llvm\\current\\bin",
+];
+
+/// `libclang` directory patterns for Haiku.
+const DIRECTORIES_HAIKU: &[&str] = &[
+    "/boot/system/lib",
+    "/boot/system/develop/lib",
+    "/boot/system/non-packaged/lib",
+    "/boot/system/non-packaged/develop/lib",
+    "/boot/home/config/non-packaged/lib",
+    "/boot/home/config/non-packaged/develop/lib",
 ];
 
 thread_local! {
@@ -152,10 +165,15 @@ impl Drop for CommandErrorPrinter {
 /// Returns the paths to and the filenames of the files matching the supplied
 /// filename patterns in the supplied directory.
 fn search_directory(directory: &Path, filenames: &[String]) -> Vec<(PathBuf, String)> {
+    // Escape the directory in case it contains characters that have special
+    // meaning in glob patterns (e.g., `[` or `]`).
+    let directory = Pattern::escape(directory.to_str().unwrap());
+    let directory = Path::new(&directory);
+
     // Join the directory to the filename patterns to obtain the path patterns.
     let paths = filenames
         .iter()
-        .filter_map(|f| directory.join(f).to_str().map(ToOwned::to_owned));
+        .map(|f| directory.join(f).to_str().unwrap().to_owned());
 
     // Prevent wildcards from matching path separators.
     let mut options = MatchOptions::new();
@@ -170,7 +188,7 @@ fn search_directory(directory: &Path, filenames: &[String]) -> Vec<(PathBuf, Str
             }
         })
         .filter_map(|p| {
-            let filename = p.file_name().and_then(|f| f.to_str())?;
+            let filename = p.file_name()?.to_str().unwrap();
 
             // The `libclang_shared` library has been renamed to `libclang-cpp`
             // in Clang 10. This can cause instances of this library (e.g.,
@@ -257,6 +275,8 @@ pub fn search_libclang_directories(files: &[String], variable: &str) -> Vec<(Pat
         DIRECTORIES_MACOS
     } else if cfg!(target_os = "windows") {
         DIRECTORIES_WINDOWS
+    } else if cfg!(target_os = "haiku") {
+        DIRECTORIES_HAIKU
     } else {
         &[]
     };

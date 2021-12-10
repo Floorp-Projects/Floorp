@@ -46,6 +46,7 @@
 
 extern crate cc;
 
+use std::collections::HashMap;
 use std::env;
 use std::ffi::{OsStr, OsString};
 use std::fs::{self, File};
@@ -58,6 +59,7 @@ use std::process::Command;
 pub struct Config {
     path: PathBuf,
     generator: Option<OsString>,
+    generator_toolset: Option<OsString>,
     cflags: OsString,
     cxxflags: OsString,
     asmflags: OsString,
@@ -67,6 +69,7 @@ pub struct Config {
     host: Option<String>,
     out_dir: Option<PathBuf>,
     profile: Option<String>,
+    configure_args: Vec<OsString>,
     build_args: Vec<OsString>,
     cmake_target: Option<String>,
     env: Vec<(OsString, OsString)>,
@@ -77,6 +80,9 @@ pub struct Config {
     verbose_cmake: bool,
     verbose_make: bool,
     pic: Option<bool>,
+    c_cfg: Option<cc::Build>,
+    cxx_cfg: Option<cc::Build>,
+    env_cache: HashMap<String, Option<OsString>>,
 }
 
 /// Builds the native library rooted at `path` with the default cmake options.
@@ -177,6 +183,7 @@ impl Config {
         Config {
             path: env::current_dir().unwrap().join(path),
             generator: None,
+            generator_toolset: None,
             cflags: OsString::new(),
             cxxflags: OsString::new(),
             asmflags: OsString::new(),
@@ -186,6 +193,7 @@ impl Config {
             out_dir: None,
             target: None,
             host: None,
+            configure_args: Vec::new(),
             build_args: Vec::new(),
             cmake_target: None,
             env: Vec::new(),
@@ -196,6 +204,9 @@ impl Config {
             verbose_cmake: false,
             verbose_make: false,
             pic: None,
+            c_cfg: None,
+            cxx_cfg: None,
+            env_cache: HashMap::new(),
         }
     }
 
@@ -206,8 +217,21 @@ impl Config {
     }
 
     /// Sets the build-tool generator (`-G`) for this compilation.
+    ///
+    /// If unset, this crate will use the `CMAKE_GENERATOR` environment variable
+    /// if set. Otherwise, it will guess the best generator to use based on the
+    /// build target.
     pub fn generator<T: AsRef<OsStr>>(&mut self, generator: T) -> &mut Config {
         self.generator = Some(generator.as_ref().to_owned());
+        self
+    }
+
+    /// Sets the toolset name (-T) if supported by generator.
+    /// Can be used to compile with CLang/LLV instead of msvc when Visual Studio generator is selected.
+    ///
+    /// If unset, will use the default toolset of the selected generator.
+    pub fn generator_toolset<T: AsRef<OsStr>>(&mut self, toolset_name: T) -> &mut Config {
+        self.generator_toolset = Some(toolset_name.as_ref().to_owned());
         self
     }
 
@@ -314,6 +338,12 @@ impl Config {
         self
     }
 
+    /// Add an argument to the `cmake` configure step
+    pub fn configure_arg<A: AsRef<OsStr>>(&mut self, arg: A) -> &mut Config {
+        self.configure_args.push(arg.as_ref().to_owned());
+        self
+    }
+
     /// Add an argument to the final `cmake` build step
     pub fn build_arg<A: AsRef<OsStr>>(&mut self, arg: A) -> &mut Config {
         self.build_args.push(arg.as_ref().to_owned());
@@ -378,6 +408,18 @@ impl Config {
             })
     }
 
+    /// Initializes the C build configuration.
+    pub fn init_c_cfg(&mut self, c_cfg: cc::Build) -> &mut Config {
+        self.c_cfg = Some(c_cfg);
+        self
+    }
+
+    /// Initializes the C++ build configuration.
+    pub fn init_cxx_cfg(&mut self, cxx_cfg: cc::Build) -> &mut Config {
+        self.cxx_cfg = Some(cxx_cfg);
+        self
+    }
+
     /// Run this configuration, compiling the library with all the configured
     /// options.
     ///
@@ -395,11 +437,26 @@ impl Config {
             }
         };
         let host = self.host.clone().unwrap_or_else(|| getenv_unwrap("HOST"));
+
+        // Some decisions later on are made if CMAKE_TOOLCHAIN_FILE is defined,
+        // so we need to read it from the environment variables from the beginning.
+        if !self.defined("CMAKE_TOOLCHAIN_FILE") {
+            if let Some(s) = self.getenv_target_os("CMAKE_TOOLCHAIN_FILE") {
+                self.define("CMAKE_TOOLCHAIN_FILE", s);
+            }
+        }
+
+        let generator = self
+            .generator
+            .clone()
+            .or_else(|| self.getenv_target_os("CMAKE_GENERATOR"));
+
         let msvc = target.contains("msvc");
         let ndk = self.uses_android_ndk();
-        let mut c_cfg = cc::Build::new();
+        let mut c_cfg = self.c_cfg.clone().unwrap_or_default();
         c_cfg
             .cargo_metadata(false)
+            .cpp(false)
             .opt_level(0)
             .debug(false)
             .warnings(false)
@@ -408,7 +465,7 @@ impl Config {
         if !ndk {
             c_cfg.target(&target);
         }
-        let mut cxx_cfg = cc::Build::new();
+        let mut cxx_cfg = self.cxx_cfg.clone().unwrap_or_default();
         cxx_cfg
             .cargo_metadata(false)
             .cpp(true)
@@ -448,12 +505,16 @@ impl Config {
                 cmake_prefix_path.push(PathBuf::from(root));
             }
         }
-        let system_prefix = env::var_os("CMAKE_PREFIX_PATH").unwrap_or(OsString::new());
+        let system_prefix = self
+            .getenv_target_os("CMAKE_PREFIX_PATH")
+            .unwrap_or(OsString::new());
         cmake_prefix_path.extend(env::split_paths(&system_prefix).map(|s| s.to_owned()));
         let cmake_prefix_path = env::join_paths(&cmake_prefix_path).unwrap();
 
         // Build up the first cmake command to build the build system.
-        let executable = env::var("CMAKE").unwrap_or("cmake".to_owned());
+        let executable = self
+            .getenv_target_os("CMAKE")
+            .unwrap_or(OsString::from("cmake"));
         let mut cmd = Command::new(&executable);
 
         if self.verbose_cmake {
@@ -463,7 +524,7 @@ impl Config {
 
         cmd.arg(&self.path).current_dir(&build);
         let mut is_ninja = false;
-        if let Some(ref generator) = self.generator {
+        if let Some(ref generator) = generator {
             is_ninja = generator.to_string_lossy().contains("Ninja");
         }
         if target.contains("windows-gnu") {
@@ -471,7 +532,7 @@ impl Config {
                 // On MinGW we need to coerce cmake to not generate a visual
                 // studio build system but instead use makefiles that MinGW can
                 // use to build.
-                if self.generator.is_none() {
+                if generator.is_none() {
                     // If make.exe isn't found, that means we may be using a MinGW
                     // toolchain instead of a MSYS2 toolchain. If neither is found,
                     // the build cannot continue.
@@ -522,21 +583,27 @@ impl Config {
             // otherwise we won't get 32/64 bit correct automatically.
             // This also guarantees that NMake generator isn't chosen implicitly.
             let using_nmake_generator;
-            if self.generator.is_none() {
+            if generator.is_none() {
                 cmd.arg("-G").arg(self.visual_studio_generator(&target));
                 using_nmake_generator = false;
             } else {
-                using_nmake_generator = self.generator.as_ref().unwrap() == "NMake Makefiles";
+                using_nmake_generator = generator.as_ref().unwrap() == "NMake Makefiles";
             }
             if !is_ninja && !using_nmake_generator {
                 if target.contains("x86_64") {
-                    cmd.arg("-Thost=x64");
+                    if self.generator_toolset.is_none() {
+                        cmd.arg("-Thost=x64");
+                    }
                     cmd.arg("-Ax64");
                 } else if target.contains("thumbv7a") {
-                    cmd.arg("-Thost=x64");
+                    if self.generator_toolset.is_none() {
+                        cmd.arg("-Thost=x64");
+                    }
                     cmd.arg("-Aarm");
                 } else if target.contains("aarch64") {
-                    cmd.arg("-Thost=x64");
+                    if self.generator_toolset.is_none() {
+                        cmd.arg("-Thost=x64");
+                    }
                     cmd.arg("-AARM64");
                 } else if target.contains("i686") {
                     use cc::windows_registry::{find_vs_version, VsVers};
@@ -545,7 +612,9 @@ impl Config {
                             // 32-bit x86 toolset used to be the default for all hosts,
                             // but Visual Studio 2019 changed the default toolset to match the host,
                             // so we need to manually override it for x86 targets
-                            cmd.arg("-Thost=x86");
+                            if self.generator_toolset.is_none() {
+                                cmd.arg("-Thost=x86");
+                            }
                             cmd.arg("-AWin32");
                         }
                         _ => {}
@@ -562,11 +631,20 @@ impl Config {
             if !self.defined("CMAKE_SYSTEM_NAME") {
                 cmd.arg("-DCMAKE_SYSTEM_NAME=SunOS");
             }
+        } else if target.contains("apple-ios") || target.contains("apple-tvos") {
+            // These two flags prevent CMake from adding an OSX sysroot, which messes up compilation.
+            if !self.defined("CMAKE_OSX_SYSROOT") && !self.defined("CMAKE_OSX_DEPLOYMENT_TARGET") {
+                cmd.arg("-DCMAKE_OSX_SYSROOT=/");
+                cmd.arg("-DCMAKE_OSX_DEPLOYMENT_TARGET=");
+            }
         }
-        if let Some(ref generator) = self.generator {
+        if let Some(ref generator) = generator {
             cmd.arg("-G").arg(generator);
         }
-        let profile = self.get_profile();
+        if let Some(ref generator_toolset) = self.generator_toolset {
+            cmd.arg("-T").arg(generator_toolset);
+        }
+        let profile = self.get_profile().to_string();
         for &(ref k, ref v) in &self.defines {
             let mut os = OsString::from("-D");
             os.push(k);
@@ -623,7 +701,7 @@ impl Config {
                 //
                 // Note that for other generators, though, this *overrides*
                 // things like the optimization flags, which is bad.
-                if self.generator.is_none() && msvc {
+                if generator.is_none() && msvc {
                     let flag_var_alt = format!("CMAKE_{}_FLAGS_{}", kind, build_type_upcase);
                     if !self.defined(&flag_var_alt) {
                         let mut flagsflag = OsString::from("-D");
@@ -693,70 +771,45 @@ impl Config {
             cmd.arg("-DCMAKE_VERBOSE_MAKEFILE:BOOL=ON");
         }
 
-        if !self.defined("CMAKE_TOOLCHAIN_FILE") {
-            if let Ok(s) = env::var("CMAKE_TOOLCHAIN_FILE") {
-                cmd.arg(&format!("-DCMAKE_TOOLCHAIN_FILE={}", s));
-            }
-        }
-
         for &(ref k, ref v) in c_compiler.env().iter().chain(&self.env) {
             cmd.env(k, v);
         }
 
         if self.always_configure || !build.join("CMakeCache.txt").exists() {
+            cmd.args(&self.configure_args);
             run(cmd.env("CMAKE_PREFIX_PATH", cmake_prefix_path), "cmake");
         } else {
             println!("CMake project was already configured. Skipping configuration step.");
         }
 
-        let mut makeflags = None;
-        let mut parallel_flags = None;
-
-        if let Ok(s) = env::var("NUM_JOBS") {
-            match self.generator.as_ref().map(|g| g.to_string_lossy()) {
-                Some(ref g) if g.contains("Ninja") => {
-                    parallel_flags = Some(format!("-j{}", s));
-                }
-                Some(ref g) if g.contains("Visual Studio") => {
-                    parallel_flags = Some(format!("/m:{}", s));
-                }
-                Some(ref g) if g.contains("NMake") => {
-                    // NMake creates `Makefile`s, but doesn't understand `-jN`.
-                }
-                _ if fs::metadata(&build.join("Makefile")).is_ok() => {
-                    match env::var_os("CARGO_MAKEFLAGS") {
-                        // Only do this on non-windows and non-bsd
-                        // On Windows, we could be invoking make instead of
-                        // mingw32-make which doesn't work with our jobserver
-                        // bsdmake also does not work with our job server
-                        Some(ref s)
-                            if !(cfg!(windows)
-                                || cfg!(target_os = "openbsd")
-                                || cfg!(target_os = "netbsd")
-                                || cfg!(target_os = "freebsd")
-                                || cfg!(target_os = "bitrig")
-                                || cfg!(target_os = "dragonflybsd")) =>
-                        {
-                            makeflags = Some(s.clone())
-                        }
-
-                        // This looks like `make`, let's hope it understands `-jN`.
-                        _ => makeflags = Some(OsString::from(format!("-j{}", s))),
-                    }
-                }
-                _ => {}
-            }
-        }
-
         // And build!
         let target = self.cmake_target.clone().unwrap_or("install".to_string());
         let mut cmd = Command::new(&executable);
+        cmd.current_dir(&build);
+
         for &(ref k, ref v) in c_compiler.env().iter().chain(&self.env) {
             cmd.env(k, v);
         }
 
-        if let Some(flags) = makeflags {
-            cmd.env("MAKEFLAGS", flags);
+        // If the generated project is Makefile based we should carefully transfer corresponding CARGO_MAKEFLAGS
+        if fs::metadata(&build.join("Makefile")).is_ok() {
+            match env::var_os("CARGO_MAKEFLAGS") {
+                // Only do this on non-windows and non-bsd
+                // On Windows, we could be invoking make instead of
+                // mingw32-make which doesn't work with our jobserver
+                // bsdmake also does not work with our job server
+                Some(ref makeflags)
+                    if !(cfg!(windows)
+                        || cfg!(target_os = "openbsd")
+                        || cfg!(target_os = "netbsd")
+                        || cfg!(target_os = "freebsd")
+                        || cfg!(target_os = "bitrig")
+                        || cfg!(target_os = "dragonflybsd")) =>
+                {
+                    cmd.env("MAKEFLAGS", makeflags);
+                }
+                _ => {}
+            }
         }
 
         cmd.arg("--build").arg(".");
@@ -765,20 +818,47 @@ impl Config {
             cmd.arg("--target").arg(target);
         }
 
-        cmd.arg("--config")
-            .arg(&profile)
-            .arg("--")
-            .args(&self.build_args)
-            .current_dir(&build);
+        cmd.arg("--config").arg(&profile);
 
-        if let Some(flags) = parallel_flags {
-            cmd.arg(flags);
+        if let Ok(s) = env::var("NUM_JOBS") {
+            // See https://cmake.org/cmake/help/v3.12/manual/cmake.1.html#build-tool-mode
+            cmd.arg("--parallel").arg(s);
+        }
+
+        if !&self.build_args.is_empty() {
+            cmd.arg("--").args(&self.build_args);
         }
 
         run(&mut cmd, "cmake");
 
         println!("cargo:root={}", dst.display());
         return dst;
+    }
+
+    fn getenv_os(&mut self, v: &str) -> Option<OsString> {
+        if let Some(val) = self.env_cache.get(v) {
+            return val.clone();
+        }
+        let r = env::var_os(v);
+        println!("{} = {:?}", v, r);
+        self.env_cache.insert(v.to_string(), r.clone());
+        r
+    }
+
+    /// Gets a target-specific environment variable.
+    fn getenv_target_os(&mut self, var_base: &str) -> Option<OsString> {
+        let host = self.host.clone().unwrap_or_else(|| getenv_unwrap("HOST"));
+        let target = self
+            .target
+            .clone()
+            .unwrap_or_else(|| getenv_unwrap("TARGET"));
+
+        let kind = if host == target { "HOST" } else { "TARGET" };
+        let target_u = target.replace("-", "_");
+        self.getenv_os(&format!("{}_{}", var_base, target))
+            .or_else(|| self.getenv_os(&format!("{}_{}", var_base, target_u)))
+            .or_else(|| self.getenv_os(&format!("{}_{}", kind, var_base)))
+            .or_else(|| self.getenv_os(var_base))
     }
 
     fn visual_studio_generator(&self, target: &str) -> String {
@@ -794,7 +874,7 @@ impl Config {
                  doesn't know how to generate cmake files for it, \
                  can the `cmake` crate be updated?"
             ),
-            Err(msg) => panic!(msg),
+            Err(msg) => panic!("{}", msg),
         };
         if ["i686", "x86_64", "thumbv7a", "aarch64"]
             .iter()

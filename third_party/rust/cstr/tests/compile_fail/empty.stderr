@@ -4,4 +4,4 @@ error: unexpected end of input, expected one of: byte string literal, string lit
 4 |     let _foo = cstr!();
   |                ^^^^^^^
   |
-  = note: this error originates in a macro (in Nightly builds, run with -Z macro-backtrace for more info)
+  = note: this error originates in the macro `cstr` (in Nightly builds, run with -Z macro-backtrace for more info)

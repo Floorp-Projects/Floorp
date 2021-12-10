@@ -16,14 +16,16 @@ extern crate glob;
 
 use std::path::{Path, PathBuf};
 
+use glob::Pattern;
+
 use common;
 
 /// Returns the name of an LLVM or Clang library from a path to such a library.
 fn get_library_name(path: &Path) -> Option<String> {
     path.file_stem().map(|p| {
         let string = p.to_string_lossy();
-        if string.starts_with("lib") {
-            string[3..].to_owned()
+        if let Some(name) = string.strip_prefix("lib") {
+            name.to_owned()
         } else {
             string.to_string()
         }
@@ -39,8 +41,8 @@ fn get_llvm_libraries() -> Vec<String> {
             // Depending on the version of `llvm-config` in use, listed
             // libraries may be in one of two forms, a full path to the library
             // or simply prefixed with `-l`.
-            if p.starts_with("-l") {
-                Some(p[2..].into())
+            if let Some(path) = p.strip_prefix("-l") {
+                Some(path.into())
             } else {
                 get_library_name(Path::new(p))
             }
@@ -67,11 +69,12 @@ const CLANG_LIBRARIES: &[&str] = &[
 
 /// Returns the Clang libraries required to link to `libclang` statically.
 fn get_clang_libraries<P: AsRef<Path>>(directory: P) -> Vec<String> {
-    let pattern = directory
-        .as_ref()
-        .join("libclang*.a")
-        .to_string_lossy()
-        .to_string();
+    // Escape the directory in case it contains characters that have special
+    // meaning in glob patterns (e.g., `[` or `]`).
+    let directory = Pattern::escape(directory.as_ref().to_str().unwrap());
+    let directory = Path::new(&directory);
+
+    let pattern = directory.join("libclang*.a").to_str().unwrap().to_owned();
     if let Ok(libraries) = glob::glob(&pattern) {
         libraries
             .filter_map(|l| l.ok().and_then(|l| get_library_name(&l)))
@@ -134,6 +137,8 @@ pub fn link() {
         println!("cargo:rustc-flags=-l ffi -l ncursesw -l stdc++ -l z");
     } else if cfg!(target_os = "macos") {
         println!("cargo:rustc-flags=-l ffi -l ncurses -l c++ -l z");
+    } else if cfg!(target_os = "haiku") {
+        println!("cargo:rustc-flags=-l ffi -l ncursesw -l stdc++ -l z");
     }
 
     cep.discard();
