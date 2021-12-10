@@ -54,6 +54,19 @@ class TestSupportChild extends GeckoViewActorChild {
           }
           waitForPaints();
         });
+      case "GetLinkColor": {
+        const { selector } = aMsg.data;
+        const element = this.document.querySelector(selector);
+        if (!element) {
+          throw new Error("No element for " + selector);
+        }
+        const color = this.contentWindow.windowUtils.getVisitedDependentComputedStyle(
+          element,
+          "",
+          "color"
+        );
+        return color;
+      }
     }
     return null;
   }
