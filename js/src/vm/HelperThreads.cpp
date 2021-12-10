@@ -641,6 +641,16 @@ struct CompileToStencilTask : public ParseTask {
 };
 
 template <typename Unit>
+struct CompileModuleToStencilTask : public ParseTask {
+  JS::SourceText<Unit> data;
+
+  CompileModuleToStencilTask(JSContext* cx, JS::SourceText<Unit>& srcBuf,
+                             JS::OffThreadCompileCallback callback,
+                             void* callbackData);
+  void parse(JSContext* cx) override;
+};
+
+template <typename Unit>
 CompileToStencilTask<Unit>::CompileToStencilTask(
     JSContext* cx, JS::SourceText<Unit>& srcBuf,
     JS::OffThreadCompileCallback callback, void* callbackData)
@@ -674,8 +684,40 @@ void CompileToStencilTask<Unit>::parse(JSContext* cx) {
   }
 }
 
+template <typename Unit>
+CompileModuleToStencilTask<Unit>::CompileModuleToStencilTask(
+    JSContext* cx, JS::SourceText<Unit>& srcBuf,
+    JS::OffThreadCompileCallback callback, void* callbackData)
+    : ParseTask(ParseTaskKind::ModuleStencil, cx, callback, callbackData),
+      data(std::move(srcBuf)) {}
+
+template <typename Unit>
+void CompileModuleToStencilTask<Unit>::parse(JSContext* cx) {
+  MOZ_ASSERT(cx->isHelperThreadContext());
+
+  stencilInput_ = cx->make_unique<frontend::CompilationInput>(options);
+  if (!stencilInput_) {
+    return;
+  }
+
+  extensibleStencil_ =
+      frontend::ParseModuleToExtensibleStencil(cx, *stencilInput_, data);
+  if (!extensibleStencil_) {
+    return;
+  }
+
+  if (options.allocateInstantiationStorage) {
+    frontend::BorrowingCompilationStencil borrowingStencil(*extensibleStencil_);
+    if (!frontend::PrepareForInstantiate(cx, *stencilInput_, borrowingStencil,
+                                         *gcOutput_)) {
+      extensibleStencil_.reset();
+    }
+  }
+}
+
 bool ParseTask::instantiateStencils(JSContext* cx) {
-  MOZ_ASSERT(kind != ParseTaskKind::ScriptStencil);
+  MOZ_ASSERT(kind != ParseTaskKind::ScriptStencil &&
+             kind != ParseTaskKind::ModuleStencil);
 
   if (!stencil_ && !extensibleStencil_) {
     return false;
@@ -963,6 +1005,36 @@ JS::OffThreadToken* js::StartOffThreadCompileToStencil(
     void* callbackData) {
   return StartOffThreadCompileToStencilInternal(cx, options, srcBuf, callback,
                                                 callbackData);
+}
+
+template <typename Unit>
+static JS::OffThreadToken* StartOffThreadCompileModuleToStencilInternal(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    JS::SourceText<Unit>& srcBuf, JS::OffThreadCompileCallback callback,
+    void* callbackData) {
+  auto task = cx->make_unique<CompileModuleToStencilTask<Unit>>(
+      cx, srcBuf, callback, callbackData);
+  if (!task) {
+    return nullptr;
+  }
+
+  return StartOffThreadParseTask(cx, std::move(task), options);
+}
+
+JS::OffThreadToken* js::StartOffThreadCompileModuleToStencil(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    JS::SourceText<char16_t>& srcBuf, JS::OffThreadCompileCallback callback,
+    void* callbackData) {
+  return StartOffThreadCompileModuleToStencilInternal(cx, options, srcBuf,
+                                                      callback, callbackData);
+}
+
+JS::OffThreadToken* js::StartOffThreadCompileModuleToStencil(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    JS::SourceText<Utf8Unit>& srcBuf, JS::OffThreadCompileCallback callback,
+    void* callbackData) {
+  return StartOffThreadCompileModuleToStencilInternal(cx, options, srcBuf,
+                                                      callback, callbackData);
 }
 
 template <typename Unit>
@@ -1868,6 +1940,14 @@ GlobalHelperThreadState::finishCompileToStencilTask(
     JSContext* cx, JS::OffThreadToken* token,
     JS::InstantiationStorage* storage) {
   return finishCompileToStencilTask(cx, ParseTaskKind::ScriptStencil, token,
+                                    storage);
+}
+
+already_AddRefed<frontend::CompilationStencil>
+GlobalHelperThreadState::finishCompileModuleToStencilTask(
+    JSContext* cx, JS::OffThreadToken* token,
+    JS::InstantiationStorage* storage) {
+  return finishCompileToStencilTask(cx, ParseTaskKind::ModuleStencil, token,
                                     storage);
 }
 
