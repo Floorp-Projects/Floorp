@@ -10,6 +10,10 @@ Note: In this file, do not use the hard wrap in the middle of a sentence for com
 
 ## [Unreleased]
 
+## [0.2.7] - 2021-06-26
+
+- [Support custom Drop implementation.](https://github.com/taiki-e/pin-project-lite/pull/25) See [#25](https://github.com/taiki-e/pin-project-lite/pull/25) for details.
+
 ## [0.2.6] - 2021-03-04
 
 - [Support item attributes in any order.](https://github.com/taiki-e/pin-project-lite/pull/57)
@@ -184,7 +188,8 @@ Note: In this file, do not use the hard wrap in the middle of a sentence for com
 
 Initial release
 
-[Unreleased]: https://github.com/taiki-e/pin-project-lite/compare/v0.2.6...HEAD
+[Unreleased]: https://github.com/taiki-e/pin-project-lite/compare/v0.2.7...HEAD
+[0.2.7]: https://github.com/taiki-e/pin-project-lite/compare/v0.2.6...v0.2.7
 [0.2.6]: https://github.com/taiki-e/pin-project-lite/compare/v0.2.5...v0.2.6
 [0.2.5]: https://github.com/taiki-e/pin-project-lite/compare/v0.2.4...v0.2.5
 [0.2.4]: https://github.com/taiki-e/pin-project-lite/compare/v0.2.3...v0.2.4

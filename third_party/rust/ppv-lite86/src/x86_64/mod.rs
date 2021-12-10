@@ -79,7 +79,7 @@ where
     type u64x2 = sse2::u64x2_sse2<YesS3, YesS4, NI>;
     type u128x1 = sse2::u128x1_sse2<YesS3, YesS4, NI>;
 
-    type u32x4x2 = sse2::u32x4x2_sse2<YesS3, YesS4, NI>;
+    type u32x4x2 = sse2::avx2::u32x4x2_avx2<NI>;
     type u64x2x2 = sse2::u64x2x2_sse2<YesS3, YesS4, NI>;
     type u64x4 = sse2::u64x4_sse2<YesS3, YesS4, NI>;
     type u128x2 = sse2::u128x2_sse2<YesS3, YesS4, NI>;
@@ -167,9 +167,11 @@ impl Default for vec256_storage {
     }
 }
 impl vec256_storage {
+    #[inline(always)]
     pub fn new128(xs: [vec128_storage; 2]) -> Self {
         Self { sse2: xs }
     }
+    #[inline(always)]
     pub fn split128(self) -> [vec128_storage; 2] {
         unsafe { self.sse2 }
     }
@@ -200,9 +202,11 @@ impl Default for vec512_storage {
     }
 }
 impl vec512_storage {
+    #[inline(always)]
     pub fn new128(xs: [vec128_storage; 4]) -> Self {
         Self { sse2: xs }
     }
+    #[inline(always)]
     pub fn split128(self) -> [vec128_storage; 4] {
         unsafe { self.sse2 }
     }

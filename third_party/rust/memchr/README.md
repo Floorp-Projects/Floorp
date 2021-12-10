@@ -2,7 +2,7 @@ memchr
 ======
 This library provides heavily optimized routines for string search primitives.
 
-[![Build status](https://github.com/BurntSushi/rust-memchr/workflows/ci/badge.svg)](https://github.com/BurntSushi/rust-memchr/actions)
+[![Build status](https://github.com/BurntSushi/memchr/workflows/ci/badge.svg)](https://github.com/BurntSushi/memchr/actions)
 [![](https://meritbadge.herokuapp.com/memchr)](https://crates.io/crates/memchr)
 
 Dual-licensed under MIT or the [UNLICENSE](https://unlicense.org/).
@@ -84,4 +84,24 @@ approaches:
 * A huge suite of benchmarks that are also run as tests. Benchmarks always
   confirm that the expected result occurs.
 
-Improvements to the testing infrastructue are very welcome.
+Improvements to the testing infrastructure are very welcome.
+
+
+### Algorithms used
+
+At time of writing, this crate's implementation of substring search actually
+has a few different algorithms to choose from depending on the situation.
+
+* For very small haystacks,
+  [Rabin-Karp](https://en.wikipedia.org/wiki/Rabin%E2%80%93Karp_algorithm)
+  is used to reduce latency. Rabin-Karp has very small overhead and can often
+  complete before other searchers have even been constructed.
+* For small needles, a variant of the
+  ["Generic SIMD"](http://0x80.pl/articles/simd-strfind.html#algorithm-1-generic-simd)
+  algorithm is used. Instead of using the first and last bytes, a heuristic is
+  used to select bytes based on a background distribution of byte frequencies.
+* In all other cases,
+  [Two-Way](https://en.wikipedia.org/wiki/Two-way_string-matching_algorithm)
+  is used. If possible, a prefilter based on the "Generic SIMD" algorithm
+  linked above is used to find candidates quickly. A dynamic heuristic is used
+  to detect if the prefilter is ineffective, and if so, disables it.

@@ -1,6 +1,6 @@
 use rafx::api::*;
 use rafx::framework::*;
-use rafx::nodes::*;
+use rafx::render_features::*;
 use std::sync::Arc;
 
 /// Vulkan renderer that creates and manages the vulkan instance, device, swapchain, and
@@ -28,7 +28,7 @@ impl Renderer {
             height: window_size.height,
         };
 
-        let api = RafxApi::new(window, &Default::default())?;
+        let api = unsafe { RafxApi::new(window, &Default::default())? };
         let device_context = api.device_context();
 
         let render_registry = RenderRegistryBuilder::default()
@@ -445,7 +445,7 @@ impl Renderer {
         let fixed_function_state = Arc::new(fixed_function_state);
 
         let material_pass = MaterialPass::new(
-            &resource_context,
+            resource_context,
             fixed_function_state,
             vec![vertex_shader_module, fragment_shader_module],
             &[&vertex_entry_point, &fragment_entry_point],
@@ -469,9 +469,8 @@ rafx::declare_render_phase!(
     opaque_render_phase_sort_submit_nodes
 );
 
-fn opaque_render_phase_sort_submit_nodes(submit_nodes: Vec<SubmitNode>) -> Vec<SubmitNode> {
+fn opaque_render_phase_sort_submit_nodes(_submit_nodes: &mut Vec<RenderFeatureSubmitNode>) {
     // No sort needed
-    submit_nodes
 }
 
 lazy_static::lazy_static! {
@@ -484,7 +483,7 @@ lazy_static::lazy_static! {
             uv: Default::default()
         };
 
-        VertexDataLayout::build_vertex_layout(&vertex, |builder, vertex| {
+        VertexDataLayout::build_vertex_layout(&vertex, RafxVertexAttributeRate::Vertex, |builder, vertex| {
             builder.add_member(&vertex.pos, "POSITION", RafxFormat::R32G32_SFLOAT);
             builder.add_member(&vertex.uv, "TEXCOORD", RafxFormat::R32G32_SFLOAT);
             builder.add_member(&vertex.col, "COLOR", RafxFormat::R8G8B8A8_UNORM);

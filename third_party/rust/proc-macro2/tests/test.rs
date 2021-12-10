@@ -1,3 +1,5 @@
+#![allow(clippy::non_ascii_literal)]
+
 use proc_macro2::{Ident, Literal, Punct, Spacing, Span, TokenStream, TokenTree};
 use std::panic;
 use std::str::{self, FromStr};
@@ -166,7 +168,11 @@ fn literal_iter_negative() {
 #[test]
 fn literal_parse() {
     assert!("1".parse::<Literal>().is_ok());
+    assert!("-1".parse::<Literal>().is_ok());
+    assert!("-1u12".parse::<Literal>().is_ok());
     assert!("1.0".parse::<Literal>().is_ok());
+    assert!("-1.0".parse::<Literal>().is_ok());
+    assert!("-1.0f12".parse::<Literal>().is_ok());
     assert!("'a'".parse::<Literal>().is_ok());
     assert!("\"\n\"".parse::<Literal>().is_ok());
     assert!("0 1".parse::<Literal>().is_err());
@@ -175,6 +181,9 @@ fn literal_parse() {
     assert!("/* comment */0".parse::<Literal>().is_err());
     assert!("0/* comment */".parse::<Literal>().is_err());
     assert!("0// comment".parse::<Literal>().is_err());
+    assert!("- 1".parse::<Literal>().is_err());
+    assert!("- 1.0".parse::<Literal>().is_err());
+    assert!("-\"\"".parse::<Literal>().is_err());
 }
 
 #[test]
@@ -183,7 +192,7 @@ fn roundtrip() {
         println!("parse: {}", p);
         let s = p.parse::<TokenStream>().unwrap().to_string();
         println!("first: {}", s);
-        let s2 = s.to_string().parse::<TokenStream>().unwrap().to_string();
+        let s2 = s.parse::<TokenStream>().unwrap().to_string();
         assert_eq!(s, s2);
     }
     roundtrip("a");
@@ -479,7 +488,7 @@ TokenStream [
 
 #[test]
 fn default_tokenstream_is_empty() {
-    let default_token_stream: TokenStream = Default::default();
+    let default_token_stream = <TokenStream as Default>::default();
 
     assert!(default_token_stream.is_empty());
 }

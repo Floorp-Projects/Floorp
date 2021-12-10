@@ -13,9 +13,9 @@
 [package]
 edition = "2018"
 name = "pin-project-lite"
-version = "0.2.6"
+version = "0.2.7"
 authors = ["Taiki Endo <te316e89@gmail.com>"]
-exclude = ["/.*", "/scripts"]
+exclude = ["/.*", "/tools"]
 description = "A lightweight version of pin-project written with declarative macros.\n"
 documentation = "https://docs.rs/pin-project-lite"
 keywords = ["pin", "macros"]

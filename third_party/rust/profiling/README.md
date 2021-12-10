@@ -154,7 +154,7 @@ profile-with-puffin = ["profiling/profile-with-puffin"]
 profile-with-optick = ["profiling/profile-with-optick"]
 profile-with-superluminal = ["profiling/profile-with-superluminal"]
 profile-with-tracing = ["profiling/profile-with-tracing"]
-profile-with-tracy = ["profiling/profile-with-tracing"]
+profile-with-tracy = ["profiling/profile-with-tracy"]
 ```
 
  * You can use the default feature to quickly/temporarily turn something on: `default = ["profile-with-optick"]`

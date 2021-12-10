@@ -79,7 +79,7 @@ macro_rules! ident_fragment_display {
                 }
             }
         )*
-    }
+    };
 }
 
 ident_fragment_display!(bool, str, String, char);
