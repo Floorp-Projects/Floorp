@@ -181,7 +181,7 @@ open class DefaultToolbarMenu(
         iconTintColorResource = primaryTextColor(),
         highlight = BrowserMenuHighlight.LowPriority(
             label = context.getString(R.string.browser_menu_install_on_homescreen),
-            notificationTint = getColor(context, R.color.fx_mobile_icon_color_notice)
+            notificationTint = getColor(context, R.color.fx_mobile_icon_color_information)
         ),
         isHighlighted = {
             !context.settings().installPwaOpened
@@ -250,7 +250,7 @@ open class DefaultToolbarMenu(
         iconTintColorResource = primaryTextColor(),
         highlight = BrowserMenuHighlight.LowPriority(
             label = context.getString(R.string.browser_menu_open_app_link),
-            notificationTint = getColor(context, R.color.fx_mobile_icon_color_notice)
+            notificationTint = getColor(context, R.color.fx_mobile_icon_color_information)
         ),
         isHighlighted = { !context.settings().openInAppOpened }
     ) {

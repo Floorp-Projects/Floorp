@@ -154,7 +154,7 @@ class CustomTabToolbarMenu(
         iconTintColorResource = primaryTextColor(),
         highlight = BrowserMenuHighlight.LowPriority(
             label = context.getString(R.string.browser_menu_open_app_link),
-            notificationTint = getColor(context, R.color.fx_mobile_icon_color_notice)
+            notificationTint = getColor(context, R.color.fx_mobile_icon_color_information)
         ),
         isHighlighted = { !context.settings().openInAppOpened }
     ) {
