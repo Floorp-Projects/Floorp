@@ -26,6 +26,7 @@
 //! schemes for redox in future without breakage of existing
 //! software.
 
+#[cfg(feature = "auth")]
 extern crate argon2;
 extern crate getrandom;
 extern crate syscall;
@@ -43,6 +44,7 @@ use std::process::Command;
 use std::slice::{Iter, IterMut};
 use std::str::FromStr;
 #[cfg(not(test))]
+#[cfg(feature = "auth")]
 use std::thread;
 use std::time::Duration;
 
@@ -200,6 +202,7 @@ impl User {
     /// # Panics
     /// If the User's hash fields are unpopulated, this function will `panic!`
     /// (see [`AllUsers`](struct.AllUsers.html#shadowfile-handling) for more info).
+    #[cfg(feature = "auth")]
     pub fn set_passwd(&mut self, password: impl AsRef<str>) -> Result<()> {
         self.panic_if_unpopulated();
         let password = password.as_ref();
@@ -240,6 +243,7 @@ impl User {
     /// # Panics
     /// If the User's hash fields are unpopulated, this function will `panic!`
     /// (see [`AllUsers`](struct.AllUsers.html#shadowfile-handling) for more info).
+    #[cfg(feature = "auth")]
     pub fn verify_passwd(&self, password: impl AsRef<str>) -> bool {
         self.panic_if_unpopulated();
         // Safe because it will have panicked already if self.hash.is_none()
@@ -1068,6 +1072,7 @@ mod test {
     }
 
     // *** struct.User ***
+    #[cfg(feature = "auth")]
     #[test]
     #[should_panic(expected = "Hash not populated!")]
     fn wrong_attempt_set_password() {
@@ -1084,6 +1089,7 @@ mod test {
         user.unset_passwd();
     }
 
+    #[cfg(feature = "auth")]
     #[test]
     #[should_panic(expected = "Hash not populated!")]
     fn wrong_attempt_verify_password() {
@@ -1108,6 +1114,7 @@ mod test {
         user.is_passwd_unset();
     }
 
+    #[cfg(feature = "auth")]
     #[test]
     fn attempt_user_api() {
         let mut users = AllUsers::new(test_auth_cfg()).unwrap();
@@ -1193,6 +1200,7 @@ mod test {
         }
     }
 
+    #[cfg(feature = "auth")]
     #[test]
     fn manip_user() {
         let mut users = AllUsers::new(test_auth_cfg()).unwrap();

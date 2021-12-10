@@ -6,10 +6,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use super::common;
-use super::config::Config;
-use super::error::Error;
-use super::result::Result;
+use crate::common;
+use crate::config::Config;
+use crate::error::Error;
+use crate::result::Result;
 
 /// Structure containing settings for the Argon2 algorithm. A combination of
 /// the original argon2_context and argon2_instance_t.
@@ -102,25 +102,25 @@ impl<'a> Context<'a> {
         let lane_length = segment_length * common::SYNC_POINTS;
 
         Ok(Context {
-            config: config,
-            lane_length: lane_length,
-            memory_blocks: memory_blocks,
-            pwd: pwd,
-            salt: salt,
-            segment_length: segment_length,
+            config,
+            lane_length,
+            memory_blocks,
+            pwd,
+            salt,
+            segment_length,
         })
     }
 }
 
-
 #[cfg(test)]
 mod tests {
 
-    use error::Error;
-    use super::*;
-    use thread_mode::ThreadMode;
-    use variant::Variant;
-    use version::Version;
+    use crate::config::Config;
+    use crate::context::Context;
+    use crate::error::Error;
+    use crate::thread_mode::ThreadMode;
+    use crate::variant::Variant;
+    use crate::version::Version;
 
     #[test]
     fn new_returns_correct_instance() {
@@ -155,7 +155,10 @@ mod tests {
             mem_cost: 7,
             ..Default::default()
         };
-        assert_eq!(Context::new(config, &[0u8; 8], &[0u8; 8]), Err(Error::MemoryTooLittle));
+        assert_eq!(
+            Context::new(config, &[0u8; 8], &[0u8; 8]),
+            Err(Error::MemoryTooLittle)
+        );
     }
 
     #[test]
@@ -165,7 +168,10 @@ mod tests {
             mem_cost: 31,
             ..Default::default()
         };
-        assert_eq!(Context::new(config, &[0u8; 8], &[0u8; 8]), Err(Error::MemoryTooLittle));
+        assert_eq!(
+            Context::new(config, &[0u8; 8], &[0u8; 8]),
+            Err(Error::MemoryTooLittle)
+        );
     }
 
     #[test]
@@ -174,7 +180,10 @@ mod tests {
             time_cost: 0,
             ..Default::default()
         };
-        assert_eq!(Context::new(config, &[0u8; 8], &[0u8; 8]), Err(Error::TimeTooSmall));
+        assert_eq!(
+            Context::new(config, &[0u8; 8], &[0u8; 8]),
+            Err(Error::TimeTooSmall)
+        );
     }
 
     #[test]
@@ -183,7 +192,10 @@ mod tests {
             lanes: 0,
             ..Default::default()
         };
-        assert_eq!(Context::new(config, &[0u8; 8], &[0u8; 8]), Err(Error::LanesTooFew));
+        assert_eq!(
+            Context::new(config, &[0u8; 8], &[0u8; 8]),
+            Err(Error::LanesTooFew)
+        );
     }
 
     #[test]
@@ -192,14 +204,20 @@ mod tests {
             lanes: 1 << 24,
             ..Default::default()
         };
-        assert_eq!(Context::new(config, &[0u8; 8], &[0u8; 8]), Err(Error::LanesTooMany));
+        assert_eq!(
+            Context::new(config, &[0u8; 8], &[0u8; 8]),
+            Err(Error::LanesTooMany)
+        );
     }
 
     #[test]
     fn new_with_too_short_salt_returns_correct_error() {
         let config = Default::default();
         let salt = [0u8; 7];
-        assert_eq!(Context::new(config, &[0u8; 8], &salt), Err(Error::SaltTooShort));
+        assert_eq!(
+            Context::new(config, &[0u8; 8], &salt),
+            Err(Error::SaltTooShort)
+        );
     }
 
     #[test]
@@ -208,6 +226,9 @@ mod tests {
             hash_length: 3,
             ..Default::default()
         };
-        assert_eq!(Context::new(config, &[0u8; 8], &[0u8; 8]), Err(Error::OutputTooShort));
+        assert_eq!(
+            Context::new(config, &[0u8; 8], &[0u8; 8]),
+            Err(Error::OutputTooShort)
+        );
     }
 }

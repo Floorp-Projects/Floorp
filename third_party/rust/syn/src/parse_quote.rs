@@ -73,11 +73,7 @@
 #[macro_export]
 macro_rules! parse_quote {
     ($($tt:tt)*) => {
-        $crate::parse_quote::parse(
-            $crate::__private::From::from(
-                $crate::__private::quote::quote!($($tt)*)
-            )
-        )
+        $crate::parse_quote::parse($crate::__private::quote::quote!($($tt)*))
     };
 }
 

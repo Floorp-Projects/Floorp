@@ -217,3 +217,135 @@ fn test_group_colons() {
     }
     "###);
 }
+
+#[test]
+fn test_trait_object() {
+    let tokens = quote!(dyn for<'a> Trait<'a> + 'static);
+    snapshot!(tokens as Type, @r###"
+    Type::TraitObject {
+        dyn_token: Some,
+        bounds: [
+            Trait(TraitBound {
+                modifier: None,
+                lifetimes: Some(BoundLifetimes {
+                    lifetimes: [
+                        LifetimeDef {
+                            lifetime: Lifetime {
+                                ident: "a",
+                            },
+                        },
+                    ],
+                }),
+                path: Path {
+                    segments: [
+                        PathSegment {
+                            ident: "Trait",
+                            arguments: PathArguments::AngleBracketed {
+                                args: [
+                                    Lifetime(Lifetime {
+                                        ident: "a",
+                                    }),
+                                ],
+                            },
+                        },
+                    ],
+                },
+            }),
+            Lifetime(Lifetime {
+                ident: "static",
+            }),
+        ],
+    }
+    "###);
+
+    let tokens = quote!(dyn 'a + Trait);
+    snapshot!(tokens as Type, @r###"
+    Type::TraitObject {
+        dyn_token: Some,
+        bounds: [
+            Lifetime(Lifetime {
+                ident: "a",
+            }),
+            Trait(TraitBound {
+                modifier: None,
+                path: Path {
+                    segments: [
+                        PathSegment {
+                            ident: "Trait",
+                            arguments: None,
+                        },
+                    ],
+                },
+            }),
+        ],
+    }
+    "###);
+
+    // None of the following are valid Rust types.
+    syn::parse_str::<Type>("for<'a> dyn Trait<'a>").unwrap_err();
+    syn::parse_str::<Type>("dyn for<'a> 'a + Trait").unwrap_err();
+}
+
+#[test]
+fn test_trailing_plus() {
+    #[rustfmt::skip]
+    let tokens = quote!(impl Trait +);
+    snapshot!(tokens as Type, @r###"
+    Type::ImplTrait {
+        bounds: [
+            Trait(TraitBound {
+                modifier: None,
+                path: Path {
+                    segments: [
+                        PathSegment {
+                            ident: "Trait",
+                            arguments: None,
+                        },
+                    ],
+                },
+            }),
+        ],
+    }
+    "###);
+
+    #[rustfmt::skip]
+    let tokens = quote!(dyn Trait +);
+    snapshot!(tokens as Type, @r###"
+    Type::TraitObject {
+        dyn_token: Some,
+        bounds: [
+            Trait(TraitBound {
+                modifier: None,
+                path: Path {
+                    segments: [
+                        PathSegment {
+                            ident: "Trait",
+                            arguments: None,
+                        },
+                    ],
+                },
+            }),
+        ],
+    }
+    "###);
+
+    #[rustfmt::skip]
+    let tokens = quote!(Trait +);
+    snapshot!(tokens as Type, @r###"
+    Type::TraitObject {
+        bounds: [
+            Trait(TraitBound {
+                modifier: None,
+                path: Path {
+                    segments: [
+                        PathSegment {
+                            ident: "Trait",
+                            arguments: None,
+                        },
+                    ],
+                },
+            }),
+        ],
+    }
+    "###);
+}

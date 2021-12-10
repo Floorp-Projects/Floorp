@@ -108,7 +108,7 @@ impl ExtendedFloat {
         F: Float,
         Algorithm: FnOnce(&mut ExtendedFloat, i32),
     {
-        round_to_native::<F, _>(self, algorithm)
+        round_to_native::<F, _>(self, algorithm);
     }
 
     // FROM

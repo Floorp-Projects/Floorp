@@ -36,7 +36,7 @@ pub fn expand_derive_deserialize(
 
     let impl_block = if let Some(remote) = cont.attrs.remote() {
         let vis = &input.vis;
-        let used = pretend::pretend_used(&cont);
+        let used = pretend::pretend_used(&cont, params.is_packed);
         quote! {
             impl #de_impl_generics #ident #ty_generics #where_clause {
                 #vis fn deserialize<__D>(__deserializer: __D) -> #serde::__private::Result<#remote #ty_generics, __D::Error>
@@ -125,6 +125,9 @@ struct Parameters {
     /// At least one field has a serde(getter) attribute, implying that the
     /// remote type has a private field.
     has_getter: bool,
+
+    /// Type has a repr(packed) attribute.
+    is_packed: bool,
 }
 
 impl Parameters {
@@ -137,6 +140,7 @@ impl Parameters {
         let borrowed = borrowed_lifetimes(cont);
         let generics = build_generics(cont, &borrowed);
         let has_getter = cont.data.has_getter();
+        let is_packed = cont.attrs.is_packed();
 
         Parameters {
             local,
@@ -144,6 +148,7 @@ impl Parameters {
             generics,
             borrowed,
             has_getter,
+            is_packed,
         }
     }
 
@@ -475,7 +480,7 @@ fn deserialize_tuple(
     };
 
     let visit_seq = Stmts(deserialize_seq(
-        &type_path, params, fields, false, cattrs, &expecting,
+        &type_path, params, fields, false, cattrs, expecting,
     ));
 
     let visitor_expr = quote! {
@@ -561,7 +566,7 @@ fn deserialize_tuple_in_place(
         None
     };
 
-    let visit_seq = Stmts(deserialize_seq_in_place(params, fields, cattrs, &expecting));
+    let visit_seq = Stmts(deserialize_seq_in_place(params, fields, cattrs, expecting));
 
     let visitor_expr = quote! {
         __Visitor {
@@ -922,7 +927,7 @@ fn deserialize_struct(
     let expecting = cattrs.expecting().unwrap_or(&expecting);
 
     let visit_seq = Stmts(deserialize_seq(
-        &type_path, params, fields, true, cattrs, &expecting,
+        &type_path, params, fields, true, cattrs, expecting,
     ));
 
     let (field_visitor, fields_stmt, visit_map) = if cattrs.has_flatten() {
@@ -1063,7 +1068,7 @@ fn deserialize_struct_in_place(
     };
     let expecting = cattrs.expecting().unwrap_or(&expecting);
 
-    let visit_seq = Stmts(deserialize_seq_in_place(params, fields, cattrs, &expecting));
+    let visit_seq = Stmts(deserialize_seq_in_place(params, fields, cattrs, expecting));
 
     let (field_visitor, fields_stmt, visit_map) =
         deserialize_struct_as_struct_in_place_visitor(params, fields, cattrs);
@@ -1728,6 +1733,8 @@ fn deserialize_externally_tagged_variant(
     }
 }
 
+// Generates significant part of the visit_seq and visit_map bodies of visitors
+// for the variants of internally tagged enum.
 fn deserialize_internally_tagged_variant(
     params: &Parameters,
     variant: &Variant,
@@ -1779,11 +1786,9 @@ fn deserialize_untagged_variant(
     deserializer: TokenStream,
 ) -> Fragment {
     if let Some(path) = variant.attrs.deserialize_with() {
-        let (wrapper, wrapper_ty, unwrap_fn) = wrap_deserialize_variant_with(params, variant, path);
+        let unwrap_fn = unwrap_to_variant_closure(params, variant, false);
         return quote_block! {
-            #wrapper
-            _serde::__private::Result::map(
-                <#wrapper_ty as _serde::Deserialize>::deserialize(#deserializer), #unwrap_fn)
+            _serde::__private::Result::map(#path(#deserializer), #unwrap_fn)
         };
     }
 
@@ -2087,7 +2092,7 @@ fn deserialize_identifier(
 ) -> Fragment {
     let mut flat_fields = Vec::new();
     for (_, ident, aliases) in fields {
-        flat_fields.extend(aliases.iter().map(|alias| (alias, ident)))
+        flat_fields.extend(aliases.iter().map(|alias| (alias, ident)));
     }
 
     let field_strs: &Vec<_> = &flat_fields.iter().map(|(name, _)| name).collect();
@@ -2285,7 +2290,7 @@ fn deserialize_identifier(
     };
 
     let visit_borrowed = if fallthrough_borrowed.is_some() || collect_other_fields {
-        let fallthrough_borrowed_arm = fallthrough_borrowed.as_ref().unwrap_or(&fallthrough_arm);
+        let fallthrough_borrowed_arm = fallthrough_borrowed.as_ref().unwrap_or(fallthrough_arm);
         Some(quote! {
             fn visit_borrowed_str<__E>(self, __value: &'de str) -> _serde::__private::Result<Self::Value, __E>
             where
@@ -2883,12 +2888,30 @@ fn wrap_deserialize_variant_with(
     variant: &Variant,
     deserialize_with: &syn::ExprPath,
 ) -> (TokenStream, TokenStream, TokenStream) {
-    let this = &params.this;
-    let variant_ident = &variant.ident;
-
     let field_tys = variant.fields.iter().map(|field| field.ty);
     let (wrapper, wrapper_ty) =
         wrap_deserialize_with(params, &quote!((#(#field_tys),*)), deserialize_with);
+
+    let unwrap_fn = unwrap_to_variant_closure(params, variant, true);
+
+    (wrapper, wrapper_ty, unwrap_fn)
+}
+
+// Generates closure that converts single input parameter to the final value.
+fn unwrap_to_variant_closure(
+    params: &Parameters,
+    variant: &Variant,
+    with_wrapper: bool,
+) -> TokenStream {
+    let this = &params.this;
+    let variant_ident = &variant.ident;
+
+    let (arg, wrapper) = if with_wrapper {
+        (quote! { __wrap }, quote! { __wrap.value })
+    } else {
+        let field_tys = variant.fields.iter().map(|field| field.ty);
+        (quote! { __wrap: (#(#field_tys),*) }, quote! { __wrap })
+    };
 
     let field_access = (0..variant.fields.len()).map(|n| {
         Member::Unnamed(Index {
@@ -2896,31 +2919,30 @@ fn wrap_deserialize_variant_with(
             span: Span::call_site(),
         })
     });
-    let unwrap_fn = match variant.style {
+
+    match variant.style {
         Style::Struct if variant.fields.len() == 1 => {
             let member = &variant.fields[0].member;
             quote! {
-                |__wrap| #this::#variant_ident { #member: __wrap.value }
+                |#arg| #this::#variant_ident { #member: #wrapper }
             }
         }
         Style::Struct => {
             let members = variant.fields.iter().map(|field| &field.member);
             quote! {
-                |__wrap| #this::#variant_ident { #(#members: __wrap.value.#field_access),* }
+                |#arg| #this::#variant_ident { #(#members: #wrapper.#field_access),* }
             }
         }
         Style::Tuple => quote! {
-            |__wrap| #this::#variant_ident(#(__wrap.value.#field_access),*)
+            |#arg| #this::#variant_ident(#(#wrapper.#field_access),*)
         },
         Style::Newtype => quote! {
-            |__wrap| #this::#variant_ident(__wrap.value)
+            |#arg| #this::#variant_ident(#wrapper)
         },
         Style::Unit => quote! {
-            |__wrap| #this::#variant_ident
+            |#arg| #this::#variant_ident
         },
-    };
-
-    (wrapper, wrapper_ty, unwrap_fn)
+    }
 }
 
 fn expr_is_missing(field: &Field, cattrs: &attr::Container) -> Fragment {

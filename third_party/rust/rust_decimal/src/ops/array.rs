@@ -1,4 +1,4 @@
-use crate::constants::U32_MASK;
+use crate::constants::{POWERS_10, U32_MASK};
 
 /// Rescales the given decimal to new scale.
 /// e.g. with 1.23 and new scale 3 rescale the value to 1.230
@@ -207,6 +207,21 @@ pub(crate) fn div_by_u32(bits: &mut [u32], divisor: u32) -> u32 {
 
         remainder
     }
+}
+
+pub(crate) fn div_by_1x(bits: &mut [u32; 3], power: usize) -> u32 {
+    let mut remainder = 0u32;
+    let divisor = POWERS_10[power] as u64;
+    let temp = ((remainder as u64) << 32) + (bits[2] as u64);
+    remainder = (temp % divisor) as u32;
+    bits[2] = (temp / divisor) as u32;
+    let temp = ((remainder as u64) << 32) + (bits[1] as u64);
+    remainder = (temp % divisor) as u32;
+    bits[1] = (temp / divisor) as u32;
+    let temp = ((remainder as u64) << 32) + (bits[0] as u64);
+    remainder = (temp % divisor) as u32;
+    bits[0] = (temp / divisor) as u32;
+    remainder
 }
 
 #[inline]
