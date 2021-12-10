@@ -1,13 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
-    <string name="mozac_browser_errorpages_page_title">Chyba při načítání stránky</string>
 
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">Zkusit znovu</string>
-
-    <!-- The button that appears at the bottom of an error page. -->
-    <string name="mozac_browser_errorpages_page_go_back">Přejít zpět</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">Nepodařilo se dokončit požadavek</string>
@@ -271,4 +266,11 @@ kdo se snaží vydávat za server.</li>
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
       <p>Tato webová stránka na serveru %1$s byla nahlášena jako klamavá a byla zablokována na základě vašeho bezpečnostního nastavení.</p>
     ]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">Nelze navázat zabezpečené spojení</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[Máte zapnutý režim „pouze HTTPS“ zajišťující vyšší míru zabezpečení, ale zabezpečená verze webu <em>%1$s</em> není dostupná.]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">Pokračovat přes nezabezpečené spojení</string>
 </resources>

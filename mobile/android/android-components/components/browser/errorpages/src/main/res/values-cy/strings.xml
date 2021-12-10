@@ -269,4 +269,11 @@
     <string name="mozac_browser_errorpages_safe_phishing_uri_message"><![CDATA[
       <p>Mae gwefan %1$s yn hysbys fel gwefan twyllodrus ac wedi cael ei rwystro ar sail eich dewisiadau diogelwch.</p>
     ]]></string>
+
+    <!-- The title of the error page for websites that do not support HTTPS when HTTPS-Only is turned on -->
+    <string name="mozac_browser_errorpages_httpsonly_title">Gwefan Ddiogel Ddim ar Gael</string>
+    <!-- The text of the error page for websites that do not support HTTPS when HTTPS-Only is turned on. %1$s will be replaced with the URL of the website. -->
+    <string name="mozac_browser_errorpages_httpsonly_message"><![CDATA[Rydych wedi galluogi’r Modd HTTPS-yn-Unig ar gyfer gwell diogelwch, ac nid oes fersiwn HTTPS o <em>%1$s</em> ar gael.]]></string>
+    <!-- Button on error page for websites that do not support HTTPS when HTTPS-Only is turned on. Clicking the button allows the user to nevertheless load the website using HTTP. -->
+    <string name="mozac_browser_errorpages_httpsonly_button">Ymlaen i’r Wefan HTTP</string>
 </resources>
