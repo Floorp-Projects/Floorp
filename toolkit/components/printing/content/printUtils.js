@@ -44,6 +44,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
+  "SHOW_PAGE_SETUP_MENU",
+  "print.show_page_setup_menu",
+  false
+);
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
   "PRINT_ALWAYS_SILENT",
   "print.always_print_silent",
   false
@@ -149,7 +156,7 @@ var PrintUtils = {
     }
     let pageSetupMenuItem = document.getElementById("menu_printSetup");
     if (pageSetupMenuItem) {
-      pageSetupMenuItem.hidden = PRINT_TAB_MODAL;
+      pageSetupMenuItem.hidden = PRINT_TAB_MODAL && !SHOW_PAGE_SETUP_MENU;
     }
   },
 
