@@ -183,8 +183,6 @@ class nsICanvasRenderingContextInternal : public nsISupports,
     return nsString();
   }
 
-  virtual void OnVisibilityChange() {}
-
   virtual void OnMemoryPressure() {}
 
   virtual void OnBeforePaintTransaction() {}
