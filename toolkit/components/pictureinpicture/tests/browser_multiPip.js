@@ -18,15 +18,6 @@ function getTelemetryMaxPipCount(resetMax = false) {
 }
 
 /**
- * Set pref for multiple PiP support first
- */
-add_task(async () => {
-  return SpecialPowers.pushPrefEnv({
-    set: [["media.videocontrols.picture-in-picture.allow-multiple", true]],
-  });
-});
-
-/**
  * Tests that multiple PiPs can be opened and closed in a single tab
  */
 add_task(async () => {
