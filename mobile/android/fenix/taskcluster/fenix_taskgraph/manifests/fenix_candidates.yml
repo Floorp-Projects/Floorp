@@ -66,22 +66,22 @@ mapping:
         description: "Android package for arm64-v8a"
         pretty_name: fenix-${version}.${locale}.android-arm64-v8a.apk
         destinations:
-            - ${dated_path}-fenix-${version}-android-arm64-v8a
+            - ${folder_prefix}fenix-${version}-android-arm64-v8a
     armeabi-v7a/target.apk:
         <<: *default
         description: "Android package for armeabi-v7a"
         pretty_name: fenix-${version}.${locale}.android-armeabi-v7a.apk
         destinations:
-            - ${dated_path}-fenix-${version}-android-armeabi-v7a
+            - ${folder_prefix}fenix-${version}-android-armeabi-v7a
     x86/target.apk:
         <<: *default
         description: "Android package for x86"
         pretty_name: fenix-${version}.${locale}.android-x86.apk
         destinations:
-            - ${dated_path}-fenix-${version}-android-x86
+            - ${folder_prefix}fenix-${version}-android-x86
     x86_64/target.apk:
         <<: *default
         description: "Android package for x86_64"
         pretty_name: fenix-${version}.${locale}.android-x86_64.apk
         destinations:
-            - ${dated_path}-fenix-${version}-android-x86_64
+            - ${folder_prefix}fenix-${version}-android-x86_64
