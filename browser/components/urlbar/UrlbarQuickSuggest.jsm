@@ -458,7 +458,7 @@ class Suggestions {
    *   The icon's remote settings path.
    */
   async _fetchIcon(path) {
-    if (!path) {
+    if (!path || !this._rs) {
       return null;
     }
     let record = (
