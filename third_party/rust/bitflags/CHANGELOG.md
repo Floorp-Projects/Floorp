@@ -1,3 +1,60 @@
+# 1.3.2
+
+- Allow `non_snake_case` in generated flags types ([#256])
+
+[#252]: https://github.com/bitflags/bitflags/pull/256
+
+# 1.3.1
+
+- Revert unconditional `#[repr(transparent)]` ([#252])
+
+[#252]: https://github.com/bitflags/bitflags/pull/252
+
+# 1.3.0 (yanked)
+
+- Add `#[repr(transparent)]` ([#187])
+
+- End `empty` doc comment with full stop ([#202])
+
+- Fix typo in crate root docs ([#206])
+
+- Document from_bits_unchecked unsafety ([#207])
+
+- Let `is_all` ignore extra bits ([#211])
+
+- Allows empty flag definition ([#225])
+
+- Making crate accessible from std ([#227])
+
+- Make `from_bits` a const fn ([#229])
+
+- Allow multiple bitflags structs in one macro invocation ([#235])
+
+- Add named functions to perform set operations ([#244])
+
+- Fix typos in method docs ([#245])
+
+- Modernization of the `bitflags` macro to take advantage of newer features and 2018 idioms ([#246])
+
+- Fix regression (in an unreleased feature) and simplify tests ([#247])
+
+- Use `Self` and fix bug when overriding `stringify!` ([#249])
+
+[#187]: https://github.com/bitflags/bitflags/pull/187
+[#202]: https://github.com/bitflags/bitflags/pull/202
+[#206]: https://github.com/bitflags/bitflags/pull/206
+[#207]: https://github.com/bitflags/bitflags/pull/207
+[#211]: https://github.com/bitflags/bitflags/pull/211
+[#225]: https://github.com/bitflags/bitflags/pull/225
+[#227]: https://github.com/bitflags/bitflags/pull/227
+[#229]: https://github.com/bitflags/bitflags/pull/229
+[#235]: https://github.com/bitflags/bitflags/pull/235
+[#244]: https://github.com/bitflags/bitflags/pull/244
+[#245]: https://github.com/bitflags/bitflags/pull/245
+[#246]: https://github.com/bitflags/bitflags/pull/246
+[#247]: https://github.com/bitflags/bitflags/pull/247
+[#249]: https://github.com/bitflags/bitflags/pull/249
+
 # 1.2.1
 
 - Remove extraneous `#[inline]` attributes ([#194])

@@ -90,8 +90,8 @@ fn validate_header(path: &Path) -> Result<(), String> {
 /// Returns the components of the version in the supplied `libclang` shared
 // library filename.
 fn parse_version(filename: &str) -> Vec<u32> {
-    let version = if filename.starts_with("libclang.so.") {
-        &filename[12..]
+    let version = if let Some(version) = filename.strip_prefix("libclang.so.") {
+        version
     } else if filename.starts_with("libclang-") {
         &filename[9..filename.len() - 3]
     } else {
@@ -129,7 +129,8 @@ fn search_libclang_directories(runtime: bool) -> Result<Vec<(PathBuf, String, Ve
     if cfg!(any(
         target_os = "openbsd",
         target_os = "freebsd",
-        target_os = "netbsd"
+        target_os = "netbsd",
+        target_os = "haiku"
     )) {
         // Some BSD distributions don't create a `libclang.so` symlink either,
         // but use a different naming scheme for versioned files (e.g.,
@@ -252,7 +253,7 @@ pub fn link() {
         // `libclang.so.7.0`).
         let name = match name.find(".dylib").or_else(|| name.find(".so")) {
             Some(index) => &name[0..index],
-            None => &name,
+            None => name,
         };
 
         println!("cargo:rustc-link-lib=dylib={}", name);
