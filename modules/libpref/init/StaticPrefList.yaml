@@ -2931,6 +2931,12 @@
   value: false
   mirror: always
 
+# This enables the SVGPathSeg APIs
+- name: dom.svg.pathSeg.enabled
+  type: bool
+  value: false
+  mirror: always
+
 # Preference that is primarily used for testing of problematic file paths.
 # It can also be used for switching between different storage directories, but
 # such feature is not officially supported.
