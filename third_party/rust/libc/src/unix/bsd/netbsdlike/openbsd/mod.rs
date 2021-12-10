@@ -14,6 +14,7 @@ pub type pthread_cond_t = *mut ::c_void;
 pub type pthread_condattr_t = *mut ::c_void;
 pub type pthread_rwlock_t = *mut ::c_void;
 pub type pthread_rwlockattr_t = *mut ::c_void;
+pub type pthread_spinlock_t = ::uintptr_t;
 pub type caddr_t = *mut ::c_char;
 
 // elf.h
@@ -382,6 +383,33 @@ s! {
         pub dlpi_name: *const ::c_char,
         pub dlpi_phdr: *const Elf_Phdr,
         pub dlpi_phnum: Elf_Half,
+    }
+
+    // sys/sysctl.h
+    pub struct kinfo_vmentry {
+        pub kve_start: ::c_ulong,
+        pub kve_end: ::c_ulong,
+        pub kve_guard: ::c_ulong,
+        pub kve_fspace: ::c_ulong,
+        pub kve_fspace_augment: ::c_ulong,
+        pub kve_offset: u64,
+        pub kve_wired_count: ::c_int,
+        pub kve_etype: ::c_int,
+        pub kve_protection: ::c_int,
+        pub kve_max_protection: ::c_int,
+        pub kve_advice: ::c_int,
+        pub kve_inheritance: ::c_int,
+        pub kve_flags: u8,
+    }
+
+    pub struct ptrace_state {
+        pub pe_report_event: ::c_int,
+        pub pe_other_pid: ::pid_t,
+        pub pe_tid: ::pid_t,
+    }
+
+    pub struct ptrace_thread_state {
+        pub pts_tid: ::pid_t,
     }
 }
 
@@ -1168,6 +1196,14 @@ pub const NOTE_CHILD: u32 = 0x00000004;
 
 pub const TMP_MAX: ::c_uint = 0x7fffffff;
 
+pub const AI_PASSIVE: ::c_int = 1;
+pub const AI_CANONNAME: ::c_int = 2;
+pub const AI_NUMERICHOST: ::c_int = 4;
+pub const AI_EXT: ::c_int = 8;
+pub const AI_NUMERICSERV: ::c_int = 16;
+pub const AI_FQDN: ::c_int = 32;
+pub const AI_ADDRCONFIG: ::c_int = 64;
+
 pub const NI_NUMERICHOST: ::c_int = 1;
 pub const NI_NUMERICSERV: ::c_int = 2;
 pub const NI_NOFQDN: ::c_int = 4;
@@ -1402,6 +1438,11 @@ pub const PTHREAD_STACK_MIN: ::size_t = 1_usize << _MAX_PAGE_SHIFT;
 pub const MINSIGSTKSZ: ::size_t = 3_usize << _MAX_PAGE_SHIFT;
 pub const SIGSTKSZ: ::size_t = MINSIGSTKSZ + (1_usize << _MAX_PAGE_SHIFT) * 4;
 
+pub const PT_SET_EVENT_MASK: ::c_int = 12;
+pub const PT_GET_EVENT_MASK: ::c_int = 13;
+pub const PT_GET_PROCESS_STATE: ::c_int = 14;
+pub const PT_GET_THREAD_FIRST: ::c_int = 15;
+pub const PT_GET_THREAD_NEXT: ::c_int = 16;
 pub const PT_FIRSTMACH: ::c_int = 32;
 
 pub const SOCK_CLOEXEC: ::c_int = 0x8000;
@@ -1509,6 +1550,8 @@ extern "C" {
         servlen: ::size_t,
         flags: ::c_int,
     ) -> ::c_int;
+    pub fn getresgid(rgid: *mut ::gid_t, egid: *mut ::gid_t, sgid: *mut ::gid_t) -> ::c_int;
+    pub fn getresuid(ruid: *mut ::uid_t, euid: *mut ::uid_t, suid: *mut ::uid_t) -> ::c_int;
     pub fn kevent(
         kq: ::c_int,
         changelist: *const ::kevent,
@@ -1518,6 +1561,7 @@ extern "C" {
         timeout: *const ::timespec,
     ) -> ::c_int;
     pub fn mprotect(addr: *mut ::c_void, len: ::size_t, prot: ::c_int) -> ::c_int;
+    pub fn getthrid() -> ::pid_t;
     pub fn pthread_attr_getguardsize(
         attr: *const ::pthread_attr_t,
         guardsize: *mut ::size_t,
@@ -1528,8 +1572,10 @@ extern "C" {
         stacksize: *mut ::size_t,
     ) -> ::c_int;
     pub fn pthread_main_np() -> ::c_int;
+    pub fn pthread_get_name_np(tid: ::pthread_t, name: *mut ::c_char, len: ::size_t);
     pub fn pthread_set_name_np(tid: ::pthread_t, name: *const ::c_char);
     pub fn pthread_stackseg_np(thread: ::pthread_t, sinfo: *mut ::stack_t) -> ::c_int;
+
     pub fn sysctl(
         name: *const ::c_int,
         namelen: ::c_uint,
@@ -1542,6 +1588,7 @@ extern "C" {
     pub fn setresgid(rgid: ::gid_t, egid: ::gid_t, sgid: ::gid_t) -> ::c_int;
     pub fn setresuid(ruid: ::uid_t, euid: ::uid_t, suid: ::uid_t) -> ::c_int;
     pub fn ptrace(request: ::c_int, pid: ::pid_t, addr: caddr_t, data: ::c_int) -> ::c_int;
+    pub fn utrace(label: *const ::c_char, addr: *const ::c_void, len: ::size_t) -> ::c_int;
     pub fn memmem(
         haystack: *const ::c_void,
         haystacklen: ::size_t,
@@ -1568,6 +1615,26 @@ extern "C" {
     pub fn explicit_bzero(s: *mut ::c_void, len: ::size_t);
 
     pub fn setproctitle(fmt: *const ::c_char, ...);
+
+    pub fn freezero(ptr: *mut ::c_void, size: ::size_t);
+    pub fn malloc_conceal(size: ::size_t) -> *mut ::c_void;
+    pub fn calloc_conceal(nmemb: ::size_t, size: ::size_t) -> *mut ::c_void;
+}
+
+#[link(name = "execinfo")]
+extern "C" {
+    pub fn backtrace(addrlist: *mut *mut ::c_void, len: ::size_t) -> ::size_t;
+    pub fn backtrace_symbols(addrlist: *const *mut ::c_void, len: ::size_t) -> *mut *mut ::c_char;
+    pub fn backtrace_symbols_fd(
+        addrlist: *const *mut ::c_void,
+        len: ::size_t,
+        fd: ::c_int,
+    ) -> ::c_int;
+    pub fn backtrace_symbols_fmt(
+        addrlist: *const *mut ::c_void,
+        len: ::size_t,
+        fmt: *const ::c_char,
+    ) -> *mut *mut ::c_char;
 }
 
 cfg_if! {

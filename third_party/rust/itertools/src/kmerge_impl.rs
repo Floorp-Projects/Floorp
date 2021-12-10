@@ -111,7 +111,7 @@ pub trait KMergePredicate<T> {
     fn kmerge_pred(&mut self, a: &T, b: &T) -> bool;
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct KMergeByLt;
 
 impl<T: PartialOrd> KMergePredicate<T> for KMergeByLt {

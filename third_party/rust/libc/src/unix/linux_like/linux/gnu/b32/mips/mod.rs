@@ -153,17 +153,6 @@ s! {
         pub l_pid: ::pid_t,
         pad: [::c_long; 4],
     }
-
-    pub struct termios2 {
-        pub c_iflag: ::tcflag_t,
-        pub c_oflag: ::tcflag_t,
-        pub c_cflag: ::tcflag_t,
-        pub c_lflag: ::tcflag_t,
-        pub c_line: ::cc_t,
-        pub c_cc: [::cc_t; 23],
-        pub c_ispeed: ::speed_t,
-        pub c_ospeed: ::speed_t,
-    }
 }
 
 pub const O_LARGEFILE: ::c_int = 0x2000;
@@ -751,10 +740,6 @@ pub const TIOCOUTQ: ::c_ulong = 0x7472;
 pub const TIOCSTI: ::c_ulong = 0x5472;
 pub const TIOCGWINSZ: ::c_ulong = 0x40087468;
 pub const TIOCSWINSZ: ::c_ulong = 0x80087467;
-pub const TIOCMGET: ::c_ulong = 0x741d;
-pub const TIOCMBIS: ::c_ulong = 0x741b;
-pub const TIOCMBIC: ::c_ulong = 0x741c;
-pub const TIOCMSET: ::c_ulong = 0x741a;
 pub const FIONREAD: ::c_ulong = 0x467f;
 pub const TIOCCONS: ::c_ulong = 0x80047478;
 
@@ -837,7 +822,6 @@ pub const B19200: ::speed_t = 0o000016;
 pub const B38400: ::speed_t = 0o000017;
 pub const EXTA: ::speed_t = B19200;
 pub const EXTB: ::speed_t = B38400;
-pub const BOTHER: ::speed_t = 0o010000;
 pub const B57600: ::speed_t = 0o010001;
 pub const B115200: ::speed_t = 0o010002;
 pub const B230400: ::speed_t = 0o010003;
@@ -853,13 +837,6 @@ pub const B2500000: ::speed_t = 0o010014;
 pub const B3000000: ::speed_t = 0o010015;
 pub const B3500000: ::speed_t = 0o010016;
 pub const B4000000: ::speed_t = 0o010017;
-
-pub const TIOCM_ST: ::c_int = 0x010;
-pub const TIOCM_SR: ::c_int = 0x020;
-pub const TIOCM_CTS: ::c_int = 0x040;
-pub const TIOCM_CAR: ::c_int = 0x100;
-pub const TIOCM_RNG: ::c_int = 0x200;
-pub const TIOCM_DSR: ::c_int = 0x400;
 
 pub const EHWPOISON: ::c_int = 168;
 

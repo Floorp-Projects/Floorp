@@ -430,10 +430,6 @@ pub const TIOCOUTQ: ::c_int = 0x40047473;
 pub const TIOCSTI: ::c_int = 0x5412;
 pub const TIOCGWINSZ: ::c_int = 0x40087468;
 pub const TIOCSWINSZ: ::c_int = 0x80087467;
-pub const TIOCMGET: ::c_int = 0x5415;
-pub const TIOCMBIS: ::c_int = 0x5416;
-pub const TIOCMBIC: ::c_int = 0x5417;
-pub const TIOCMSET: ::c_int = 0x5418;
 pub const FIONREAD: ::c_int = 0x4004667F;
 pub const TIOCCONS: ::c_int = 0x541D;
 
@@ -442,18 +438,6 @@ pub const TIOCSRS485: ::c_int = 0x542f;
 
 pub const POLLWRNORM: ::c_short = 0x100;
 pub const POLLWRBAND: ::c_short = 0x200;
-
-pub const TIOCM_LE: ::c_int = 0x001;
-pub const TIOCM_DTR: ::c_int = 0x002;
-pub const TIOCM_RTS: ::c_int = 0x004;
-pub const TIOCM_ST: ::c_int = 0x008;
-pub const TIOCM_SR: ::c_int = 0x010;
-pub const TIOCM_CTS: ::c_int = 0x020;
-pub const TIOCM_CAR: ::c_int = 0x040;
-pub const TIOCM_RNG: ::c_int = 0x080;
-pub const TIOCM_DSR: ::c_int = 0x100;
-pub const TIOCM_CD: ::c_int = TIOCM_CAR;
-pub const TIOCM_RI: ::c_int = TIOCM_RNG;
 
 // Syscall table
 pub const SYS_restart_syscall: ::c_long = 0;

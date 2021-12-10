@@ -31,6 +31,22 @@ pub type id_t = i32;
 pub type idtype_t = ::c_uint;
 pub type fd_mask = u32;
 
+pub type Elf32_Addr = u32;
+pub type Elf32_Half = u16;
+pub type Elf32_Lword = u64;
+pub type Elf32_Off = u32;
+pub type Elf32_Sword = i32;
+pub type Elf32_Word = u32;
+
+pub type Elf64_Addr = u64;
+pub type Elf64_Half = u16;
+pub type Elf64_Lword = u64;
+pub type Elf64_Off = u64;
+pub type Elf64_Sword = i32;
+pub type Elf64_Sxword = i64;
+pub type Elf64_Word = u32;
+pub type Elf64_Xword = u64;
+
 #[cfg_attr(feature = "extra_traits", derive(Debug))]
 pub enum timezone {}
 impl ::Copy for timezone {}
@@ -100,6 +116,16 @@ s! {
         pub ai_canonname: *mut c_char,
         pub ai_addr: *mut ::sockaddr,
         pub ai_next: *mut addrinfo,
+    }
+
+    pub struct ifaddrs {
+        pub ifa_next: *mut ifaddrs,
+        pub ifa_name: *mut ::c_char,
+        pub ifa_flags: ::c_uint,
+        pub ifa_addr: *mut ::sockaddr,
+        pub ifa_netmask: *mut ::sockaddr,
+        pub ifa_dstaddr: *mut ::sockaddr,
+        pub ida_data: *mut ::c_void,
     }
 
     pub struct fd_set {
@@ -315,6 +341,35 @@ s! {
         pub named_sem_id: i32, // actually a union with unnamed_sem (i32)
         pub padding: [i32; 2],
     }
+
+    pub struct ucred {
+        pub pid: ::pid_t,
+        pub uid: ::uid_t,
+        pub gid: ::gid_t,
+    }
+
+    pub struct sockaddr_dl {
+        pub sdl_len: u8,
+        pub sdl_family: u8,
+        pub sdl_e_type: u16,
+        pub sdl_index: u32,
+        pub sdl_type: u8,
+        pub sdl_nlen: u8,
+        pub sdl_alen: u8,
+        pub sdl_slen: u8,
+        pub sdl_data: [u8; 46],
+    }
+
+    pub struct dl_phdr_info {
+        pub dlpi_addr: Elf_Addr,
+        pub dlpi_name: *const ::c_char,
+        pub dlpi_phdr: *const Elf_Phdr,
+        pub dlpi_phnum: Elf_Half,
+        pub dlpi_adds: ::c_ulonglong,
+        pub dlpi_subs: ::c_ulonglong,
+        pub dlpi_tls_modid: usize,
+        pub dlpi_tls_data: *mut ::c_void,
+    }
 }
 
 s_no_extra_traits! {
@@ -346,10 +401,63 @@ s_no_extra_traits! {
         __unused1: *mut ::c_void, // actually a function pointer
         pub sigev_notify_attributes: *mut ::pthread_attr_t,
     }
+
+    pub struct utmpx {
+        pub ut_type: ::c_short,
+        pub ut_tv: ::timeval,
+        pub ut_id: [::c_char; 8],
+        pub ut_pid: ::pid_t,
+        pub ut_user: [::c_char; 32],
+        pub ut_line: [::c_char; 16],
+        pub ut_host: [::c_char; 128],
+        __ut_reserved: [::c_char; 64],
+    }
 }
 
 cfg_if! {
     if #[cfg(feature = "extra_traits")] {
+        impl PartialEq for utmpx {
+            fn eq(&self, other: &utmpx) -> bool {
+                self.ut_type == other.ut_type
+                    && self.ut_tv == other.ut_tv
+                    && self.ut_id == other.ut_id
+                    && self.ut_pid == other.ut_pid
+                    && self.ut_user == other.ut_user
+                    && self.ut_line == other.ut_line
+                    && self.ut_host.iter().zip(other.ut_host.iter()).all(|(a,b)| a == b)
+                    && self.__ut_reserved == other.__ut_reserved
+            }
+        }
+
+        impl Eq for utmpx {}
+
+        impl ::fmt::Debug for utmpx {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("utmpx")
+                    .field("ut_type", &self.ut_type)
+                    .field("ut_tv", &self.ut_tv)
+                    .field("ut_id", &self.ut_id)
+                    .field("ut_pid", &self.ut_pid)
+                    .field("ut_user", &self.ut_user)
+                    .field("ut_line", &self.ut_line)
+                    .field("ut_host", &self.ut_host)
+                    .field("__ut_reserved", &self.__ut_reserved)
+                    .finish()
+            }
+        }
+
+        impl ::hash::Hash for utmpx {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.ut_type.hash(state);
+                self.ut_tv.hash(state);
+                self.ut_id.hash(state);
+                self.ut_pid.hash(state);
+                self.ut_user.hash(state);
+                self.ut_line.hash(state);
+                self.ut_host.hash(state);
+                self.__ut_reserved.hash(state);
+            }
+        }
         impl PartialEq for sockaddr_un {
             fn eq(&self, other: &sockaddr_un) -> bool {
                 self.sun_len == other.sun_len
@@ -543,6 +651,7 @@ pub const RLIMIT_FSIZE: ::c_int = 3;
 pub const RLIMIT_NOFILE: ::c_int = 4;
 pub const RLIMIT_STACK: ::c_int = 5;
 pub const RLIMIT_AS: ::c_int = 6;
+pub const RLIM_INFINITY: ::c_ulong = 0xffffffff;
 // Haiku specific
 pub const RLIMIT_NOVMON: ::c_int = 7;
 pub const RLIM_NLIMITS: ::c_int = 8;
@@ -674,6 +783,7 @@ pub const MAP_SHARED: ::c_int = 0x01;
 pub const MAP_PRIVATE: ::c_int = 0x02;
 pub const MAP_FIXED: ::c_int = 0x04;
 pub const MAP_ANONYMOUS: ::c_int = 0x08;
+pub const MAP_NORESERVE: ::c_int = 0x10;
 pub const MAP_ANON: ::c_int = MAP_ANONYMOUS;
 
 pub const MAP_FAILED: *mut ::c_void = !0 as *mut ::c_void;
@@ -780,6 +890,7 @@ pub const MADV_SEQUENTIAL: ::c_int = 2;
 pub const MADV_RANDOM: ::c_int = 3;
 pub const MADV_WILLNEED: ::c_int = 4;
 pub const MADV_DONTNEED: ::c_int = 5;
+pub const MADV_FREE: ::c_int = 6;
 
 // https://github.com/haiku/haiku/blob/master/headers/posix/net/if.h#L80
 pub const IFF_UP: ::c_int = 0x0001;
@@ -808,6 +919,15 @@ pub const AF_NOTIFY: ::c_int = 8;
 pub const AF_LOCAL: ::c_int = 9;
 pub const AF_UNIX: ::c_int = AF_LOCAL;
 pub const AF_BLUETOOTH: ::c_int = 10;
+
+pub const PF_UNSPEC: ::c_int = AF_UNSPEC;
+pub const PF_INET: ::c_int = AF_INET;
+pub const PF_ROUTE: ::c_int = AF_ROUTE;
+pub const PF_LINK: ::c_int = AF_LINK;
+pub const PF_INET6: ::c_int = AF_INET6;
+pub const PF_LOCAL: ::c_int = AF_LOCAL;
+pub const PF_UNIX: ::c_int = AF_UNIX;
+pub const PF_BLUETOOTH: ::c_int = AF_BLUETOOTH;
 
 pub const IP_OPTIONS: ::c_int = 1;
 pub const IP_HDRINCL: ::c_int = 2;
@@ -979,6 +1099,7 @@ pub const _SC_HOST_NAME_MAX: ::c_int = 61;
 pub const _SC_REGEXP: ::c_int = 62;
 pub const _SC_SYMLOOP_MAX: ::c_int = 63;
 pub const _SC_SHELL: ::c_int = 64;
+pub const _SC_TTY_NAME_MAX: ::c_int = 65;
 
 pub const PTHREAD_STACK_MIN: ::size_t = 8192;
 
@@ -1234,6 +1355,16 @@ pub const PRIO_PROCESS: ::c_int = 0;
 pub const PRIO_PGRP: ::c_int = 1;
 pub const PRIO_USER: ::c_int = 2;
 
+// utmpx entry types
+pub const EMPTY: ::c_short = 0;
+pub const BOOT_TIME: ::c_short = 1;
+pub const OLD_TIME: ::c_short = 2;
+pub const NEW_TIME: ::c_short = 3;
+pub const USER_PROCESS: ::c_short = 4;
+pub const INIT_PROCESS: ::c_short = 5;
+pub const LOGIN_PROCESS: ::c_short = 6;
+pub const DEAD_PROCESS: ::c_short = 7;
+
 pub const LOG_PID: ::c_int = 1 << 12;
 pub const LOG_CONS: ::c_int = 2 << 12;
 pub const LOG_ODELAY: ::c_int = 4 << 12;
@@ -1295,7 +1426,7 @@ f! {
         return
     }
 
-    pub fn FD_ISSET(fd: ::c_int, set: *mut fd_set) -> bool {
+    pub fn FD_ISSET(fd: ::c_int, set: *const fd_set) -> bool {
         let fd = fd as usize;
         let size = ::mem::size_of_val(&(*set).fds_bits[0]) * 8;
         return ((*set).fds_bits[fd / size] & (1 << (fd % size))) != 0
@@ -1356,6 +1487,12 @@ extern "C" {
     pub fn getpriority(which: ::c_int, who: id_t) -> ::c_int;
     pub fn setpriority(which: ::c_int, who: id_t, priority: ::c_int) -> ::c_int;
 
+    pub fn endusershell();
+    pub fn getpass(prompt: *const ::c_char) -> *mut ::c_char;
+    pub fn getusershell() -> *mut ::c_char;
+    pub fn issetugid() -> ::c_int;
+    pub fn setusershell();
+
     pub fn utimensat(
         fd: ::c_int,
         path: *const ::c_char,
@@ -1371,6 +1508,8 @@ extern "C" {
     pub fn labs(i: ::c_long) -> ::c_long;
     pub fn rand() -> ::c_int;
     pub fn srand(seed: ::c_uint);
+    pub fn getifaddrs(ifap: *mut *mut ::ifaddrs) -> ::c_int;
+    pub fn freeifaddrs(ifa: *mut ::ifaddrs);
 }
 
 #[link(name = "bsd")]
@@ -1403,6 +1542,8 @@ extern "C" {
         attr: *mut pthread_condattr_t,
         clock_id: ::clockid_t,
     ) -> ::c_int;
+    pub fn valloc(numBytes: ::size_t) -> *mut ::c_void;
+    pub fn malloc_usable_size(ptr: *mut ::c_void) -> ::size_t;
     pub fn memalign(align: ::size_t, size: ::size_t) -> *mut ::c_void;
     pub fn setgroups(ngroups: ::c_int, ptr: *const ::gid_t) -> ::c_int;
     pub fn ioctl(fd: ::c_int, request: ::c_ulong, ...) -> ::c_int;
@@ -1433,6 +1574,8 @@ extern "C" {
     pub fn globfree(pglob: *mut ::glob_t);
     pub fn gettimeofday(tp: *mut ::timeval, tz: *mut ::c_void) -> ::c_int;
     pub fn posix_madvise(addr: *mut ::c_void, len: ::size_t, advice: ::c_int) -> ::c_int;
+    pub fn posix_fadvise(fd: ::c_int, offset: ::off_t, len: ::off_t, advice: ::c_int) -> ::c_int;
+    pub fn posix_fallocate(fd: ::c_int, offset: ::off_t, len: ::off_t) -> ::c_int;
 
     pub fn shm_open(name: *const ::c_char, oflag: ::c_int, mode: ::mode_t) -> ::c_int;
     pub fn shm_unlink(name: *const ::c_char) -> ::c_int;
@@ -1474,6 +1617,12 @@ extern "C" {
         buf: *mut ::c_char,
         buflen: ::size_t,
         result: *mut *mut ::group,
+    ) -> ::c_int;
+    pub fn getgrouplist(
+        user: *const ::c_char,
+        basegroup: ::gid_t,
+        grouplist: *mut ::gid_t,
+        groupcount: *mut ::c_int,
     ) -> ::c_int;
     pub fn sigaltstack(ss: *const stack_t, oss: *mut stack_t) -> ::c_int;
     pub fn sem_close(sem: *mut sem_t) -> ::c_int;
@@ -1528,6 +1677,29 @@ extern "C" {
     ) -> ::pid_t;
     pub fn sethostname(name: *const ::c_char, len: ::size_t) -> ::c_int;
     pub fn uname(buf: *mut ::utsname) -> ::c_int;
+    pub fn getutxent() -> *mut utmpx;
+    pub fn getutxid(ut: *const utmpx) -> *mut utmpx;
+    pub fn getutxline(ut: *const utmpx) -> *mut utmpx;
+    pub fn pututxline(ut: *const utmpx) -> *mut utmpx;
+    pub fn setutxent();
+    pub fn endutxent();
+
+    pub fn dl_iterate_phdr(
+        callback: ::Option<
+            unsafe extern "C" fn(
+                info: *mut dl_phdr_info,
+                size: usize,
+                data: *mut ::c_void,
+            ) -> ::c_int,
+        >,
+        data: *mut ::c_void,
+    ) -> ::c_int;
+
+    pub fn strsep(string: *mut *mut ::c_char, delimiters: *const ::c_char) -> *mut ::c_char;
+    pub fn explicit_bzero(buf: *mut ::c_void, len: ::size_t);
+
+    pub fn login_tty(_fd: ::c_int) -> ::c_int;
+    pub fn fgetln(stream: *mut ::FILE, _length: *mut ::size_t) -> *mut ::c_char;
 }
 
 cfg_if! {
@@ -1537,6 +1709,21 @@ cfg_if! {
     } else {
         mod b32;
         pub use self::b32::*;
+    }
+}
+
+cfg_if! {
+    if #[cfg(target_arch = "x86")] {
+        // TODO
+        // mod x86;
+        // pub use self::x86::*;
+    } else if #[cfg(target_arch = "x86_64")] {
+        mod x86_64;
+        pub use self::x86_64::*;
+    } else if #[cfg(target_arch = "aarch64")] {
+        // TODO
+        // mod aarch64;
+        // pub use self::aarch64::*;
     }
 }
 

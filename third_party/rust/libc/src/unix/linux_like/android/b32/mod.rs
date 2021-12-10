@@ -8,6 +8,7 @@ pub type off64_t = ::c_longlong;
 pub type sigset_t = ::c_ulong;
 pub type socklen_t = i32;
 pub type time64_t = i64;
+pub type __u64 = ::c_ulonglong;
 
 s! {
     pub struct sigaction {
@@ -117,6 +118,14 @@ s! {
         pendingWriters: ::c_int,
         attr: i32,
         __reserved: [::c_char; 12],
+    }
+
+    pub struct pthread_barrier_t {
+        __private: [i32; 8],
+    }
+
+    pub struct pthread_spinlock_t {
+        __private: [i32; 2],
     }
 
     pub struct passwd {

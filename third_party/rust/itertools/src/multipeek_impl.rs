@@ -38,6 +38,7 @@ impl<I: Iterator> MultiPeek<I> {
     /// Works exactly like `.next()` with the only difference that it doesn't
     /// advance itself. `.peek()` can be called multiple times, to peek
     /// further ahead.
+    /// When `.next()` is called, reset the peeking “cursor”.
     pub fn peek(&mut self) -> Option<&I::Item> {
         let ret = if self.index < self.buf.len() {
             Some(&self.buf[self.index])

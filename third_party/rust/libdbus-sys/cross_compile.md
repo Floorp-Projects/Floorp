@@ -1,9 +1,81 @@
 Cross compiling dbus
 ====================
 
+There are (at least) three different approaches to cross compiling dbus. Choose which one fits you best:
+
+ * Using rust-embedded/cross, see below
+ * There is an alternative guide at [issue 184](https://github.com/diwic/dbus-rs/issues/184#issuecomment-520228758), which also contains a [powershell script](https://github.com/diwic/dbus-rs/issues/184#issuecomment-520791888) that set things up for you.
+ * Setting things up manually, see below
+
 The examples below all assume you're trying to compile for Raspberry Pi 2 or 3 running Raspbian. Adjust target triples accordingly if your target is something else.
 
-Before you start: there is an alternative guide at [issue 184](https://github.com/diwic/dbus-rs/issues/184#issuecomment-520228758), which also contains a [powershell script](https://github.com/diwic/dbus-rs/issues/184#issuecomment-520791888) that set things up for you. Feel free to use either this guide or the alternative one as you see fit.
+
+Cross compiling using rust-embedded/cross
+=========================================
+
+Thanks to [jobale](https://github.com/jobale) for providing these instructions
+(taken from [issue 292](https://github.com/diwic/dbus-rs/issues/292)).
+
+Tested on Ubuntu 20.04 | rustc 1.47.0
+
+- Install [rust-embedded/cross](https://github.com/rust-embedded/cross)
+- In your project directory, create a **Cross.toml** file: `touch Cross.toml`
+Add this code in it:
+
+```
+[target.armv7-unknown-linux-gnueabihf]
+image = "rustcross:dbus-armhf"
+
+[build.env]
+passthrough = [
+	"RUSTFLAGS",
+]
+```
+
+
+- In your project directory create a **Dockerfile**: `touch Dockerfile`
+Put this code in it:
+
+```
+# Base image for rapsberrypi 3 target
+FROM rustembedded/cross:armv7-unknown-linux-gnueabihf
+
+# Install libdbus libraries and pkg-config
+RUN dpkg --add-architecture armhf && \
+	    apt-get update && \
+	    apt-get install --assume-yes libdbus-1-dev libdbus-1-dev:armhf pkg-config
+```
+
+For whatever reason, _in the docker image_, armhf libraries are installed in at least 2 locations. That's the reason of all my troubles:
+- /usr/arm-linux-gnueabihf/lib/
+- /usr/lib/arm-linux-gnueabihf/
+
+- Cross needs to know those locations. We pass them to the compiler through a command flag. For convenience I put it in a bash script:
+
+```
+#!/bin/bash
+set -o errexit
+set -o nounset
+set -o pipefail
+set -o xtrace
+
+readonly TARGET_ARCH=armv7-unknown-linux-gnueabihf
+readonly LINK_FLAGS='-L /usr/arm-linux-gnueabihf/lib/ -L /usr/lib/arm-linux-gnueabihf/'
+
+RUSTFLAGS=${LINK_FLAGS} cross build --release --target=${TARGET_ARCH}
+
+```
+
+
+Some more explanations for newcomers like me:
+
+- Cross command act as cargo command (e.g: `cross build` is the same as `cargo build` but for cross-compiling).
+- In Cross.toml,  `passthrough = [ "RUSTFLAGS",]` is what enable us to pass flags/parameters to the compiler in the docker image.
+
+
+
+Setting up cross compiling manually
+===================================
 
 A cross linker
 --------------
@@ -64,5 +136,3 @@ Finally
 If we are all set up, you should be able to successfully compile with:
 
 `cargo build --target=armv7-unknown-linux-gnueabihf`
-
-

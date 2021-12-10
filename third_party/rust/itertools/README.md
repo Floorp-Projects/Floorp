@@ -1,50 +1,39 @@
-
-Itertools
-=========
+# Itertools
 
 Extra iterator adaptors, functions and macros.
 
-Please read the `API documentation here`__
+Please read the [API documentation here](https://docs.rs/itertools/).
 
-__ https://docs.rs/itertools/
+[![build_status](https://github.com/rust-itertools/itertools/actions/workflows/ci.yml/badge.svg)](https://github.com/rust-itertools/itertools/actions)
+[![crates.io](https://img.shields.io/crates/v/itertools.svg)](https://crates.io/crates/itertools)
 
-|build_status|_ |crates|_
+How to use with Cargo:
 
-.. |build_status| image:: https://travis-ci.org/rust-itertools/itertools.svg?branch=master
-.. _build_status: https://travis-ci.org/rust-itertools/itertools
-
-.. |crates| image:: https://meritbadge.herokuapp.com/itertools
-.. _crates: https://crates.io/crates/itertools
-
-How to use with cargo:
-
-.. code:: toml
-
-    [dependencies]
-    itertools = "0.10.0"
+```toml
+[dependencies]
+itertools = "0.10.2"
+```
 
 How to use in your crate:
 
-.. code:: rust
+```rust
+use itertools::Itertools;
+```
 
-    use itertools::Itertools;
-
-How to contribute
------------------
+## How to contribute
 
 - Fix a bug or implement a new thing
-- Include tests for your new feature, preferably a quickcheck test
+- Include tests for your new feature, preferably a QuickCheck test
 - Make a Pull Request
 
-For new features, please first consider filing a PR to `rust-lang/rust <https://github.com/rust-lang/rust>`_,
+For new features, please first consider filing a PR to [rust-lang/rust](https://github.com/rust-lang/rust),
 adding your new feature to the `Iterator` trait of the standard library, if you believe it is reasonable.
 If it isn't accepted there, proposing it for inclusion in ``itertools`` is a good idea.
 The reason for doing is this is so that we avoid future breakage as with ``.flatten()``.
 However, if your feature involves heap allocation, such as storing elements in a ``Vec<T>``,
 then it can't be accepted into ``libcore``, and you should propose it for ``itertools`` directly instead.
 
-License
--------
+## License
 
 Dual-licensed to be compatible with the Rust project.
 
