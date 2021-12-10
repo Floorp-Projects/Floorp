@@ -55,25 +55,12 @@ const known_scripts = {
   processScripts: new Set([
     "chrome://global/content/process-content.js",
     "resource://gre/modules/extensionProcessScriptLoader.js",
-    "resource://gre/modules/URLQueryStrippingListProcessScript.js",
   ]),
 };
 
 if (!gFissionBrowser) {
   known_scripts.modules.add(
     "resource:///modules/sessionstore/ContentSessionStore.jsm"
-  );
-}
-
-if (AppConstants.NIGHTLY_BUILD) {
-  // URL Query Stripping. This will only be loaded if the URL Query Stripping
-  // is enabled by default during the startup. This currently only happens in
-  // Nightly channel.
-  //
-  // Bug 1743418 will try to remove this from content startup script.
-
-  known_scripts.modules.add(
-    "resource://gre/modules/URLQueryStrippingListService.jsm"
   );
 }
 
