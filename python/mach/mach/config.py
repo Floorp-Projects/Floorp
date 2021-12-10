@@ -290,7 +290,6 @@ class ConfigSettings(collections.abc.Mapping):
         self._settings = {}
         self._sections = {}
         self._finalized = False
-        self.loaded_files = set()
 
     def load_file(self, filename: Union[str, Path]):
         self.load_files([Path(filename)])
@@ -306,7 +305,6 @@ class ConfigSettings(collections.abc.Mapping):
 
         fps = [open(f, "rt") for f in filtered]
         self.load_fps(fps)
-        self.loaded_files.update(set(filtered))
         for fp in fps:
             fp.close()
 
