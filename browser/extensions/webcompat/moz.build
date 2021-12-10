@@ -84,7 +84,6 @@ FINAL_TARGET_FILES.features["webcompat@mozilla.org"]["injections"]["js"] += [
     "injections/js/bug1722955-frontgate.com-ua-override.js",
     "injections/js/bug1724764-amextravel.com-window-print.js",
     "injections/js/bug1724868-news.yahoo.co.jp-ua-override.js",
-    "injections/js/bug1727100-slack.com-ua-override.js",
     "injections/js/bug1731825-office365-email-handling-prompt-autohide.js",
 ]
 
