@@ -21,6 +21,8 @@
 #include "RenderBundleEncoder.h"
 #include "RenderPipeline.h"
 #include "Sampler.h"
+#include "SupportedFeatures.h"
+#include "SupportedLimits.h"
 #include "Texture.h"
 #include "TextureView.h"
 #include "ValidationError.h"
@@ -51,11 +53,16 @@ JSObject* Device::CreateExternalArrayBuffer(JSContext* aCx, size_t aOffset,
                                     &mapFreeCallback, nullptr);
 }
 
-Device::Device(Adapter* const aParent, RawId aId)
+Device::Device(Adapter* const aParent, RawId aId,
+               const dom::Sequence<dom::GPUFeatureName>& aRequiredFeatures,
+               UniquePtr<ffi::WGPULimits> aRawLimits)
     : DOMEventTargetHelper(aParent->GetParentObject()),
       mId(aId),
       mBridge(aParent->mBridge),
-      mQueue(new class Queue(this, aParent->mBridge, aId)) {
+      mQueue(new class Queue(this, aParent->mBridge, aId)),
+      // features are filled in Adapter::RequestDevice
+      mFeatures(new SupportedFeatures(aParent)),
+      mLimits(new SupportedLimits(aParent, std::move(aRawLimits))) {
   mBridge->RegisterDevice(mId, this);
 }
 
@@ -70,8 +77,6 @@ void Device::Cleanup() {
 
 void Device::GetLabel(nsAString& aValue) const { aValue = mLabel; }
 void Device::SetLabel(const nsAString& aLabel) { mLabel = aLabel; }
-
-const RefPtr<Queue>& Device::GetQueue() const { return mQueue; }
 
 already_AddRefed<Buffer> Device::CreateBuffer(
     const dom::GPUBufferDescriptor& aDesc, ErrorResult& aRv) {

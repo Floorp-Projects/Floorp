@@ -41,7 +41,7 @@ class SupportedLimits final : public nsWrapperCache, public ChildOf<Adapter> {
   uint32_t MaxVertexAttributes() const;
   uint32_t MaxVertexBufferArrayStride() const;
 
-  SupportedLimits(Adapter* const aParent, const ffi::WGPULimits& aLimits);
+  SupportedLimits(Adapter* const aParent, UniquePtr<ffi::WGPULimits>&& aLimits);
 
  private:
   ~SupportedLimits();
