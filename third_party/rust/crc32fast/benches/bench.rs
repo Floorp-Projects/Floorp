@@ -21,19 +21,23 @@ fn bench(b: &mut Bencher, size: usize, hasher_init: Hasher) {
 }
 
 fn bench_kilobyte_baseline(b: &mut Bencher) {
-    bench(b, 1024, Hasher::internal_new_baseline(0))
+    bench(b, 1024, Hasher::internal_new_baseline(0, 0))
 }
 
 fn bench_kilobyte_specialized(b: &mut Bencher) {
-    bench(b, 1024, Hasher::internal_new_specialized(0).unwrap())
+    bench(b, 1024, Hasher::internal_new_specialized(0, 0).unwrap())
 }
 
 fn bench_megabyte_baseline(b: &mut Bencher) {
-    bench(b, 1024 * 1024, Hasher::internal_new_baseline(0))
+    bench(b, 1024 * 1024, Hasher::internal_new_baseline(0, 0))
 }
 
 fn bench_megabyte_specialized(b: &mut Bencher) {
-    bench(b, 1024 * 1024, Hasher::internal_new_specialized(0).unwrap())
+    bench(
+        b,
+        1024 * 1024,
+        Hasher::internal_new_specialized(0, 0).unwrap(),
+    )
 }
 
 benchmark_group!(

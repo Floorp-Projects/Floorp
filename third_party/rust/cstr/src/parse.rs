@@ -45,7 +45,7 @@ fn parse_literal(literal: Literal) -> Result<Vec<u8>, &'static str> {
     let s = literal.to_string();
     let s = s.as_bytes();
     match s[0] {
-        b'"' => Ok(parse_cooked_content(&s)),
+        b'"' => Ok(parse_cooked_content(s)),
         b'r' => Ok(parse_raw_content(&s[1..])),
         b'b' => match s[1] {
             b'"' => Ok(parse_cooked_content(&s[1..])),
@@ -92,12 +92,12 @@ fn parse_cooked_content(mut s: &[u8]) -> Vec<u8> {
         s = &s[2..];
         match b {
             b'x' => {
-                let (b, rest) = backslash_x(&s);
+                let (b, rest) = backslash_x(s);
                 result.push(b);
                 s = rest;
             }
             b'u' => {
-                let (c, rest) = backslash_u(&s);
+                let (c, rest) = backslash_u(s);
                 result.extend_from_slice(c.encode_utf8(&mut [0; 4]).as_bytes());
                 s = rest;
             }

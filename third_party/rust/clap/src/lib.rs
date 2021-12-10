@@ -366,7 +366,7 @@
 //!  * **Red** Color: **NOT** included by default (must use cargo `features` to enable)
 //!  * **Blue** Color: Dev dependency, only used while developing.
 //!
-//! ![clap dependencies](https://github.com/clap-rs/clap/blob/v2.33.1/clap_dep_graph.png)
+//! ![clap dependencies](https://github.com/clap-rs/clap/blob/v2.34.0/clap_dep_graph.png)
 //!
 //! ### More Information
 //!
@@ -391,7 +391,7 @@
 //! `clap`. You can either add it to the [examples/] directory, or file an issue and tell
 //! me. I'm all about giving credit where credit is due :)
 //!
-//! Please read [CONTRIBUTING.md](https://github.com/clap-rs/clap/blob/v2.33.1/.github/CONTRIBUTING.md) before you start contributing.
+//! Please read [CONTRIBUTING.md](https://github.com/clap-rs/clap/blob/v2.34.0/.github/CONTRIBUTING.md) before you start contributing.
 //!
 //!
 //! ### Testing Code
@@ -512,12 +512,12 @@
 //! `clap` is licensed under the MIT license. Please read the [LICENSE-MIT][license] file in
 //! this repository for more information.
 //!
-//! [examples/]: https://github.com/clap-rs/clap/tree/v2.33.1/examples
+//! [examples/]: https://github.com/clap-rs/clap/tree/v2.34.0/examples
 //! [video tutorials]: https://www.youtube.com/playlist?list=PLza5oFLQGTl2Z5T8g1pRkIynR3E0_pc7U
-//! [license]: https://github.com/clap-rs/clap/blob/v2.33.1/LICENSE-MIT
+//! [license]: https://github.com/clap-rs/clap/blob/v2.34.0/LICENSE-MIT
 
 #![crate_type = "lib"]
-#![doc(html_root_url = "https://docs.rs/clap/2.33.3")]
+#![doc(html_root_url = "https://docs.rs/clap/2.34.0")]
 #![deny(
     missing_docs,
     missing_debug_implementations,
@@ -530,16 +530,15 @@
 //      unused_qualifications       (bitflags, clippy)
 //      trivial_numeric_casts       (bitflags)
 #![cfg_attr(
-    not(any(feature = "lints", feature = "nightly")),
+    not(any(feature = "cargo-clippy", feature = "nightly")),
     forbid(unstable_features)
 )]
-#![cfg_attr(feature = "lints", feature(plugin))]
-#![cfg_attr(feature = "lints", plugin(clippy))]
+//#![cfg_attr(feature = "lints", feature(plugin))]
+//#![cfg_attr(feature = "lints", plugin(clippy))]
 // Need to disable deny(warnings) while deprecations are active
-// #![cfg_attr(feature = "lints", deny(warnings))]
-#![cfg_attr(feature = "lints", allow(cyclomatic_complexity))]
-#![cfg_attr(feature = "lints", allow(doc_markdown))]
-#![cfg_attr(feature = "lints", allow(explicit_iter_loop))]
+//#![cfg_attr(feature = "cargo-clippy", deny(warnings))]
+// Due to our "MSRV for 2.x will remain unchanged" policy, we can't fix these warnings
+#![allow(bare_trait_objects, deprecated)]
 
 #[cfg(all(feature = "color", not(target_os = "windows")))]
 extern crate ansi_term;
@@ -579,9 +578,9 @@ mod strext;
 mod suggestions;
 mod usage_parser;
 
-const INTERNAL_ERROR_MSG: &'static str = "Fatal internal error. Please consider filing a bug \
+const INTERNAL_ERROR_MSG: &str = "Fatal internal error. Please consider filing a bug \
                                           report at https://github.com/clap-rs/clap/issues";
-const INVALID_UTF8: &'static str = "unexpected invalid UTF-8 code point";
+const INVALID_UTF8: &str = "unexpected invalid UTF-8 code point";
 
 #[cfg(unstable)]
 pub use derive::{ArgEnum, ClapApp, FromArgMatches, IntoApp};
