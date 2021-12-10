@@ -11,9 +11,12 @@
 #[cfg(feature = "bench")]
 use std::iter;
 #[cfg(feature = "bench")]
-use test::Bencher;
-#[cfg(feature = "bench")]
 use std::prelude::v1::*;
+#[cfg(feature = "bench")]
+use test::Bencher;
+
+#[cfg(feature = "bench")]
+use UnicodeXID;
 
 #[cfg(feature = "bench")]
 #[bench]
@@ -21,9 +24,7 @@ fn cargo_is_xid_start(b: &mut Bencher) {
     let string = iter::repeat('a').take(4096).collect::<String>();
 
     b.bytes = string.len() as u64;
-    b.iter(|| {
-        string.chars().all(super::UnicodeXID::is_xid_start)
-    });
+    b.iter(|| string.chars().all(super::UnicodeXID::is_xid_start));
 }
 
 #[cfg(feature = "bench")]
@@ -32,9 +33,7 @@ fn stdlib_is_xid_start(b: &mut Bencher) {
     let string = iter::repeat('a').take(4096).collect::<String>();
 
     b.bytes = string.len() as u64;
-    b.iter(|| {
-        string.chars().all(char::is_xid_start)
-    });
+    b.iter(|| string.chars().all(char::is_xid_start));
 }
 
 #[cfg(feature = "bench")]
@@ -43,9 +42,7 @@ fn cargo_xid_continue(b: &mut Bencher) {
     let string = iter::repeat('a').take(4096).collect::<String>();
 
     b.bytes = string.len() as u64;
-    b.iter(|| {
-        string.chars().all(super::UnicodeXID::is_xid_continue)
-    });
+    b.iter(|| string.chars().all(super::UnicodeXID::is_xid_continue));
 }
 
 #[cfg(feature = "bench")]
@@ -54,17 +51,12 @@ fn stdlib_xid_continue(b: &mut Bencher) {
     let string = iter::repeat('a').take(4096).collect::<String>();
 
     b.bytes = string.len() as u64;
-    b.iter(|| {
-        string.chars().all(char::is_xid_continue)
-    });
+    b.iter(|| string.chars().all(char::is_xid_continue));
 }
 
 #[test]
 fn test_is_xid_start() {
-    let chars = [
-        'A', 'Z', 'a', 'z',
-        '\u{1000d}', '\u{10026}',
-    ];
+    let chars = ['A', 'Z', 'a', 'z', '\u{1000d}', '\u{10026}'];
 
     for ch in &chars {
         assert!(super::UnicodeXID::is_xid_start(*ch), "{}", ch);
@@ -74,10 +66,7 @@ fn test_is_xid_start() {
 #[test]
 fn test_is_not_xid_start() {
     let chars = [
-        '\x00', '\x01',
-        '0', '9',
-        ' ', '[', '<', '{', '(',
-        '\u{02c2}', '\u{ffff}',
+        '\x00', '\x01', '0', '9', ' ', '[', '<', '{', '(', '\u{02c2}', '\u{ffff}',
     ];
 
     for ch in &chars {
@@ -87,10 +76,7 @@ fn test_is_not_xid_start() {
 
 #[test]
 fn test_is_xid_continue() {
-    let chars = [
-        '0', '9', 'A', 'Z', 'a', 'z', '_',
-        '\u{1000d}', '\u{10026}',
-    ];
+    let chars = ['0', '9', 'A', 'Z', 'a', 'z', '_', '\u{1000d}', '\u{10026}'];
 
     for ch in &chars {
         assert!(super::UnicodeXID::is_xid_continue(*ch), "{}", ch);
@@ -100,9 +86,7 @@ fn test_is_xid_continue() {
 #[test]
 fn test_is_not_xid_continue() {
     let chars = [
-        '\x00', '\x01',
-        ' ', '[', '<', '{', '(',
-        '\u{02c2}', '\u{ffff}',
+        '\x00', '\x01', ' ', '[', '<', '{', '(', '\u{02c2}', '\u{ffff}',
     ];
 
     for &ch in &chars {
