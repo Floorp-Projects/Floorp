@@ -27,7 +27,6 @@
 #include "js/OffThreadScriptCompilation.h"  // JS::OffThreadCompileCallback
 #include "js/SourceText.h"                  // JS::SourceText
 #include "js/Transcoding.h"  // JS::TranscodeSources, JS::TranscodeBuffer, JS::TranscodeRange
-#include "js/UniquePtr.h"  // js::UniquePtr
 
 struct JS_PUBLIC_API JSContext;
 class JS_PUBLIC_API JSTracer;
@@ -41,9 +40,11 @@ struct CompilationGCOutput;
 }  // namespace frontend
 }  // namespace js
 
-namespace JS {
+// ************************************************************************
+//   Types
+// ************************************************************************
 
-class OffThreadToken;
+namespace JS {
 
 using Stencil = js::frontend::CompilationStencil;
 
@@ -88,11 +89,53 @@ struct InstantiationStorage {
   void trace(JSTracer* trc);
 };
 
+}  // namespace JS
+
+// ************************************************************************
+//   Reference Count
+// ************************************************************************
+
+namespace JS {
+
 // These non-member functions let us manipulate the ref counts of the opaque
 // Stencil type. The RefPtrTraits below calls these for use when using the
 // RefPtr type.
 JS_PUBLIC_API void StencilAddRef(Stencil* stencil);
 JS_PUBLIC_API void StencilRelease(Stencil* stencil);
+
+}  // namespace JS
+
+namespace mozilla {
+template <>
+struct RefPtrTraits<JS::Stencil> {
+  static void AddRef(JS::Stencil* stencil) { JS::StencilAddRef(stencil); }
+  static void Release(JS::Stencil* stencil) { JS::StencilRelease(stencil); }
+};
+}  // namespace mozilla
+
+// ************************************************************************
+//   Properties
+// ************************************************************************
+
+namespace JS {
+
+// Return true if the stencil relies on external data as a result of XDR
+// decoding.
+extern JS_PUBLIC_API bool StencilIsBorrowed(Stencil* stencil);
+
+// Return true if the stencil is lazily parsed.
+extern JS_PUBLIC_API bool StencilCanLazilyParse(Stencil* stencil);
+
+extern JS_PUBLIC_API size_t SizeOfStencil(Stencil* stencil,
+                                          mozilla::MallocSizeOf mallocSizeOf);
+
+}  // namespace JS
+
+// ************************************************************************
+//   Compilation
+// ************************************************************************
+
+namespace JS {
 
 // Compile the source text into a JS::Stencil using the provided options. The
 // resulting stencil may be instantiated into any Realm on the current runtime
@@ -118,19 +161,20 @@ extern JS_PUBLIC_API already_AddRefed<Stencil> CompileModuleScriptToStencil(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     SourceText<char16_t>& srcBuf);
 
+}  // namespace JS
+
+// ************************************************************************
+//   Instantiation
+// ************************************************************************
+
+namespace JS {
+
 // Instantiate the Stencil into current Realm and return the JSScript.
 extern JS_PUBLIC_API JSScript* InstantiateGlobalStencil(
     JSContext* cx, const InstantiateOptions& options, Stencil* stencil);
 extern JS_PUBLIC_API JSScript* InstantiateGlobalStencil(
     JSContext* cx, const InstantiateOptions& options, Stencil* stencil,
     InstantiationStorage* storage);
-
-// Return true if the stencil relies on external data as a result of XDR
-// decoding.
-extern JS_PUBLIC_API bool StencilIsBorrowed(Stencil* stencil);
-
-// Return true if the stencil is lazily parsed.
-extern JS_PUBLIC_API bool StencilCanLazilyParse(Stencil* stencil);
 
 // Instantiate a module Stencil and return the associated object. Inside the
 // engine this is a js::ModuleObject.
@@ -139,6 +183,16 @@ extern JS_PUBLIC_API JSObject* InstantiateModuleStencil(
 extern JS_PUBLIC_API JSObject* InstantiateModuleStencil(
     JSContext* cx, const InstantiateOptions& options, Stencil* stencil,
     InstantiationStorage* storage);
+
+}  // namespace JS
+
+// ************************************************************************
+//   Transcoding
+// ************************************************************************
+
+namespace JS {
+
+class OffThreadToken;
 
 // Serialize the Stencil into the transcode buffer.
 extern JS_PUBLIC_API TranscodeResult EncodeStencil(JSContext* cx,
@@ -151,8 +205,19 @@ extern JS_PUBLIC_API TranscodeResult DecodeStencil(JSContext* cx,
                                                    const TranscodeRange& range,
                                                    Stencil** stencilOut);
 
-extern JS_PUBLIC_API size_t SizeOfStencil(Stencil* stencil,
-                                          mozilla::MallocSizeOf mallocSizeOf);
+// Register an encoder on its script source, such that all functions can be
+// encoded as they are parsed, in the same way as
+// JS::CompileAndStartIncrementalEncoding
+extern JS_PUBLIC_API bool StartIncrementalEncoding(JSContext* cx,
+                                                   RefPtr<Stencil>&& stencil);
+
+}  // namespace JS
+
+// ************************************************************************
+//   Off-thread compilation/transcoding
+// ************************************************************************
+
+namespace JS {
 
 // Start an off-thread task to compile the source text into a JS::Stencil,
 // using the provided options.
@@ -184,20 +249,27 @@ extern JS_PUBLIC_API OffThreadToken* CompileModuleToStencilOffThread(
 // IsTranscodingBytecodeAligned and IsTranscodingBytecodeOffsetAligned.
 // (This should be handled while encoding).
 //
-// `buffer` should be alive until the end of `FinishOffThreadScriptDecoder`.
+// `buffer` should be alive until the end of `FinishDecodeStencilOffThread`.
 extern JS_PUBLIC_API OffThreadToken* DecodeStencilOffThread(
     JSContext* cx, const DecodeOptions& options, const TranscodeBuffer& buffer,
     size_t cursor, OffThreadCompileCallback callback, void* callbackData);
 
-// The start of `range` should be meet IsTranscodingBytecodeAligned and
+// The start of `range` should meet IsTranscodingBytecodeAligned and
 // AlignTranscodingBytecodeOffset.
 // (This should be handled while encoding).
 //
-// `range` should be alive until the end of `FinishOffThreadScriptDecoder`.
+// `range` should be alive until the end of `FinishDecodeStencilOffThread`.
 extern JS_PUBLIC_API OffThreadToken* DecodeStencilOffThread(
     JSContext* cx, const DecodeOptions& options, const TranscodeRange& range,
     OffThreadCompileCallback callback, void* callbackData);
 
+// Start an off-thread task to decode multiple stencils.
+//
+// The start of `TranscodeSource.range` in `sources` should meet
+// IsTranscodingBytecodeAligned and AlignTranscodingBytecodeOffset
+//
+// `sources` should be alive until the end of
+// `FinishDecodeMultiStencilsOffThread`.
 extern JS_PUBLIC_API OffThreadToken* DecodeMultiStencilsOffThread(
     JSContext* cx, const DecodeOptions& options, TranscodeSources& sources,
     OffThreadCompileCallback callback, void* callbackData);
@@ -224,6 +296,7 @@ extern JS_PUBLIC_API bool FinishDecodeMultiStencilsOffThread(
     JSContext* cx, OffThreadToken* token,
     mozilla::Vector<RefPtr<Stencil>>* stencils);
 
+// Cancel the off-thread task to compile/decode.
 extern JS_PUBLIC_API void CancelCompileToStencilOffThread(
     JSContext* cx, OffThreadToken* token);
 
@@ -236,20 +309,6 @@ extern JS_PUBLIC_API void CancelDecodeStencilOffThread(JSContext* cx,
 extern JS_PUBLIC_API void CancelDecodeMultiStencilsOffThread(
     JSContext* cx, OffThreadToken* token);
 
-// Register an encoder on its script source, such that all functions can be
-// encoded as they are parsed, in the same way as
-// JS::CompileAndStartIncrementalEncoding
-extern JS_PUBLIC_API bool StartIncrementalEncoding(JSContext* cx,
-                                                   RefPtr<Stencil>&& stencil);
-
 }  // namespace JS
-
-namespace mozilla {
-template <>
-struct RefPtrTraits<JS::Stencil> {
-  static void AddRef(JS::Stencil* stencil) { JS::StencilAddRef(stencil); }
-  static void Release(JS::Stencil* stencil) { JS::StencilRelease(stencil); }
-};
-}  // namespace mozilla
 
 #endif  // js_experimental_JSStencil_h
