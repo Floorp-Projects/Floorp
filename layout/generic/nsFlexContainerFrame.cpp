@@ -1324,14 +1324,8 @@ StyleAlignFlags nsFlexContainerFrame::CSSAlignmentForAbsPosChild(
     alignment = isAxisReversed ? StyleAlignFlags::START : StyleAlignFlags::END;
   } else if (alignment == StyleAlignFlags::LEFT ||
              alignment == StyleAlignFlags::RIGHT) {
-    if (aLogicalAxis == eLogicalAxisInline) {
-      const bool isLeft = (alignment == StyleAlignFlags::LEFT);
-      alignment = (isLeft == GetWritingMode().IsBidiLTR())
-                      ? StyleAlignFlags::START
-                      : StyleAlignFlags::END;
-    } else {
-      alignment = StyleAlignFlags::START;
-    }
+    MOZ_ASSERT(isMainAxis, "Only justify-* can have 'left' and 'right'!");
+    alignment = axisTracker.ResolveJustifyLeftRight(alignment);
   } else if (alignment == StyleAlignFlags::BASELINE) {
     alignment = StyleAlignFlags::START;
   } else if (alignment == StyleAlignFlags::LAST_BASELINE) {
