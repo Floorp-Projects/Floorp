@@ -20,8 +20,8 @@ const APIS = {
   GetRequestedLocales() {
     return browser.test.getRequestedLocales();
   },
-  GetLinkColor({ uri, selector }) {
-    return browser.test.getLinkColor(uri, selector);
+  GetLinkColor({ tab, selector }) {
+    return browser.test.getLinkColor(tab.id, selector);
   },
   GetPidForTab({ tab }) {
     return browser.test.getPidForTab(tab.id);

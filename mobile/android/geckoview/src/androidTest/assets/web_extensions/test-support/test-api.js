@@ -14,32 +14,6 @@ const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
 );
 
-function linkColorFrameScript() {
-  addMessageListener("HistoryDelegateTest:GetLinkColor", function onMessage(
-    message
-  ) {
-    const { selector, uri } = message.data;
-
-    if (content.document.documentURI != uri) {
-      return;
-    }
-    const element = content.document.querySelector(selector);
-    if (!element) {
-      sendAsyncMessage("HistoryDelegateTest:GetLinkColor", {
-        ok: false,
-        error: "No element for " + selector,
-      });
-      return;
-    }
-    const color = content.windowUtils.getVisitedDependentComputedStyle(
-      element,
-      "",
-      "color"
-    );
-    sendAsyncMessage("HistoryDelegateTest:GetLinkColor", { ok: true, color });
-  });
-}
-
 function setResolutionAndScaleToFrameScript(resolution) {
   addMessageListener("PanZoomControllerTest:SetResolutionAndScaleTo", () => {
     content.window.visualViewport.addEventListener("resize", () => {
@@ -75,6 +49,12 @@ this.test = class extends ExtensionAPI {
   }
 
   getAPI(context) {
+    function windowActor(tabId) {
+      const tab = context.extension.tabManager.get(tabId);
+      const { browsingContext } = tab.browser;
+      return browsingContext.currentWindowGlobal.getActor("TestSupport");
+    }
+
     return {
       test: {
         /* Set prefs and returns set of saved prefs */
@@ -109,34 +89,8 @@ this.test = class extends ExtensionAPI {
         },
 
         /* Gets link color for a given selector. */
-        async getLinkColor(uri, selector) {
-          const frameScript = `data:text/javascript,(${encodeURI(
-            linkColorFrameScript
-          )}).call(this)`;
-          Services.mm.loadFrameScript(frameScript, true);
-
-          return new Promise((resolve, reject) => {
-            const onMessage = message => {
-              Services.mm.removeMessageListener(
-                "HistoryDelegateTest:GetLinkColor",
-                onMessage
-              );
-              if (message.data.ok) {
-                resolve(message.data.color);
-              } else {
-                reject(message.data.error);
-              }
-            };
-
-            Services.mm.addMessageListener(
-              "HistoryDelegateTest:GetLinkColor",
-              onMessage
-            );
-            Services.mm.broadcastAsyncMessage(
-              "HistoryDelegateTest:GetLinkColor",
-              { uri, selector }
-            );
-          });
+        async getLinkColor(tabId, selector) {
+          return windowActor(tabId).sendQuery("GetLinkColor", { selector });
         },
 
         async getRequestedLocales() {
@@ -221,27 +175,17 @@ this.test = class extends ExtensionAPI {
         },
 
         async flushApzRepaints(tabId) {
-          const tab = context.extension.tabManager.get(tabId);
-          const { browsingContext } = tab.browser;
-
           // TODO: Note that `waitUntilApzStable` in apz_test_utils.js does
           // flush APZ repaints in the parent process (i.e. calling
           // nsIDOMWindowUtils.flushApzRepaints for the parent process) before
           // flushApzRepaints is called for the target content document, if we
           // still meet intermittent failures, we might want to do it here as
           // well.
-          await browsingContext.currentWindowGlobal
-            .getActor("TestSupport")
-            .sendQuery("FlushApzRepaints");
+          await windowActor(tabId).sendQuery("FlushApzRepaints");
         },
 
         async promiseAllPaintsDone(tabId) {
-          const tab = context.extension.tabManager.get(tabId);
-          const { browsingContext } = tab.browser;
-
-          await browsingContext.currentWindowGlobal
-            .getActor("TestSupport")
-            .sendQuery("PromiseAllPaintsDone");
+          await windowActor(tabId).sendQuery("PromiseAllPaintsDone");
         },
 
         async usingGpuProcess() {

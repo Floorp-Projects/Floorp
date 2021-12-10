@@ -73,24 +73,24 @@ class HistoryDelegateTest : BaseSessionTest() {
 
         // Sometimes link changes are not applied immediately, wait for a little bit
         UiThreadUtils.waitForCondition({
-            sessionRule.getLinkColor(testUri, "#mozilla") == VISITED_COLOR
+            mainSession.getLinkColor("#mozilla") == VISITED_COLOR
         }, sessionRule.env.defaultTimeoutMillis)
 
         assertThat(
             "Mozilla should be visited",
-            sessionRule.getLinkColor(testUri, "#mozilla"),
+            mainSession.getLinkColor("#mozilla"),
             equalTo(VISITED_COLOR)
         )
 
         assertThat(
             "Test Pilot should be visited",
-            sessionRule.getLinkColor(testUri, "#testpilot"),
+            mainSession.getLinkColor("#testpilot"),
             equalTo(VISITED_COLOR)
         )
 
         assertThat(
             "Bugzilla should be unvisited",
-            sessionRule.getLinkColor(testUri, "#bugzilla"),
+            mainSession.getLinkColor("#bugzilla"),
             equalTo(UNVISITED_COLOR)
         )
     }

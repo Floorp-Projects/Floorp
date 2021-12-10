@@ -2328,18 +2328,17 @@ public class GeckoSessionTestRule implements TestRule {
   }
 
   /**
-   * Gets the color of a link for a given URI and selector.
+   * Gets the color of a link for a given selector.
    *
-   * @param uri Page where the link is present.
    * @param selector Selector that matches the link
    * @return String representing the color, e.g. rgb(0, 0, 255)
    */
-  public String getLinkColor(final String uri, final String selector) {
+  public String getLinkColor(final GeckoSession session, final String selector) {
     return (String)
         webExtensionApiCall(
+            session,
             "GetLinkColor",
             args -> {
-              args.put("uri", uri);
               args.put("selector", selector);
             });
   }
