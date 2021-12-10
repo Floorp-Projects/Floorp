@@ -13,28 +13,17 @@ const PanelOffsetX = -33;
 const PanelOffsetY = -8;
 
 var ScreenshotsUtils = {
-  initialized: false,
   initialize() {
-    if (!this.initialized) {
-      if (
-        !Services.prefs.getBoolPref(
-          "screenshots.browser.component.enabled",
-          false
-        )
-      ) {
-        return;
-      }
-      Services.obs.addObserver(this, "menuitem-screenshot");
-      Services.obs.addObserver(this, "screenshots-take-screenshot");
-      this.initialized = true;
+    if (
+      !Services.prefs.getBoolPref(
+        "screenshots.browser.component.enabled",
+        false
+      )
+    ) {
+      return;
     }
-  },
-  uninitialize() {
-    if (this.initialized) {
-      Services.obs.removeObserver(this, "menuitem-screenshot");
-      Services.obs.removeObserver(this, "screenshots-take-screenshot");
-      this.initialized = false;
-    }
+    Services.obs.addObserver(this, "menuitem-screenshot");
+    Services.obs.addObserver(this, "screenshots-take-screenshot");
   },
   observe(subj, topic, data) {
     let { gBrowser } = subj;
