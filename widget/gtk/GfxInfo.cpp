@@ -768,6 +768,15 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
     ////////////////////////////////////
     // FEATURE_WEBRENDER - ALLOWLIST
 
+#if defined(EARLY_BETA_OR_EARLIER)
+    APPEND_TO_DRIVER_BLOCKLIST_EXT(
+        OperatingSystem::Linux, ScreenSizeStatus::All, BatteryStatus::All,
+        DesktopEnvironment::All, WindowProtocol::All, DriverVendor::MesaAll,
+        DeviceFamily::All, nsIGfxInfo::FEATURE_WEBRENDER,
+        nsIGfxInfo::FEATURE_ALLOW_ALWAYS, DRIVER_GREATER_THAN_OR_EQUAL,
+        V(21, 0, 0, 0), "FEATURE_MESA", "Mesa 21.0.0.0");
+#endif
+
     // Intel Mesa baseline, chosen arbitrarily.
     APPEND_TO_DRIVER_BLOCKLIST_EXT(
         OperatingSystem::Linux, ScreenSizeStatus::All, BatteryStatus::All,
@@ -953,6 +962,14 @@ nsresult GfxInfo::GetFeatureStatusImpl(
   }
 
   if (aFeature == nsIGfxInfo::FEATURE_WEBRENDER) {
+    // Don't try Webrender on devices where we are guaranteed to fail.
+    if (mGLMajorVersion < 3) {
+      *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
+      aFailureId = "FEATURE_FAILURE_OPENGL_LESS_THAN_3";
+      return NS_OK;
+    }
+
+    // Bug 1710400: Disable Webrender on the deprecated Intel DDX driver
     for (const nsCString& driver : mDdxDrivers) {
       if (strcasestr(driver.get(), "Intel")) {
         *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
