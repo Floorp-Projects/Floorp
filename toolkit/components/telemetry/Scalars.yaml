@@ -1922,29 +1922,6 @@ os.environment:
     operating_systems:
       - windows
 
-  is_default_handler:
-    bug_numbers:
-      - 1743914
-    description: >
-      Records whether Firefox was the default handler for particular file types
-      or protocols.  The result is split into keys which represent the file
-      extension: currently, a subset of the file types Firefox registers to
-      handle, namely ".pdf".  In the future, more file types may be recorded,
-      and/or a subset of the protocol schemes that Firefox registers to may be
-      recorded.
-    keyed: true
-    expires: "106"
-    kind: boolean
-    notification_emails:
-      - application-update-telemetry-alerts@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - firefox
-    record_in_processes:
-      - main
-    operating_systems:
-      - windows
-
   is_kept_in_dock:
     bug_numbers:
       - 1715348
