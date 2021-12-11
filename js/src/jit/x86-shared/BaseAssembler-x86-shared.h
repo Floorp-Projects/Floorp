@@ -4928,8 +4928,12 @@ class BaseAssembler : public GenericAssembler {
       return;
     }
 
-    spew("%-11s%s, %s, %s", name, XMMRegName(rm), XMMRegName(src0),
-         XMMRegName(dst));
+    if (src0 == invalid_xmm) {
+      spew("%-11s%s, %s", name, XMMRegName(rm), XMMRegName(dst));
+    } else {
+      spew("%-11s%s, %s, %s", name, XMMRegName(rm), XMMRegName(src0),
+           XMMRegName(dst));
+    }
     m_formatter.threeByteOpVex(ty, opcode, escape, (RegisterID)rm, src0, dst);
   }
 
@@ -4946,8 +4950,12 @@ class BaseAssembler : public GenericAssembler {
       return;
     }
 
-    spew("%-11s$0x%x, %s, %s, %s", name, imm, XMMRegName(rm), XMMRegName(src0),
-         XMMRegName(dst));
+    if (src0 == invalid_xmm) {
+      spew("%-11s$0x%x, %s, %s", name, imm, XMMRegName(rm), XMMRegName(dst));
+    } else {
+      spew("%-11s$0x%x, %s, %s, %s", name, imm, XMMRegName(rm),
+           XMMRegName(src0), XMMRegName(dst));
+    }
     m_formatter.threeByteOpVex(ty, opcode, escape, (RegisterID)rm, src0, dst);
     m_formatter.immediate8u(imm);
   }
@@ -4964,8 +4972,12 @@ class BaseAssembler : public GenericAssembler {
       return;
     }
 
-    spew("%-11s" MEM_ob ", %s, %s", name, ADDR_ob(offset, base),
-         XMMRegName(src0), XMMRegName(dst));
+    if (src0 == invalid_xmm) {
+      spew("%-11s" MEM_ob ", %s", name, ADDR_ob(offset, base), XMMRegName(dst));
+    } else {
+      spew("%-11s" MEM_ob ", %s, %s", name, ADDR_ob(offset, base),
+           XMMRegName(src0), XMMRegName(dst));
+    }
     m_formatter.threeByteOpVex(ty, opcode, escape, offset, base, src0, dst);
   }
 
@@ -4973,11 +4985,24 @@ class BaseAssembler : public GenericAssembler {
                        ThreeByteOpcodeID opcode, ThreeByteEscape escape,
                        int32_t offset, RegisterID base, RegisterID index,
                        int32_t scale, XMMRegisterID src0, XMMRegisterID dst) {
-    MOZ_ASSERT(useLegacySSEEncoding(src0, dst));
-    spew("%-11s" MEM_obs ", %s", legacySSEOpName(name),
-         ADDR_obs(offset, base, index, scale), XMMRegName(dst));
-    m_formatter.legacySSEPrefix(ty);
-    m_formatter.threeByteOp(opcode, escape, offset, base, index, scale, dst);
+    if (useLegacySSEEncoding(src0, dst)) {
+      spew("%-11s" MEM_obs ", %s", legacySSEOpName(name),
+           ADDR_obs(offset, base, index, scale), XMMRegName(dst));
+      m_formatter.legacySSEPrefix(ty);
+      m_formatter.threeByteOp(opcode, escape, offset, base, index, scale, dst);
+      return;
+    }
+
+    if (src0 == invalid_xmm) {
+      spew("%-11s" MEM_obs ", %s", name, ADDR_obs(offset, base, index, scale),
+           XMMRegName(dst));
+    } else {
+      spew("%-11s" MEM_obs ", %s, %s", name,
+           ADDR_obs(offset, base, index, scale), XMMRegName(src0),
+           XMMRegName(dst));
+    }
+    m_formatter.threeByteOpVex(ty, opcode, escape, offset, base, index, scale,
+                               src0, dst);
   }
 
   void threeByteOpImmSimd(const char* name, VexOperandType ty,
@@ -4993,8 +5018,13 @@ class BaseAssembler : public GenericAssembler {
       return;
     }
 
-    spew("%-11s$0x%x, " MEM_ob ", %s, %s", name, imm, ADDR_ob(offset, base),
-         XMMRegName(src0), XMMRegName(dst));
+    if (src0 == invalid_xmm) {
+      spew("%-11s$0x%x, " MEM_ob ", %s", name, imm, ADDR_ob(offset, base),
+           XMMRegName(dst));
+    } else {
+      spew("%-11s$0x%x, " MEM_ob ", %s, %s", name, imm, ADDR_ob(offset, base),
+           XMMRegName(src0), XMMRegName(dst));
+    }
     m_formatter.threeByteOpVex(ty, opcode, escape, offset, base, src0, dst);
     m_formatter.immediate8u(imm);
   }
@@ -5013,9 +5043,14 @@ class BaseAssembler : public GenericAssembler {
       return;
     }
 
-    spew("%-11s$0x%x, " MEM_obs ", %s, %s", name, imm,
-         ADDR_obs(offset, base, index, scale), XMMRegName(src0),
-         XMMRegName(dst));
+    if (src0 == invalid_xmm) {
+      spew("%-11s$0x%x, " MEM_obs ", %s", name, imm,
+           ADDR_obs(offset, base, index, scale), XMMRegName(dst));
+    } else {
+      spew("%-11s$0x%x, " MEM_obs ", %s, %s", name, imm,
+           ADDR_obs(offset, base, index, scale), XMMRegName(src0),
+           XMMRegName(dst));
+    }
     m_formatter.threeByteOpVex(ty, opcode, escape, offset, base, index, scale,
                                src0, dst);
     m_formatter.immediate8u(imm);
@@ -5032,7 +5067,11 @@ class BaseAssembler : public GenericAssembler {
       return;
     }
 
-    spew("%-11s%p, %s, %s", name, address, XMMRegName(src0), XMMRegName(dst));
+    if (src0 == invalid_xmm) {
+      spew("%-11s%p, %s", name, address, XMMRegName(dst));
+    } else {
+      spew("%-11s%p, %s, %s", name, address, XMMRegName(src0), XMMRegName(dst));
+    }
     m_formatter.threeByteOpVex(ty, opcode, escape, address, src0, dst);
   }
 

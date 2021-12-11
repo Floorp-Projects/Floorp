@@ -884,8 +884,7 @@ class BaseAssemblerX64 : public BaseAssembler {
   void vpextrq_irr(unsigned lane, XMMRegisterID src, RegisterID dst) {
     MOZ_ASSERT(lane < 2);
     threeByteOpImmSimdInt64("vpextrq", VEX_PD, OP3_PEXTRQ_EvVdqIb, ESCAPE_3A,
-                            lane, (XMMRegisterID)dst, invalid_xmm,
-                            (RegisterID)src);
+                            lane, src, dst);
   }
 
   void vpinsrq_irr(unsigned lane, RegisterID src1, XMMRegisterID src0,
@@ -1223,33 +1222,16 @@ class BaseAssemblerX64 : public BaseAssembler {
   [[nodiscard]] JmpSrc twoByteRipOpSimd(const char* name, VexOperandType ty,
                                         TwoByteOpcodeID opcode,
                                         XMMRegisterID src0, XMMRegisterID dst) {
-    if (useLegacySSEEncoding(src0, dst)) {
-      m_formatter.legacySSEPrefix(ty);
-      m_formatter.twoByteRipOp(opcode, 0, dst);
-      JmpSrc label(m_formatter.size());
-      if (IsXMMReversedOperands(opcode)) {
-        spew("%-11s%s, " MEM_o32r "", legacySSEOpName(name), XMMRegName(dst),
-             ADDR_o32r(label.offset()));
-      } else {
-        spew("%-11s" MEM_o32r ", %s", legacySSEOpName(name),
-             ADDR_o32r(label.offset()), XMMRegName(dst));
-      }
-      return label;
-    }
-
-    m_formatter.twoByteRipOpVex(ty, opcode, 0, src0, dst);
+    MOZ_ASSERT(src0 == invalid_xmm);
+    m_formatter.legacySSEPrefix(ty);
+    m_formatter.twoByteRipOp(opcode, 0, dst);
     JmpSrc label(m_formatter.size());
-    if (src0 == invalid_xmm) {
-      if (IsXMMReversedOperands(opcode)) {
-        spew("%-11s%s, " MEM_o32r "", name, XMMRegName(dst),
-             ADDR_o32r(label.offset()));
-      } else {
-        spew("%-11s" MEM_o32r ", %s", name, ADDR_o32r(label.offset()),
-             XMMRegName(dst));
-      }
+    if (IsXMMReversedOperands(opcode)) {
+      spew("%-11s%s, " MEM_o32r "", legacySSEOpName(name), XMMRegName(dst),
+           ADDR_o32r(label.offset()));
     } else {
-      spew("%-11s" MEM_o32r ", %s, %s", name, ADDR_o32r(label.offset()),
-           XMMRegName(src0), XMMRegName(dst));
+      spew("%-11s" MEM_o32r ", %s", legacySSEOpName(name),
+           ADDR_o32r(label.offset()), XMMRegName(dst));
     }
     return label;
   }
@@ -1258,7 +1240,7 @@ class BaseAssemblerX64 : public BaseAssembler {
                                            TwoByteOpcodeID opcode, uint32_t imm,
                                            XMMRegisterID src0,
                                            XMMRegisterID dst) {
-    MOZ_ASSERT(useLegacySSEEncoding(src0, dst));
+    MOZ_ASSERT(src0 == invalid_xmm);
     m_formatter.legacySSEPrefix(ty);
     m_formatter.twoByteRipOp(opcode, 0, dst);
     m_formatter.immediate8u(imm);
@@ -1338,7 +1320,7 @@ class BaseAssemblerX64 : public BaseAssembler {
                                           ThreeByteEscape escape,
                                           XMMRegisterID src0,
                                           XMMRegisterID dst) {
-    MOZ_ASSERT(useLegacySSEEncoding(src0, dst));
+    MOZ_ASSERT(src0 == invalid_xmm);
     m_formatter.legacySSEPrefix(ty);
     m_formatter.threeByteRipOp(opcode, escape, 0, dst);
     JmpSrc label(m_formatter.size());
@@ -1349,25 +1331,20 @@ class BaseAssemblerX64 : public BaseAssembler {
 
   void threeByteOpImmSimdInt64(const char* name, VexOperandType ty,
                                ThreeByteOpcodeID opcode, ThreeByteEscape escape,
-                               uint32_t imm, XMMRegisterID src1,
-                               XMMRegisterID src0, RegisterID dst) {
-    if (useLegacySSEEncodingAlways()) {
-      spew("%-11s$0x%x, %s, %s", legacySSEOpName(name), imm, XMMRegName(src1),
-           GPReg64Name(dst));
-      m_formatter.legacySSEPrefix(ty);
-      m_formatter.threeByteOp64(opcode, escape, (RegisterID)src1, dst);
-      m_formatter.immediate8u(imm);
-      return;
-    }
-
-    MOZ_CRASH("AVX NYI");
+                               uint32_t imm, XMMRegisterID src,
+                               RegisterID dst) {
+    spew("%-11s$0x%x, %s, %s", legacySSEOpName(name), imm, GPReg64Name(dst),
+         XMMRegName(src));
+    m_formatter.legacySSEPrefix(ty);
+    m_formatter.threeByteOp64(opcode, escape, dst, (RegisterID)src);
+    m_formatter.immediate8u(imm);
   }
 
   void threeByteOpImmInt64Simd(const char* name, VexOperandType ty,
                                ThreeByteOpcodeID opcode, ThreeByteEscape escape,
                                uint32_t imm, RegisterID src1,
                                XMMRegisterID src0, XMMRegisterID dst) {
-    if (useLegacySSEEncodingAlways()) {
+    if (useLegacySSEEncoding(src0, dst)) {
       spew("%-11s$0x%x, %s, %s", legacySSEOpName(name), imm, GPReg64Name(src1),
            XMMRegName(dst));
       m_formatter.legacySSEPrefix(ty);
@@ -1376,7 +1353,12 @@ class BaseAssemblerX64 : public BaseAssembler {
       return;
     }
 
-    MOZ_CRASH("AVX NYI");
+    MOZ_ASSERT(src0 != invalid_xmm);
+    spew("%-11s$0x%x, %s, %s, %s", name, imm, GPReg64Name(src1),
+         XMMRegName(src0), XMMRegName(dst));
+    m_formatter.threeByteOpVex64(ty, opcode, escape, src1, src0,
+                                 (RegisterID)dst);
+    m_formatter.immediate8u(imm);
   }
 };
 
