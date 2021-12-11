@@ -3085,7 +3085,8 @@ static void locked_profiler_stream_json_for_this_process(
   buffer.AddEntry(ProfileBufferEntry::CollectionEnd(collectionEndMs));
 }
 
-bool profiler_stream_json_for_this_process(
+// Keep this internal function non-static, so it may be used by tests.
+bool do_profiler_stream_json_for_this_process(
     SpliceableJSONWriter& aWriter, double aSinceTime, bool aIsShuttingDown,
     ProfilerCodeAddressService* aService) {
   LOG("profiler_stream_json_for_this_process");
@@ -3108,6 +3109,17 @@ bool profiler_stream_json_for_this_process(
                                                preRecordedMetaInformation,
                                                aIsShuttingDown, aService);
   return true;
+}
+
+bool profiler_stream_json_for_this_process(
+    SpliceableJSONWriter& aWriter, double aSinceTime, bool aIsShuttingDown,
+    ProfilerCodeAddressService* aService) {
+  MOZ_RELEASE_ASSERT(
+      !XRE_IsParentProcess() || NS_IsMainThread(),
+      "In the parent process, profiles should only be generated from the main "
+      "thread, otherwise they will be incomplete.");
+  return do_profiler_stream_json_for_this_process(aWriter, aSinceTime,
+                                                  aIsShuttingDown, aService);
 }
 
 // END saving/streaming code
