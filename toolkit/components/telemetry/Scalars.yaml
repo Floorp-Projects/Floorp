@@ -1867,6 +1867,61 @@ os.environment:
     operating_systems:
       - windows
 
+  launched_to_handle:
+    bug_numbers:
+      - 1243603
+    description: >
+      Records counts for when Firefox was launched afresh (i.e., was not already
+      running) to handle a file type or protocol with `-osint -url ...`.  The
+      result is split into keys which represent the file extension: currently,
+      the set of file types Firefox registers to handle, namely ".avif", ".htm",
+      ".html", ".pdf", ".shtml", ".xht", ".xhtml", ".svg", ".webp", and the set
+      of protocol schemes that Firefox registers to handle, namely "about",
+      "http", "https", "mailto".  If Firefox was launched to handle a file type
+      or protocol it does not register to handle by default, the count is
+      recorded as ".<other extension>" or "<other protocol>", respectively
+      (neither of which are valid extension or protocol identifiers).
+    keyed: true
+    expires: "106"
+    kind: uint
+    notification_emails:
+      - application-update-telemetry-alerts@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - firefox
+    record_in_processes:
+      - main
+    operating_systems:
+      - windows
+
+  invoked_to_handle:
+    bug_numbers:
+      - 1243603
+    description: >
+      Records counts for when Firefox was invoked (i.e., was already running and
+      was not launched) to handle a file type or protocol with `-osint -url
+      ...`.  The result is split into keys which represent the file extension:
+      currently, the set of file types Firefox registers to handle, namely
+      ".avif", ".htm", ".html", ".pdf", ".shtml", ".xht", ".xhtml", ".svg",
+      ".webp", and the set of protocol schemes that Firefox registers to handle,
+      namely "about", "http", "https", "mailto".  If Firefox was invoked to
+      handle a file type or protocol it does not register to handle by default,
+      the count is recorded as ".<other extension>" or "<other protocol>",
+      respectively (neither of which are valid extension or protocol
+      identifiers).
+    keyed: true
+    expires: "106"
+    kind: uint
+    notification_emails:
+      - application-update-telemetry-alerts@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - firefox
+    record_in_processes:
+      - main
+    operating_systems:
+      - windows
+
   is_kept_in_dock:
     bug_numbers:
       - 1715348
