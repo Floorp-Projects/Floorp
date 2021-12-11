@@ -505,6 +505,10 @@ ${RemoveDefaultBrowserAgentShortcut}
   ${EndIf}
 
 
+  ; Keep this list synchronized with
+  ; https://searchfox.org/mozilla-central/source/browser/installer/windows/msix/AppxManifest.xml.in.
+  ; and `os.environment.launched_to_handle` and `os.environment.invoked_to_handle` telemetry in
+  ; https://searchfox.org/mozilla-central/source/browser/components/BrowserContentHandler.jsm.
   ${AddAssociationIfNoneExist} ".pdf" "FirefoxHTML$5"
   ${AddAssociationIfNoneExist} ".oga" "FirefoxHTML$5"
   ${AddAssociationIfNoneExist} ".ogg" "FirefoxHTML$5"
