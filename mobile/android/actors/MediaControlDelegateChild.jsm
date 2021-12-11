@@ -1,12 +1,11 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
 
-const { GeckoViewChildModule } = ChromeUtils.import(
-  "resource://gre/modules/GeckoViewChildModule.jsm"
+const { GeckoViewActorChild } = ChromeUtils.import(
+  "resource://gre/modules/GeckoViewActorChild.jsm"
 );
 
 const { XPCOMUtils } = ChromeUtils.import(
@@ -17,25 +16,9 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   MediaUtils: "resource://gre/modules/MediaUtils.jsm",
 });
 
-class GeckoViewMediaControl extends GeckoViewChildModule {
-  onInit() {
-    debug`onEnable`;
-  }
+var EXPORTED_SYMBOLS = ["MediaControlDelegateChild"];
 
-  onEnable() {
-    debug`onEnable`;
-
-    addEventListener("MozDOMFullscreen:Entered", this, false);
-    addEventListener("MozDOMFullscreen:Exited", this, false);
-  }
-
-  onDisable() {
-    debug`onDisable`;
-
-    removeEventListener("MozDOMFullscreen:Entered", this);
-    removeEventListener("MozDOMFullscreen:Exited", this);
-  }
-
+class MediaControlDelegateChild extends GeckoViewActorChild {
   handleEvent(aEvent) {
     debug`handleEvent: ${aEvent.type}`;
 
@@ -50,7 +33,7 @@ class GeckoViewMediaControl extends GeckoViewChildModule {
   handleFullscreenChanged() {
     debug`handleFullscreenChanged`;
 
-    const element = content && content.document.fullscreenElement;
+    const element = this.document.fullscreenElement;
     const mediaElement = MediaUtils.findMediaElement(element);
 
     if (element && !mediaElement) {
@@ -58,17 +41,12 @@ class GeckoViewMediaControl extends GeckoViewChildModule {
       debug`No fullscreen media element found.`;
     }
 
-    const message = {
+    this.eventDispatcher.sendRequest({
+      type: "GeckoView:MediaSession:Fullscreen",
       metadata: MediaUtils.getMetadata(mediaElement) ?? {},
       enabled: !!element,
-    };
-
-    this.messageManager.sendAsyncMessage(
-      "GeckoView:MediaControl:Fullscreen",
-      message
-    );
+    });
   }
 }
 
-const { debug } = GeckoViewMediaControl.initLogging("GeckoViewMediaControl");
-const module = GeckoViewMediaControl.create(this);
+const { debug } = MediaControlDelegateChild.initLogging("MediaControlDelegateChild");
