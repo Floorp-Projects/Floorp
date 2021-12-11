@@ -290,6 +290,21 @@ let ShellServiceInternal = {
   },
 
   /**
+   * Determine if we're the default handler for the given file extension (like
+   * ".pdf") or protocol (like "https").  Windows-only for now.
+   *
+   * @returns true if we are the default handler, false otherwise.
+   */
+  isDefaultHandlerFor(aFileExtensionOrProtocol) {
+    if (AppConstants.platform == "win") {
+      return this.shellService
+        .QueryInterface(Ci.nsIWindowsShellService)
+        .isDefaultHandlerFor(aFileExtensionOrProtocol);
+    }
+    return false;
+  },
+
+  /**
    * Checks if Firefox app can and isn't pinned to OS "taskbar."
    *
    * @throws if not called from main process.

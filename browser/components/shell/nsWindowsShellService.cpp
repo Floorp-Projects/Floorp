@@ -207,6 +207,32 @@ nsWindowsShellService::IsDefaultBrowser(bool aForAllTypes,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsWindowsShellService::IsDefaultHandlerFor(
+    const nsAString& aFileExtensionOrProtocol, bool* aIsDefaultHandlerFor) {
+  *aIsDefaultHandlerFor = false;
+
+  RefPtr<IApplicationAssociationRegistration> pAAR;
+  HRESULT hr = CoCreateInstance(
+      CLSID_ApplicationAssociationRegistration, nullptr, CLSCTX_INPROC,
+      IID_IApplicationAssociationRegistration, getter_AddRefs(pAAR));
+  if (FAILED(hr)) {
+    return NS_OK;
+  }
+
+  wchar_t exePath[MAXPATHLEN] = L"";
+  nsresult rv = BinaryPath::GetLong(exePath);
+
+  if (NS_FAILED(rv)) {
+    return NS_OK;
+  }
+
+  const nsString& flatClass = PromiseFlatString(aFileExtensionOrProtocol);
+
+  *aIsDefaultHandlerFor = IsPathDefaultForClass(pAAR, exePath, flatClass.get());
+  return NS_OK;
+}
+
 nsresult nsWindowsShellService::LaunchControlPanelDefaultsSelectionUI() {
   IApplicationAssociationRegistrationUI* pAARUI;
   HRESULT hr = CoCreateInstance(
