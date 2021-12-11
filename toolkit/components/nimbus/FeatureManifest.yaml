@@ -225,6 +225,10 @@ shellService:
       type: boolean
       fallbackPref: browser.shell.setDefaultBrowserUserChoice
       description: Should it set as default browser
+    setDefaultPDFHandler:
+      type: boolean
+      fallbackPref: browser.shell.setDefaultPDFHandler
+      description: Should setting it as the default browser set it as the default PDF handler.
 upgradeDialog:
   description: The dialog shown for major upgrades
   hasExposure: false
