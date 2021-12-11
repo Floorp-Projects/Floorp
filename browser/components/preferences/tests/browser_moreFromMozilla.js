@@ -161,3 +161,34 @@ add_task(async function test_aboutpreferences_advanced_template() {
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
+
+add_task(async function test_aboutpreferences_clickBtnVPN() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["browser.preferences.moreFromMozilla", true],
+      ["browser.preferences.moreFromMozilla.template", "simple"],
+    ],
+  });
+  await openPreferencesViaOpenPreferencesAPI("paneMoreFromMozilla", {
+    leaveOpen: true,
+  });
+
+  let doc = gBrowser.contentDocument;
+  let tab = gBrowser.selectedTab;
+
+  let productCards = doc.querySelectorAll("vbox.simple");
+  Assert.ok(productCards, "Simple template loaded");
+
+  const expectedUrl = "https://www.mozilla.org/products/vpn/";
+  let tabOpened = BrowserTestUtils.waitForNewTab(gBrowser, url =>
+    url.startsWith(expectedUrl)
+  );
+  let vpnButton = doc.getElementById("simple-mozillaVPN");
+  vpnButton.doCommand();
+  let openedTab = await tabOpened;
+
+  Assert.ok(gBrowser.selectedBrowser.documentURI.spec.startsWith(expectedUrl));
+
+  BrowserTestUtils.removeTab(openedTab);
+  BrowserTestUtils.removeTab(tab);
+});

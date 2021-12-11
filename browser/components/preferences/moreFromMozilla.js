@@ -133,7 +133,7 @@ var gMoreFromMozillaPane = {
           );
           actionElement.setAttribute("target", "_blank");
         } else {
-          actionElement.addEventListener("click", function() {
+          actionElement.addEventListener("command", function() {
             let mainWindow = window.windowRoot.ownerGlobal;
             mainWindow.openTrustedLinkIn(
               gMoreFromMozillaPane.getURL(
