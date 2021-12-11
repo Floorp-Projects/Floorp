@@ -1350,6 +1350,10 @@ Toolbox.prototype = {
     };
   },
 
+  _isDebugTargetFenix() {
+    return this._getDebugTargetData()?.runtimeInfo?.isFenix;
+  },
+
   /**
    * loading React modules when needed (to avoid performance penalties
    * during Firefox start up time).
@@ -2152,6 +2156,7 @@ Toolbox.prototype = {
   _buildPickerButton() {
     this.pickerButton = this._createButtonState({
       id: "command-button-pick",
+      className: this._getPickerAdditionalClassName(),
       description: this._getPickerTooltip(),
       onClick: this._onPickerClick,
       isInStartContainer: true,
@@ -2161,6 +2166,13 @@ Toolbox.prototype = {
     });
 
     return this.pickerButton;
+  },
+
+  _getPickerAdditionalClassName() {
+    if (this._isDebugTargetFenix()) {
+      return "remote-fenix";
+    }
+    return null;
   },
 
   /**
@@ -2175,9 +2187,17 @@ Toolbox.prototype = {
     shortcut = KeyShortcuts.stringify(shortcut);
     const shortcutMac = L10N.getStr("toolbox.elementPicker.mac.key");
     const isMac = Services.appinfo.OS === "Darwin";
-    const label = isMac
-      ? "toolbox.elementPicker.mac.tooltip"
-      : "toolbox.elementPicker.tooltip";
+
+    let label;
+    if (this._isDebugTargetFenix()) {
+      label = isMac
+        ? "toolbox.androidElementPicker.mac.tooltip"
+        : "toolbox.androidElementPicker.tooltip";
+    } else {
+      label = isMac
+        ? "toolbox.elementPicker.mac.tooltip"
+        : "toolbox.elementPicker.tooltip";
+    }
 
     return isMac
       ? L10N.getFormatStr(label, shortcut, shortcutMac)
@@ -2274,7 +2294,7 @@ Toolbox.prototype = {
       // If the current panel doesn't define a custom updatePickerButton,
       // revert the button to its default state
       button.description = this._getPickerTooltip();
-      button.className = null;
+      button.className = this._getPickerAdditionalClassName();
       button.disabled = null;
     }
   },
