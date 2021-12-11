@@ -2317,8 +2317,7 @@ void CodeGenerator::visitWasmBinarySimd128(LWasmBinarySimd128* ins) {
   FloatRegister rhs = ToFloatRegister(ins->rhs());
   FloatRegister temp1 = ToTempFloatRegisterOrInvalid(ins->getTemp(0));
   FloatRegister temp2 = ToTempFloatRegisterOrInvalid(ins->getTemp(1));
-
-  MOZ_ASSERT(ToFloatRegister(ins->output()) == lhsDest);
+  FloatRegister output = ToFloatRegister(ins->output());
 
   switch (ins->simdOp()) {
     case wasm::SimdOp::V128And:
@@ -2405,13 +2404,13 @@ void CodeGenerator::visitWasmBinarySimd128(LWasmBinarySimd128* ins) {
       masm.unsignedMaxInt16x8(rhs, lhsDest);
       break;
     case wasm::SimdOp::I32x4Add:
-      masm.addInt32x4(rhs, lhsDest);
+      masm.addInt32x4(lhsDest, rhs, output);
       break;
     case wasm::SimdOp::I32x4Sub:
-      masm.subInt32x4(rhs, lhsDest);
+      masm.subInt32x4(lhsDest, rhs, output);
       break;
     case wasm::SimdOp::I32x4Mul:
-      masm.mulInt32x4(rhs, lhsDest);
+      masm.mulInt32x4(lhsDest, rhs, output);
       break;
     case wasm::SimdOp::I32x4MinS:
       masm.minInt32x4(rhs, lhsDest);
@@ -3412,8 +3411,9 @@ void CodeGenerator::visitWasmReplaceInt64LaneSimd128(
     LWasmReplaceInt64LaneSimd128* ins) {
 #ifdef ENABLE_WASM_SIMD
   MOZ_RELEASE_ASSERT(ins->simdOp() == wasm::SimdOp::I64x2ReplaceLane);
-  masm.replaceLaneInt64x2(ins->laneIndex(), ToRegister64(ins->rhs()),
-                          ToFloatRegister(ins->lhsDest()));
+  masm.replaceLaneInt64x2(ins->laneIndex(), ToFloatRegister(ins->lhs()),
+                          ToRegister64(ins->rhs()),
+                          ToFloatRegister(ins->output()));
 #else
   MOZ_CRASH("No SIMD");
 #endif
