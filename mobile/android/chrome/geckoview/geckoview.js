@@ -701,7 +701,18 @@ function startup() {
       name: "GeckoViewMediaControl",
       onEnable: {
         resource: "resource://gre/modules/GeckoViewMediaControl.jsm",
-        frameScript: "chrome://geckoview/content/GeckoViewMediaControlChild.js",
+        actors: {
+          MediaControlDelegate: {
+            child: {
+              moduleURI: "resource:///actors/MediaControlDelegateChild.jsm",
+              events: {
+                "MozDOMFullscreen:Entered": {},
+                "MozDOMFullscreen:Exited": {},
+              },
+            },
+            allFrames: true,
+          },
+        },
       },
     },
     {
