@@ -6354,6 +6354,8 @@ nsTransparencyMode nsWindow::GetTransparencyMode() {
 }
 
 void nsWindow::SetWindowMouseTransparent(bool aIsTransparent) {
+  mMouseTransparent = aIsTransparent;
+
   GdkWindow* window =
       mDrawToContainer ? gtk_widget_get_window(mShell) : mGdkWindow;
   if (!window) {
